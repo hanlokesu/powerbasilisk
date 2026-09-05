@@ -1080,7 +1080,7 @@ impl Parser {
                 }
                 // Plain INPUT (console) — not implemented, consume
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("INPUT".to_string(), line))
             }
             Token::Open => self.parse_open_statement(),
             Token::Close => self.parse_close_statement(),
@@ -1219,7 +1219,7 @@ impl Parser {
                             }
                             _ => {
                                 self.consume_to_eol();
-                                return Ok(Statement::Noop);
+                                return Ok(Statement::Noop("ON ERROR GOTO".to_string(), line));
                             }
                         };
                         self.consume_to_eol();
@@ -1227,19 +1227,32 @@ impl Parser {
                     }
                 }
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("ON ERROR".to_string(), line))
             }
             Token::Replace => {
                 // REPLACE old$ WITH new$ IN target$
                 self.advance();
+                let old = self.parse_expression()?;
+                if matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("WITH")) {
+                    self.advance();
+                }
+                let new_s = self.parse_expression()?;
+                if matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("IN")) {
+                    self.advance();
+                }
+                let target = self.parse_expression()?;
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Call(CallStmt {
+                    name: "REPLACE".to_string(),
+                    args: vec![target, old, new_s],
+                    line,
+                }))
             }
             Token::Remove => {
                 // REMOVE$ is usually a function but REMOVE can be a statement
                 self.advance();
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("REMOVE".to_string(), line))
             }
             Token::Resume => {
                 self.advance();
@@ -1317,12 +1330,12 @@ impl Parser {
                 // We need to treat the included content as statements
                 // For now, skip — the preprocessor should have resolved this
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("#INCLUDE".to_string(), line))
             }
             Token::PercentConstant(_) => {
                 // %CONSTANT = value inside a sub
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("%CONSTANT".to_string(), line))
             }
             Token::End => {
                 // Check what follows END
@@ -1339,13 +1352,13 @@ impl Parser {
                     Some(Token::If) | Some(Token::Select) | Some(Token::Type) => {
                         // Mismatched block-end — consume and skip
                         self.consume_to_eol();
-                        Ok(Statement::Noop)
+                        Ok(Statement::Noop("END (mismatched block)".to_string(), line))
                     }
                     _ => {
                         // Standalone END (program termination)
                         self.advance(); // consume END
                         self.consume_to_eol();
-                        Ok(Statement::Noop)
+                        Ok(Statement::Noop("END".to_string(), line))
                     }
                 }
             }
@@ -1378,12 +1391,12 @@ impl Parser {
                         }
                         // LINE INPUT without # — console, not implemented
                         self.consume_to_eol();
-                        return Ok(Statement::Noop);
+                        return Ok(Statement::Noop("LINE INPUT".to_string(), line));
                     }
                     // LINE (not INPUT) — DDT drawing or other, consume
                     self.advance();
                     self.consume_to_eol();
-                    return Ok(Statement::Noop);
+                    return Ok(Statement::Noop("LINE".to_string(), line));
                 }
 
                 // KILL filename$
@@ -1472,6 +1485,98 @@ impl Parser {
                     }));
                 }
 
+                if matches!(name_upper.as_str(), "LSET" | "RSET") {
+                    self.advance(); // consume LSET/RSET
+                    // LSET target$ = value  (and RSET)
+                    let target = self.parse_primary()?;
+                    if self.peek() == &Token::Eq {
+                        self.advance();
+                    }
+                    let value = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: name_upper.clone(),
+                        args: vec![target, value],
+                        line,
+                    }));
+                }
+
+                // WRITE #filenum, expr, ...  (CSV-style record)
+                if name_upper == "WRITE" && self.peek_at(1) == Some(&Token::Hash) {
+                    self.advance(); // consume WRITE
+                    self.advance(); // consume #
+                    let file_num = self.parse_expression()?;
+                    let mut args = vec![file_num];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "WRITE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // SEEK #filenum, position&
+                if name_upper == "SEEK" && self.peek_at(1) == Some(&Token::Hash) {
+                    self.advance(); // consume SEEK
+                    self.advance(); // consume #
+                    let file_num = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let pos = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "SEEK".to_string(),
+                        args: vec![file_num, pos],
+                        line,
+                    }));
+                }
+                // LOCK / UNLOCK #filenum [, record& [, length&]]
+                if (name_upper == "LOCK" || name_upper == "UNLOCK") && self.peek_at(1) == Some(&Token::Hash) {
+                    let stmt_name = name_upper.clone();
+                    self.advance(); // consume LOCK/UNLOCK
+                    self.advance(); // consume #
+                    let file_num = self.parse_expression()?;
+                    let mut args = vec![file_num];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: stmt_name,
+                        args,
+                        line,
+                    }));
+                }
+                // FLUSH #filenum
+                if name_upper == "FLUSH" && self.peek_at(1) == Some(&Token::Hash) {
+                    self.advance(); // consume FLUSH
+                    self.advance(); // consume #
+                    let file_num = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "FLUSH".to_string(),
+                        args: vec![file_num],
+                        line,
+                    }));
+                }
+                // NAME oldfile$ AS newfile$
+                if name_upper == "NAME" {
+                    self.advance(); // consume NAME
+                    let old_name = self.parse_expression()?;
+                    if matches!(self.peek(), Token::As) {
+                        self.advance();
+                    }
+                    let new_name = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "NAME".to_string(),
+                        args: vec![old_name, new_name],
+                        line,
+                    }));
+                }
                 if matches!(
                     name_upper.as_str(),
                     "DIALOG"
@@ -1484,20 +1589,10 @@ impl Parser {
                         | "TREEVIEW"
                         | "LISTVIEW"
                         | "XPRINT"
-                        | "WRITE"
-                        | "LSET"
-                        | "RSET"
-                        | "RESET"
-                        | "ERASE"
-                        | "FLUSH"
-                        | "NAME"
-                        | "SEEK"
-                        | "LOCK"
-                        | "UNLOCK"
                 ) {
                     self.advance();
                     self.consume_to_eol();
-                    return Ok(Statement::Noop);
+                    return Ok(Statement::Noop(name_upper.clone(), line));
                 }
 
                 let name_clone = name.clone();
@@ -1541,7 +1636,7 @@ impl Parser {
                         }));
                     }
                     self.consume_to_eol();
-                    return Ok(Statement::Noop);
+                    return Ok(Statement::Noop(name_clone.clone(), line));
                 }
 
                 if self.peek_at(1) == Some(&Token::LParen) {
@@ -1574,7 +1669,7 @@ impl Parser {
                     }
 
                     self.consume_to_eol();
-                    return Ok(Statement::Noop);
+                    return Ok(Statement::Noop(name_clone.clone(), line));
                 }
 
                 // No LParen after identifier — could be a SUB call: SubName arg1, arg2
@@ -1597,7 +1692,7 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
-                Ok(Statement::Noop)
+                Ok(Statement::Noop("<unknown token>".to_string(), line))
             }
         }
     }
@@ -2039,7 +2134,7 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
-                return Ok(Statement::Noop);
+                return Ok(Statement::Noop("OPEN (unknown mode)".to_string(), line));
             }
         };
 
@@ -2069,7 +2164,7 @@ impl Parser {
         if self.at_eol_or_eof() {
             // Bare CLOSE with no file number — close all files
             self.consume_to_eol();
-            return Ok(Statement::Noop);
+            return Ok(Statement::Noop("CLOSE (no file)".to_string(), line));
         }
         let file_num = self.parse_expression()?;
         self.consume_to_eol();

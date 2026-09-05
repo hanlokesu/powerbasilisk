@@ -37,7 +37,25 @@ fn main() {
     });
 
     let runtime_lib = get_flag_value(&args, "--runtime-lib");
-    let lib_dir = get_flag_value(&args, "--lib-dir");
+    let lib_dir = get_flag_value(&args, "--lib-dir").or_else(|| {
+        let d = detect_sdk_lib_dir();
+        match &d {
+            Some(path) => {
+                eprintln!(
+                    "[pbcompiler] Auto-detected Windows SDK lib dir: {}",
+                    path
+                )
+            }
+            None => {
+                if exe_mode {
+                    eprintln!(
+                        "[pbcompiler] Warning: --lib-dir not given and no Windows SDK found under C:\\Program Files (x86)\\Windows Kits\\10\\Lib; linking may fail."
+                    );
+                }
+            }
+        }
+        d
+    });
     let split_threshold = get_flag_value(&args, "--split-threshold")
         .and_then(|s| s.parse::<usize>().ok())
         .unwrap_or(0);
@@ -72,6 +90,42 @@ fn get_flag_value(args: &[String], flag: &str) -> Option<String> {
     args.iter()
         .position(|a| a == flag)
         .and_then(|pos| args.get(pos + 1).cloned())
+}
+/// Auto-detect the Windows SDK import-library directory so users do not have
+/// to pass --lib-dir by hand. Scans the standard install roots and picks the
+/// newest installed version whose `um\x64` folder exists.
+fn detect_sdk_lib_dir() -> Option<String> {
+    let roots = [
+        r"C:\Program Files (x86)\Windows Kits\10\Lib",
+        r"C:\Program Files\Windows Kits\10\Lib",
+    ];
+    let mut best: Option<(Vec<u64>, String)> = None;
+    for root in roots.iter() {
+        let root_path = Path::new(root);
+        let entries = match std::fs::read_dir(root_path) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            // Version folders look like "10.0.26100.0"; skip non-version names.
+            let ver: Vec<u64> = name
+                .split('.')
+                .filter_map(|s| s.parse::<u64>().ok())
+                .collect();
+            if ver.is_empty() {
+                continue;
+            }
+            let um64 = root_path.join(&name).join("um").join("x64");
+            if !um64.is_dir() {
+                continue;
+            }
+            if best.as_ref().map_or(true, |(bv, _)| ver > *bv) {
+                best = Some((ver, um64.to_string_lossy().into_owned()));
+            }
+        }
+    }
+    best.map(|(_, path)| path)
 }
 
 fn compile_file(

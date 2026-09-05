@@ -492,7 +492,7 @@ impl Interpreter {
                 }
                 Ok(Flow::Normal)
             }
-            Statement::Noop => Ok(Flow::Normal),
+            Statement::Noop(_, _) => Ok(Flow::Normal),
         }
     }
 

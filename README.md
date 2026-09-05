@@ -1,229 +1,284 @@
-<p align="center">
-  <img src="assets/powerbasilisk-hero.png" width="400" alt="PowerBasilisk">
-</p>
+# PowerBasilisk Enhanced
 
-<h1 align="center">PowerBasilisk</h1>
+An enhanced 64-bit PowerBASIC compiler, forked from
+[`benstopics/powerbasilisk`](https://github.com/benstopics/powerbasilisk).
 
-<p align="center">
-  <b>An open-source 64-bit PowerBASIC compiler written in Rust, targeting LLVM IR</b>
-</p>
+**PowerBasilisk** is an open-source compiler that translates PowerBASIC source
+code (`.bas`) into LLVM IR and then into native 64-bit Windows executables.
+The toolchain is written in Rust and has zero external crate dependencies.
 
-<p align="center">
-  <a href="https://github.com/benstopics/powerbasilisk/actions/workflows/ci.yml"><img src="https://github.com/benstopics/powerbasilisk/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/benstopics/powerbasilisk/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License"></a>
-  <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/rust-1.75%2B-orange?logo=rust" alt="Rust"></a>
-  <a href="https://llvm.org/"><img src="https://img.shields.io/badge/LLVM-17%2B-blue?logo=llvm" alt="LLVM"></a>
-  <a href="https://github.com/benstopics/powerbasilisk"><img src="https://img.shields.io/github/stars/benstopics/powerbasilisk?style=social" alt="Stars"></a>
-</p>
+This repository is an **enhanced branch** that fixes an upstream bug and adds
+several frequently-used PowerBASIC statements/functions that were previously
+silently dropped during code generation.
 
 ---
 
-PowerBasilisk compiles [PowerBASIC](https://en.wikipedia.org/wiki/PowerBASIC) 9.x source code to **LLVM IR**, then uses `clang` to produce native executables, DLLs, or object files. It is written entirely in Rust with **zero external crate dependencies** for the core frontend.
+## What's New vs. Upstream
 
-The compiler generates LLVM IR as **plain text** (no `inkwell` or `llvm-sys` bindings required), making it easy to build and inspect the output at every stage. It also includes `pbinterp`, a Rust-based PowerBASIC interpreter for running unit tests without compiling.
+### Fixed
+- **`-lui` link flag bug** — removed a stale `-lui` from the exe linker
+  arguments. Modern Windows SDKs no longer ship `ui.lib`, so the upstream
+  linker command failed whenever `--lib-dir` was used. This branch links
+  correctly against current Windows SDKs.
+- **Auto-detect the Windows SDK** — `--lib-dir` is now optional. When it is
+  omitted, the compiler scans the standard install roots
+  (`C:\Program Files (x86)\Windows Kits\10\Lib` and the 64-bit sibling) and
+  picks the **newest installed SDK version** whose `um\x64` folder exists, so
+  each user does not need to know their SDK version number. If no SDK is
+  found, a warning is printed and linking will fail with a clear message.
 
-## Why PowerBasilisk Exists
+### New Built-ins (previously silently discarded)
+| PB statement / function | Maps to | Notes |
+| --- | --- | --- |
+| `MSGBOX text$ [, style& [, title$]]` | `MessageBoxA` (user32) | modal message box |
+| `SHELL command$ [, mode&]` | `ShellExecuteA` (shell32) | launch a program / document |
+| `CURDIR$` | `GetCurrentDirectoryA` (kernel32) | current working directory (no-parens call supported) |
+| `ISFILE(path$)` | `_access` (C runtime) | returns -1 if the file exists, 0 if not |
+| `REPLACE old$ WITH new$ IN target$` | `pb_replace` (runtime) | replace every occurrence of `old$` in `target$` |
+| `ERASE array` | `pb_erase_array` (runtime) | zero numeric arrays, null string arrays (static arrays) |
+| `LSET var$ = expr` | `pb_lset` / `pb_lset_buf` (runtime) | left-justify into a fixed-length string, pad with spaces |
+| `RSET var$ = expr` | `pb_rset` / `pb_rset_buf` (runtime) | right-justify into a fixed-length string, pad with spaces |
+| `WRITE #f, ...` | `pb_write_file_*` (runtime) | CSV-style record output: strings quoted, numbers raw, CRLF row terminator |
+| `SEEK #f, pos` | `pb_seek` (runtime) | 1-based byte repositioning (`fseek` under the hood) |
+| `LOCK #f [, rec [, len]]` | `pb_lock` (runtime) | byte-range file lock via CRT `_locking` |
+| `UNLOCK #f [, rec [, len]]` | `pb_unlock` (runtime) | release a byte-range file lock |
+| `RESET` | `pb_reset` (runtime) | close every open file handle |
+| `FLUSH #f` | `pb_flush` (runtime) | `fflush` a file buffer to disk |
+| `NAME old$ AS new$` | `pb_name` (runtime) | rename a file (`rename`) |
 
-Bob Zale founded [PowerBASIC](https://en.wikipedia.org/wiki/PowerBASIC) in 1989, a fast native-code BASIC compiler for DOS and Windows. It built a loyal community of developers who shipped real production software with it for decades.
+> **Why this matters:** upstream `pbcompiler` would report "compiled
+> successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
+> expressions. Programs built this way ran but did nothing. This branch wires
+> them to real Win32 / CRT calls and is verified against running executables.
 
-Zale died in 2012. In 2017, **Drake Software** (owned by **Cinven**, a European private equity firm) acquired the PowerBASIC source code and assets, promising to continue development. But they not only released nothing, but they killed the website and shut down the community forums without warning destroying decades of accumulated knowledge, code samples, and developer discussions overnight.
+### Diagnostics: know when your code is silently dropped
+Upstream would compile a `.bas` that uses an unimplemented statement, produce
+a working `.exe`, and never tell you that whole lines of your code did
+nothing. This branch adds an **unimplemented-statement report**:
 
-### Wall Street Raider
+- Every statement that is parsed but produces **no code** is recorded.
+- After each build, the compiler prints a summary to stderr:
+  `[pbcompiler] WARNING: N statement(s) not implemented (silently dropped)`.
+- A full report is written next to your output, e.g.
+  `program.unimplemented.log`, listing **the source line and the statement
+  name** for every silent drop, so you can tell exactly what will not run.
 
-The project that drives PowerBasilisk's development is [Wall Street Raider](https://www.wallstreetraider.com) which is a 180,000-line PowerBASIC financial simulation written over 40 years by Michael Jenkins, a Harvard-trained lawyer and CPA who retired at 42 to build it. It covers 1,600 companies with stocks, bonds, options, futures, swaps, ETFs, antitrust, and tax accounting based on actual IRS rules. Multiple teams spent years and hundreds of thousands of dollars trying to rewrite it in other languages. None succeeded.
+Example report from a program using DDT GUI statements:
 
-In 2024, [Ben Ward](https://github.com/benstopics) figured out the approach that works: don't rewrite the engine, wrap it. He built a modern Electron/Preact UI that talks to Jenkins' untouched PowerBASIC engine through a C++ REST bridge. The [remaster is on Steam](https://store.steampowered.com/app/3525620/Wall_Street_Raider/).
-
-However, issues began to arise with this approach. The Foreign Function Interface (FFI) layer was complex and brittle, leading to frequent crashes and memory leaks. So Ben built PowerBasilisk, not only in the hopes of running Wall Street Raider in 64-bit and one day on Linux and macOS, but also to develop an automated test harness for Jenkins' codebase to catch regressions and ensure stability as he continues to add features and content.
-
-## Architecture
-
+```text
+PowerBasilisk Enhanced - unimplemented / silently-dropped statement report
+3 statement(s) parsed but produced NO code. These make the .exe run but do nothing.
+Check each line below against your source:
+  line 5: statement `DIALOG` parsed but NOT implemented (NOOP) - no code generated
+  line 6: statement `XPRINT` parsed but NOT implemented (NOOP) - no code generated
+  line 7: statement `GARBAGE_STMT` has no codegen implementation - skipped
 ```
-                    PowerBasilisk Compiler Pipeline
- ┌───────────┐    ┌───────┐    ┌───────┐    ┌──────────┐    ┌──────────┐
- │ PB Source │───>│ Prepr │───>│  Lex  │───>│  Parse   │───>│ Codegen  │
- │  (.bas)   │    │ ocess │    │       │    │  (AST)   │    │(LLVM IR) │
- └───────────┘    └───────┘    └───────┘    └──────────┘    └───┬──────┘
-                      │                          │              │
-                      │      ┌──────────┐        │              v
-                      └─────>│ pbinterp │<───────┘       ┌──────────┐
-                             │  (AST    │                │ .ll file │
-                             │ interp.) │                └────┬─────┘
-                             └──────────┘                     │ clang
-                                                              v
-                                                    ┌─────────────────┐
-                                                    │ .obj / .exe /   │
-                                                    │      .dll       │
-                                                    └─────────────────┘
-```
 
-### Crate Structure
+This covers all three silent-drop paths: parser-level `NOOP`s (known but
+unimplemented statements), bare statements with no codegen (`Unknown sub`),
+and expression functions with no implementation (`Unknown function — 0`).
 
-| Crate | Purpose | Details |
-|-------|---------|---------|
-| [**`pb`**](pb/) | Shared frontend: lexer, parser, AST, preprocessor. Zero dependencies. | [README](pb/README.md) |
-| [**`pbcompiler`**](pbcompiler/) | LLVM IR code generation, linking, CLI driver. Depends on `pb`. | [README](pbcompiler/README.md) |
-| [**`pbinterp`**](pbinterp/) | AST interpreter for running PB code directly. Depends on `pb`. | [README](pbinterp/README.md) |
+### Implementation notes (gotchas fixed)
+- **LSET / RSET memory model.** A PowerBASIC fixed-length string
+  (`STRING * N`) is a **direct char buffer**, not a `BSTR` pointer variable.
+  The first attempt used `pb_lset(char**, ...)` (pointer-to-pointer) and
+  produced garbage. The fix is a buffer variant (`pb_lset_buf` / `pb_rset_buf`)
+  that writes straight into the fixed buffer, selected automatically based on
+  the target variable's type.
 
-## Quick Start
+---
 
-### Option 1: Download prebuilt binaries (recommended)
+## Getting Started (new users)
 
-Grab the latest release from [GitHub Releases](https://github.com/benstopics/powerbasilisk/releases). Prebuilt binaries are available for:
+The quickest path on a brand-new machine:
 
-- **Windows** (x86_64) — `pbcompiler.exe`, `pbinterp.exe`
-- **macOS** (x86_64, Apple Silicon) — `pbcompiler`, `pbinterp`
-- **Linux** (x86_64, aarch64) — `pbcompiler`, `pbinterp`
+1. **Double-click `setup.bat`** (or run
+   `powershell -NoProfile -ExecutionPolicy Bypass -File setup.ps1`).
+   It checks for and installs (via `winget`, if missing):
+   - Rust toolchain (`Rustlang.Rustup`)
+   - LLVM / Clang (`LLVM.LLVM`, ~500 MB download; a UAC prompt may appear
+     - click YES)
+   - Windows SDK (`Microsoft.WindowsSDK.10.0.26100`)
+   Then it builds `pb_runtime_x64.obj` and the release `pbcompiler.exe`
+   for you.
+2. **Compile your first program:**
 
-Extract the archive and add the directory to your `PATH`, or run the binaries directly.
+   ```bash
+   pbcompiler build your_program.bas --exe --target x86_64-pc-windows-msvc --runtime-lib pb_runtime_x64.obj
+   ```
 
-### Option 2: Build from source
+   (`--lib-dir` is optional — the compiler auto-detects the Windows SDK.)
 
-Requires **Rust** 1.75+:
+That is all a new user needs to know. The sections below explain the build
+in detail for contributors.
+
+---
+
+## Build
+
+Prerequisites: a Rust toolchain (`rustup`) and, for linking, LLVM/Clang.
 
 ```bash
-git clone https://github.com/benstopics/powerbasilisk.git
-cd powerbasilisk
-cargo build --release
+# inside the workspace root (pbsrc/)
+cargo build --release -p pbcompiler
+# binary: target/release/pbcompiler.exe
 ```
 
-This builds two binaries in `target/release/`:
-- `pbcompiler` — the compiler (PB source → LLVM IR → native)
-- `pbinterp` — the interpreter (PB source → direct execution)
+## Usage
 
-### Prerequisites for compilation
-
-**LLVM/Clang** 17+ is required for `pbcompiler` to compile generated IR to native code:
-- Windows: `winget install LLVM.LLVM`
-- macOS: `brew install llvm`
-- Linux: `apt install clang llvm` or equivalent
-
-`pbinterp` does **not** require LLVM — it interprets PB code directly from the AST.
-
-### Compile a PowerBASIC program
+Compile a PB program to a 64-bit exe:
 
 ```bash
-# Compile to object file (32-bit, the default)
-pbcompiler build hello.bas -o hello
-
-# Compile to executable
-pbcompiler build hello.bas -o hello --exe \
-  --runtime-lib pbcompiler/runtime/pb_runtime.obj
-
-# Compile to DLL
-pbcompiler build mylib.bas -o mylib --dll
-
-# Emit LLVM IR only (for inspection)
-pbcompiler build hello.bas -o hello --emit-llvm
-```
-
-### Targeting 32-bit vs 64-bit
-
-The compiler defaults to 32-bit (`i686-pc-windows-msvc`) for compatibility with legacy PowerBASIC code. Use `--target` to select a different architecture:
-
-```bash
-# 32-bit (default) — compatible with original PowerBASIC binaries
-pbcompiler build hello.bas -o hello --exe \
-  --runtime-lib pbcompiler/runtime/pb_runtime.obj
-
-# 64-bit
-pbcompiler build hello.bas -o hello --exe \
+pbcompiler build program.bas --exe \
   --target x86_64-pc-windows-msvc \
-  --runtime-lib pbcompiler/runtime/pb_runtime_x64.obj
+  --runtime-lib pb_runtime_x64.obj \
+  --lib-dir "<Windows SDK>\Lib\<ver>\um\x64"
 ```
 
-The runtime library must be compiled for the same target:
+- `--runtime-lib` — points to the precompiled `pb_runtime.c` object.
+- `--lib-dir`  — optional. Directory containing `user32.lib`,
+  `shell32.lib`, etc. Required for `MSGBOX` / `SHELL` / Win32 API usage.
+  If omitted, the compiler auto-detects the newest installed Windows SDK.
 
-```bash
-# Build 32-bit runtime (default)
-clang -c --target=i686-pc-windows-msvc pbcompiler/runtime/pb_runtime.c \
-  -o pbcompiler/runtime/pb_runtime.obj
+---
 
-# Build 64-bit runtime
-clang -c --target=x86_64-pc-windows-msvc pbcompiler/runtime/pb_runtime.c \
-  -o pbcompiler/runtime/pb_runtime_x64.obj
-```
+## Verified
 
-Both the compiler output and the runtime must use the same target triple. Mixing 32-bit and 64-bit objects produces linker error 1112 (machine type mismatch).
+All added built-ins are tested by compiling and **running** the generated
+64-bit executables:
 
-### Interpret a PowerBASIC program
+- `ISFILE` — returns correct result for existing and missing files.
+- `CURDIR$` — returns the real current working directory.
+- `MSGBOX` — a modal dialog is shown with the correct title.
+- `SHELL` — launching `calc.exe` starts the Calculator application.
 
-```bash
-# Run a PB program directly (no compilation needed)
-pbinterp run hello.bas
+Tier 2 additions are verified by compiling and running a combined test
+program (`test_enhance2.bas`, exit code 0):
 
-# Run with timeout
-pbinterp run tests.bas --timeout 120
+- `REPLACE` — `"the cat sat on the cat mat"` — `"the dog sat on the dog mat"`.
+- `ERASE` — a `LONG` array's summed elements return 0; a `STRING` array's
+  first element length returns 0.
+- `LSET` / `RSET` — a `STRING * 10` variable shows left/right-justified text
+  padded to exactly 10 characters.
 
-# Dump preprocessed output
-pbinterp dump hello.bas
-```
+The upstream official test suite (14 programs) continues to build, run, and
+pass with exit code 0, and the user's real-world `.bas` files now emit real
+`MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` calls
+instead of being silently dropped.
 
-## CLI Reference
+**SDK auto-detection verified** - every build listed above (the 14 official
+tests, the Tier 2A and Tier 2B tests, the file I/O round trip, and the
+user's real-world `.bas` program) was compiled and linked **without
+`--lib-dir`**. The compiler auto-detected the newest installed Windows SDK
+(`C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\um\x64` on the
+test machine, which also has the older `10.0.19041.0` installed) and
+linked every program successfully.
 
-### pbcompiler
+**Tier 2B file-statement test** (`test_tier2b.bas`, exit code 0) covers the
+remaining Tier-2 file statements end to end:
 
-```
-pbcompiler build <file.bas> [options]
+- `WRITE #` — writes CSV-style records; reading them back with `LINE INPUT #`
+  yields `"hello",42,3.5` and `"world",7` exactly.
+- `SEEK #` — repositions to byte 1 and re-reads the first record correctly.
+- `LOCK` / `UNLOCK #` — a byte range is locked and released without error.
+- `FLUSH #` — buffers are flushed mid-program.
+- `NAME ... AS ...` — renames the test file on disk.
+- `RESET` — closes every open file handle; the renamed file is then deleted
+  with `KILL` and no temporary files remain.
 
-Options:
-  -o <path>              Output path (default: input with .obj extension)
-  --exe                  Link to standalone executable
-  --dll                  Link to shared library (DLL)
-  --session-struct       Wrap all globals into a single exported struct
-  --emit-llvm            Emit .ll file only (skip clang compilation)
-  --parse-only           Parse and exit (no codegen)
-  --debug                Enable debug mode (function tracing, crash handler)
-  --runtime-lib <path>   Path to pb_runtime.obj for linking
-  --lib-dir <path>       Directory containing import libraries (.lib)
-  --target <triple>      LLVM target triple (default: i686-pc-windows-msvc)
-  --split-threshold <N>  Split functions exceeding N IR lines (default: off)
-```
+**File I/O round trip** — a full write→read→verify→cleanup cycle passes with
+exit code 0:
 
-### pbinterp
+- `fileio_writer.bas` opens `testdata.txt` `FOR OUTPUT` and writes 9 lines via
+  `PRINT #` (text, numbers, a float, loop-built rows, and a line produced by
+  the new `REPLACE` statement).
+- `fileio_reader.bas` opens it `FOR INPUT`, reads all 9 lines back with
+  `LINE INPUT #` inside `WHILE NOT EOF(f)`, verifies the count, then deletes
+  the file with `KILL`.
+- Every line read back matches what was written, byte for byte. This confirms
+  the file pipeline (`FREEFILE`, `OPEN`, `PRINT #`, `LINE INPUT #`, `EOF`,
+  `CLOSE`, `KILL`) executes real I/O — not empty shells.
 
-```
-pbinterp run <file.bas> [options]
+---
 
-Options:
-  --timeout <seconds>    Execution timeout (default: none)
-  --json <path>          Write test results as JSON
-  --filter <pattern>     Only run test suites matching pattern
 
-pbinterp dump <file.bas>
-  Dump preprocessed source (after #INCLUDE resolution)
-```
+## Statement Support Matrix
 
-## Contributing
+Status legend: **✅** implemented and verified · **⚠️** parsed but produces
+NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 
-Contributions are welcome! There are two main ways to help:
+### Newly implemented by this branch
+| PB statement / function | Status | Maps to |
+| --- | --- | --- |
+| `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
+| `REPLACE old$ WITH new$ IN target$` | ✅ | `pb_replace` |
+| `ERASE array` | ✅ | `pb_erase_array` |
+| `LSET var$ = expr` / `RSET var$ = expr` | ✅ | `pb_lset(_buf)` / `pb_rset(_buf)` |
+| `WRITE #f, ...` | ✅ | `pb_write_file_begin/str/int/dbl/newline` |
+| `SEEK #f, pos` | ✅ | `pb_seek` |
+| `LOCK #f` / `UNLOCK #f` | ✅ | `pb_lock` / `pb_unlock` |
+| `RESET` / `FLUSH #f` | ✅ | `pb_reset` / `pb_flush` |
+| `NAME old$ AS new$` | ✅ | `pb_name` |
 
-### Submit code changes
+### Core language (upstream, verified by the 14 official tests)
+`PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
+`FREEFILE`, `KILL`, `IF/THEN/ELSE`, `FOR/NEXT`, `WHILE/WEND`, `DO/LOOP`,
+`GOTO` + labels, `GOSUB/RETURN`, `FUNCTION`/`CALL`, `DIM`/`GLOBAL`/`LOCAL`,
+arrays, and core string/numeric built-ins — **✅**
 
-Open an issue or pull request on GitHub. For development setup:
+### Parsed but produces NO code (reported, not silent)
+| Statement | Notes |
+| --- | --- |
+| `INPUT` (console) | ⚠️ console input not implemented |
+| `ON ERROR GOTO` / `ON ERROR` / `RESUME` | ⚠️ error handling deferred |
+| `REMOVE` | ⚠️ |
+| `#INCLUDE` (inside a SUB) | ⚠️ only top-level include works |
+| `%CONSTANT` | ⚠️ |
+| `END` (mismatched / standalone) | ⚠️ |
+| `LINE INPUT` (console, no `#`) | ⚠️ |
+| `LINE` (drawing) | ⚠️ |
+| `OPEN` (unknown mode) | ⚠️ |
+| `CLOSE` (no file number) | ⚠️ |
+| `DIALOG` / `CONTROL` / `MENU` / `TOOLBAR` / `STATUSBAR` | 🔲 Tier 3 GUI |
+| `COMBOBOX` / `LISTBOX` / `TREEVIEW` / `LISTVIEW` / `XPRINT` | 🔲 Tier 3 GUI |
 
-```bash
-# Build in debug mode (faster compilation)
-cargo build
+> Every ⚠️ / 🔲 line is reported in `*.unimplemented.log` after each build
+> with its exact source line, so nothing is silently dropped.
 
-# Run clippy
-cargo clippy --all-targets
+---
 
-# Format code
-cargo fmt --all
-```
+## Roadmap / Known Limitations
 
-### Share your PowerBASIC source code
+- **Tier 2 (done):** `REPLACE`, `LSET`, `RSET`, `ERASE`, `WRITE #`, `SEEK`,
+  `LOCK/UNLOCK`, `RESET`, `FLUSH`, and `NAME` are implemented and verified.
+  Still open: `ON ERROR GOTO` - parsed and reported in
+  `*.unimplemented.log` (not silently dropped), but produces no code yet;
+  a real implementation needs a runtime error-handling mechanism
+  (an error latch + a check after every failing call + a branch to the
+  error handler), a structural change to codegen, and is deferred.
+- **Tier 3 (future, large):** the DDT GUI framework — `DIALOG`, `CONTROL`,
+  `MENU`, `TOOLBAR`, `STATUSBAR`, `COMBOBOX`, `LISTBOX`, `TREEVIEW`,
+  `LISTVIEW`, `XPRINT` — effectively a rewrite of the entire windowing
+  framework.
 
-If you have a PowerBASIC codebase you'd like to compile with PowerBasilisk, send your source to **Ben Ward** at [benstopics@gmail.com](mailto:benstopics@gmail.com). He will:
+---
 
-- Use your code as a **litmus test** for compiler compatibility
-- Write tests based on your program's expected behavior
-- Troubleshoot any compilation or runtime issues for you
-- Report back what works and what still needs compiler support
+## Credits & License
 
-This is one of the most valuable ways to contribute — real-world PowerBASIC code exposes edge cases and missing features that synthetic tests don't catch. Your code helps make PowerBasilisk work for everyone.
+Original project and code: [Ben Ward (benstopics)](https://github.com/benstopics)
+— see upstream `LICENSE`.
 
-## License
+This enhanced branch is maintained by **Hanlo**, with AI assistance from
+**Doubao**. The enhancements are additive and do not remove any upstream
+copyright notice.
 
-[Apache-2.0](LICENSE)
+Licensed under the **Apache License 2.0**. See the `LICENSE` file (from
+upstream) for the full license text.
+
+---
+
+## Disclaimer
+
+This is a community enhancement of an open-source project. PowerBASIC is a
+trademark of its respective owner; this project is not affiliated with or
+endorsed by the PowerBASIC company.

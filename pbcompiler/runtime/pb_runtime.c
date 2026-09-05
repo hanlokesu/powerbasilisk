@@ -13,6 +13,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <io.h>  /* _locking / _fileno for LOCK/UNLOCK */
+#include <sys/locking.h>  /* _LK_LOCK / _LK_UNLCK */
 
 #ifdef _WIN32
 /* Declare only what we need from oleaut32 — avoids pulling in all of windows.h */
@@ -791,3 +793,148 @@ int RemarksData(int x) {
 
 /* EZLIB functions are now nooped in the compiler (should_noop_function).
  * No runtime stubs needed. */
+
+/* LSET (BSTR target): left-justify src into a fixed-length PB string, pad spaces */
+void pb_lset(char** dest, const char* src, int len) {
+    char* old = *dest;
+    char* buf = (char*)malloc((size_t)len + 1);
+    int src_len = src ? (int)strlen(src) : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        buf[i] = (i < src_len) ? src[i] : 32;
+    }
+    buf[len] = (char)0;
+    *dest = pb_bstr_alloc(buf, (unsigned int)len);
+    free(buf);
+    if (old) SysFreeString(old);
+}
+
+/* RSET (BSTR target): right-justify src into a fixed-length PB string, pad spaces */
+void pb_rset(char** dest, const char* src, int len) {
+    char* old = *dest;
+    char* buf = (char*)malloc((size_t)len + 1);
+    int src_len = src ? (int)strlen(src) : 0;
+    int pad = (src_len < len) ? (len - src_len) : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        buf[i] = (i < pad) ? 32 : ((i - pad) < src_len ? src[i - pad] : 32);
+    }
+    buf[len] = (char)0;
+    *dest = pb_bstr_alloc(buf, (unsigned int)len);
+    free(buf);
+    if (old) SysFreeString(old);
+}
+
+/* ERASE: zero-out a static array (non-string) or NULL-out string elements */
+void pb_erase_array(char* base, int elem_size, int count, int is_string) {
+    if (is_string) {
+        char** p = (char**)base;
+        int i;
+        for (i = 0; i < count; i++) p[i] = NULL;
+    } else {
+        memset(base, 0, (size_t)elem_size * (size_t)count);
+    }
+}
+
+/* LSET (buffer target, e.g. STRING * N fixed-length var): left-justify src, pad spaces */
+void pb_lset_buf(char* dest, const char* src, int len) {
+    int src_len = src ? (int)strlen(src) : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        dest[i] = (i < src_len) ? src[i] : 32;
+    }
+    dest[len] = (char)0;
+}
+
+/* RSET (buffer target): right-justify src, pad spaces */
+void pb_rset_buf(char* dest, const char* src, int len) {
+    int src_len = src ? (int)strlen(src) : 0;
+    int pad = (src_len < len) ? (len - src_len) : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        dest[i] = (i < pad) ? 32 : ((i - pad) < src_len ? src[i - pad] : 32);
+    }
+    dest[len] = (char)0;
+}
+
+/* RESET: close all open files */
+/* RESET: close all open files */
+void pb_reset(void) {
+    for (int i = 1; i < MAX_FILE_HANDLES; i++) {
+        if (file_handles[i]) {
+            fclose(file_handles[i]);
+            file_handles[i] = NULL;
+        }
+    }
+}
+
+/* FLUSH: flush file buffers to disk */
+void pb_flush(int filenum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        fflush(file_handles[filenum]);
+    }
+}
+
+/* NAME: rename a file */
+int pb_name(const char* old_path, const char* new_path) {
+    return rename(old_path, new_path);
+}
+
+/* WRITE # support: per-file "first field" tracking */
+static int write_first_field[MAX_FILE_HANDLES] = {0};
+void pb_write_file_begin(int filenum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES) write_first_field[filenum] = 1;
+}
+void pb_write_file_str(int filenum, const char* s) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (!write_first_field[filenum]) fputc(',', file_handles[filenum]);
+        write_first_field[filenum] = 0;
+        fputc(34, file_handles[filenum]); /* double quote */
+        fputs(s ? s : "", file_handles[filenum]);
+        fputc(34, file_handles[filenum]);
+    }
+}
+void pb_write_file_int(int filenum, long v) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (!write_first_field[filenum]) fputc(',', file_handles[filenum]);
+        write_first_field[filenum] = 0;
+        fprintf(file_handles[filenum], "%ld", v);
+    }
+}
+void pb_write_file_dbl(int filenum, double v) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (!write_first_field[filenum]) fputc(',', file_handles[filenum]);
+        write_first_field[filenum] = 0;
+        fprintf(file_handles[filenum], "%.14g", v);
+    }
+}
+void pb_write_file_newline(int filenum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        fputs("\r\n", file_handles[filenum]);
+        write_first_field[filenum] = 1;
+        fflush(file_handles[filenum]);
+    }
+}
+
+/* SEEK: position file pointer (PB is 1-based) */
+void pb_seek(int filenum, long pos) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        fseek(file_handles[filenum], (long)(pos - 1), SEEK_SET);
+    }
+}
+
+/* LOCK/UNLOCK: lock a byte range of the file (C runtime _locking) */
+void pb_lock(int filenum, long record, long length) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (record > 0) fseek(file_handles[filenum], (long)(record - 1), SEEK_SET);
+        long nb = (length > 0) ? length : 1;
+        _locking(_fileno(file_handles[filenum]), _LK_LOCK, nb);
+    }
+}
+void pb_unlock(int filenum, long record, long length) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (record > 0) fseek(file_handles[filenum], (long)(record - 1), SEEK_SET);
+        long nb = (length > 0) ? length : 1;
+        _locking(_fileno(file_handles[filenum]), _LK_UNLCK, nb);
+    }
+}

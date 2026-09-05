@@ -181,7 +181,7 @@ pub enum Statement {
     LineInputFile(LineInputFileStmt),
     Kill(Expr),
     Block(Vec<Statement>), // multiple statements from one parse (e.g. LOCAL a, b)
-    Noop,                  // for empty stubs, no-ops
+    Noop(String, usize),   // (unimplemented statement name, source line)
 }
 
 #[derive(Debug, Clone)]

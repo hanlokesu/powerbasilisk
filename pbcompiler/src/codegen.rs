@@ -34,6 +34,29 @@ pub fn compile(
     compiler.debug_mode = opts.debug_mode;
     compiler.pp_constants = pp_constants.clone();
     compiler.compile_program(program)?;
+    // Report statements that were silently dropped (no code generated)
+    if !compiler.warnings.is_empty() {
+        let warn_path = output_path.with_extension("unimplemented.log");
+        let mut report = String::new();
+        report.push_str("PowerBasilisk Enhanced - unimplemented / silently-dropped statement report\n");
+        report.push_str(&format!(
+            "{} statement(s) parsed but produced NO code. These make the .exe run but do nothing.\n",
+            compiler.warnings.len()
+        ));
+        report.push_str("Check each line below against your source:\n");
+        for w in &compiler.warnings {
+            report.push_str("  ");
+            report.push_str(w);
+            report.push('\n');
+        }
+        std::fs::write(&warn_path, &report)
+            .map_err(|e| PbError::io(format!("Failed to write unimplemented report: {}", e)))?;
+        eprintln!(
+            "[pbcompiler] WARNING: {} statement(s) not implemented (silently dropped) - see {}",
+            compiler.warnings.len(),
+            warn_path.display()
+        );
+    }
 
     let ir = compiler.module.emit();
 
@@ -93,7 +116,7 @@ pub fn compile(
         );
         obj_paths.push(split_obj_path);
     } else {
-        // No split needed — compile as one unit
+        // No split needed → compile as one unit
         let obj_path = output_path.with_extension("obj");
         compile_with_clang(&ll_path, &obj_path, "-O2", &opts.target)?;
         eprintln!("[pbcompiler] Wrote object: {}", obj_path.display());
@@ -375,7 +398,6 @@ fn link_exe(obj_paths: &[&Path], exe_path: &Path, opts: &CompileOptions) -> PbRe
     if let Some(ref lib_dir) = opts.lib_dir {
         args.push(format!("-L{}", lib_dir));
         args.extend([
-            "-lui".to_string(),
             "-lkernel32".to_string(),
             "-luser32".to_string(),
             "-lgdi32".to_string(),
@@ -777,6 +799,9 @@ struct Compiler {
 
     // Preprocessor %CONSTANTS (name → value)
     pp_constants: HashMap<String, i64>,
+
+    // Unimplemented-statement warnings collected during codegen (name / line)
+    warnings: Vec<String>,
 }
 
 /// Tracks a global variable or array that will become a session struct field.
@@ -902,6 +927,7 @@ impl Compiler {
             session_fields: Vec::new(),
             debug_mode: false,
             pp_constants: HashMap::new(),
+            warnings: Vec::new(),
         }
     }
 
@@ -921,7 +947,7 @@ impl Compiler {
         }
     }
 
-    /// IR type for a struct field — FixedString becomes [N x i8] instead of ptr
+    /// IR type for a struct field → FixedString becomes [N x i8] instead of ptr
     fn ir_type_for_field(pb_type: &PbType) -> IrType {
         match pb_type {
             PbType::FixedString(n) => IrType::Array(*n, Box::new(IrType::I8)),
@@ -1154,9 +1180,47 @@ impl Compiler {
         self.module
             .declare_function("_access", &IrType::I32, &[IrType::Ptr, IrType::I32], false);
         self.module
+            .declare_function("pb_lset", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
+        self.module
+            .declare_function("pb_rset", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
+        self.module
+            .declare_function("pb_lset_buf", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
+        self.module
+            .declare_function("pb_rset_buf", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
+        self.module
+            .declare_function("pb_erase_array", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32], false);
+        self.module
+            .declare_function("pb_reset", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_flush", &IrType::Void, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_name", &IrType::I32, &[IrType::Ptr, IrType::Ptr], false);
+        self.module
+            .declare_function("pb_write_file_begin", &IrType::Void, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_write_file_str", &IrType::Void, &[IrType::I32, IrType::Ptr], false);
+        self.module
+            .declare_function("pb_write_file_int", &IrType::Void, &[IrType::I32, IrType::I64], false);
+        self.module
+            .declare_function("pb_write_file_dbl", &IrType::Void, &[IrType::I32, IrType::Double], false);
+        self.module
+            .declare_function("pb_write_file_newline", &IrType::Void, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_seek", &IrType::Void, &[IrType::I32, IrType::I64], false);
+        self.module
+            .declare_function("pb_lock", &IrType::Void, &[IrType::I32, IrType::I64, IrType::I64], false);
+        self.module
+            .declare_function("pb_unlock", &IrType::Void, &[IrType::I32, IrType::I64, IrType::I64], false);
+        self.module
             .declare_dllimport("Sleep", &IrType::Void, &[IrType::I32]);
         self.module
             .declare_dllimport("GetCommandLineA", &IrType::Ptr, &[]);
+        self.module
+            .declare_dllimport("MessageBoxA", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::I32]);
+        self.module
+            .declare_dllimport("ShellExecuteA", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::I32]);
+        self.module
+            .declare_dllimport("GetCurrentDirectoryA", &IrType::I32, &[IrType::I32, IrType::Ptr]);
 
         // Empty string constant
         let (empty_name, _) = self.module.add_string_constant("");
@@ -1204,11 +1268,11 @@ impl Compiler {
                 }
                 TopLevel::GlobalDecl(vd) => {
                     if vd.is_array {
-                        // GLOBAL arr() AS TYPE — remember for later DIM with bounds
+                        // GLOBAL arr() AS TYPE → remember for later DIM with bounds
                         self.pending_global_arrays
                             .insert(normalize_name(&vd.name), vd.pb_type.clone());
                     } else if future_arrays.contains(&normalize_name(&vd.name)) {
-                        // Will be DIMmed as array later — treat as pending array
+                        // Will be DIMmed as array later → treat as pending array
                         self.pending_global_arrays
                             .insert(normalize_name(&vd.name), vd.pb_type.clone());
                     } else {
@@ -1228,7 +1292,7 @@ impl Compiler {
                 TopLevel::DimDecl(dim) => {
                     let name = normalize_name(&dim.name);
                     if !dim.bounds.is_empty() {
-                        // Top-level DIM with bounds — declare as global array
+                        // Top-level DIM with bounds → declare as global array
                         let pb_type = if let Some(pt) = self.pending_global_arrays.get(&name) {
                             pt.clone()
                         } else {
@@ -1272,7 +1336,7 @@ impl Compiler {
             match item {
                 TopLevel::FunctionDecl(fd) => {
                     if let Err(e) = self.compile_function(fd) {
-                        eprintln!("Codegen warning: FUNCTION {} — {}", fd.name, e);
+                        eprintln!("Codegen warning: FUNCTION {} → {}", fd.name, e);
                         codegen_errors += 1;
                         // Emit stub declaration so call sites don't fail
                         let name = normalize_name(&fd.name);
@@ -1288,7 +1352,7 @@ impl Compiler {
                 }
                 TopLevel::SubDecl(sd) => {
                     if let Err(e) = self.compile_sub(sd) {
-                        eprintln!("Codegen warning: SUB {} — {}", sd.name, e);
+                        eprintln!("Codegen warning: SUB {} → {}", sd.name, e);
                         codegen_errors += 1;
                         // Emit stub declaration so call sites don't fail
                         let name = normalize_name(&sd.name);
@@ -1345,7 +1409,7 @@ impl Compiler {
                 let (cat, _) = self.module.add_string_constant("BUILD");
                 let (msg, _) = self
                     .module
-                    .add_string_constant("Debug mode enabled — modal and state logging active");
+                    .add_string_constant("Debug mode enabled → modal and state logging active");
                 fb.call_void(
                     "pb_debug_log_msg",
                     &[Val::new(cat, IrType::Ptr), Val::new(msg, IrType::Ptr)],
@@ -1468,7 +1532,7 @@ impl Compiler {
         let name = normalize_name(&ds.name);
 
         if ds.lib.is_none() {
-            // Forward declaration within same compilation unit — skip.
+            // Forward declaration within same compilation unit → skip.
             // The actual definition will be registered from FunctionDecl/SubDecl.
             return;
         }
@@ -1586,7 +1650,7 @@ impl Compiler {
     // ========== Function/Sub compilation ==========
 
     /// Returns true if the function/sub should be nooped (compiled as an empty stub).
-    /// EZLIB/EZGUI functions are part of the old Win32 UI — the Electron frontend handles all UI now.
+    /// EZLIB/EZGUI functions are part of the old Win32 UI → the Electron frontend handles all UI now.
     fn should_noop_function(name: &str) -> bool {
         name.starts_with("EZLIB_") || name.starts_with("EZGUI_")
     }
@@ -1612,7 +1676,7 @@ impl Compiler {
         let (fn_name_str, _) = self.module.add_string_constant(&name);
         fb.call_void("pb_debug_enter", &[Val::new(fn_name_str, IrType::Ptr)]);
 
-        // Noop EZLIB/EZGUI functions — old Win32 UI, replaced by Electron
+        // Noop EZLIB/EZGUI functions → old Win32 UI, replaced by Electron
         if Self::should_noop_function(&name) {
             let ret_ir = Self::ir_type_for(&fd.return_type);
             if ret_ir == IrType::Ptr {
@@ -1693,7 +1757,7 @@ impl Compiler {
         let (fn_name_str, _) = self.module.add_string_constant(&name);
         fb.call_void("pb_debug_enter", &[Val::new(fn_name_str, IrType::Ptr)]);
 
-        // Noop EZLIB/EZGUI subs — old Win32 UI, replaced by Electron
+        // Noop EZLIB/EZGUI subs → old Win32 UI, replaced by Electron
         if Self::should_noop_function(&name) {
             fb.ret_void();
             self.module.add_function_body(fb.finish());
@@ -1923,7 +1987,7 @@ impl Compiler {
                 Ok(())
             }
             Statement::ExitSelect => {
-                // EXIT SELECT — in compiled code, CASE blocks don't fall through,
+                // EXIT SELECT → in compiled code, CASE blocks don't fall through,
                 // so this is effectively a no-op (control goes to end of select)
                 Ok(())
             }
@@ -1968,7 +2032,13 @@ impl Compiler {
                 fb.call_void("pb_kill", &[path]);
                 Ok(())
             }
-            Statement::Noop => Ok(()),
+            Statement::Noop(name, line) => {
+                self.warnings.push(format!(
+                    "line {}: statement `{}` parsed but NOT implemented (NOOP) - no code generated",
+                    line, name
+                ));
+                Ok(())
+            }
         }
     }
 
@@ -1999,7 +2069,7 @@ impl Compiler {
                         fb.store(&converted, &ptr);
                     }
                 } else {
-                    // Auto-declare local — use original name for type inference
+                    // Auto-declare local → use original name for type inference
                     let pb_type = infer_type_from_name(orig_name);
                     let ir_type = Self::ir_type_for(&pb_type);
                     let ptr = fb.alloca(&ir_type);
@@ -2110,7 +2180,7 @@ impl Compiler {
                 self.declare_global_array(&name, &pb_type, &dim.bounds);
                 return Ok(());
             }
-            // Already declared as global array — skip
+            // Already declared as global array → skip
             if self.symbols.lookup_array(&name).is_some() {
                 return Ok(());
             }
@@ -2237,6 +2307,186 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "MSGBOX" => {
+                // MSGBOX text$ [, style& [, title$]] -> MessageBoxA(NULL, text, title, style)
+                if !call.args.is_empty() {
+                    let text = self.compile_expr(fb, &call.args[0])?;
+                    let style = if call.args.len() > 1 {
+                        let sv = self.compile_expr(fb, &call.args[1])?;
+                        self.to_i32(fb, &sv)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    let title = if call.args.len() > 2 {
+                        self.compile_expr(fb, &call.args[2])?
+                    } else {
+                        Val::new(self.empty_string_name.clone(), IrType::Ptr)
+                    };
+                    let null = Val::new("null".to_string(), IrType::Ptr);
+                    if self.module.is_32bit() {
+                        fb.call_stdcall(&IrType::I32, "MessageBoxA", &[null.clone(), text.clone(), title.clone(), style.clone()]);
+                    } else {
+                        fb.call(&IrType::I32, "MessageBoxA", &[null, text, title, style]);
+                    }
+                }
+                return Ok(());
+            }
+            "SHELL" => {
+                // SHELL command$ [, mode&] -> ShellExecuteA(NULL, "open", command, NULL, NULL, mode)
+                if !call.args.is_empty() {
+                    let cmd = self.compile_expr(fb, &call.args[0])?;
+                    let mode = if call.args.len() > 1 {
+                        let sv = self.compile_expr(fb, &call.args[1])?;
+                        self.to_i32(fb, &sv)
+                    } else {
+                        fb.const_i32(1) // SW_SHOWNORMAL
+                    };
+                    let null = Val::new("null".to_string(), IrType::Ptr);
+                    let (open_name, _) = self.module.add_string_constant("open");
+                    let open = Val::new(open_name, IrType::Ptr);
+                    if self.module.is_32bit() {
+                        fb.call_stdcall(&IrType::Ptr, "ShellExecuteA", &[null.clone(), open.clone(), cmd.clone(), null.clone(), null.clone(), mode.clone()]);
+                    } else {
+                        fb.call(&IrType::Ptr, "ShellExecuteA", &[null.clone(), open.clone(), cmd.clone(), null.clone(), null.clone(), mode]);
+                    }
+                }
+                return Ok(());
+            }
+            "REPLACE" => {
+                // REPLACE old$ WITH new$ IN target$  → pb_replace(&target, old, new)
+                if call.args.len() >= 3 {
+                    let old = self.compile_expr(fb, &call.args[1])?;
+                    let new_s = self.compile_expr(fb, &call.args[2])?;
+                    let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    fb.call_void("pb_replace", &[ptr, old, new_s]);
+                }
+                return Ok(());
+            }
+            "ERASE" => {
+                // ERASE array - zero / null all elements
+                if let Some(arg) = call.args.first() {
+                    if let Expr::Variable(vname) = arg {
+                        let arr_name = normalize_name(vname);
+                        if let Some(arr_info) = self.symbols.lookup_array(&arr_name).cloned() {
+                            let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                            let elem_size = match &arr_info.elem_ir_type {
+                                IrType::I8 | IrType::I1 => 1,
+                                IrType::I16 => 2,
+                                IrType::I32 | IrType::Float => 4,
+                                IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                                _ => 4,
+                            };
+                            let is_string = if arr_info.elem_ir_type == IrType::Ptr { 1 } else { 0 };
+                            fb.call_void("pb_erase_array", &[
+                                base,
+                                fb.const_i32(elem_size),
+                                fb.const_i32(arr_info.total_elements as i32),
+                                fb.const_i32(is_string),
+                            ]);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "LSET" | "RSET" => {
+                // LSET target$ = value  → pb_lset(&target, value, len)
+                if call.args.len() >= 2 {
+                    let value = self.compile_expr(fb, &call.args[1])?;
+                    let (ptr, pb_type) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let len = match pb_type {
+                        PbType::FixedString(n) => n as i32,
+                        _ => 256,
+                    };
+                    let is_fixed = matches!(pb_type, PbType::FixedString(_));
+                    let len_const = fb.const_i32(len);
+                    if is_fixed {
+                        if name == "LSET" {
+                            fb.call_void("pb_lset_buf", &[ptr, value, len_const]);
+                        } else {
+                            fb.call_void("pb_rset_buf", &[ptr, value, len_const]);
+                        }
+                    } else if name == "LSET" {
+                        fb.call_void("pb_lset", &[ptr, value, len_const]);
+                    } else {
+                        fb.call_void("pb_rset", &[ptr, value, len_const]);
+                    }
+                }
+                return Ok(());
+            }
+            "RESET" => {
+                fb.call_void("pb_reset", &[]);
+                return Ok(());
+            }
+            "FLUSH" => {
+                if let Some(arg) = call.args.first() {
+                    let sv = self.compile_expr(fb, arg)?;
+                    let f = self.to_i32(fb, &sv);
+                    fb.call_void("pb_flush", &[f]);
+                }
+                return Ok(());
+            }
+            "NAME" => {
+                if call.args.len() >= 2 {
+                    let old = self.compile_expr(fb, &call.args[0])?;
+                    let new_s = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_name", &[old, new_s]);
+                }
+                return Ok(());
+            }
+            "WRITE" => {
+                if call.args.len() >= 1 {
+                    let sv0 = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &sv0);
+                    fb.call_void("pb_write_file_begin", &[f.clone()]);
+                    for arg in call.args.iter().skip(1) {
+                        let v = self.compile_expr(fb, arg)?;
+                        match &v.ty {
+                            IrType::I32 | IrType::I64 => {
+                                let vi = self.to_i64(fb, &v);
+                                fb.call_void("pb_write_file_int", &[f.clone(), vi]);
+                            }
+                            IrType::Double => fb.call_void("pb_write_file_dbl", &[f.clone(), v]),
+                            _ => fb.call_void("pb_write_file_str", &[f.clone(), v]),
+                        }
+                    }
+                    fb.call_void("pb_write_file_newline", &[f]);
+                }
+                return Ok(());
+            }
+            "SEEK" => {
+                if call.args.len() >= 2 {
+                    let sv0 = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &sv0);
+                    let sv1 = self.compile_expr(fb, &call.args[1])?;
+                    let pos = self.to_i64(fb, &sv1);
+                    fb.call_void("pb_seek", &[f, pos]);
+                }
+                return Ok(());
+            }
+            "LOCK" | "UNLOCK" => {
+                if call.args.len() >= 1 {
+                    let sv0 = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &sv0);
+                    let rec = if call.args.len() >= 2 {
+                        let sv1 = self.compile_expr(fb, &call.args[1])?;
+                        self.to_i64(fb, &sv1)
+                    } else {
+                        fb.const_i64(0)
+                    };
+                    let len = if call.args.len() >= 3 {
+                        let sv2 = self.compile_expr(fb, &call.args[2])?;
+                        self.to_i64(fb, &sv2)
+                    } else {
+                        fb.const_i64(0)
+                    };
+                    if name == "LOCK" {
+                        fb.call_void("pb_lock", &[f, rec, len]);
+                    } else {
+                        fb.call_void("pb_unlock", &[f, rec, len]);
+                    }
+                }
+                return Ok(());
+            }
             _ => {}
         }
 
@@ -2259,7 +2509,15 @@ impl Compiler {
             return Ok(());
         }
 
-        Ok(()) // Unknown sub — skip
+        self.warnings.push(format!(
+
+            "line {}: statement `{}` has no codegen implementation - skipped (may produce an empty exe)",
+
+            call.line, call.name
+
+        ));
+
+        Ok(())
     }
 
     fn compile_call_args(
@@ -2314,7 +2572,7 @@ impl Compiler {
         for i in args.len()..func_info.params.len() {
             let param = &func_info.params[i];
             if !param.is_optional {
-                break; // Non-optional param missing — stop (caller error, handled at runtime)
+                break; // Non-optional param missing → stop (caller error, handled at runtime)
             }
             let default_val = if Self::is_string_pb(&param.pb_type) {
                 Val::new(self.empty_string_name.clone(), IrType::Ptr)
@@ -2879,7 +3137,7 @@ impl Compiler {
     // ========== GOSUB / RETURN / GOTO / LABEL codegen ==========
 
     fn compile_label(&mut self, fb: &mut FunctionBuilder, name: &str) -> PbResult<()> {
-        // If name matches a known SUB/FUNCTION, it was misparsed — emit a call instead
+        // If name matches a known SUB/FUNCTION, it was misparsed → emit a call instead
         let norm = normalize_name(name);
         if self.functions.contains_key(&norm) {
             let info = self.functions.get(&norm).unwrap().clone();
@@ -2979,7 +3237,7 @@ impl Compiler {
         let ret_addr = fb.load(&IrType::I32, &ctx.ret_addr_ptr);
         fb.switch(&ret_addr, &bad_label, &cases);
 
-        // Bad label — unreachable but needed by LLVM
+        // Bad label → unreachable but needed by LLVM
         fb.label(&bad_label);
         // Just fall through (will hit the function's normal return)
 
@@ -3006,11 +3264,22 @@ impl Compiler {
                     "TIME" if orig_name.ends_with('$') => {
                         return Ok(fb.call(&IrType::Ptr, "pb_time", &[]));
                     }
+                    "CURDIR" if orig_name.ends_with('$') => {
+                        let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));
+                        let len_const = fb.const_i32(1024);
+                        if self.module.is_32bit() {
+                            fb.call_stdcall(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                        } else {
+                            fb.call(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                        }
+                        let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
+                        return Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len]));
+                    }
                     _ => {}
                 }
                 let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
                 let info = self.symbols.lookup(&name).unwrap();
-                // FixedString (ASCIIZ*N): alloca IS the buffer — create heap copy
+                // FixedString (ASCIIZ*N): alloca IS the buffer → create heap copy
                 // (stack buffer would be dangling after function return)
                 if matches!(info.pb_type, PbType::FixedString(_)) {
                     let buf_ptr = Val::new(ptr_name, IrType::Ptr);
@@ -3065,6 +3334,10 @@ impl Compiler {
                         Ok(fb.call(&info.ret_type, &info.ir_name, &compiled_args))
                     }
                 } else {
+                    self.warnings.push(format!(
+                        "expression function `{}` not implemented - replaced with 0",
+                        name
+                    ));
                     Ok(fb.const_i32(0)) // Unknown function
                 }
             }
@@ -3102,7 +3375,7 @@ impl Compiler {
                     }
                 }
                 let (field_ptr, field_pb) = self.compile_lvalue_ptr(fb, expr)?;
-                // FixedString TYPE fields: the buffer address IS the string —
+                // FixedString TYPE fields: the buffer address IS the string →
                 // don't load from the buffer (that would read buffer content as a pointer)
                 if matches!(field_pb, PbType::FixedString(_)) {
                     return Ok(field_ptr);
@@ -3131,12 +3404,12 @@ impl Compiler {
                 }
             }
             Expr::Varptr(inner) => {
-                // VARPTR(var) or VARPTR(arr(idx)) — return address as i32
+                // VARPTR(var) or VARPTR(arr(idx)) → return address as i32
                 let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, inner)?;
                 Ok(fb.ptrtoint(&ptr))
             }
             Expr::ByvalOverride(inner) => {
-                // BYVAL override outside of call args context — just compile inner expr
+                // BYVAL override outside of call args context → just compile inner expr
                 self.compile_expr(fb, inner)
             }
             Expr::BinaryOp(op, left, right) => {
@@ -3596,8 +3869,32 @@ impl Compiler {
                     fb.select(&exists, &neg_one, &zero2)
                 }))
             }
+            "ISFILE" => {
+                // ISFILE(path$) → returns -1 (true) if the file exists, 0 if not (PB9+ alias of EXIST)
+                let path = self.compile_expr(fb, &args[0]);
+                Some(path.map(|p| {
+                    let zero = fb.const_i32(0);
+                    let result = fb.call(&IrType::I32, "_access", &[p, zero.clone()]);
+                    let exists = fb.icmp("eq", &result, &zero);
+                    let neg_one = fb.const_i32(-1);
+                    let zero2 = fb.const_i32(0);
+                    fb.select(&exists, &neg_one, &zero2)
+                }))
+            }
+            "CURDIR" => {
+                // CURDIR$ → current working directory, returned as a PB string
+                let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));
+                let len_const = fb.const_i32(1024);
+                if self.module.is_32bit() {
+                    fb.call_stdcall(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                } else {
+                    fb.call(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                }
+                let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
+                Some(Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len])))
+            }
             "SIZEOF" => {
-                // SIZEOF(var) — return size in bytes
+                // SIZEOF(var) → return size in bytes
                 // For ASCIIZ*N / FixedString(N): returns N
                 // For TYPE variables: returns struct size
                 // For scalar types: returns type size
@@ -3656,12 +3953,12 @@ impl Compiler {
                 Some(var_name.map(|v| fb.call(&IrType::Ptr, "pb_environ", &[v])))
             }
             "EXE" => {
-                // EXE.PATH$ and EXE.NAME$ — handled via the TypeMember path
+                // EXE.PATH$ and EXE.NAME$ → handled via the TypeMember path
                 // This shouldn't normally be reached but as fallback return empty
                 Some(Ok(fb.call(&IrType::Ptr, "pb_exe_path", &[])))
             }
             "STRPTR" => {
-                // STRPTR(s$) — returns pointer to string data as integer
+                // STRPTR(s$) → returns pointer to string data as integer
                 let s = self.compile_expr(fb, &args[0]);
                 Some(s.map(|s| {
                     // The string value IS the pointer to char data
@@ -3669,7 +3966,7 @@ impl Compiler {
                 }))
             }
             "VARPTR" => {
-                // VARPTR(v) — returns address of variable as integer
+                // VARPTR(v) → returns address of variable as integer
                 match &args[0] {
                     Expr::Variable(orig_name) => {
                         let vname = normalize_name(orig_name);
@@ -4033,7 +4330,7 @@ impl Compiler {
             let len_i32 = self.to_i32(fb, &length);
             Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[src, len_i32]))
         } else {
-            // MID$(s, start) — rest of string
+            // MID$(s, start) → rest of string
             let src_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&src));
             Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[src, src_len]))
         }
@@ -4376,10 +4673,10 @@ impl Compiler {
 
         // Get the character byte
         let char_byte = if char_val.ty == IrType::Ptr {
-            // STRING$(n, "X") — use first char
+            // STRING$(n, "X") → use first char
             fb.load(&IrType::I8, &char_val)
         } else {
-            // STRING$(n, code) — use as char code
+            // STRING$(n, code) → use as char code
             let code_i32 = self.to_i32(fb, &char_val);
             fb.trunc(&code_i32, &IrType::I8)
         };
@@ -4542,7 +4839,7 @@ impl Compiler {
     /// Declare a global array and register it in the symbol table.
     fn declare_global_array(&mut self, name: &str, pb_type: &PbType, bounds: &[DimBound]) {
         let norm_name = normalize_name(name);
-        // Already declared — skip
+        // Already declared → skip
         if self.symbols.lookup_array(&norm_name).is_some() {
             return;
         }
@@ -4740,7 +5037,7 @@ impl Compiler {
         if let Some(info) = self.symbols.lookup(name) {
             return info.ptr_name.clone();
         }
-        // Auto-allocate — use original_name (with type suffix) for type inference
+        // Auto-allocate → use original_name (with type suffix) for type inference
         let pb_type = infer_type_from_name(original_name);
         let ir_type = Self::ir_type_for(&pb_type);
         let ptr = fb.alloca(&ir_type);
