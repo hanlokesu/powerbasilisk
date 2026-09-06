@@ -1,5 +1,10 @@
 # PowerBasilisk Enhanced
 
+[![CI](https://github.com/hanlokesu/powerbasilisk/actions/workflows/ci.yml/badge.svg)](https://github.com/hanlokesu/powerbasilisk/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/hanlokesu/powerbasilisk)](https://github.com/hanlokesu/powerbasilisk/releases)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
+
+
 An enhanced 64-bit PowerBASIC compiler, forked from
 [`benstopics/powerbasilisk`](https://github.com/benstopics/powerbasilisk).
 
