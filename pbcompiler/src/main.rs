@@ -120,7 +120,7 @@ fn detect_sdk_lib_dir() -> Option<String> {
             if !um64.is_dir() {
                 continue;
             }
-            if best.as_ref().map_or(true, |(bv, _)| ver > *bv) {
+            if best.as_ref().is_none_or(|(bv, _)| ver > *bv) {
                 best = Some((ver, um64.to_string_lossy().into_owned()));
             }
         }

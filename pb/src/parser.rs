@@ -924,13 +924,12 @@ impl Parser {
             // body encountering the enclosing function's END SUB).
             if self.peek() == &Token::End {
                 match self.peek_at(1) {
-                    Some(&Token::Sub) | Some(&Token::Function) => {
+                    Some(&Token::Sub) | Some(&Token::Function)
                         if !terminators
                             .iter()
-                            .any(|t| matches!(t, BodyEnd::EndSub | BodyEnd::EndFunction))
-                        {
-                            break; // don't consume, let parent handle it
-                        }
+                            .any(|t| matches!(t, BodyEnd::EndSub | BodyEnd::EndFunction)) =>
+                    {
+                        break; // don't consume, let parent handle it
                     }
                     _ => {}
                 }
@@ -1487,7 +1486,7 @@ impl Parser {
 
                 if matches!(name_upper.as_str(), "LSET" | "RSET") {
                     self.advance(); // consume LSET/RSET
-                    // LSET target$ = value  (and RSET)
+                                    // LSET target$ = value  (and RSET)
                     let target = self.parse_primary()?;
                     if self.peek() == &Token::Eq {
                         self.advance();
@@ -1533,7 +1532,9 @@ impl Parser {
                     }));
                 }
                 // LOCK / UNLOCK #filenum [, record& [, length&]]
-                if (name_upper == "LOCK" || name_upper == "UNLOCK") && self.peek_at(1) == Some(&Token::Hash) {
+                if (name_upper == "LOCK" || name_upper == "UNLOCK")
+                    && self.peek_at(1) == Some(&Token::Hash)
+                {
                     let stmt_name = name_upper.clone();
                     self.advance(); // consume LOCK/UNLOCK
                     self.advance(); // consume #

@@ -38,7 +38,9 @@ pub fn compile(
     if !compiler.warnings.is_empty() {
         let warn_path = output_path.with_extension("unimplemented.log");
         let mut report = String::new();
-        report.push_str("PowerBasilisk Enhanced - unimplemented / silently-dropped statement report\n");
+        report.push_str(
+            "PowerBasilisk Enhanced - unimplemented / silently-dropped statement report\n",
+        );
         report.push_str(&format!(
             "{} statement(s) parsed but produced NO code. These make the .exe run but do nothing.\n",
             compiler.warnings.len()
@@ -1179,16 +1181,36 @@ impl Compiler {
             .declare_function("_chdir", &IrType::I32, &[IrType::Ptr], false);
         self.module
             .declare_function("_access", &IrType::I32, &[IrType::Ptr, IrType::I32], false);
-        self.module
-            .declare_function("pb_lset", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
-        self.module
-            .declare_function("pb_rset", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
-        self.module
-            .declare_function("pb_lset_buf", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
-        self.module
-            .declare_function("pb_rset_buf", &IrType::Void, &[IrType::Ptr, IrType::Ptr, IrType::I32], false);
-        self.module
-            .declare_function("pb_erase_array", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32], false);
+        self.module.declare_function(
+            "pb_lset",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_rset",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_lset_buf",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_rset_buf",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_erase_array",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_reset", &IrType::Void, &[], false);
         self.module
@@ -1197,30 +1219,70 @@ impl Compiler {
             .declare_function("pb_name", &IrType::I32, &[IrType::Ptr, IrType::Ptr], false);
         self.module
             .declare_function("pb_write_file_begin", &IrType::Void, &[IrType::I32], false);
-        self.module
-            .declare_function("pb_write_file_str", &IrType::Void, &[IrType::I32, IrType::Ptr], false);
-        self.module
-            .declare_function("pb_write_file_int", &IrType::Void, &[IrType::I32, IrType::I64], false);
-        self.module
-            .declare_function("pb_write_file_dbl", &IrType::Void, &[IrType::I32, IrType::Double], false);
-        self.module
-            .declare_function("pb_write_file_newline", &IrType::Void, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_write_file_str",
+            &IrType::Void,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_write_file_int",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_write_file_dbl",
+            &IrType::Void,
+            &[IrType::I32, IrType::Double],
+            false,
+        );
+        self.module.declare_function(
+            "pb_write_file_newline",
+            &IrType::Void,
+            &[IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_seek", &IrType::Void, &[IrType::I32, IrType::I64], false);
-        self.module
-            .declare_function("pb_lock", &IrType::Void, &[IrType::I32, IrType::I64, IrType::I64], false);
-        self.module
-            .declare_function("pb_unlock", &IrType::Void, &[IrType::I32, IrType::I64, IrType::I64], false);
+        self.module.declare_function(
+            "pb_lock",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_unlock",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64, IrType::I64],
+            false,
+        );
         self.module
             .declare_dllimport("Sleep", &IrType::Void, &[IrType::I32]);
         self.module
             .declare_dllimport("GetCommandLineA", &IrType::Ptr, &[]);
-        self.module
-            .declare_dllimport("MessageBoxA", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::I32]);
-        self.module
-            .declare_dllimport("ShellExecuteA", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::I32]);
-        self.module
-            .declare_dllimport("GetCurrentDirectoryA", &IrType::I32, &[IrType::I32, IrType::Ptr]);
+        self.module.declare_dllimport(
+            "MessageBoxA",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::I32],
+        );
+        self.module.declare_dllimport(
+            "ShellExecuteA",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+        );
+        self.module.declare_dllimport(
+            "GetCurrentDirectoryA",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+        );
 
         // Empty string constant
         let (empty_name, _) = self.module.add_string_constant("");
@@ -2324,7 +2386,11 @@ impl Compiler {
                     };
                     let null = Val::new("null".to_string(), IrType::Ptr);
                     if self.module.is_32bit() {
-                        fb.call_stdcall(&IrType::I32, "MessageBoxA", &[null.clone(), text.clone(), title.clone(), style.clone()]);
+                        fb.call_stdcall(
+                            &IrType::I32,
+                            "MessageBoxA",
+                            &[null.clone(), text.clone(), title.clone(), style.clone()],
+                        );
                     } else {
                         fb.call(&IrType::I32, "MessageBoxA", &[null, text, title, style]);
                     }
@@ -2345,9 +2411,31 @@ impl Compiler {
                     let (open_name, _) = self.module.add_string_constant("open");
                     let open = Val::new(open_name, IrType::Ptr);
                     if self.module.is_32bit() {
-                        fb.call_stdcall(&IrType::Ptr, "ShellExecuteA", &[null.clone(), open.clone(), cmd.clone(), null.clone(), null.clone(), mode.clone()]);
+                        fb.call_stdcall(
+                            &IrType::Ptr,
+                            "ShellExecuteA",
+                            &[
+                                null.clone(),
+                                open.clone(),
+                                cmd.clone(),
+                                null.clone(),
+                                null.clone(),
+                                mode.clone(),
+                            ],
+                        );
                     } else {
-                        fb.call(&IrType::Ptr, "ShellExecuteA", &[null.clone(), open.clone(), cmd.clone(), null.clone(), null.clone(), mode]);
+                        fb.call(
+                            &IrType::Ptr,
+                            "ShellExecuteA",
+                            &[
+                                null.clone(),
+                                open.clone(),
+                                cmd.clone(),
+                                null.clone(),
+                                null.clone(),
+                                mode,
+                            ],
+                        );
                     }
                 }
                 return Ok(());
@@ -2364,26 +2452,31 @@ impl Compiler {
             }
             "ERASE" => {
                 // ERASE array - zero / null all elements
-                if let Some(arg) = call.args.first() {
-                    if let Expr::Variable(vname) = arg {
-                        let arr_name = normalize_name(vname);
-                        if let Some(arr_info) = self.symbols.lookup_array(&arr_name).cloned() {
-                            let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
-                            let elem_size = match &arr_info.elem_ir_type {
-                                IrType::I8 | IrType::I1 => 1,
-                                IrType::I16 => 2,
-                                IrType::I32 | IrType::Float => 4,
-                                IrType::I64 | IrType::Double | IrType::Ptr => 8,
-                                _ => 4,
-                            };
-                            let is_string = if arr_info.elem_ir_type == IrType::Ptr { 1 } else { 0 };
-                            fb.call_void("pb_erase_array", &[
+                if let Some(Expr::Variable(vname)) = call.args.first() {
+                    let arr_name = normalize_name(vname);
+                    if let Some(arr_info) = self.symbols.lookup_array(&arr_name).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let is_string = if arr_info.elem_ir_type == IrType::Ptr {
+                            1
+                        } else {
+                            0
+                        };
+                        fb.call_void(
+                            "pb_erase_array",
+                            &[
                                 base,
                                 fb.const_i32(elem_size),
                                 fb.const_i32(arr_info.total_elements as i32),
                                 fb.const_i32(is_string),
-                            ]);
-                        }
+                            ],
+                        );
                     }
                 }
                 return Ok(());
@@ -2434,10 +2527,10 @@ impl Compiler {
                 return Ok(());
             }
             "WRITE" => {
-                if call.args.len() >= 1 {
+                if !call.args.is_empty() {
                     let sv0 = self.compile_expr(fb, &call.args[0])?;
                     let f = self.to_i32(fb, &sv0);
-                    fb.call_void("pb_write_file_begin", &[f.clone()]);
+                    fb.call_void("pb_write_file_begin", std::slice::from_ref(&f));
                     for arg in call.args.iter().skip(1) {
                         let v = self.compile_expr(fb, arg)?;
                         match &v.ty {
@@ -2464,7 +2557,7 @@ impl Compiler {
                 return Ok(());
             }
             "LOCK" | "UNLOCK" => {
-                if call.args.len() >= 1 {
+                if !call.args.is_empty() {
                     let sv0 = self.compile_expr(fb, &call.args[0])?;
                     let f = self.to_i32(fb, &sv0);
                     let rec = if call.args.len() >= 2 {
@@ -3268,9 +3361,17 @@ impl Compiler {
                         let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));
                         let len_const = fb.const_i32(1024);
                         if self.module.is_32bit() {
-                            fb.call_stdcall(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                            fb.call_stdcall(
+                                &IrType::I32,
+                                "GetCurrentDirectoryA",
+                                &[len_const.clone(), buf.clone()],
+                            );
                         } else {
-                            fb.call(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                            fb.call(
+                                &IrType::I32,
+                                "GetCurrentDirectoryA",
+                                &[len_const.clone(), buf.clone()],
+                            );
                         }
                         let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
                         return Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len]));
@@ -3886,9 +3987,17 @@ impl Compiler {
                 let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));
                 let len_const = fb.const_i32(1024);
                 if self.module.is_32bit() {
-                    fb.call_stdcall(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                    fb.call_stdcall(
+                        &IrType::I32,
+                        "GetCurrentDirectoryA",
+                        &[len_const.clone(), buf.clone()],
+                    );
                 } else {
-                    fb.call(&IrType::I32, "GetCurrentDirectoryA", &[len_const.clone(), buf.clone()]);
+                    fb.call(
+                        &IrType::I32,
+                        "GetCurrentDirectoryA",
+                        &[len_const.clone(), buf.clone()],
+                    );
                 }
                 let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
                 Some(Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len])))
