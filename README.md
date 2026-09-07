@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 
+![demo](assets/powerbasilisk-demo.gif)
+
 An enhanced 64-bit PowerBASIC compiler, forked from
 [`benstopics/powerbasilisk`](https://github.com/benstopics/powerbasilisk).
 
