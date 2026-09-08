@@ -1,6 +1,6 @@
 [package]
 name = "pb"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Shared PowerBASIC frontend: lexer, parser, AST, preprocessor"
 license = "Apache-2.0"
