@@ -12,15 +12,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 29 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 36 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 262 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 255 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (29)
+## ✅ Implemented (36)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| BEEP | STATEMENT | `"BEEP"` |
 | CALL | STATEMENT | `core` |
+| CHDIR | STATEMENT | `_chdir` |
 | CLOSE | STATEMENT | `compile_close` |
 | DECR | STATEMENT | `core` |
 | DIM | STATEMENT | `compile_dim` |
@@ -36,17 +38,22 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LINE INPUT# | STATEMENT | `compile_line_input_file` |
 | LOCK | STATEMENT | `pb_lock` |
 | LSET | STATEMENT | `pb_lset` |
+| MKDIR | STATEMENT | `_mkdir` |
 | MSGBOX | STATEMENT | `MessageBoxA` |
 | NAME | STATEMENT | `pb_rename, pb_name` |
 | OPEN | STATEMENT | `compile_open` |
 | PRINT# | STATEMENT | `pb_write_file` |
+| RANDOMIZE | STATEMENT | `"RANDOMIZE"` |
 | REDIM | STATEMENT | `compile_dim` |
 | REPLACE | STATEMENT | `pb_replace` |
 | RESET | STATEMENT | `pb_reset` |
 | RETURN | STATEMENT | `core` |
+| RMDIR | STATEMENT | `_rmdir` |
 | RSET | STATEMENT | `pb_rset` |
 | SEEK | STATEMENT | `pb_seek` |
 | SHELL | STATEMENT | `ShellExecuteA` |
+| SLEEP | STATEMENT | `pb_sleep, "SLEEP"` |
+| SWAP | STATEMENT | `"SWAP"` |
 | UNLOCK | STATEMENT | `pb_unlock` |
 | WRITE# | STATEMENT | `pb_write_file` |
 
@@ -264,7 +271,7 @@ Function-class Win32 built-ins (also implemented):
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (262, alphabetical)
+## ⬜ Not implemented (255, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -287,12 +294,10 @@ Function-class Win32 built-ins (also implemented):
 | ASC | STATEMENT | PB/Win + PB/CC | Established |
 | ASM | STATEMENT | PB/Win + PB/CC | Established |
 | ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
-| BEEP | STATEMENT | PB/Win + PB/CC | Established |
 | BIT | STATEMENT | PB/Win + PB/CC | Established |
 | BIT CALC | STATEMENT | PB/Win + PB/CC | Established |
 | CALL DWORD | STATEMENT | PB/Win + PB/CC | Established |
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
-| CHDIR | STATEMENT | PB/Win + PB/CC | Established |
 | CHDRIVE | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
 | CLIPBOARD | STATEMENT | PB/Win + PB/CC | Established |
@@ -359,7 +364,6 @@ Function-class Win32 built-ins (also implemented):
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
 | MID$ | STATEMENT | PB/Win + PB/CC | Established |
 | MKBYT$, MKCUR$, MKCUX$, MKD$, MKDWD$, MKE$, MKI$, MKL$, MKQ$, MKS$ AND MKWRD$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKDIR | STATEMENT | PB/Win + PB/CC | Established |
 | MOUSEPTR | STATEMENT | PB/CC only | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -379,23 +383,19 @@ Function-class Win32 built-ins (also implemented):
 | PUT$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
-| RANDOMIZE | STATEMENT | PB/Win + PB/CC | Established |
 | REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
 | REGISTER | STATEMENT | PB/Win + PB/CC | Established |
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | REM | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| RMDIR | STATEMENT | PB/Win + PB/CC | Established |
 | ROTATE | STATEMENT | PB/Win + PB/CC | Established |
 | SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | Established |
 | SETATTR | STATEMENT | PB/Win + PB/CC | Established |
 | SETEOF | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | SHIFT | STATEMENT | PB/Win + PB/CC | Established |
-| SLEEP | STATEMENT | PB/Win + PB/CC | Established |
 | SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
-| SWAP | STATEMENT | PB/Win + PB/CC | Established |
 | TCP ACCEPT | STATEMENT | PB/Win + PB/CC | Established |
 | TCP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | TCP LINE INPUT | STATEMENT | PB/Win + PB/CC | Established |
