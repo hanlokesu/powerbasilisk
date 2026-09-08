@@ -214,6 +214,14 @@ exit code 0:
 Status legend: **✅** implemented and verified · **⚠️** parsed but produces
 NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 
+> **Official coverage audit** — every keyword below has been checked against
+> the PowerBASIC official documentation (MIT-licensed keyword index,
+> 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
+> [**statement-coverage.md**](docs/statement-coverage.md) · full data:
+> [**statement-coverage.csv**](docs/statement-coverage.csv).
+> Summary: **29** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **262** documented upstream with no codegen evidence yet.
+
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
 | --- | --- | --- |
