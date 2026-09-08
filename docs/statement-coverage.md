@@ -1,25 +1,25 @@
-# PowerBasilisk Enhanced — 官方语句覆盖对照表
+# PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-对照依据：**PB 官方文档库**（MIT 许可，735 关键字 / 1282 主题页，PB/Win 10+11 / PB/CC 6+7）
+Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
-- 官方**语句类**关键字总数：**493**
+- Official **statement-class** keywords total: **493**
 
-- 官方函数类：190（其中 CURDIR$ / ISFILE 已实现）
+- Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- 生成日期：2026-09-08
+- Generated: 2026-09-08
 
-## 汇总
+## Summary
 
-| 状态 | 数量 | 说明 |
-|------|------|------|
-| ✅ 已实现 | 29 | 真实 codegen 生成代码（Win32 调用 / runtime 函数 / 控制流）|
-| 🚧 第三档 DDT | 202 | DDT GUI 框架，难度高，留待后续更新 |
-| ⬜ 未实现 | 262 | 官方有文档、编译器中无代码生成证据 |
+| Status | Count | Notes |
+|--------|-------|-------|
+| ✅ Implemented | 29 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
+| ⬜ Not implemented | 262 | Documented upstream, no codegen evidence yet |
 
-## ✅ 已实现清单（29 项）
+## ✅ Implemented (29)
 
-| 关键字 | 官方类别 | 实现方式 |
-|--------|---------|---------|
+| Keyword | Official kind | Implementation |
+|---------|---------------|----------------|
 | CALL | STATEMENT | `core` |
 | CLOSE | STATEMENT | `compile_close` |
 | DECR | STATEMENT | `core` |
@@ -50,10 +50,17 @@
 | UNLOCK | STATEMENT | `pb_unlock` |
 | WRITE# | STATEMENT | `pb_write_file` |
 
-## 🚧 第三档 DDT（延期，下次更新）
+Function-class Win32 built-ins (also implemented):
 
-| 关键字 | 官方类别 |
-|--------|---------|
+| Keyword | Official kind | Implementation |
+|---------|---------------|----------------|
+| CURDIR$ | FUNCTION | `GetCurrentDirectoryA` |
+| ISFILE | FUNCTION | `_access` |
+
+## 🚧 Tier-3 DDT (deferred to next update)
+
+| Keyword | Official kind |
+|---------|---------------|
 | ACCEL ATTACH | STATEMENT |
 | COLOR | STATEMENT |
 | COMBOBOX | STATEMENT |
@@ -257,10 +264,10 @@
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ 未实现（按官方字母序，262 项）
+## ⬜ Not implemented (262, alphabetical)
 
-| 关键字 | 官方类别 | 平台 | 状态 |
-|--------|---------|------|------|
+| Keyword | Official kind | Platform | Status |
+|---------|---------------|----------|--------|
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -523,3 +530,15 @@
 | \#TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | \#UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | \#UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+
+## Files
+
+- `docs/statement-coverage.md` — this readable summary
+- `docs/statement-coverage.csv` — all rows with per-keyword status (Keyword, Kind, Platform, Status, Impl)
+
+## Method
+
+1. Parse `keyword-index.md` from the official docs package (735 keywords, one line per keyword).
+2. Keep statement-class keywords (STATEMENT / BLOCK / KEYWORD / DIRECTIVE) = 493.
+3. Grep `codegen.rs` for the runtime helpers / Win32 API calls / compile_* functions each keyword maps to.
+4. Classify: IMPLEMENTED (real codegen evidence) / TIER3_DDT (GUI framework, deferred) / NOT_IMPL (no evidence).
