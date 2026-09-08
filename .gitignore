@@ -1,18 +1,25 @@
+# Build artifacts
 /target/
-*.obj
 *.exe
-*.dll
-*.exp
-*.lib
+*.obj
 *.ll
-*.pdb
-*.iobj
-*.ipdb
-Cargo.lock
-# Generated logs
-*_debug.log
-*_crash.log
-*_modal_debug.log
-# Test artifacts
-pbinterp/tests/results.txt
-litmus/
+*.o
+*.lib
+*.log
+
+# Test outputs
+gif_demo/
+*.unimplemented.log
+*_result.txt
+err_dir/
+err_dir_new/
+tiny_demo_dir/
+regress/
+regress2/
+
+# Release packaging (generated, not source)
+release_pkg/
+release_pkg_full/
+
+# Local archives
+*.zip

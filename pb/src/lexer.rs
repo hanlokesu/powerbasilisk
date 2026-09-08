@@ -317,19 +317,27 @@ impl Lexer {
                     }
                 }
 
-                // Dollar sign alone (shouldn't normally appear alone, but handle)
+                // Dollar sign: string equate ($CRLF) or wide equate ($$NUL)
                 '$' => {
                     self.advance();
+                    // Wide variant: $$ prefix (returns Word, not string)
+                    let wide = if self.peek() == Some('$') {
+                        self.advance();
+                        true
+                    } else {
+                        false
+                    };
                     // Check if it's a string equate like $CRLF
                     let word = self.read_word();
                     if !word.is_empty() {
+                        let prefix = if wide { "$$" } else { "$" };
                         tokens.push(self.make_located(
-                            Token::Identifier(format!("${}", word.to_uppercase())),
+                            Token::Identifier(format!("{}{}", prefix, word.to_uppercase())),
                             start_line,
                             start_col,
                         ));
                     } else {
-                        // bare $ -- probably error, skip
+                        // bare $ (or $$) -- probably error, skip
                         continue;
                     }
                 }

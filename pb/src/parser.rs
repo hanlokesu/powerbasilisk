@@ -1462,12 +1462,31 @@ impl Parser {
                     return Ok(Statement::Block(try_body));
                 }
 
+                // SWAP var1, var2 — exchange two variables
+                if name_upper == "SWAP" {
+                    self.advance(); // consume SWAP
+                    let mut args = Vec::new();
+                    if !self.at_eol_or_eof() {
+                        args.push(self.parse_expression()?);
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "SWAP".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+
                 // DDT statements: DIALOG, CONTROL, MENU, TOOLBAR, STATUSBAR
                 // COMBOBOX, LISTBOX, TREEVIEW, LISTVIEW, XPRINT — DDT UI verbs
-                // SLEEP, RANDOMIZE, MKDIR — parse arg, emit as function call
+                // SLEEP, RANDOMIZE, MKDIR, BEEP — parse arg, emit as function call
                 if matches!(
                     name_upper.as_str(),
-                    "SLEEP" | "RANDOMIZE" | "MKDIR" | "RMDIR" | "CHDIR"
+                    "SLEEP" | "RANDOMIZE" | "MKDIR" | "RMDIR" | "CHDIR" | "BEEP"
                 ) {
                     let call_name = name_upper.clone();
                     self.advance();

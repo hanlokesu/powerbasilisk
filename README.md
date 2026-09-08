@@ -219,8 +219,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **29** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **262** documented upstream with no codegen evidence yet.
+> Summary: **31** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **260** documented upstream with no codegen evidence yet.
 
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
@@ -234,8 +234,12 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `LOCK #f` / `UNLOCK #f` | ✅ | `pb_lock` / `pb_unlock` |
 | `RESET` / `FLUSH #f` | ✅ | `pb_reset` / `pb_flush` |
 | `NAME old$ AS new$` | ✅ | `pb_name` |
+| `BEEP` | ✅ | `Beep(800, 300)` (kernel32) |
+| `SWAP a, b` | ✅ | register-level load/store exchange |
+| `MKDIR` / `RMDIR` / `CHDIR` / `KILL` + `ERR` / `ERRCLEAR` | ✅ | `_mkdir` / `_rmdir` / `_chdir` / `pb_kill` + `@pb_err` global — PB-compatible error codes (75/76/53) on failure |
+| Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
 
-### Core language (upstream, verified by the 14 official tests)
+### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
 `FREEFILE`, `KILL`, `IF/THEN/ELSE`, `FOR/NEXT`, `WHILE/WEND`, `DO/LOOP`,
 `GOTO` + labels, `GOSUB/RETURN`, `FUNCTION`/`CALL`, `DIM`/`GLOBAL`/`LOCAL`,

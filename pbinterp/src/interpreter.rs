@@ -795,13 +795,40 @@ impl Interpreter {
             Expr::StringLit(s) => Ok(Value::Str(s.clone())),
             Expr::Variable(name) => {
                 let key = name.to_uppercase();
-                // Check string equates
+                // Check string equates (official PB built-in string equates)
                 match key.as_str() {
-                    "$CRLF" => return Ok(Value::Str("\r\n".to_string())),
-                    "$CR" => return Ok(Value::Str("\r".to_string())),
+                    "$NUL" => return Ok(Value::Str("\u{0}".to_string())),
+                    "$BEL" => return Ok(Value::Str("\u{7}".to_string())),
+                    "$BS" => return Ok(Value::Str("\u{8}".to_string())),
+                    "$TAB" => return Ok(Value::Str("\u{9}".to_string())),
                     "$LF" => return Ok(Value::Str("\n".to_string())),
-                    "$NUL" => return Ok(Value::Str("\0".to_string())),
-                    "$TAB" => return Ok(Value::Str("\t".to_string())),
+                    "$VT" => return Ok(Value::Str("\x0B".to_string())),
+                    "$FF" => return Ok(Value::Str("\x0C".to_string())),
+                    "$CR" => return Ok(Value::Str("\r".to_string())),
+                    "$CRLF" => return Ok(Value::Str("\r\n".to_string())),
+                    "$EOF" => return Ok(Value::Str("\u{1A}".to_string())),
+                    "$ESC" => return Ok(Value::Str("\u{1B}".to_string())),
+                    "$SPC" => return Ok(Value::Str(" ".to_string())),
+                    "$DQ" => return Ok(Value::Str("\"".to_string())),
+                    "$DQ2" => return Ok(Value::Str("\"\"".to_string())),
+                    "$SQ" => return Ok(Value::Str("'".to_string())),
+                    "$SQ2" => return Ok(Value::Str("''".to_string())),
+                    "$QCQ" => return Ok(Value::Str("\",\"".to_string())),
+                    "$WHITESPACE" => return Ok(Value::Str(" \t\r\n".to_string())),
+                    // Wide single-char equates return a Word (numeric) value
+                    "$$NUL" => return Ok(Value::Long(0)),
+                    "$$BEL" => return Ok(Value::Long(7)),
+                    "$$BS" => return Ok(Value::Long(8)),
+                    "$$TAB" => return Ok(Value::Long(9)),
+                    "$$LF" => return Ok(Value::Long(10)),
+                    "$$VT" => return Ok(Value::Long(11)),
+                    "$$FF" => return Ok(Value::Long(12)),
+                    "$$CR" => return Ok(Value::Long(13)),
+                    "$$EOF" => return Ok(Value::Long(26)),
+                    "$$ESC" => return Ok(Value::Long(27)),
+                    "$$SPC" => return Ok(Value::Long(32)),
+                    "$$DQ" => return Ok(Value::Long(34)),
+                    "$$SQ" => return Ok(Value::Long(39)),
                     _ => {}
                 }
                 Ok(self.env.get_var(&key))

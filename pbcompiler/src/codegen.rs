@@ -1114,7 +1114,8 @@ impl Compiler {
             false,
         );
         self.module
-            .declare_function("pb_kill", &IrType::Void, &[IrType::Ptr], false);
+            .declare_function("pb_kill", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function("_errno", &IrType::Ptr, &[], false);
 
         // C string library (size_t = i32 on 32-bit)
         self.module
@@ -1259,6 +1260,10 @@ impl Compiler {
         );
         self.module
             .declare_dllimport("Sleep", &IrType::Void, &[IrType::I32]);
+        self.module
+            .declare_dllimport("Beep", &IrType::Void, &[IrType::I32, IrType::I32]);
+        // PB-compatible ERR system variable (provided by pb_runtime.c)
+        self.module.declare_external_global("pb_err", &IrType::I32);
         self.module
             .declare_dllimport("GetCommandLineA", &IrType::Ptr, &[]);
         self.module.declare_dllimport(
@@ -2090,8 +2095,31 @@ impl Compiler {
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
             Statement::LineInputFile(li) => self.compile_line_input_file(fb, li),
             Statement::Kill(expr) => {
+                // KILL filespec — on failure set ERR: ENOENT -> 53, EACCES -> 70, other -> 75
                 let path = self.compile_expr(fb, expr)?;
-                fb.call_void("pb_kill", &[path]);
+                let ret = fb.call(&IrType::I32, "pb_kill", &[path]);
+                let neg1 = fb.const_i32(-1);
+                let is_err = fb.icmp("eq", &ret, &neg1);
+                let err_lbl = fb.next_label("kill.err");
+                let merge_lbl = fb.next_label("kill.merge");
+                fb.condbr(&is_err, &err_lbl, &merge_lbl);
+                fb.label(&err_lbl);
+                let errno_ptr = fb.call(&IrType::Ptr, "_errno", &[]);
+                let eno = fb.load(&IrType::I32, &errno_ptr);
+                let enoent = fb.const_i32(2);
+                let is_enoent = fb.icmp("eq", &eno, &enoent);
+                let enoent_lbl = fb.next_label("kill.enoent");
+                let other_lbl = fb.next_label("kill.other");
+                fb.condbr(&is_enoent, &enoent_lbl, &other_lbl);
+                fb.label(&enoent_lbl);
+                let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                fb.store(&fb.const_i32(53), &g);
+                fb.br(&merge_lbl);
+                fb.label(&other_lbl);
+                let g2 = Val::new("@pb_err".to_string(), IrType::Ptr);
+                fb.store(&fb.const_i32(75), &g2);
+                fb.br(&merge_lbl);
+                fb.label(&merge_lbl);
                 Ok(())
             }
             Statement::Noop(name, line) => {
@@ -2349,23 +2377,68 @@ impl Compiler {
                 return Ok(());
             }
             "MKDIR" => {
+                // MKDIR path$ — on failure set ERR: EEXIST -> 75, ENOENT -> 76 (PB semantics)
                 if !call.args.is_empty() {
                     let path = self.compile_expr(fb, &call.args[0])?;
-                    fb.call(&IrType::I32, "_mkdir", &[path]);
+                    let ret = fb.call(&IrType::I32, "_mkdir", &[path]);
+                    let neg1 = fb.const_i32(-1);
+                    let is_err = fb.icmp("eq", &ret, &neg1);
+                    let err_lbl = fb.next_label("mkdir.err");
+                    let merge_lbl = fb.next_label("mkdir.merge");
+                    fb.condbr(&is_err, &err_lbl, &merge_lbl);
+                    fb.label(&err_lbl);
+                    let errno_ptr = fb.call(&IrType::Ptr, "_errno", &[]);
+                    let eno = fb.load(&IrType::I32, &errno_ptr);
+                    let eexist = fb.const_i32(17);
+                    let is_eexist = fb.icmp("eq", &eno, &eexist);
+                    let eexist_lbl = fb.next_label("mkdir.eexist");
+                    let other_lbl = fb.next_label("mkdir.other");
+                    fb.condbr(&is_eexist, &eexist_lbl, &other_lbl);
+                    fb.label(&eexist_lbl);
+                    let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                    fb.store(&fb.const_i32(75), &g);
+                    fb.br(&merge_lbl);
+                    fb.label(&other_lbl);
+                    let g2 = Val::new("@pb_err".to_string(), IrType::Ptr);
+                    fb.store(&fb.const_i32(76), &g2);
+                    fb.br(&merge_lbl);
+                    fb.label(&merge_lbl);
                 }
                 return Ok(());
             }
             "RMDIR" => {
+                // RMDIR path$ — on failure set ERR 75 (PB semantics)
                 if !call.args.is_empty() {
                     let path = self.compile_expr(fb, &call.args[0])?;
-                    fb.call(&IrType::I32, "_rmdir", &[path]);
+                    let ret = fb.call(&IrType::I32, "_rmdir", &[path]);
+                    let neg1 = fb.const_i32(-1);
+                    let is_err = fb.icmp("eq", &ret, &neg1);
+                    let err_lbl = fb.next_label("rmdir.err");
+                    let merge_lbl = fb.next_label("rmdir.merge");
+                    fb.condbr(&is_err, &err_lbl, &merge_lbl);
+                    fb.label(&err_lbl);
+                    let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                    fb.store(&fb.const_i32(75), &g);
+                    fb.br(&merge_lbl);
+                    fb.label(&merge_lbl);
                 }
                 return Ok(());
             }
             "CHDIR" => {
+                // CHDIR path$ — on failure set ERR 76 (PB semantics)
                 if !call.args.is_empty() {
                     let path = self.compile_expr(fb, &call.args[0])?;
-                    fb.call(&IrType::I32, "_chdir", &[path]);
+                    let ret = fb.call(&IrType::I32, "_chdir", &[path]);
+                    let neg1 = fb.const_i32(-1);
+                    let is_err = fb.icmp("eq", &ret, &neg1);
+                    let err_lbl = fb.next_label("chdir.err");
+                    let merge_lbl = fb.next_label("chdir.merge");
+                    fb.condbr(&is_err, &err_lbl, &merge_lbl);
+                    fb.label(&err_lbl);
+                    let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                    fb.store(&fb.const_i32(76), &g);
+                    fb.br(&merge_lbl);
+                    fb.label(&merge_lbl);
                 }
                 return Ok(());
             }
@@ -2447,6 +2520,45 @@ impl Compiler {
                     let new_s = self.compile_expr(fb, &call.args[2])?;
                     let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, &call.args[0])?;
                     fb.call_void("pb_replace", &[ptr, old, new_s]);
+                }
+                return Ok(());
+            }
+            "ERRCLEAR" => {
+                // ERRCLEAR — reset the ERR system variable to 0
+                let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                fb.store(&fb.const_i32(0), &g);
+                return Ok(());
+            }
+            "BEEP" => {
+                // BEEP -> Beep(800, 300) — default beep tone
+                let freq = fb.const_i32(800);
+                let dur = fb.const_i32(300);
+                fb.call_void("Beep", &[freq, dur]);
+                return Ok(());
+            }
+            "SWAP" => {
+                // SWAP a, b — exchange two lvalues (variables / array elements / type members)
+                if call.args.len() >= 2 {
+                    let (ptr_a, pb_a) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let (ptr_b, pb_b) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    let ir_a = Self::ir_type_for(&pb_a);
+                    let ir_b = Self::ir_type_for(&pb_b);
+                    // If types differ, widen both to the larger one before swapping
+                    let (ir_common, pb_common) = if ir_a == ir_b {
+                        (ir_a.clone(), pb_a.clone())
+                    } else {
+                        // Prefer i64 (double the width) as the common type
+                        (IrType::I64, PbType::Quad)
+                    };
+                    let val_a = fb.load(&ir_common, &ptr_a);
+                    let val_b = fb.load(&ir_common, &ptr_b);
+                    let tmp = fb.alloca(&ir_common);
+                    fb.store(&val_a, &tmp);
+                    let conv_b = self.convert_value(fb, &val_b, &ir_common, &pb_common);
+                    fb.store(&conv_b, &ptr_a);
+                    let tmp_val = fb.load(&ir_common, &tmp);
+                    let conv_a = self.convert_value(fb, &tmp_val, &ir_common, &pb_common);
+                    fb.store(&conv_a, &ptr_b);
                 }
                 return Ok(());
             }
@@ -3348,6 +3460,26 @@ impl Compiler {
                 Ok(Val::new(str_name, IrType::Ptr))
             }
             Expr::Variable(orig_name) => {
+                // Built-in string equates ($CRLF, $TAB, ...) — check before normalize
+                // (normalize would strip the leading/trailing $ and hide the equate)
+                if orig_name.starts_with('$') && orig_name.len() > 1 {
+                    if let Some(s) = string_equate(orig_name) {
+                        let (str_name, _) = self.module.add_string_constant(&s);
+                        return Ok(Val::new(str_name, IrType::Ptr));
+                    }
+                    if let Some(w) = wide_equate(orig_name) {
+                        return Ok(fb.const_i32(w));
+                    }
+                    if wide_equate_unsupported(orig_name) {
+                        self.warnings.push(format!(
+                            "wide multi-char equate `{}` is not supported yet \
+                             (no wide-string type in this compiler) - treated as empty string",
+                            orig_name
+                        ));
+                        let (str_name, _) = self.module.add_string_constant("");
+                        return Ok(Val::new(str_name, IrType::Ptr));
+                    }
+                }
                 let name = normalize_name(orig_name);
                 // System variables that are actually function calls
                 match name.as_str() {
@@ -3375,6 +3507,11 @@ impl Compiler {
                         }
                         let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
                         return Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len]));
+                    }
+                    "ERR" => {
+                        // PB-compatible ERR system variable: load @pb_err (i32)
+                        let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                        return Ok(fb.load(&IrType::I32, &g));
                     }
                     _ => {}
                 }
@@ -5163,6 +5300,69 @@ impl Compiler {
 }
 
 /// Normalize a PB name: uppercase, strip type suffix.
+/// PB built-in string equates — the 18 ANSI forms from the official docs.
+/// Returns the expanded string, or None if the name is not a built-in equate.
+fn string_equate(name: &str) -> Option<String> {
+    let upper = name.to_uppercase();
+    let v = match upper.as_str() {
+        "$NUL" => "\u{0}".to_string(),
+        "$BEL" => "\u{7}".to_string(),
+        "$BS" => "\u{8}".to_string(),
+        "$TAB" => "\u{9}".to_string(),
+        "$LF" => "\n".to_string(),
+        "$VT" => "\x0B".to_string(),
+        "$FF" => "\x0C".to_string(),
+        "$CR" => "\r".to_string(),
+        "$CRLF" => "\r\n".to_string(),
+        "$EOF" => "\u{1A}".to_string(),
+        "$ESC" => "\u{1B}".to_string(),
+        "$SPC" => " ".to_string(),
+        "$DQ" => "\"".to_string(),
+        "$DQ2" => "\"\"".to_string(),
+        "$SQ" => "'".to_string(),
+        "$SQ2" => "''".to_string(),
+        "$QCQ" => "\",\"".to_string(),
+        "$WHITESPACE" => " \t\r\n".to_string(),
+        _ => return None,
+    };
+    Some(v)
+}
+
+/// Wide ($$) equates that return a single Word value — usable as a numeric
+/// constant in this compiler (i32). Multi-char wide forms need a wide-string
+/// type and are rejected explicitly (see wide_equate_unsupported).
+fn wide_equate(name: &str) -> Option<i32> {
+    let upper = name.to_uppercase();
+    let v = match upper.as_str() {
+        "$$NUL" => 0,
+        "$$BEL" => 7,
+        "$$BS" => 8,
+        "$$TAB" => 9,
+        "$$LF" => 10,
+        "$$VT" => 11,
+        "$$FF" => 12,
+        "$$CR" => 13,
+        "$$EOF" => 26,
+        "$$ESC" => 27,
+        "$$SPC" => 32,
+        "$$DQ" => 34,
+        "$$SQ" => 39,
+        _ => return None,
+    };
+    Some(v)
+}
+
+/// Wide multi-char equates that this compiler cannot represent yet
+/// (they are wide strings). Recognised so we can fail explicitly instead of
+/// silently treating them as ordinary variables.
+fn wide_equate_unsupported(name: &str) -> bool {
+    let upper = name.to_uppercase();
+    matches!(
+        upper.as_str(),
+        "$$CRLF" | "$$DQ2" | "$$SQ2" | "$$QCQ" | "$$WHITESPACE"
+    )
+}
+
 fn normalize_name(name: &str) -> String {
     let upper = name.to_uppercase();
     let bytes = upper.as_bytes();

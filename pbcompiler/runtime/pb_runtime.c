@@ -616,6 +616,9 @@ void pb_kill(const char* path) {
     if (path) remove(path);
 }
 
+/* ===== ERR system variable (PB-compatible error code) ===== */
+int pb_err = 0;   /* readable from PB source as ERR; set by failing MKDIR/RMDIR/CHDIR/KILL */
+
 /* ===== System builtins ===== */
 
 #ifdef _WIN32
