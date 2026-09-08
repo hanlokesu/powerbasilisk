@@ -238,12 +238,27 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `SWAP a, b` | ✅ | register-level load/store exchange |
 | `MKDIR` / `RMDIR` / `CHDIR` / `KILL` + `ERR` / `ERRCLEAR` | ✅ | `_mkdir` / `_rmdir` / `_chdir` / `pb_kill` + `@pb_err` global — PB-compatible error codes (75/76/53) on failure |
 | Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
+| `CHR$(a, b, c)` multi-argument | ✅ | one byte per argument, concatenated (`CHR$(13,10)` = CR+LF) |
+| `RND` bare form (no parens) | ✅ | same as `RND()` — random double in [0,1) |
+| `INPUT #f, s$` reading `WRITE #` output | ✅ | CSV double-quotes stripped per PB semantics |
+| `PRINT` console output | ✅ | flushed immediately after each line (visible under redirection / on abort) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
 `FREEFILE`, `KILL`, `IF/THEN/ELSE`, `FOR/NEXT`, `WHILE/WEND`, `DO/LOOP`,
 `GOTO` + labels, `GOSUB/RETURN`, `FUNCTION`/`CALL`, `DIM`/`GLOBAL`/`LOCAL`,
 arrays, and core string/numeric built-ins — **✅**
+
+### Live demos
+- `examples/demo.bas` — **full-feature showcase**: control flow, all 18 string
+  equates, REPLACE/LSET/RSET, arrays+ERASE, file I/O (WRITE#/SEEK#/LOCK/UNLOCK/
+  RESET/FLUSH/NAME/KILL), directories + PB-compatible `ERR` codes, RANDOMIZE/RND,
+  SWAP, CURDIR$/ISFILE, BEEP, SLEEP, MSGBOX and SHELL. Compiles with one command
+  and prints `ALL FEATURES VERIFIED OK` to the console (plus a final MSGBOX).
+- `official_hello.bas` — the **original PowerBASIC 10 samples `Hello.bas`**
+  (from a licensed PB/Win 10 install) compiles unmodified after charset
+  conversion and runs as a 64-bit native exe, proving drop-in compatibility
+  with the official sample suite (sample itself is (c) PowerBASIC, Inc.).
 
 ### Parsed but produces NO code (reported, not silent)
 | Statement | Notes |

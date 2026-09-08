@@ -579,6 +579,14 @@ void pb_input_file_str(int filenum, char** dest) {
         if (i < (int)sizeof(buf) - 1) buf[i++] = (char)ch;
     }
     buf[i] = '\0';
+    /* Strip surrounding double quotes written by WRITE# (CSV quoting) */
+    if (i >= 2 && buf[0] == '"' && buf[i - 1] == '"') {
+        char* unquoted = (char*)malloc(i - 1);
+        memcpy(unquoted, buf + 1, i - 2);
+        unquoted[i - 2] = '\0';
+        *dest = bstr_from_buf(unquoted);
+        return;
+    }
     char* result = (char*)malloc(i + 1);
     memcpy(result, buf, i + 1);
     *dest = bstr_from_buf(result);

@@ -978,6 +978,8 @@ impl Compiler {
         // Declare printf
         self.module
             .declare_function("printf", &IrType::I32, &[IrType::Ptr], true);
+        self.module
+            .declare_function("fflush", &IrType::I32, &[IrType::Ptr], false);
 
         // LLVM intrinsics for math
         self.module.declare_intrinsic(
@@ -3202,6 +3204,9 @@ impl Compiler {
         let (nl_name, _) = self.module.add_string_constant("\n");
         let nl_ptr = Val::new(nl_name, IrType::Ptr);
         fb.call_variadic(&IrType::I32, "printf", &[nl_ptr]);
+        // Flush so console output is visible immediately (and survives
+        // abnormal termination / redirection, not just process exit)
+        fb.call_void("fflush", &[Val::new("null", IrType::Ptr)]);
         Ok(())
     }
 
@@ -3512,6 +3517,10 @@ impl Compiler {
                         // PB-compatible ERR system variable: load @pb_err (i32)
                         let g = Val::new("@pb_err".to_string(), IrType::Ptr);
                         return Ok(fb.load(&IrType::I32, &g));
+                    }
+                    "RND" => {
+                        // Bare RND (no parens) is the PB random function
+                        return self.builtin_rnd(fb, &[]);
                     }
                     _ => {}
                 }
@@ -4482,14 +4491,24 @@ impl Compiler {
     }
 
     fn builtin_chr(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
-        let code = self.compile_expr(fb, &args[0])?;
-        let code_i32 = self.to_i32(fb, &code);
-        // Build 1-byte string, then BSTR alloc
-        let tmp = fb.alloca(&IrType::I8);
-        let byte = fb.trunc(&code_i32, &IrType::I8);
-        fb.store(&byte, &tmp);
-        let one = fb.const_i32(1);
-        Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[tmp, one]))
+        if args.is_empty() {
+            let tmp = fb.alloca(&IrType::I8);
+            let zero = fb.const_i32(0);
+            return Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[tmp, zero]));
+        }
+        // Multi-arg CHR$(a, b, c) concatenates one byte per argument
+        let len = args.len() as i32;
+        let len_val = fb.const_i32(len);
+        let buf = fb.call(&IrType::Ptr, "malloc", std::slice::from_ref(&len_val));
+        for (i, arg) in args.iter().enumerate() {
+            let code = self.compile_expr(fb, arg)?;
+            let code_i32 = self.to_i32(fb, &code);
+            let byte = fb.trunc(&code_i32, &IrType::I8);
+            let off = fb.const_i32(i as i32);
+            let slot = fb.gep_byte(&buf, &off);
+            fb.store(&byte, &slot);
+        }
+        Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, len_val]))
     }
 
     fn builtin_asc(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

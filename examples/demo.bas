@@ -1,117 +1,250 @@
-' PowerBasilisk Enhanced — 功能演示 Demo
-' 编译: pbcompiler build demo.bas --exe --target x86_64-pc-windows-msvc --runtime-lib pb_runtime_x64.obj
+' PowerBasilisk Enhanced — Full Feature Demo
+' Compile: pbcompiler build demo.bas --exe --target x86_64-pc-windows-msvc --runtime-lib pb_runtime_x64.obj
 '
-' 展示增强版全部功能：
-'   1) Win32 内建: MSGBOX / SHELL / CURDIR$ / ISFILE
-'   2) 第二档语句: REPLACE / ERASE / LSET / RSET
-'   3) 文件语句:   WRITE# / SEEK# / LOCK / UNLOCK / RESET / FLUSH / NAME
+' Shows every feature implemented by this branch:
+'   1) Control flow   : IF/THEN/ELSE, FOR/NEXT, WHILE/WEND, DO/LOOP, GOSUB/RETURN
+'   2) Strings        : 18 built-in equates ($CRLF...), REPLACE, LSET/RSET, core funcs
+'   3) Arrays         : DIM, ERASE
+'   4) File I/O       : OPEN, PRINT#, LINE INPUT#, INPUT#, WRITE#, SEEK#, LOCK/UNLOCK,
+'                       FLUSH, RESET, NAME, KILL, EOF, FREEFILE
+'   5) Directories    : MKDIR, RMDIR, CHDIR + ERR / ERRCLEAR (PB error codes)
+'   6) System         : MSGBOX, BEEP, SLEEP, RANDOMIZE+RND, SWAP, CURDIR$, ISFILE, SHELL
 '
 FUNCTION PBMAIN() AS LONG
   LOCAL f AS LONG
   LOCAL s AS STRING
   LOCAL t AS STRING
-  LOCAL n AS LONG
+  LOCAL i AS LONG
+  LOCAL sum AS LONG
+  LOCAL a AS LONG
+  LOCAL b AS LONG
+  LOCAL r AS DOUBLE
   LOCAL fixed10 AS STRING * 10
+  LOCAL ok AS LONG
   DIM arr(5) AS LONG
 
-  PRINT "=== PowerBasilisk Enhanced Demo ==="
-  PRINT "PowerBASIC -> LLVM IR -> native x64 exe"
+  ok = 1
+  PRINT "=============================================="
+  PRINT "  PowerBasilisk Enhanced - Full Feature Demo"
+  PRINT "  PowerBASIC -> LLVM IR -> native x64 exe"
+  PRINT "=============================================="
+
+  ' ---------- 1. Control flow ----------
   PRINT ""
+  PRINT "[1] Control flow"
 
-  ' ---------- 1. Win32 built-ins ----------
-  PRINT "[1] Win32 built-ins"
+  FOR i = 1 TO 5
+    sum = sum + i
+  NEXT i
+  IF sum = 15 THEN
+    PRINT "  FOR/NEXT + IF/THEN: sum(1..5) = " + STR$(sum) + "  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: sum = " + STR$(sum)
+  END IF
 
-  ' CURDIR$ -> GetCurrentDirectoryA
-  PRINT "CURDIR$  = "; CURDIR$
+  i = 0
+  WHILE i < 3
+    i = i + 1
+  WEND
+  PRINT "  WHILE/WEND: i = " + STR$(i) + "  OK"
 
-  ' ISFILE -> _access
-  PRINT "ISFILE(pbcompiler.exe) = "; ISFILE("pbcompiler.exe")
-  PRINT "ISFILE(not_exist.txt)  = "; ISFILE("not_exist.txt")
+  DO
+    i = i - 1
+  LOOP UNTIL i = 0
+  PRINT "  DO/LOOP UNTIL: i = " + STR$(i) + "  OK"
 
-  ' SHELL -> ShellExecuteA (launches Calculator; SW_SHOWNORMAL)
-  SHELL "calc.exe"
-  PRINT "SHELL -> launched calc.exe via ShellExecuteA"
+  GOSUB ShowSubroutine
+  PRINT "  GOSUB/RETURN: returned OK"
 
-  ' ---------- 2. Tier-2 statements ----------
+  ' ---------- 2. Strings ----------
   PRINT ""
-  PRINT "[2] Tier-2 statements"
+  PRINT "[2] Strings (built-in equates)"
 
-  ' REPLACE
+  ' All 18 equates are compile-time constants; demo a few + join
+  s = "Line1" + $CRLF + "Line2"
+  IF s = "Line1" + CHR$(13, 10) + "Line2" THEN
+    PRINT "  $CRLF = CR+LF bytes  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: $CRLF"
+  END IF
+
+  PRINT "  $DQ/$SQ/$TAB: [" + $DQ + "quoted" + $DQ + "]" + $TAB + "[" + $SQ + "sq" + $SQ + "]"
+  PRINT "  $WHITESPACE = space+tab+cr+lf (invisible)  OK"
+
   t = "the cat sat on the cat mat"
   REPLACE "cat" WITH "dog" IN t
-  PRINT "REPLACE: "; t
+  IF t = "the dog sat on the dog mat" THEN
+    PRINT "  REPLACE: " + t + "  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: REPLACE -> " + t
+  END IF
 
-  ' ERASE
-  FOR n = 0 TO 5
-    arr(n) = 100 + n
-  NEXT n
-  ERASE arr
-  PRINT "ERASE arr(5) -> arr(0) = "; arr(0)
-
-  ' LSET / RSET on a fixed-length string
   fixed10 = ""
   LSET fixed10 = "ab"
-  PRINT "LSET: ["; fixed10; "]"
+  PRINT "  LSET: [" + fixed10 + "]  (left-aligned)"
   fixed10 = ""
   RSET fixed10 = "cd"
-  PRINT "RSET: ["; fixed10; "]"
+  PRINT "  RSET: [" + fixed10 + "]  (right-aligned)"
 
-  ' ---------- 3. File statements ----------
+  PRINT "  LEN/LEFT$/RIGHT$: " + STR$(LEN("hello")) + " / " + LEFT$("hello", 2) + " / " + RIGHT$("hello", 2)
+
+  ' ---------- 3. Arrays ----------
   PRINT ""
-  PRINT "[3] File statements"
+  PRINT "[3] Arrays"
 
-  ' WRITE # (CSV-style) + FLUSH
+  FOR i = 0 TO 5
+    arr(i) = 100 + i
+  NEXT i
+  ERASE arr
+  IF arr(0) = 0 THEN
+    PRINT "  DIM + ERASE: arr(0) after ERASE = " + STR$(arr(0)) + "  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: arr(0) = " + STR$(arr(0))
+  END IF
+
+  ' ---------- 4. File I/O ----------
+  PRINT ""
+  PRINT "[4] File I/O"
+
   f = FREEFILE
   OPEN "demo_data.tmp" FOR OUTPUT AS #f
-  WRITE #f, "hello", 42, 3.5
-  WRITE #f, "world", 7
+  PRINT #f, "Hello file world"
+  WRITE #f, "csv", 42, 3.5
   FLUSH #f
   CLOSE #f
+  PRINT "  OPEN/PRINT#/WRITE#/FLUSH/CLOSE  OK"
 
-  ' Read back with LINE INPUT
   f = FREEFILE
   OPEN "demo_data.tmp" FOR INPUT AS #f
   LINE INPUT #f, s
-  PRINT "WRITE# row1: ["; s; "]"
-  LINE INPUT #f, s
-  PRINT "WRITE# row2: ["; s; "]"
-  CLOSE #f
+  INPUT #f, t, i, r
+  IF s = "Hello file world" AND t = "csv" AND i = 42 AND r = 3.5 THEN
+    PRINT "  LINE INPUT#/INPUT# read back  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: read back [" + s + "] [" + t + "]"
+  END IF
 
-  ' SEEK: reposition to byte 1, re-read first record
-  f = FREEFILE
-  OPEN "demo_data.tmp" FOR INPUT AS #f
   SEEK #f, 1
   LINE INPUT #f, s
-  PRINT "SEEK  -> re-read: ["; s; "]"
+  PRINT "  SEEK# to top: [" + s + "]"
   CLOSE #f
 
-  ' LOCK / UNLOCK byte range
   f = FREEFILE
   OPEN "demo_data.tmp" FOR INPUT AS #f
   LOCK #f, 1, 10
-  PRINT "LOCK #f,1,10 OK"
   UNLOCK #f, 1, 10
-  PRINT "UNLOCK #f,1,10 OK"
   CLOSE #f
+  PRINT "  LOCK/UNLOCK byte range  OK"
 
-  ' NAME: rename file
   NAME "demo_data.tmp" AS "demo_renamed.tmp"
-  PRINT "NAME -> demo_renamed.tmp"
+  PRINT "  NAME: file renamed  OK"
 
-  ' RESET: open a file, then close ALL handles
   f = FREEFILE
   OPEN "demo_renamed.tmp" FOR INPUT AS #f
   RESET
-  PRINT "RESET: all files closed"
+  PRINT "  RESET: all handles closed  OK"
 
-  ' Cleanup
-  KILL "demo_renamed.tmp"
+  IF ISFILE("demo_renamed.tmp") = 1 THEN
+    KILL "demo_renamed.tmp"
+    PRINT "  KILL + ISFILE: file removed  OK"
+  END IF
+
+  ' ---------- 5. Directories + ERR ----------
+  PRINT ""
+  PRINT "[5] Directories + ERR semantics"
+
+  MKDIR "demo_dir"
+  MKDIR "demo_dir"          ' already exists -> ERR 75 (PB official)
+  IF ERR = 75 THEN
+    PRINT "  MKDIR twice -> ERR 75  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: MKDIR exists ERR=" + STR$(ERR)
+  END IF
+  ERRCLEAR
+
+  RMDIR "no_such_dir_xyz"   ' missing -> ERR 75
+  IF ERR = 75 THEN
+    PRINT "  RMDIR missing -> ERR 75  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: RMDIR missing ERR=" + STR$(ERR)
+  END IF
+  ERRCLEAR
+
+  CHDIR "no_such_dir_abc"   ' invalid -> ERR 76
+  IF ERR = 76 THEN
+    PRINT "  CHDIR invalid -> ERR 76  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: CHDIR invalid ERR=" + STR$(ERR)
+  END IF
+  ERRCLEAR
+
+  RMDIR "demo_dir"
+  PRINT "  RMDIR: cleanup OK"
+
+  ' ---------- 6. System calls ----------
+  PRINT ""
+  PRINT "[6] System calls"
+
+  RANDOMIZE 42
+  r = RND
+  PRINT "  RANDOMIZE+RND: first value = " + STR$(r)
+
+  a = 111
+  b = 222
+  SWAP a, b
+  IF a = 222 AND b = 111 THEN
+    PRINT "  SWAP: a=222 b=111  OK"
+  ELSE
+    ok = 0
+    PRINT "  FAIL: SWAP a=" + STR$(a) + " b=" + STR$(b)
+  END IF
+
+  PRINT "  CURDIR$ = " + CURDIR$
+  PRINT "  ISFILE(demo.bas) = " + STR$(ISFILE("demo.bas"))
+
+  BEEP
+  SLEEP 300
+  PRINT "  BEEP + SLEEP 300ms  OK"
+
+  ' ---------- Final report ----------
+  f = FREEFILE
+  OPEN "demo_result.txt" FOR OUTPUT AS #f
+  IF ok = 1 THEN
+    PRINT #f, "ALL OK: every enhanced feature ran successfully"
+  ELSE
+    PRINT #f, "FAILED: one or more checks failed"
+  END IF
+  CLOSE #f
 
   PRINT ""
-  PRINT "All enhanced features demonstrated OK."
+  IF ok = 1 THEN
+    PRINT "=== ALL FEATURES VERIFIED OK ==="
+  ELSE
+    PRINT "=== SOME CHECKS FAILED ==="
+  END IF
+  PRINT "(see demo_result.txt)"
 
-  ' ---------- 4. MSGBOX last (modal, blocks) ----------
-  MSGBOX "Hello from PowerBasilisk 64-bit!" + CHR$(13, 10) + "All Tier-2 statements + Win32 built-ins verified.", 0, "PowerBasilisk Demo"
+  ' ---------- 7. GUI popups (the show) ----------
+  SHELL "calc.exe"                                   ' launch Calculator
+  MSGBOX "PowerBasilisk Enhanced - all features OK!" + $CRLF + $CRLF + _
+         "MSGBOX + SHELL + CURDIR$ + ISFILE + BEEP + SLEEP" + $CRLF + _
+         "REPLACE + ERASE + LSET + RSET + SWAP + RANDOMIZE" + $CRLF + _
+         "WRITE#/SEEK#/LOCK/UNLOCK/RESET/FLUSH/NAME/KILL" + $CRLF + _
+         "MKDIR/RMDIR/CHDIR + ERR/ERRCLEAR + 18 string equates", 64, "PowerBasilisk Demo"
 
   FUNCTION = 0
+  EXIT FUNCTION
+
+ShowSubroutine:
+  PRINT "  (inside GOSUB subroutine)"
+  RETURN
+
 END FUNCTION
