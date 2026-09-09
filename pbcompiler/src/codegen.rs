@@ -1117,7 +1117,8 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_kill", &IrType::I32, &[IrType::Ptr], false);
-        self.module.declare_function("_errno", &IrType::Ptr, &[], false);
+        self.module
+            .declare_function("_errno", &IrType::Ptr, &[], false);
 
         // C string library (size_t = i32 on 32-bit)
         self.module
