@@ -289,6 +289,23 @@ arrays, and core string/numeric built-ins — **✅**
 
 ---
 
+## Changelog
+
+### v0.1.2 — bug-fix release (2026-09-11)
+
+Four real bugs found by sample-driven testing were fixed:
+
+| # | Bug | Before | After |
+|---|-----|--------|-------|
+| 1 | `REDIM` of a `STRING` array without `AS` | array was typed `LONG` (`[4 x i32]`) — string data corrupted | inherits the declared element type (`[4 x ptr]` for `STRING`) |
+| 2 | List declarations, e.g. `LOCAL a, b AS QUAD` | only `b` became `QUAD`; `a` silently fell back to `LONG` | the trailing `AS` type-fills the **whole** list (PB semantics, per the official docs: `LOCAL aaa, bbb, ccc AS INTEGER`) |
+| 3 | `PRINT` of a `QUAD` value | truncated to 32 bits (`987654321012345` printed as `821493369`) | printed as full 64-bit (`%lld`); `PRINT #` and number-to-string conversion no longer round through `double` either |
+| 4 | `OPEN file FOR BINARY` | opened with `"w+b"` — **truncated** an existing file on open | opens read/write **without truncating** (`r+b`), creates the file only if it does not exist — matches PowerBASIC semantics |
+
+Regression: 15/15 official tests pass, `cargo clippy --all-targets -- -D warnings` clean, CI green.
+
+---
+
 ## Roadmap / Known Limitations
 
 - **Tier 2 (done):** `REPLACE`, `LSET`, `RSET`, `ERASE`, `WRITE #`, `SEEK`,
