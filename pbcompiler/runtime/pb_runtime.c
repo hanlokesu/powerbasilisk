@@ -509,6 +509,7 @@ int pb_open(const char* path, int mode, int filenum) {
         case 0: fmode = "r"; break;   /* INPUT */
         case 1: fmode = "w"; break;   /* OUTPUT */
         case 2: fmode = "a"; break;   /* APPEND */
+        case 3: fmode = "w+b"; break;  /* BINARY (read+write) */
         default: fmode = "r"; break;
     }
     file_handles[filenum] = fopen(path, fmode);
@@ -985,6 +986,60 @@ void pb_write_file_newline(int filenum) {
 void pb_seek(int filenum, long pos) {
     if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
         fseek(file_handles[filenum], (long)(pos - 1), SEEK_SET);
+    }
+}
+
+/* GET #f [, pos], var: read raw bytes from a binary file into a variable.
+   pos <= 0 means "current position" (caller passes -1 when omitted). */
+void pb_get(int filenum, long long pos, char* buf, long long size) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (pos > 0) fseek(file_handles[filenum], (long)(pos - 1), SEEK_SET);
+        fread(buf, 1, (size_t)size, file_handles[filenum]);
+    }
+}
+
+/* PUT #f [, pos], var: write raw bytes from a variable to a binary file. */
+void pb_put(int filenum, long long pos, char* buf, long long size) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        if (pos > 0) fseek(file_handles[filenum], (long)(pos - 1), SEEK_SET);
+        fwrite(buf, 1, (size_t)size, file_handles[filenum]);
+    }
+}
+
+/* ARRAY SORT helpers */
+static int cmp_i32(const void* a, const void* b) {
+    long x = *(const long*)a, y = *(const long*)b;
+    return (x > y) - (x < y);
+}
+static int cmp_i64(const void* a, const void* b) {
+    long long x = *(const long long*)a, y = *(const long long*)b;
+    return (x > y) - (x < y);
+}
+static int cmp_dbl(const void* a, const void* b) {
+    double x = *(const double*)a, y = *(const double*)b;
+    return (x > y) - (x < y);
+}
+static int cmp_f32(const void* a, const void* b) {
+    float x = *(const float*)a, y = *(const float*)b;
+    return (x > y) - (x < y);
+}
+static int cmp_str(const void* a, const void* b) {
+    const char* x = *(char* const*)a;
+    const char* y = *(char* const*)b;
+    if (!x) x = "";
+    if (!y) y = "";
+    return strcmp(x, y);
+}
+/* ARRAY SORT arr(): ascending sort of a PB array.
+   type: 0=LONG(4) 1=QUAD(8) 2=DOUBLE(8) 3=STRING(ptr,8) 4=SINGLE(4) */
+void pb_array_sort(char* base, int elem_size, int count, int type) {
+    if (!base || count <= 1) return;
+    switch (type) {
+        case 0: qsort(base, (size_t)count, (size_t)elem_size, cmp_i32); break;
+        case 1: qsort(base, (size_t)count, (size_t)elem_size, cmp_i64); break;
+        case 2: qsort(base, (size_t)count, (size_t)elem_size, cmp_dbl); break;
+        case 3: qsort(base, (size_t)count, (size_t)elem_size, cmp_str); break;
+        case 4: qsort(base, (size_t)count, (size_t)elem_size, cmp_f32); break;
     }
 }
 

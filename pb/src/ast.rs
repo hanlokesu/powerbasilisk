@@ -302,6 +302,7 @@ pub enum OpenMode {
     Output,
     Append,
     Input,
+    Binary,
 }
 
 #[derive(Debug, Clone)]

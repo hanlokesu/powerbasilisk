@@ -1274,6 +1274,24 @@ impl Compiler {
             &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_get",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_put",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_sort",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_reset", &IrType::Void, &[], false);
         self.module
@@ -2678,6 +2696,72 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "GET" | "PUT" => {
+                // GET #f [, pos], var  /  PUT #f [, pos], var
+                // args = [filenum, (pos), var]
+                if call.args.len() >= 2 {
+                    let f0 = self.compile_expr(fb, &call.args[0])?;
+                    let filenum = self.to_i32(fb, &f0);
+                    // pos: 3 args -> args[1] is position; 2 args -> current position (-1)
+                    let pos_val = if call.args.len() >= 3 {
+                        let p = self.compile_expr(fb, &call.args[1])?;
+                        self.to_i64(fb, &p)
+                    } else {
+                        fb.const_i64(-1)
+                    };
+                    let var_expr = &call.args[call.args.len() - 1];
+                    let (ptr, pb_type) = self.compile_lvalue_ptr(fb, var_expr)?;
+                    let size = match &pb_type {
+                        PbType::Byte => 1,
+                        PbType::Word | PbType::Integer => 2,
+                        PbType::Long | PbType::Dword => 4,
+                        PbType::Single => 4,
+                        PbType::Quad | PbType::Double | PbType::Ext | PbType::Cur => 8,
+                        PbType::FixedString(n) => *n as i64,
+                        _ => 0, // dynamic STRING / Variant / UDT: raw size not fixed
+                    };
+                    if size > 0 {
+                        fb.call_void(
+                            if call.name == "GET" {
+                                "pb_get"
+                            } else {
+                                "pb_put"
+                            },
+                            &[filenum, pos_val, ptr, fb.const_i64(size)],
+                        );
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY SORT" => {
+                // ARRAY SORT arr() [FOR n] [, DESCEND|ASCEND]
+                if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                    let name = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&name).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let (elem_size, sort_type) = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => (1, 0),
+                            IrType::I16 => (2, 0),
+                            IrType::I32 => (4, 0),
+                            IrType::Float => (4, 4),
+                            IrType::I64 => (8, 1),
+                            IrType::Double => (8, 2),
+                            IrType::Ptr => (8, 3),
+                            _ => (4, 0),
+                        };
+                        fb.call_void(
+                            "pb_array_sort",
+                            &[
+                                base,
+                                fb.const_i32(elem_size),
+                                fb.const_i32(arr_info.total_elements as i32),
+                                fb.const_i32(sort_type),
+                            ],
+                        );
+                    }
+                }
+                return Ok(());
+            }
             "LSET" | "RSET" => {
                 // LSET target$ = value  → pb_lset(&target, value, len)
                 if call.args.len() >= 2 {
@@ -3301,6 +3385,7 @@ impl Compiler {
             OpenMode::Input => fb.const_i32(0),
             OpenMode::Output => fb.const_i32(1),
             OpenMode::Append => fb.const_i32(2),
+            OpenMode::Binary => fb.const_i32(3),
         };
         let filenum = self.compile_expr(fb, &open.file_num)?;
         let filenum_i32 = self.to_i32(fb, &filenum);
@@ -3541,7 +3626,13 @@ impl Compiler {
 
     fn compile_expr(&mut self, fb: &mut FunctionBuilder, expr: &Expr) -> PbResult<Val> {
         match expr {
-            Expr::IntegerLit(n) => Ok(fb.const_i32(*n as i32)),
+            Expr::IntegerLit(n) => {
+                if *n >= i32::MIN as i64 && *n <= i32::MAX as i64 {
+                    Ok(fb.const_i32(*n as i32))
+                } else {
+                    Ok(fb.const_i64(*n))
+                }
+            }
             Expr::FloatLit(f) => Ok(fb.const_f64(*f)),
             Expr::StringLit(s) => {
                 let (str_name, _) = self.module.add_string_constant(s);

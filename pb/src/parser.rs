@@ -1574,6 +1574,43 @@ impl Parser {
                         line,
                     }));
                 }
+                // ARRAY SORT arr() [FOR n] [, DESCEND|ASCEND]
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SORT")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume SORT
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY SORT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // GET #filenum [, pos], var / PUT #filenum [, pos], var
+                // (binary file read/write; args = [filenum, (pos), var])
+                if (name_upper == "GET" || name_upper == "PUT")
+                    && self.peek_at(1) == Some(&Token::Hash)
+                {
+                    self.advance(); // consume GET/PUT
+                    self.advance(); // consume #
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: name_upper,
+                        args,
+                        line,
+                    }));
+                }
                 // SEEK #filenum, position&
                 if name_upper == "SEEK" && self.peek_at(1) == Some(&Token::Hash) {
                     self.advance(); // consume SEEK
@@ -2219,6 +2256,10 @@ impl Parser {
             Token::Input => {
                 self.advance();
                 OpenMode::Input
+            }
+            Token::Identifier(w) if w.to_uppercase() == "BINARY" => {
+                self.advance();
+                OpenMode::Binary
             }
             _ => {
                 self.consume_to_eol();

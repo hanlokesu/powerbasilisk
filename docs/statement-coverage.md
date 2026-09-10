@@ -12,14 +12,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 50 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 53 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 241 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 238 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (50)
+## ✅ Implemented (53)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| ARRAY SORT | STATEMENT | `pb_array_sort` |
 | ASC | STATEMENT | `core` |
 | BEEP | STATEMENT | `"BEEP"` |
 | CALL | STATEMENT | `core` |
@@ -37,6 +38,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FLUSH | STATEMENT | `pb_flush` |
 | FOR / NEXT | STATEMENT | `core` |
 | FUNCTION / END FUNCTION | STATEMENT | `core` |
+| GET | STATEMENT | `pb_get` |
 | IF | STATEMENT | `core` |
 | IF/END IF | BLOCK | `core` |
 | INCR | STATEMENT | `core` |
@@ -54,6 +56,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OPEN | STATEMENT | `compile_open` |
 | PARSE | STATEMENT | `core` |
 | PRINT# | STATEMENT | `pb_write_file` |
+| PUT | STATEMENT | `pb_put` |
 | RANDOMIZE | STATEMENT | `"RANDOMIZE"` |
 | REDIM | STATEMENT | `compile_dim` |
 | REPLACE | STATEMENT | `pb_replace` |
@@ -285,7 +288,7 @@ Function-class Win32 built-ins (also implemented):
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (241, alphabetical)
+## ⬜ Not implemented (238, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -300,7 +303,6 @@ Function-class Win32 built-ins (also implemented):
 | ARRAY SCAN | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SORT | STATEMENT | PB/Win + PB/CC | Established |
 | ARRAY SWAP | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -340,7 +342,6 @@ Function-class Win32 built-ins (also implemented):
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
-| GET | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GLOBAL | STATEMENT | PB/Win + PB/CC | Established |
@@ -382,7 +383,6 @@ Function-class Win32 built-ins (also implemented):
 | PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
-| PUT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | PUT$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
