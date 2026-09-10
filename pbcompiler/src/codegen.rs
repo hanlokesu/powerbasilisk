@@ -3382,11 +3382,18 @@ impl Compiler {
                 let str_ptr = Val::new(str_name, IrType::Ptr);
                 fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val]);
             } else if val.ty.is_int() {
-                let (str_name, _len) = self.module.add_string_constant("%d");
-                let str_ptr = Val::new(str_name, IrType::Ptr);
-                // Extend to i32 if needed
-                let val_i32 = self.to_i32(fb, &val);
-                fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val_i32]);
+                if val.ty == IrType::I64 {
+                    // QUAD: print as 64-bit, no truncation
+                    let (str_name, _len) = self.module.add_string_constant("%lld");
+                    let str_ptr = Val::new(str_name, IrType::Ptr);
+                    fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val]);
+                } else {
+                    let (str_name, _len) = self.module.add_string_constant("%d");
+                    let str_ptr = Val::new(str_name, IrType::Ptr);
+                    // Extend to i32 if needed
+                    let val_i32 = self.to_i32(fb, &val);
+                    fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val_i32]);
+                }
             } else if val.ty.is_float() {
                 let (str_name, _len) = self.module.add_string_constant("%.6g");
                 let str_ptr = Val::new(str_name, IrType::Ptr);
@@ -4742,15 +4749,39 @@ impl Compiler {
     fn num_to_string(&mut self, fb: &mut FunctionBuilder, val: &Val) -> Val {
         let buf_size = fb.const_i32(32);
         let buf = fb.call(&IrType::Ptr, "malloc", std::slice::from_ref(&buf_size));
-        let f64_val = self.to_f64(fb, val);
-        let (fmt_name, _) = self.module.add_string_constant("%g");
-        let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
-        fb.call_variadic_with_sig(
-            &IrType::I32,
-            "snprintf",
-            &[buf.clone(), buf_size, fmt_ptr, f64_val],
-            &[IrType::Ptr, IrType::I32, IrType::Ptr],
-        );
+        if val.ty.is_int() {
+            // Integers keep exact formatting: %lld for QUAD, %d otherwise
+            if val.ty == IrType::I64 {
+                let (fmt_name, _) = self.module.add_string_constant("%lld");
+                let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+                fb.call_variadic_with_sig(
+                    &IrType::I32,
+                    "snprintf",
+                    &[buf.clone(), buf_size, fmt_ptr, val.clone()],
+                    &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I64],
+                );
+            } else {
+                let (fmt_name, _) = self.module.add_string_constant("%d");
+                let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+                let val_i32 = self.to_i32(fb, val);
+                fb.call_variadic_with_sig(
+                    &IrType::I32,
+                    "snprintf",
+                    &[buf.clone(), buf_size, fmt_ptr, val_i32],
+                    &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+                );
+            }
+        } else {
+            let f64_val = self.to_f64(fb, val);
+            let (fmt_name, _) = self.module.add_string_constant("%g");
+            let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+            fb.call_variadic_with_sig(
+                &IrType::I32,
+                "snprintf",
+                &[buf.clone(), buf_size, fmt_ptr, f64_val],
+                &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            );
+        }
         let len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
         let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf.clone(), len]);
         fb.call_void("free", &[buf]);

@@ -509,7 +509,14 @@ int pb_open(const char* path, int mode, int filenum) {
         case 0: fmode = "r"; break;   /* INPUT */
         case 1: fmode = "w"; break;   /* OUTPUT */
         case 2: fmode = "a"; break;   /* APPEND */
-        case 3: fmode = "w+b"; break;  /* BINARY (read+write) */
+        case 3:
+            /* BINARY: open existing file read/write without truncating;
+               create it if it does not exist (PB semantics). */
+            file_handles[filenum] = fopen(path, "r+b");
+            if (!file_handles[filenum]) {
+                file_handles[filenum] = fopen(path, "w+b");
+            }
+            return (file_handles[filenum] != NULL) ? 0 : -1;
         default: fmode = "r"; break;
     }
     file_handles[filenum] = fopen(path, fmode);
