@@ -128,7 +128,7 @@ pub fn compile(
     // Link if requested
     if opts.dll_mode {
         let dll_path = output_path.with_extension("dll");
-        link_dll(&obj_paths[0], &dll_path, &opts.target)?;
+        link_dll(&obj_paths[0], &dll_path, opts)?;
         eprintln!("[pbcompiler] Linked DLL: {}", dll_path.display());
     }
 
@@ -351,19 +351,40 @@ fn generate_stub_module(original_ll: &Path, obj_path: &Path, target: &str) -> Pb
     compile_with_clang(&stub_ll, obj_path, "-O0", target)
 }
 
-fn link_dll(obj_path: &Path, dll_path: &Path, target: &str) -> PbResult<()> {
-    let target_flag = format!("--target={}", target);
-    let obj_str = obj_path.to_string_lossy();
-    let dll_str = dll_path.to_string_lossy();
+fn link_dll(obj_path: &Path, dll_path: &Path, opts: &CompileOptions) -> PbResult<()> {
+    let mut args: Vec<String> = vec![
+        "-shared".to_string(),
+        format!("--target={}", opts.target),
+        obj_path.to_string_lossy().to_string(),
+    ];
+
+    // Runtime library (pb_debug_enter, pb_bstr_alloc, pb_str_concat, ...)
+    if let Some(ref runtime) = opts.runtime_lib {
+        args.push(runtime.clone());
+    }
+
+    args.push("-o".to_string());
+    args.push(dll_path.to_string_lossy().to_string());
+    args.push("-loleaut32".to_string());
+
+    // Windows system libraries (same set as EXE linking)
+    if let Some(ref lib_dir) = opts.lib_dir {
+        args.push(format!("-L{}", lib_dir));
+        args.extend([
+            "-lkernel32".to_string(),
+            "-luser32".to_string(),
+            "-lgdi32".to_string(),
+            "-lshell32".to_string(),
+            "-lcomctl32".to_string(),
+            "-lcomdlg32".to_string(),
+            "-ladvapi32".to_string(),
+            "-lole32".to_string(),
+            "-lwinmm".to_string(),
+        ]);
+    }
+
     let output = std::process::Command::new("clang")
-        .args([
-            "-shared",
-            &target_flag,
-            obj_str.as_ref(),
-            "-loleaut32",
-            "-o",
-            dll_str.as_ref(),
-        ])
+        .args(&args)
         .output()
         .map_err(|e| PbError::io(format!("Failed to run clang for DLL linking: {}", e)))?;
 
@@ -1070,6 +1091,28 @@ impl Compiler {
             false,
         );
 
+        // Debug/crash facilities (declared unconditionally — every function
+        // body calls pb_debug_enter, including library/DLL sources without
+        // a PBMAIN entry point)
+        self.module
+            .declare_function("pb_install_crash_handler", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_debug_enter", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_debug_log_msg",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_debug_modal",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_external_global("pb_debug_line", &IrType::I32);
+
         // File I/O runtime
         self.module
             .declare_function("pb_freefile", &IrType::I32, &[], false);
@@ -1468,25 +1511,6 @@ impl Compiler {
         // Emit main() entry point that calls PBMAIN() if it exists
         if let Some(pbmain) = self.functions.get("PBMAIN") {
             let pbmain_ir_name = pbmain.ir_name.clone();
-            // Declare debug/crash facilities (from pb_runtime.c)
-            self.module
-                .declare_function("pb_install_crash_handler", &IrType::Void, &[], false);
-            self.module
-                .declare_function("pb_debug_enter", &IrType::Void, &[IrType::Ptr], false);
-            self.module.declare_function(
-                "pb_debug_log_msg",
-                &IrType::Void,
-                &[IrType::Ptr, IrType::Ptr],
-                false,
-            );
-            self.module.declare_function(
-                "pb_debug_modal",
-                &IrType::Void,
-                &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
-                false,
-            );
-            self.module
-                .declare_external_global("pb_debug_line", &IrType::I32);
             let mut fb = self
                 .module
                 .create_function_builder("main", &IrType::I32, &[]);

@@ -525,6 +525,10 @@ impl Parser {
                         self.advance();
                         Ok(PbType::Word)
                     }
+                    "CURRENCY" | "CUR" => {
+                        self.advance();
+                        Ok(PbType::Cur)
+                    }
                     "ASCIIZ" | "ASCIZ" => {
                         self.advance();
                         // ASCIIZ * N — fixed-size null-terminated string
@@ -709,19 +713,20 @@ impl Parser {
             Vec::new()
         };
 
-        let return_type = if self.peek() == &Token::As {
-            self.advance();
-            self.parse_type()?
-        } else {
-            type_from_suffix(&name)
-        };
-
-        // Optional EXPORT keyword
+        // Optional EXPORT keyword — comes BEFORE the AS return type in PB:
+        //   FUNCTION Foo (x AS LONG) EXPORT AS STRING
         let export = if self.peek() == &Token::Export {
             self.advance();
             true
         } else {
             false
+        };
+
+        let return_type = if self.peek() == &Token::As {
+            self.advance();
+            self.parse_type()?
+        } else {
+            type_from_suffix(&name)
         };
 
         self.consume_to_eol();
