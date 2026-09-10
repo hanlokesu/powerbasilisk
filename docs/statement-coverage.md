@@ -6,20 +6,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-08
+- Generated: 2026-09-10 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 41 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 50 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 250 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 241 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (41)
+## ✅ Implemented (50)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| ASC | STATEMENT | `core` |
 | BEEP | STATEMENT | `"BEEP"` |
 | CALL | STATEMENT | `core` |
 | CHDIR | STATEMENT | `_chdir` |
@@ -34,18 +35,24 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | EXIT | STATEMENT | `core` |
 | FILECOPY | STATEMENT | `pb_filecopy` |
 | FLUSH | STATEMENT | `pb_flush` |
+| FOR / NEXT | STATEMENT | `core` |
+| FUNCTION / END FUNCTION | STATEMENT | `core` |
 | IF | STATEMENT | `core` |
+| IF/END IF | BLOCK | `core` |
 | INCR | STATEMENT | `core` |
 | INPUT# | STATEMENT | `compile_input_file` |
 | ITERATE | STATEMENT | `core` |
 | KILL | STATEMENT | `pb_kill` |
+| LET | STATEMENT | `core` |
 | LINE INPUT# | STATEMENT | `compile_line_input_file` |
 | LOCK | STATEMENT | `pb_lock` |
 | LSET | STATEMENT | `pb_lset` |
+| MID$ | STATEMENT | `core` |
 | MKDIR | STATEMENT | `_mkdir` |
 | MSGBOX | STATEMENT | `MessageBoxA` |
 | NAME | STATEMENT | `pb_rename, pb_name` |
 | OPEN | STATEMENT | `compile_open` |
+| PARSE | STATEMENT | `core` |
 | PRINT# | STATEMENT | `pb_write_file` |
 | RANDOMIZE | STATEMENT | `"RANDOMIZE"` |
 | REDIM | STATEMENT | `compile_dim` |
@@ -55,11 +62,13 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RMDIR | STATEMENT | `_rmdir` |
 | RSET | STATEMENT | `pb_rset` |
 | SEEK | STATEMENT | `pb_seek` |
+| SELECT CASE/END SELECT | BLOCK | `core` |
 | SETATTR | STATEMENT | `pb_setattr` |
 | SHELL | STATEMENT | `ShellExecuteA` |
 | SLEEP | STATEMENT | `pb_sleep, "SLEEP"` |
 | SWAP | STATEMENT | `"SWAP"` |
 | UNLOCK | STATEMENT | `pb_unlock` |
+| VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `pb_write_file` |
 
 Function-class Win32 built-ins (also implemented):
@@ -276,7 +285,7 @@ Function-class Win32 built-ins (also implemented):
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (250, alphabetical)
+## ⬜ Not implemented (241, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -296,7 +305,6 @@ Function-class Win32 built-ins (also implemented):
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY UNIQUE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ASC | STATEMENT | PB/Win + PB/CC | Established |
 | ASM | STATEMENT | PB/Win + PB/CC | Established |
 | ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
 | BIT | STATEMENT | PB/Win + PB/CC | Established |
@@ -332,8 +340,6 @@ Function-class Win32 built-ins (also implemented):
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
-| FOR / NEXT | STATEMENT | PB/Win + PB/CC | Established |
-| FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | Established |
 | GET | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
@@ -342,7 +348,6 @@ Function-class Win32 built-ins (also implemented):
 | HEADER | STATEMENT | PB/Win only | Established |
 | HOST ADDR | STATEMENT | PB/Win + PB/CC | Established |
 | HOST NAME | STATEMENT | PB/Win + PB/CC | Established |
-| IF/END IF | BLOCK | PB/Win + PB/CC | Established |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
 | INPUT FLUSH | STATEMENT | PB/CC only | Established |
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
@@ -350,7 +355,6 @@ Function-class Win32 built-ins (also implemented):
 | INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
 | ISINFINITE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ISNORMAL | STATEMENT | PB/Win + PB/CC | Proposed New |
-| LET | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
@@ -363,7 +367,6 @@ Function-class Win32 built-ins (also implemented):
 | MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| MID$ | STATEMENT | PB/Win + PB/CC | Established |
 | MKBYT$, MKCUR$, MKCUX$, MKD$, MKDWD$, MKE$, MKI$, MKL$, MKQ$, MKS$ AND MKWRD$ | STATEMENT | PB/Win + PB/CC | Established |
 | MOUSEPTR | STATEMENT | PB/CC only | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
@@ -372,7 +375,6 @@ Function-class Win32 built-ins (also implemented):
 | ON GOSUB | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ON GOTO | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
-| PARSE | STATEMENT | PB/Win + PB/CC | Established |
 | PLAY SOUND | STATEMENT | PB/Win + PB/CC | Proposed New |
 | PLAY WAVE | STATEMENT | PB/Win + PB/CC | Established |
 | PREFIX | BLOCK | PB/Win + PB/CC | Established |
@@ -391,7 +393,6 @@ Function-class Win32 built-ins (also implemented):
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | ROTATE | STATEMENT | PB/Win + PB/CC | Established |
-| SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | Established |
 | SETEOF | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | SHIFT | STATEMENT | PB/Win + PB/CC | Established |
 | SPLIT | STATEMENT | PB/Win + PB/CC | Established |
@@ -423,7 +424,6 @@ Function-class Win32 built-ins (also implemented):
 | UDP OPEN | STATEMENT | PB/Win + PB/CC | Established |
 | UDP RECV | STATEMENT | PB/Win + PB/CC | Established |
 | UDP SEND | STATEMENT | PB/Win + PB/CC | Established |
-| VAL | STATEMENT | PB/Win + PB/CC | Established |
 | WINDOW GET | STATEMENT | PB/Win only | Established |
 | WINDOW SET | STATEMENT | PB/Win only | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
