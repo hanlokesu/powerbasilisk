@@ -168,8 +168,8 @@ impl Parser {
         match self.peek().clone() {
             Token::Global => self.parse_global_decl(),
             Token::Dim => {
-                let stmt = self.parse_dim_statement(DimScope::Dim)?;
-                Ok(Some(TopLevel::DimDecl(stmt)))
+                let stmts = self.parse_dim_statement(DimScope::Dim)?;
+                Ok(Some(TopLevel::DimDeclList(stmts)))
             }
             Token::Redim => {
                 let stmt = self.parse_redim_statement()?;
@@ -292,7 +292,12 @@ impl Parser {
     }
 
     fn parse_global_var_list(&mut self, line: usize) -> PbResult<Vec<VarDecl>> {
-        let mut decls = Vec::new();
+        let mut decls: Vec<VarDecl> = Vec::new();
+        // PB semantics: a trailing AS type-fills the whole list, both
+        // back-filling previously untyped names and propagating forward.
+        // `GLOBAL a, b AS QUAD` declares both a and b as QUAD.
+        let mut pending_type: Option<PbType> = None;
+        let mut untyped: Vec<usize> = Vec::new();
         loop {
             let name = self.consume_identifier()?;
 
@@ -300,11 +305,22 @@ impl Parser {
             if self.peek() == &Token::LParen {
                 self.advance(); // (
                 self.expect(&Token::RParen)?; // )
+                let idx = decls.len();
                 let pb_type = if self.peek() == &Token::As {
                     self.advance();
-                    self.parse_type()?
+                    let t = self.parse_type()?;
+                    for i in &untyped {
+                        decls[*i].pb_type = t.clone();
+                    }
+                    untyped.clear();
+                    pending_type = Some(t.clone());
+                    t
+                } else if let Some(t) = &pending_type {
+                    t.clone()
                 } else {
-                    type_from_suffix(&name)
+                    let t = type_from_suffix(&name);
+                    untyped.push(idx);
+                    t
                 };
                 decls.push(VarDecl {
                     name,
@@ -314,16 +330,30 @@ impl Parser {
                 });
             } else if self.peek() == &Token::As {
                 self.advance();
-                let pb_type = self.parse_type()?;
+                let t = self.parse_type()?;
+                for i in &untyped {
+                    decls[*i].pb_type = t.clone();
+                }
+                untyped.clear();
+                pending_type = Some(t.clone());
                 decls.push(VarDecl {
                     name,
-                    pb_type,
+                    pb_type: t,
+                    is_array: false,
+                    line,
+                });
+            } else if let Some(t) = &pending_type {
+                decls.push(VarDecl {
+                    name,
+                    pb_type: t.clone(),
                     is_array: false,
                     line,
                 });
             } else {
                 // GLOBAL name (no type, infer from suffix)
+                let idx = decls.len();
                 let pb_type = type_from_suffix(&name);
+                untyped.push(idx);
                 decls.push(VarDecl {
                     name,
                     pb_type,
@@ -342,7 +372,7 @@ impl Parser {
         Ok(decls)
     }
 
-    fn parse_dim_statement(&mut self, scope: DimScope) -> PbResult<DimStatement> {
+    fn parse_dim_statement(&mut self, scope: DimScope) -> PbResult<Vec<DimStatement>> {
         let line = self.current_line();
         self.advance(); // consume DIM/LOCAL/STATIC
 
@@ -354,35 +384,62 @@ impl Parser {
             scope
         };
 
-        let name = self.consume_identifier()?;
+        let mut stmts: Vec<DimStatement> = Vec::new();
+        // PB semantics: a trailing AS type-fills the whole list, both
+        // back-filling previously untyped names and propagating forward
+        // until the next AS. E.g. `DIM a, b AS LONG` → a and b are LONG.
+        let mut pending_type: Option<PbType> = None;
+        let mut untyped: Vec<usize> = Vec::new();
 
-        // Array bounds
-        let mut bounds = Vec::new();
-        if self.peek() == &Token::LParen {
-            self.advance();
-            if self.peek() != &Token::RParen {
-                bounds = self.parse_dim_bounds()?;
+        loop {
+            let name = self.consume_identifier()?;
+
+            // Array bounds
+            let mut bounds = Vec::new();
+            if self.peek() == &Token::LParen {
+                self.advance();
+                if self.peek() != &Token::RParen {
+                    bounds = self.parse_dim_bounds()?;
+                }
+                self.expect(&Token::RParen)?;
             }
-            self.expect(&Token::RParen)?;
+
+            let idx = stmts.len();
+            let pb_type = if self.peek() == &Token::As {
+                self.advance();
+                let t = self.parse_type()?;
+                for i in &untyped {
+                    stmts[*i].pb_type = t.clone();
+                }
+                untyped.clear();
+                pending_type = Some(t.clone());
+                t
+            } else if let Some(t) = &pending_type {
+                t.clone()
+            } else {
+                let t = type_from_suffix(&name);
+                untyped.push(idx);
+                t
+            };
+
+            stmts.push(DimStatement {
+                scope: actual_scope.clone(),
+                name,
+                pb_type,
+                bounds,
+                line,
+                is_redim: false,
+            });
+
+            if self.peek() == &Token::Comma {
+                self.advance();
+            } else {
+                break;
+            }
         }
 
-        // AS Type (optional — if missing, infer from suffix)
-        let pb_type = if self.peek() == &Token::As {
-            self.advance();
-            self.parse_type()?
-        } else {
-            type_from_suffix(&name)
-        };
-
         self.consume_to_eol();
-        Ok(DimStatement {
-            scope: actual_scope,
-            name,
-            pb_type,
-            bounds,
-            line,
-            is_redim: false,
-        })
+        Ok(stmts)
     }
 
     fn parse_redim_statement(&mut self) -> PbResult<DimStatement> {
@@ -1210,21 +1267,39 @@ impl Parser {
                 }
             }
             Token::Dim => {
-                let dim = self.parse_dim_statement(DimScope::Dim)?;
-                Ok(Statement::Dim(dim))
+                let dims = self.parse_dim_statement(DimScope::Dim)?;
+                if dims.len() == 1 {
+                    Ok(Statement::Dim(dims.into_iter().next().unwrap()))
+                } else {
+                    Ok(Statement::Block(
+                        dims.into_iter().map(Statement::Dim).collect(),
+                    ))
+                }
             }
             Token::Redim => {
                 let dim = self.parse_redim_statement()?;
                 Ok(Statement::Redim(dim))
             }
             Token::Static => {
-                let dim = self.parse_dim_statement(DimScope::Static)?;
-                Ok(Statement::Dim(dim))
+                let dims = self.parse_dim_statement(DimScope::Static)?;
+                if dims.len() == 1 {
+                    Ok(Statement::Dim(dims.into_iter().next().unwrap()))
+                } else {
+                    Ok(Statement::Block(
+                        dims.into_iter().map(Statement::Dim).collect(),
+                    ))
+                }
             }
             Token::Global => {
                 // GLOBAL inside a sub (shouldn't happen but handle gracefully)
-                let dim = self.parse_dim_statement(DimScope::Global)?;
-                Ok(Statement::Dim(dim))
+                let dims = self.parse_dim_statement(DimScope::Global)?;
+                if dims.len() == 1 {
+                    Ok(Statement::Dim(dims.into_iter().next().unwrap()))
+                } else {
+                    Ok(Statement::Block(
+                        dims.into_iter().map(Statement::Dim).collect(),
+                    ))
+                }
             }
             Token::On => {
                 self.advance();
@@ -1834,7 +1909,13 @@ impl Parser {
         let line = self.current_line();
         self.advance(); // LOCAL
 
-        let mut dims = Vec::new();
+        let mut dims: Vec<DimStatement> = Vec::new();
+        // PB semantics: `LOCAL aaa, bbb, ccc AS INTEGER` declares ALL names
+        // with the trailing type. So a trailing AS both (a) back-fills every
+        // previously untyped name in the list and (b) propagates forward to
+        // later names until the next AS.
+        let mut pending_type: Option<PbType> = None;
+        let mut untyped: Vec<usize> = Vec::new(); // indices of names w/o AS yet
 
         loop {
             let name = self.consume_identifier()?;
@@ -1848,11 +1929,23 @@ impl Parser {
                 self.expect(&Token::RParen)?;
             }
 
+            let idx = dims.len();
             let pb_type = if self.peek() == &Token::As {
                 self.advance();
-                self.parse_type()?
+                let t = self.parse_type()?;
+                // Back-fill all previously untyped names with this type
+                for i in &untyped {
+                    dims[*i].pb_type = t.clone();
+                }
+                untyped.clear();
+                pending_type = Some(t.clone());
+                t
+            } else if let Some(t) = &pending_type {
+                t.clone()
             } else {
-                type_from_suffix(&name)
+                let t = type_from_suffix(&name);
+                untyped.push(idx);
+                t
             };
 
             dims.push(DimStatement {

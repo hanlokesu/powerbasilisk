@@ -1386,6 +1386,13 @@ impl Compiler {
                         future_arrays.insert(normalize_name(&dim.name));
                     }
                 }
+                TopLevel::DimDeclList(dims) => {
+                    for dim in dims {
+                        if !dim.bounds.is_empty() {
+                            future_arrays.insert(normalize_name(&dim.name));
+                        }
+                    }
+                }
                 TopLevel::SubDecl(sd) => {
                     Self::scan_body_for_array_names(&sd.body, &mut future_arrays);
                 }
@@ -1437,23 +1444,11 @@ impl Compiler {
                     }
                 }
                 TopLevel::DimDecl(dim) => {
-                    let name = normalize_name(&dim.name);
-                    if !dim.bounds.is_empty() {
-                        // Top-level DIM with bounds → declare as global array
-                        let pb_type = if let Some(pt) = self.pending_global_arrays.get(&name) {
-                            pt.clone()
-                        } else {
-                            dim.pb_type.clone()
-                        };
-                        self.declare_global_array(&name, &pb_type, &dim.bounds);
-                    } else if dim.scope == DimScope::Global {
-                        let vd = VarDecl {
-                            name: dim.name.clone(),
-                            pb_type: dim.pb_type.clone(),
-                            is_array: false,
-                            line: dim.line,
-                        };
-                        self.declare_global(&vd);
+                    self.compile_top_level_dim(dim);
+                }
+                TopLevel::DimDeclList(dims) => {
+                    for dim in dims {
+                        self.compile_top_level_dim(dim);
                     }
                 }
                 _ => {}
@@ -2316,6 +2311,27 @@ impl Compiler {
                 }
             }
             _ => Err(PbError::runtime("Not an lvalue".to_string())),
+        }
+    }
+
+    fn compile_top_level_dim(&mut self, dim: &DimStatement) {
+        let name = normalize_name(&dim.name);
+        if !dim.bounds.is_empty() {
+            // Top-level DIM with bounds → declare as global array
+            let pb_type = if let Some(pt) = self.pending_global_arrays.get(&name) {
+                pt.clone()
+            } else {
+                dim.pb_type.clone()
+            };
+            self.declare_global_array(&name, &pb_type, &dim.bounds);
+        } else if dim.scope == DimScope::Global {
+            let vd = VarDecl {
+                name: dim.name.clone(),
+                pb_type: dim.pb_type.clone(),
+                is_array: false,
+                line: dim.line,
+            };
+            self.declare_global(&vd);
         }
     }
 

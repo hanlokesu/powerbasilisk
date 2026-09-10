@@ -89,6 +89,11 @@ impl Interpreter {
                     // Top-level DIM — evaluate bounds and create array
                     self.exec_dim(dim)?;
                 }
+                TopLevel::DimDeclList(dims) => {
+                    for dim in dims {
+                        self.exec_dim(dim)?;
+                    }
+                }
                 TopLevel::TypeDecl(td) => {
                     self.types.insert(td.name.clone(), td.clone());
                 }

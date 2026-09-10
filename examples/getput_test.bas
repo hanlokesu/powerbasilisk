@@ -1,10 +1,7 @@
-' GET/PUT binary file I/O verification (LONG + QUAD, each with own AS)
+' GET/PUT binary file I/O + list declarations (LOCAL a, b AS TYPE)
 FUNCTION PBMAIN() AS LONG
-    LOCAL f AS LONG
-    LOCAL a AS LONG
-    LOCAL b AS LONG
-    LOCAL q1 AS QUAD
-    LOCAL q2 AS QUAD
+    LOCAL f, a, b AS LONG
+    LOCAL q1, q2 AS QUAD
     f = FREEFILE
     OPEN "getput_test.dat" FOR BINARY AS #f
     a = 123456789

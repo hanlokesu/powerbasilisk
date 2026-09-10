@@ -44,6 +44,7 @@ pub enum TopLevel {
     GlobalDecl(VarDecl),
     GlobalDeclList(Vec<VarDecl>),
     DimDecl(DimStatement),
+    DimDeclList(Vec<DimStatement>),
     ConstDecl(ConstDecl),
     TypeDecl(TypeDecl),
     SubDecl(SubDecl),
