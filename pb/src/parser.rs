@@ -447,6 +447,24 @@ impl Parser {
     }
 
     fn parse_type(&mut self) -> PbResult<PbType> {
+        let t = self.parse_type_inner()?;
+        // PTR suffix: DWORD PTR / ASCIIZ PTR / LONG PTR — x64 pointers are 64-bit
+        if let Token::Identifier(s) = self.peek() {
+            if s.eq_ignore_ascii_case("PTR") {
+                self.advance();
+                return Ok(PbType::Quad);
+            }
+        }
+        // Bare PTR (already consumed as UserDefined("PTR"))
+        if let PbType::UserDefined(n) = &t {
+            if n.eq_ignore_ascii_case("PTR") {
+                return Ok(PbType::Quad);
+            }
+        }
+        Ok(t)
+    }
+
+    fn parse_type_inner(&mut self) -> PbResult<PbType> {
         // Skip LOCAL keyword if present (PB allows DIM arr() AS LOCAL STRING)
         if self.peek() == &Token::Local {
             self.advance();
@@ -1712,10 +1730,40 @@ impl Parser {
                 self.advance(); // consume identifier
                 let mut args = Vec::new();
                 if !self.at_eol_or_eof() && !matches!(self.peek(), Token::Else | Token::ElseIf) {
-                    args.push(self.parse_expression()?);
+                    // BYVAL/BYCOPY modifier in no-paren calls: Foo a, BYVAL %NULL
+                    let mut has_byval = matches!(self.peek(), Token::Byval);
+                    if has_byval {
+                        self.advance(); // consume BYVAL
+                    }
+                    if matches!(self.peek(), Token::Identifier(ref s) if s.eq_ignore_ascii_case("BYCOPY"))
+                    {
+                        has_byval = true;
+                        self.advance(); // consume BYCOPY
+                    }
+                    let e = self.parse_expression()?;
+                    args.push(if has_byval {
+                        Expr::ByvalOverride(Box::new(e))
+                    } else {
+                        e
+                    });
                     while self.peek() == &Token::Comma {
                         self.advance();
-                        args.push(self.parse_expression()?);
+                        // Each subsequent arg may also carry BYVAL/BYCOPY
+                        let mut hb = matches!(self.peek(), Token::Byval);
+                        if hb {
+                            self.advance();
+                        }
+                        if matches!(self.peek(), Token::Identifier(ref s2) if s2.eq_ignore_ascii_case("BYCOPY"))
+                        {
+                            hb = true;
+                            self.advance();
+                        }
+                        let e2 = self.parse_expression()?;
+                        args.push(if hb {
+                            Expr::ByvalOverride(Box::new(e2))
+                        } else {
+                            e2
+                        });
                     }
                 }
                 self.consume_to_eol();

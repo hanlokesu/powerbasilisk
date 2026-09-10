@@ -58,8 +58,15 @@ impl Preprocessor {
         }
         self.included.insert(canonical.clone());
 
-        let content = std::fs::read_to_string(&canonical)
+        // PB sources are often ANSI/GBK (not UTF-8). Try UTF-8 first; on
+        // failure fall back to lossy decode (comments/strings may show
+        // replacement chars, but ASCII keywords & structure are unaffected).
+        let bytes = std::fs::read(&canonical)
             .map_err(|e| PbError::io(format!("Cannot read {}: {}", canonical.display(), e)))?;
+        let content = match String::from_utf8(bytes.clone()) {
+            Ok(s) => s,
+            Err(_) => String::from_utf8_lossy(&bytes).into_owned(),
+        };
 
         self.process_source(&content, &canonical)
     }
@@ -176,8 +183,8 @@ impl Preprocessor {
 
             let upper_full = trimmed_full.to_uppercase();
 
-            // #COMPILE — skip entirely
-            if upper_full.starts_with("#COMPILE") {
+            // #COMPILE / #COMPILER — skip entirely
+            if upper_full.starts_with("#COMPILE") || upper_full.starts_with("#COMPILER") {
                 i += 1;
                 continue;
             }
