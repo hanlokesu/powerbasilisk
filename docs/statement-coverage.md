@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 36 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 41 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 255 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 250 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (36)
+## ✅ Implemented (41)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -24,11 +24,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CALL | STATEMENT | `core` |
 | CHDIR | STATEMENT | `_chdir` |
 | CLOSE | STATEMENT | `compile_close` |
+| CLS | STATEMENT | `pb_cls` |
 | DECR | STATEMENT | `core` |
 | DIM | STATEMENT | `compile_dim` |
 | END | STATEMENT | `core` |
+| ENVIRON | STATEMENT | `pb_environ_set` |
 | ERASE | STATEMENT | `pb_erase_array` |
+| ERROR | STATEMENT | `pb_err` |
 | EXIT | STATEMENT | `core` |
+| FILECOPY | STATEMENT | `pb_filecopy` |
 | FLUSH | STATEMENT | `pb_flush` |
 | IF | STATEMENT | `core` |
 | INCR | STATEMENT | `core` |
@@ -51,6 +55,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RMDIR | STATEMENT | `_rmdir` |
 | RSET | STATEMENT | `pb_rset` |
 | SEEK | STATEMENT | `pb_seek` |
+| SETATTR | STATEMENT | `pb_setattr` |
 | SHELL | STATEMENT | `ShellExecuteA` |
 | SLEEP | STATEMENT | `pb_sleep, "SLEEP"` |
 | SWAP | STATEMENT | `"SWAP"` |
@@ -271,7 +276,7 @@ Function-class Win32 built-ins (also implemented):
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (255, alphabetical)
+## ⬜ Not implemented (250, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -301,7 +306,6 @@ Function-class Win32 built-ins (also implemented):
 | CHDRIVE | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
 | CLIPBOARD | STATEMENT | PB/Win + PB/CC | Established |
-| CLS | STATEMENT | PB/CC only | Established |
 | COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM OPEN | STATEMENT | PB/Win + PB/CC | Established |
@@ -324,12 +328,9 @@ Function-class Win32 built-ins (also implemented):
 | DISPLAY FONT | STATEMENT | PB/Win only | Established |
 | DISPLAY OPENFILE | STATEMENT | PB/Win only | Established |
 | DISPLAY SAVEFILE | STATEMENT | PB/Win only | Established |
-| ENVIRON | STATEMENT | PB/Win + PB/CC | Established |
-| ERROR | STATEMENT | PB/Win + PB/CC | Established |
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
-| FILECOPY | STATEMENT | PB/Win + PB/CC | Established |
 | FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
 | FOR / NEXT | STATEMENT | PB/Win + PB/CC | Established |
 | FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | Established |
@@ -391,7 +392,6 @@ Function-class Win32 built-ins (also implemented):
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | ROTATE | STATEMENT | PB/Win + PB/CC | Established |
 | SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | Established |
-| SETATTR | STATEMENT | PB/Win + PB/CC | Established |
 | SETEOF | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | SHIFT | STATEMENT | PB/Win + PB/CC | Established |
 | SPLIT | STATEMENT | PB/Win + PB/CC | Established |

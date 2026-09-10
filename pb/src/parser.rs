@@ -1228,6 +1228,21 @@ impl Parser {
                 self.consume_to_eol();
                 Ok(Statement::Noop("ON ERROR".to_string(), line))
             }
+            Token::Error => {
+                // ERROR n — set the PB error code (readable via ERR)
+                self.advance(); // consume ERROR
+                let args = if !self.at_eol_or_eof() {
+                    vec![self.parse_expression()?]
+                } else {
+                    Vec::new()
+                };
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "ERROR".to_string(),
+                    args,
+                    line,
+                }))
+            }
             Token::Replace => {
                 // REPLACE old$ WITH new$ IN target$
                 self.advance();

@@ -24,6 +24,9 @@ __declspec(dllimport) void __stdcall SysFreeString(char* bstrString);
 __declspec(dllimport) void* __stdcall AddVectoredExceptionHandler(unsigned long First, void* Handler);
 __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
 __declspec(dllimport) int __stdcall MessageBoxA(void* hWnd, const char* lpText, const char* lpCaption, unsigned int uType);
+__declspec(dllimport) int __stdcall CopyFileA(const char* lpExistingFileName, const char* lpNewFileName, int bFailIfExists);
+__declspec(dllimport) unsigned long __stdcall GetLastError(void);
+__declspec(dllimport) int __stdcall SetFileAttributesA(const char* lpFileName, unsigned long dwFileAttributes);
 #endif
 
 /* ===== Debug/crash reporting ===== */
@@ -622,6 +625,57 @@ void pb_input_file_dbl(int filenum, double* dest) {
 
 void pb_kill(const char* path) {
     if (path) remove(path);
+}
+
+/* pb_err is defined later in this file (global ERR variable) */
+extern int pb_err;
+
+/* CLS: clear the console screen (PB/CC) */
+void pb_cls(void) {
+    system("cls");
+}
+
+/* ENVIRON "VAR=value" (statement form): set / remove an environment variable.
+   With '=' → set. Without '=' → remove the variable. */
+void pb_environ_set(const char* s) {
+    if (!s) return;
+    if (strchr(s, '=')) {
+        _putenv(s);
+    } else {
+        size_t n = strlen(s);
+        char* buf = (char*)malloc(n + 2);
+        if (!buf) return;
+        memcpy(buf, s, n);
+        buf[n] = '=';
+        buf[n + 1] = '\0';
+        _putenv(buf);
+        free(buf);
+    }
+}
+
+/* FILECOPY src$, dst$ — copy a file. Sets ERR on failure (PB semantics). */
+int pb_filecopy(const char* src, const char* dst) {
+    if (!src || !dst) { pb_err = 76; return -1; }
+    if (!CopyFileA(src, dst, 0)) {
+        unsigned long e = GetLastError();
+        if (e == 2)       pb_err = 53;  /* ERROR_FILE_NOT_FOUND */
+        else if (e == 5)  pb_err = 70;  /* ERROR_ACCESS_DENIED */
+        else              pb_err = 76;  /* path / other */
+        return -1;
+    }
+    pb_err = 0;
+    return 0;
+}
+
+/* SETATTR "path", attr& — set file attributes. Sets ERR on failure. */
+void pb_setattr(const char* path, int attr) {
+    if (!path) { pb_err = 76; return; }
+    if (!SetFileAttributesA(path, (unsigned long)attr)) {
+        unsigned long e = GetLastError();
+        pb_err = (e == 2) ? 53 : 76;
+    } else {
+        pb_err = 0;
+    }
 }
 
 /* ===== ERR system variable (PB-compatible error code) ===== */

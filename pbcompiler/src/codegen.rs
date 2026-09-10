@@ -1118,6 +1118,22 @@ impl Compiler {
         self.module
             .declare_function("pb_kill", &IrType::I32, &[IrType::Ptr], false);
         self.module
+            .declare_function("pb_cls", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_environ_set", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_filecopy",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_setattr",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
             .declare_function("_errno", &IrType::Ptr, &[], false);
 
         // C string library (size_t = i32 on 32-bit)
@@ -2376,6 +2392,48 @@ impl Compiler {
                     let null = Val::new("null".to_string(), IrType::Ptr);
                     let t = fb.call(&IrType::I32, "time", &[null]);
                     fb.call_void("srand", &[t]);
+                }
+                return Ok(());
+            }
+            "CLS" => {
+                // CLS — clear the console screen (PB/CC)
+                fb.call_void("pb_cls", &[]);
+                return Ok(());
+            }
+            "ERROR" => {
+                // ERROR n — set the PB error code (readable via ERR)
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    let n = self.to_i32(fb, &v);
+                    let g = Val::new("@pb_err".to_string(), IrType::Ptr);
+                    fb.store(&n, &g);
+                }
+                return Ok(());
+            }
+            "ENVIRON" => {
+                // ENVIRON "VAR=value" / ENVIRON "VAR" — set/remove env var
+                if let Some(arg) = call.args.first() {
+                    let s = self.compile_expr(fb, arg)?;
+                    fb.call_void("pb_environ_set", &[s]);
+                }
+                return Ok(());
+            }
+            "FILECOPY" => {
+                // FILECOPY src$, dst$ — copy a file (sets ERR on failure)
+                if call.args.len() >= 2 {
+                    let src = self.compile_expr(fb, &call.args[0])?;
+                    let dst = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_filecopy", &[src, dst]);
+                }
+                return Ok(());
+            }
+            "SETATTR" => {
+                // SETATTR "path", attr& — set file attributes
+                if call.args.len() >= 2 {
+                    let path = self.compile_expr(fb, &call.args[0])?;
+                    let attr = self.compile_expr(fb, &call.args[1])?;
+                    let a = self.to_i32(fb, &attr);
+                    fb.call_void("pb_setattr", &[path, a]);
                 }
                 return Ok(());
             }

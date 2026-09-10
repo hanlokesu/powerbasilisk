@@ -219,8 +219,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **36** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **255** documented upstream with no codegen evidence yet.
+> Summary: **41** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **250** documented upstream with no codegen evidence yet.
 
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
@@ -242,6 +242,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `RND` bare form (no parens) | ✅ | same as `RND()` — random double in [0,1) |
 | `INPUT #f, s$` reading `WRITE #` output | ✅ | CSV double-quotes stripped per PB semantics |
 | `PRINT` console output | ✅ | flushed immediately after each line (visible under redirection / on abort) |
+| `CLS` | ✅ | `pb_cls` → clears the console screen (PB/CC) |
+| `ERROR n` | ✅ | sets the PB error code (readable via `ERR`) |
+| `ENVIRON "VAR=value"` | ✅ | `pb_environ_set` → `_putenv`; bare `ENVIRON "VAR"` removes the variable |
+| `FILECOPY src$, dst$` | ✅ | `pb_filecopy` → `CopyFileA`, PB-compatible `ERR` on failure (53/70/76) |
+| `SETATTR "path", attr&` | ✅ | `pb_setattr` → `SetFileAttributesA`, PB-compatible `ERR` on failure |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
