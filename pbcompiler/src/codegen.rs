@@ -2336,7 +2336,19 @@ impl Compiler {
                 return Ok(());
             }
             // Local array
-            let elem_ir = Self::ir_type_for(&dim.pb_type);
+            // REDIM without an explicit type (parser marks it Variant): inherit
+            // the type declared earlier, e.g. `LOCAL sarr() AS STRING` followed
+            // by `REDIM sarr(1 TO 4)`. Falls back to LONG when undeclared.
+            let arr_pb_type = if matches!(dim.pb_type, PbType::Variant) {
+                if let Some(info) = self.symbols.lookup(&name) {
+                    info.pb_type.clone()
+                } else {
+                    PbType::Long
+                }
+            } else {
+                dim.pb_type.clone()
+            };
+            let elem_ir = Self::ir_type_for(&arr_pb_type);
             let mut dims = Vec::new();
             let mut total = 1usize;
             for bound in &dim.bounds {
@@ -2354,8 +2366,8 @@ impl Compiler {
                 ArrayInfo {
                     ptr_name: ptr.name,
                     array_ir_type: array_ir,
-                    elem_ir_type: elem_ir,
-                    pb_type: dim.pb_type.clone(),
+                    elem_ir_type: elem_ir.clone(),
+                    pb_type: arr_pb_type,
                     dims,
                     total_elements: total,
                 },

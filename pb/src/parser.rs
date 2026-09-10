@@ -404,7 +404,15 @@ impl Parser {
             self.advance();
             self.parse_type()?
         } else {
-            type_from_suffix(&name)
+            let t = type_from_suffix(&name);
+            // REDIM without an explicit type: if the name has no type suffix,
+            // mark it Variant so codegen can inherit the type declared earlier
+            // (e.g. `LOCAL sarr() AS STRING` + `REDIM sarr(1 TO 4)`).
+            if has_type_suffix(&name) {
+                t
+            } else {
+                PbType::Variant
+            }
         };
 
         self.consume_to_eol();
@@ -2606,4 +2614,17 @@ fn type_from_suffix(name: &str) -> PbType {
     } else {
         PbType::Long // PB default numeric type
     }
+}
+
+fn has_type_suffix(name: &str) -> bool {
+    name.ends_with("##")
+        || name.ends_with('#')
+        || name.ends_with("&&")
+        || name.ends_with('&')
+        || name.ends_with("%%")
+        || name.ends_with('%')
+        || name.ends_with('!')
+        || name.ends_with("@@")
+        || name.ends_with('@')
+        || name.ends_with('$')
 }
