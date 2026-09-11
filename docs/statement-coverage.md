@@ -12,92 +12,89 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 68 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 75 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 223 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 216 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (68)
+## ✅ Implemented (75)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
-| ARRAY SORT | STATEMENT | `pb_array_sort` |
+| ARRAY DELETE | STATEMENT | `core` |
+| ARRAY INSERT | STATEMENT | `core` |
+| ARRAY REVERSE | STATEMENT | `core` |
+| ARRAY SCAN | STATEMENT | `core` |
+| ARRAY SHUFFLE | STATEMENT | `core` |
+| ARRAY SORT | STATEMENT | `core` |
 | ASC | STATEMENT | `core` |
-| BEEP | STATEMENT | `"BEEP"` |
+| BEEP | STATEMENT | `core` |
+| BIT | STATEMENT | `core` |
+| BIT CALC | STATEMENT | `core` |
 | CALL | STATEMENT | `core` |
-| CHDIR | STATEMENT | `_chdir` |
-| CLOSE | STATEMENT | `compile_close` |
-| CLS | STATEMENT | `pb_cls` |
+| CHDIR | STATEMENT | `core` |
+| CHDRIVE | STATEMENT | `core` |
+| CLOSE | STATEMENT | `core` |
+| CLS | STATEMENT | `PB/CC only` |
+| DATA | STATEMENT | `core` |
 | DECR | STATEMENT | `core` |
-| DIM | STATEMENT | `compile_dim` |
+| DIM | STATEMENT | `core` |
 | END | STATEMENT | `core` |
-| ENVIRON | STATEMENT | `pb_environ_set` |
-| ERASE | STATEMENT | `pb_erase_array` |
-| ERROR | STATEMENT | `pb_err` |
+| ENVIRON | STATEMENT | `core` |
+| ERASE | STATEMENT | `core` |
+| ERROR | STATEMENT | `core` |
 | EXIT | STATEMENT | `core` |
-| FILECOPY | STATEMENT | `pb_filecopy` |
-| FLUSH | STATEMENT | `pb_flush` |
+| FILECOPY | STATEMENT | `core` |
+| FLUSH | STATEMENT | `core` |
 | FOR / NEXT | STATEMENT | `core` |
 | FUNCTION / END FUNCTION | STATEMENT | `core` |
-| GET | STATEMENT | `pb_get` |
+| GET | STATEMENT | `core` |
 | IF | STATEMENT | `core` |
 | IF/END IF | BLOCK | `core` |
 | INCR | STATEMENT | `core` |
-| INPUT# | STATEMENT | `compile_input_file` |
+| INPUT# | STATEMENT | `PB/CC only` |
+| ISINFINITE | STATEMENT | `core` |
+| ISNORMAL | STATEMENT | `core` |
 | ITERATE | STATEMENT | `core` |
-| KILL | STATEMENT | `pb_kill` |
+| KILL | STATEMENT | `core` |
 | LET | STATEMENT | `core` |
-| LINE INPUT# | STATEMENT | `compile_line_input_file` |
-| LOCK | STATEMENT | `pb_lock` |
-| LSET | STATEMENT | `pb_lset` |
+| LINE INPUT# | STATEMENT | `core` |
+| LOCK | STATEMENT | `core` |
+| LSET | STATEMENT | `core` |
 | MID$ | STATEMENT | `core` |
-| MKDIR | STATEMENT | `_mkdir` |
-| MSGBOX | STATEMENT | `MessageBoxA` |
-| NAME | STATEMENT | `pb_rename, pb_name` |
-| OPEN | STATEMENT | `compile_open` |
+| MKBYT$ | MKCUR$ | `MKCUX$` |
+| MKDIR | STATEMENT | `core` |
+| MSGBOX | STATEMENT | `PB/Win only` |
+| NAME | STATEMENT | `core` |
+| OPEN | STATEMENT | `core` |
 | PARSE | STATEMENT | `core` |
-| PRINT# | STATEMENT | `pb_write_file` |
-| PUT | STATEMENT | `pb_put` |
-| RANDOMIZE | STATEMENT | `"RANDOMIZE"` |
-| REDIM | STATEMENT | `compile_dim` |
-| REPLACE | STATEMENT | `pb_replace` |
-| RESET | STATEMENT | `pb_reset` |
+| PLAY SOUND | STATEMENT | `core` |
+| PLAY WAVE | STATEMENT | `core` |
+| PRINT# | STATEMENT | `core` |
+| PROCESS GET PRIORITY | STATEMENT | `core` |
+| PROCESS SET PRIORITY | STATEMENT | `core` |
+| PUT | STATEMENT | `core` |
+| PUT$ | STATEMENT | `core` |
+| RANDOMIZE | STATEMENT | `core` |
+| REDIM | STATEMENT | `core` |
+| REPLACE | STATEMENT | `core` |
+| RESET | STATEMENT | `core` |
 | RETURN | STATEMENT | `core` |
-| RMDIR | STATEMENT | `_rmdir` |
-| RSET | STATEMENT | `pb_rset` |
-| SEEK | STATEMENT | `pb_seek` |
+| RMDIR | STATEMENT | `core` |
+| ROTATE | STATEMENT | `core` |
+| RSET | STATEMENT | `core` |
+| SEEK | STATEMENT | `core` |
 | SELECT CASE/END SELECT | BLOCK | `core` |
-| SETATTR | STATEMENT | `pb_setattr` |
-| SHELL | STATEMENT | `ShellExecuteA` |
-| SLEEP | STATEMENT | `pb_sleep, "SLEEP"` |
-| SWAP | STATEMENT | `"SWAP"` |
-| ARRAY REVERSE | STATEMENT | `pb_array_reverse` |
-| ARRAY SHUFFLE | STATEMENT | `pb_array_shuffle` |
-| CHDRIVE | STATEMENT | `_chdrive` |
-| DATA | STATEMENT | `pb_data_append` |
-| ISINFINITE | FUNCTION | `pb_isinfinite` |
-| ISNORMAL | FUNCTION | `pb_isnormal` |
-| MKBYT$ | FUNCTION | `pb_mkbyt` |
-| PEEK | FUNCTION | `pb_peek8/16/32/64/f/d` |
-| PLAY SOUND | STATEMENT | `Beep` |
-| PLAY WAVE | STATEMENT | `PlaySoundA` |
-| POKE | STATEMENT | `pb_poke8/16/32/64/f/d` |
-| PUT$ | FUNCTION | `pb_put_string` |
-| ROTATE LEFT/RIGHT | STATEMENT | `pb_rotate_left/right` |
-| SETEOF | STATEMENT | `pb_seteof` |
-| SHIFT LEFT/RIGHT | STATEMENT | `pb_shift_left/right` |
-| SPLIT | STATEMENT | `pb_split` |
-| TIX | FUNCTION | `pb_tix` |
-| UNLOCK | STATEMENT | `pb_unlock` |
+| SETATTR | STATEMENT | `core` |
+| SETEOF | STATEMENT | `core` |
+| SHELL | STATEMENT | `core` |
+| SHIFT | STATEMENT | `core` |
+| SLEEP | STATEMENT | `core` |
+| SPLIT | STATEMENT | `core` |
+| SWAP | STATEMENT | `core` |
+| TIX | STATEMENT | `core` |
+| UNLOCK | STATEMENT | `core` |
 | VAL | STATEMENT | `core` |
-| WRITE# | STATEMENT | `pb_write_file` |
-
-Function-class Win32 built-ins (also implemented):
-
-| Keyword | Official kind | Implementation |
-|---------|---------------|----------------|
-| CURDIR$ | FUNCTION | `GetCurrentDirectoryA` |
-| ISFILE | FUNCTION | `_access` |
-
+| WRITE# | STATEMENT | `core` |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

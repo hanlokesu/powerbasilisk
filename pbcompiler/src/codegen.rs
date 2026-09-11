@@ -1368,6 +1368,75 @@ impl Compiler {
             .declare_function("pb_read_data_num", &IrType::Double, &[], false);
         self.module
             .declare_function("pb_data_reset", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_array_scan_num",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_scan_str",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_insert_num",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_insert_str",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_delete",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module
+            .declare_function("pb_lof", &IrType::I64, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_loc", &IrType::I64, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_process_get_priority", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_process_set_priority",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_peek8", &IrType::I32, &[IrType::Ptr], false);
         self.module
@@ -2805,6 +2874,61 @@ impl Compiler {
                 fb.call_void("Beep", &[freq, dur]);
                 return Ok(());
             }
+            "BIT SET" | "BIT RESET" | "BIT TOGGLE" | "BIT CALC" => {
+                // BIT {SET|RESET|TOGGLE} intvar, bitnumber / BIT CALC intvar, bitnumber, expr
+                if call.args.len() < 2 {
+                    return Ok(());
+                }
+                if let Some((ptr, ir_ty, pb_ty)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    let cur = fb.load(&ir_ty, &ptr);
+                    let vi = self.to_i64(fb, &cur);
+                    let bitv = self.compile_expr(fb, &call.args[1])?;
+                    let bi = self.to_i64(fb, &bitv);
+                    let one = fb.const_i64(1);
+                    let mask = fb.shl(&one, &bi);
+                    let newv = match name.as_str() {
+                        "BIT SET" => fb.or(&vi, &mask),
+                        "BIT RESET" => {
+                            let all = fb.const_i64(-1);
+                            let not_mask = fb.xor(&mask, &all);
+                            fb.and(&vi, &not_mask)
+                        }
+                        "BIT TOGGLE" => fb.xor(&vi, &mask),
+                        _ => {
+                            // BIT CALC: expr != 0 -> set, else reset
+                            if let Some(expr) = call.args.get(2) {
+                                let ev = self.compile_expr(fb, expr)?;
+                                let ei = self.to_i64(fb, &ev);
+                                let z = fb.const_i64(0);
+                                let is_nonzero = fb.icmp("ne", &ei, &z);
+                                let m = fb.select(&is_nonzero, &mask, &z);
+                                fb.or(&vi, &m)
+                            } else {
+                                return Ok(());
+                            }
+                        }
+                    };
+                    let conv = self.convert_value(fb, &newv, &ir_ty, &pb_ty);
+                    fb.store(&conv, &ptr);
+                }
+                return Ok(());
+            }
+            "PROCESS GET PRIORITY" | "PROCESS SET PRIORITY" => {
+                if name == "PROCESS GET PRIORITY" {
+                    if let Some(expr) = call.args.first() {
+                        if let Some((ptr, ir_ty, pb_ty)) = self.lvalue_ptr(fb, expr) {
+                            let v = fb.call(&IrType::I32, "pb_process_get_priority", &[]);
+                            let conv = self.convert_value(fb, &v, &ir_ty, &pb_ty);
+                            fb.store(&conv, &ptr);
+                        }
+                    }
+                } else if let Some(expr) = call.args.first() {
+                    let v = self.compile_expr(fb, expr)?;
+                    let vi = self.to_i32(fb, &v);
+                    fb.call_void("pb_process_set_priority", &[vi]);
+                }
+                return Ok(());
+            }
             "POKE" => {
                 // POKE [DataType,] Address, Value [, Value...] — default BYTE
                 let (dt, rest) = match call.args.first() {
@@ -3161,6 +3285,165 @@ impl Compiler {
                         self.lvalue_ptr(fb, &call.args[3]),
                     ) {
                         fb.call_void("pb_split", &[src, n, p1, p2]);
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY SCAN =" | "ARRAY SCAN <>" | "ARRAY SCAN <" | "ARRAY SCAN >"
+            | "ARRAY SCAN <=" | "ARRAY SCAN >=" => {
+                // ARRAY SCAN arr(), OP expr, TO var&
+                let op = match name.as_str() {
+                    "ARRAY SCAN <>" => 1,
+                    "ARRAY SCAN <" => 2,
+                    "ARRAY SCAN >" => 3,
+                    "ARRAY SCAN <=" => 4,
+                    "ARRAY SCAN >=" => 5,
+                    _ => 0,
+                };
+                if call.args.len() >= 3 {
+                    if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                        let an = normalize_name(arr_name);
+                        if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                            let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                            let elem_size = match &arr_info.elem_ir_type {
+                                IrType::I8 | IrType::I1 => 1,
+                                IrType::I16 => 2,
+                                IrType::I32 | IrType::Float => 4,
+                                IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                                _ => 4,
+                            };
+                            let value = self.compile_expr(fb, &call.args[1])?;
+                            let total = fb.const_i64(arr_info.total_elements as i64);
+                            let result = if arr_info.elem_ir_type == IrType::Ptr {
+                                fb.call(
+                                    &IrType::I64,
+                                    "pb_array_scan_str",
+                                    &[base, total, fb.const_i64(1), fb.const_i64(0), value],
+                                )
+                            } else {
+                                let v64 = self.to_i64(fb, &value);
+                                fb.call(
+                                    &IrType::I64,
+                                    "pb_array_scan_num",
+                                    &[
+                                        base,
+                                        fb.const_i32(elem_size),
+                                        total,
+                                        fb.const_i64(1),
+                                        fb.const_i64(0),
+                                        v64,
+                                        fb.const_i32(op),
+                                    ],
+                                )
+                            };
+                            if let Some(tgt) = call.args.get(2) {
+                                if let Some((ptr, ir_ty, pb_ty)) = self.lvalue_ptr(fb, tgt) {
+                                    let conv = self.convert_value(fb, &result, &ir_ty, &pb_ty);
+                                    fb.store(&conv, &ptr);
+                                }
+                            }
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY INSERT" => {
+                // ARRAY INSERT arr(index), value
+                if let Some(Expr::FunctionCall(arr_name, indices)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let idx = if let Some(ix) = indices.first() {
+                            self.compile_expr(fb, ix)?
+                        } else {
+                            fb.const_i64(1)
+                        };
+                        let idx64 = if idx.ty == IrType::I32 {
+                            self.to_i64(fb, &idx)
+                        } else {
+                            idx
+                        };
+                        if arr_info.elem_ir_type == IrType::Ptr {
+                            let val = self.compile_expr(fb, &call.args[1])?;
+                            fb.call_void(
+                                "pb_array_insert_str",
+                                &[
+                                    base,
+                                    fb.const_i64(arr_info.total_elements as i64),
+                                    idx64,
+                                    val,
+                                ],
+                            );
+                        } else {
+                            let val = self.compile_expr(fb, &call.args[1])?;
+                            let v64 = self.to_i64(fb, &val);
+                            fb.call_void(
+                                "pb_array_insert_num",
+                                &[
+                                    base,
+                                    fb.const_i32(elem_size),
+                                    fb.const_i64(arr_info.total_elements as i64),
+                                    idx64,
+                                    v64,
+                                ],
+                            );
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY DELETE" => {
+                // ARRAY DELETE arr(index) [FOR count]
+                if let Some(Expr::FunctionCall(arr_name, indices)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let is_string = if arr_info.elem_ir_type == IrType::Ptr {
+                            1
+                        } else {
+                            0
+                        };
+                        let idx = if let Some(ix) = indices.first() {
+                            self.compile_expr(fb, ix)?
+                        } else {
+                            fb.const_i64(1)
+                        };
+                        let idx64 = if idx.ty == IrType::I32 {
+                            self.to_i64(fb, &idx)
+                        } else {
+                            idx
+                        };
+                        let count = if let Some(cexpr) = call.args.get(1) {
+                            let cv = self.compile_expr(fb, cexpr)?;
+                            self.to_i64(fb, &cv)
+                        } else {
+                            fb.const_i64(1)
+                        };
+                        fb.call_void(
+                            "pb_array_delete",
+                            &[
+                                base,
+                                fb.const_i32(elem_size),
+                                fb.const_i64(arr_info.total_elements as i64),
+                                idx64,
+                                count,
+                                fb.const_i32(is_string),
+                            ],
+                        );
                     }
                 }
                 return Ok(());
@@ -4916,6 +5199,40 @@ impl Compiler {
                     let b = self.to_i32(fb, &val);
                     fb.call(&IrType::Ptr, "pb_mkbyt", &[b])
                 }))
+            }
+            "LOF" | "LOC" | "SEEK" => {
+                // LOF(f) / LOC(f) / SEEK(f) — file size / position (optional #)
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime(format!(
+                        "{} requires a file number",
+                        name
+                    ))));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let f = self.to_i32(fb, &val);
+                    let fn_name = if name == "LOF" { "pb_lof" } else { "pb_loc" };
+                    fb.call(&IrType::I64, fn_name, &[f])
+                }))
+            }
+            "BIT" => {
+                // BIT(intvar, bitnumber) — 0 or 1
+                if args.len() < 2 {
+                    return Some(Err(PbError::runtime("BIT requires 2 arguments")));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                let bit = self.compile_expr(fb, &args[1]);
+                Some(match (v, bit) {
+                    (Ok(vv), Ok(bb)) => {
+                        let vi = self.to_i64(fb, &vv);
+                        let bi = self.to_i64(fb, &bb);
+                        let shifted = fb.lshr(&vi, &bi);
+                        let one = fb.const_i64(1);
+                        let r = fb.and(&shifted, &one);
+                        Ok(self.to_i32(fb, &r))
+                    }
+                    (Err(e), _) | (_, Err(e)) => Err(e),
+                })
             }
             "PEEK" => {
                 // PEEK([datatype,] address) — default BYTE

@@ -1755,6 +1755,133 @@ impl Parser {
                         line,
                     }));
                 }
+                // ARRAY SCAN arr(), OP expr, TO var& (op: = <> < > <= >=)
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SCAN")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume SCAN
+                    let arr_expr = self.parse_primary()?;
+                    let mut args = vec![arr_expr];
+                    if self.peek() == &Token::For {
+                        self.advance(); // consume FOR (count currently not applied)
+                        let _count = self.parse_expression()?;
+                    }
+                    self.expect(&Token::Comma)?;
+                    let op_sym = match self.peek() {
+                        Token::Eq => "=",
+                        Token::Neq => "<>",
+                        Token::Lt => "<",
+                        Token::Gt => ">",
+                        Token::Lte => "<=",
+                        Token::Gte => ">=",
+                        _ => {
+                            return Err(PbError::parser(
+                                format!(
+                                    "ARRAY SCAN: expected relational operator, got {:?}",
+                                    self.peek()
+                                ),
+                                self.current_file(),
+                                self.current_line(),
+                            ));
+                        }
+                    };
+                    self.advance(); // consume operator
+                    args.push(self.parse_expression()?); // value
+                    self.expect(&Token::Comma)?;
+                    if self.peek() == &Token::To {
+                        self.advance(); // consume TO
+                    }
+                    args.push(self.parse_expression()?); // target var
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("ARRAY SCAN {}", op_sym),
+                        args,
+                        line,
+                    }));
+                }
+                // ARRAY INSERT arr(index), value
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "INSERT")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume INSERT
+                    let arr_expr = self.parse_primary()?;
+                    let mut args = vec![arr_expr];
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?);
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY INSERT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // ARRAY DELETE arr(index) [FOR count]
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "DELETE")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume DELETE
+                    let arr_expr = self.parse_primary()?;
+                    let mut args = vec![arr_expr];
+                    if self.peek() == &Token::For {
+                        self.advance(); // consume FOR
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY DELETE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // BIT {SET|RESET|TOGGLE} intvar, bitnumber / BIT CALC intvar, bitnumber, expr
+                if name_upper == "BIT"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "SET" | "RESET" | "TOGGLE" | "CALC"))
+                {
+                    self.advance(); // consume BIT
+                    let op = self.consume_identifier()?.to_uppercase(); // SET/RESET/TOGGLE/CALC
+                    let mut args = vec![self.parse_expression()?];
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?);
+                    if op == "CALC" {
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("BIT {}", op),
+                        args,
+                        line,
+                    }));
+                }
+                // PROCESS GET PRIORITY TO var / PROCESS SET PRIORITY pri
+                if name_upper == "PROCESS"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "GET" | "SET"))
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "PRIORITY")
+                {
+                    self.advance(); // consume PROCESS
+                    let op = self.consume_identifier()?.to_uppercase(); // GET / SET
+                    self.advance(); // consume PRIORITY
+                    let mut args = Vec::new();
+                    if op == "GET" {
+                        if self.peek() == &Token::To {
+                            self.advance(); // consume TO
+                        }
+                        args.push(self.parse_expression()?);
+                    } else {
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("PROCESS {} PRIORITY", op),
+                        args,
+                        line,
+                    }));
+                }
                 // SPLIT [WORD] MainStr, Part1Len TO Part1Var, Part2Var
                 if name_upper == "SPLIT" {
                     self.advance(); // consume SPLIT

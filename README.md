@@ -219,9 +219,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **68** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **223** documented upstream with no codegen evidence yet.
-> (2026-09-11: +15 official keywords from batches 1-5 — TIX, MKBYT$, PEEK/POKE,
+> Summary: **75** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **216** documented upstream with no codegen evidence yet.
+> (2026-09-11: +25 official keywords from batches 1-10 — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
 > CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL — all sample-verified live.)
 
@@ -265,6 +265,12 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `SPLIT [WORD] src$, a TO b, c` | ✅ | `pb_split` — returns pieces via `PARSE$`-compatible out-params |
 | `DATA ...` / `READ var, ...` / `RESTORE` | ✅ | `pb_data_append` / `pb_read_data_str/num` / `pb_data_reset` — DATA pool with cursor + RESTORE rewind |
 | `PEEK(datatype, addr)` / `POKE datatype, addr, v, ...` | ✅ | `pb_peek8/16/32/64/f/d` / `pb_poke8/16/32/64/f/d` — BYTE/WORD/DWORD/INTEGER/LONG/QUAD/SINGLE/DOUBLE; addresses are 64-bit (use `QUAD` vars for `VARPTR`) |
+| `BIT` function / `BIT SET/RESET/TOGGLE var, n` / `BIT CALC var, n, expr` | ✅ | register-level bit ops (in-place, any integral var) |
+| `PROCESS GET PRIORITY TO var` / `PROCESS SET PRIORITY pri` | ✅ | `GetPriorityClass` / `SetPriorityClass` |
+| `LOF(f)` / `LOC(f)` / `SEEK(f)` | ✅ | `pb_lof` / `pb_loc` — file length / current position (QUAD) |
+| `ARRAY DELETE arr(i) [FOR count]` | ✅ | `pb_array_delete` — element(s) removed, tail zeroed |
+| `ARRAY INSERT arr(i), value` | ✅ | `pb_array_insert_num/str` — element inserted, last shifts out (fixed arrays) |
+| `ARRAY SCAN arr(), OP expr, TO var` | ✅ | `pb_array_scan_num/str` — first matching relative index, 0 = none (`= <> < > <= >=`) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -305,6 +311,34 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.4 — batch statement expansion, round 2 (2026-09-11)
+
+18 statements/functions implemented and sample-verified (batches 6-10), all
+with real codegen, 7 official keywords flipped in
+[`statement-coverage.md`](docs/statement-coverage.md) (LOF / LOC join the
+SEEK entry as file-position functions):
+
+| Batch | Items | Verification |
+|-------|-------|--------------|
+| 6 | `BIT` function, `BIT SET/RESET/TOGGLE`, `BIT CALC`, `PROCESS GET PRIORITY`, `PROCESS SET PRIORITY` | 7/7 |
+| 7 | `LOF`, `LOC`, `SEEK` functions | 3/3 |
+| 8 | `ARRAY DELETE` (`[FOR count]`) | 2/2 |
+| 9 | `ARRAY INSERT` (fixed arrays: last element shifts out) | 1/1 |
+| 10 | `ARRAY SCAN` (`= <> < > <= >=`, numeric + string arrays) | 5/5 |
+
+Notable notes:
+- `BIT` works on any integral variable in-place (SET/RESET/TOGGLE/CALC) and as
+  a function (`BIT(x, n)` returns 0/1).
+- `PROCESS GET/SET PRIORITY` map to `GetPriorityClass`/`SetPriorityClass`
+  (`%NORMAL_PRIORITY_CLASS` = 32, `%IDLE` = 64, `%HIGH` = 128, ...).
+- `ARRAY SCAN` returns the 1-based relative index or 0 when nothing matches;
+  the optional `FOR count` sub-range is accepted but currently scans the whole
+  array (documented limitation).
+- `ARRAY INSERT` on a fixed-size array cannot grow the array — the last
+  element is shifted out (documented limitation vs. PB's dynamic REDIM).
+
+Regression: official 15/15 tests pass; fmt + clippy 0 warnings.
 
 ### v0.1.3 — batch statement expansion (2026-09-11)
 

@@ -29,6 +29,10 @@ __declspec(dllimport) int __stdcall MessageBoxA(void* hWnd, const char* lpText, 
 __declspec(dllimport) int __stdcall CopyFileA(const char* lpExistingFileName, const char* lpNewFileName, int bFailIfExists);
 __declspec(dllimport) unsigned long __stdcall GetLastError(void);
 __declspec(dllimport) int __stdcall SetFileAttributesA(const char* lpFileName, unsigned long dwFileAttributes);
+__declspec(dllimport) void* __stdcall GetCurrentProcess(void);
+__declspec(dllimport) unsigned long __stdcall GetPriorityClass(void* hProcess);
+__declspec(dllimport) int __stdcall SetPriorityClass(void* hProcess, unsigned long dwPriorityClass);
+typedef unsigned long DWORD;
 #endif
 
 /* ===== Debug/crash reporting ===== */
@@ -1029,6 +1033,109 @@ void pb_data_reset(void) {
     data_cursor = 0;
 }
 
+// PROCESS GET/SET PRIORITY - current process priority class
+unsigned long pb_process_get_priority(void) {
+    return GetPriorityClass(GetCurrentProcess());
+}
+
+int pb_process_set_priority(unsigned long pri) {
+    return SetPriorityClass(GetCurrentProcess(), pri) ? 0 : -1;
+}
+
+/* ARRAY SCAN arr([idx]) [FOR count], OP expr, TO var& — first matching relative index, 0 = none.
+   op: 0='=', 1='<>', 2='<', 3='>', 4='<=', 5='>=' */
+long long pb_array_scan_num(char* base, int elem_size, long long total, long long index,
+                            long long count, long long value, int op) {
+    if (index < 1) index = 1;
+    if (index > total) return 0;
+    if (count <= 0) count = total - index + 1;
+    if (index + count - 1 > total) count = total - index + 1;
+    for (long long i = 0; i < count; i++) {
+        long long v;
+        if (elem_size == 1) {
+            signed char t;
+            memcpy(&t, base + (index - 1 + i) * 1, 1);
+            v = t;
+        } else if (elem_size == 2) {
+            short t;
+            memcpy(&t, base + (index - 1 + i) * 2, 2);
+            v = t;
+        } else if (elem_size == 4) {
+            int t;
+            memcpy(&t, base + (index - 1 + i) * 4, 4);
+            v = t;
+        } else {
+            memcpy(&v, base + (index - 1 + i) * 8, 8);
+        }
+        int hit = 0;
+        switch (op) {
+            case 0: hit = (v == value); break;
+            case 1: hit = (v != value); break;
+            case 2: hit = (v < value); break;
+            case 3: hit = (v > value); break;
+            case 4: hit = (v <= value); break;
+            default: hit = (v >= value); break;
+        }
+        if (hit) return index + i;
+    }
+    return 0;
+}
+
+long long pb_array_scan_str(char* base, long long total, long long index, long long count,
+                            char* strval) {
+    if (index < 1) index = 1;
+    if (index > total) return 0;
+    if (count <= 0) count = total - index + 1;
+    if (index + count - 1 > total) count = total - index + 1;
+    for (long long i = 0; i < count; i++) {
+        char** sp = (char**)(base + (index - 1 + i) * 8);
+        if (*sp && strval && strcmp(*sp, strval) == 0) return index + i;
+        if (!*sp && !strval) return index + i;
+    }
+    return 0;
+}
+
+/* ARRAY INSERT arr(index), value — insert element, shift down (fixed array: last element lost) */
+void pb_array_insert_num(char* base, int elem_size, long long total, long long index,
+                         long long value) {
+    if (index < 1) index = 1;
+    if (index > total) return;
+    memmove(base + index * elem_size, base + (index - 1) * elem_size,
+            (size_t)((total - index) * elem_size));
+    memcpy(base + (index - 1) * elem_size, &value, (size_t)elem_size);
+}
+
+void pb_array_insert_str(char* base, long long total, long long index, char* bstr) {
+    if (index < 1) index = 1;
+    if (index > total) return;
+    memmove(base + index * 8, base + (index - 1) * 8, (size_t)((total - index) * 8));
+    memcpy(base + (index - 1) * 8, &bstr, 8);
+}
+
+/* ARRAY DELETE arr(index) [FOR count] — remove element(s), shift up */
+void pb_array_delete(char* base, int elem_size, long long total, long long index,
+                     long long count, int is_string) {
+    if (index < 1) index = 1;
+    if (count <= 0) count = 1;
+    if (index > total) return;
+    if (index + count > total) count = total - index + 1;
+    long long from = index - 1;
+    memmove(base + from * elem_size, base + (from + count) * elem_size,
+            (size_t)((total - from - count) * elem_size));
+    if (is_string) {
+        for (long long i = total - count; i < total; i++) {
+            char** sp = (char**)(base + i * elem_size);
+            if (*sp) {
+                SysFreeString(*sp);
+                *sp = NULL;
+            }
+        }
+    } else {
+        memset(base + (total - count) * elem_size, 0,
+               (size_t)(count * elem_size));
+    }
+}
+
 /* ===== Batch 5: PEEK / POKE ===== */
 
 int pb_peek8(void* a) { return *(unsigned char*)a; }
@@ -1195,6 +1302,25 @@ void pb_write_file_newline(int filenum) {
 }
 
 /* SEEK: position file pointer (PB is 1-based) */
+long long pb_lof(int filenum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        FILE* fp = file_handles[filenum];
+        long cur = ftell(fp);
+        fseek(fp, 0, SEEK_END);
+        long long len = ftell(fp);
+        fseek(fp, cur, SEEK_SET);
+        return len;
+    }
+    return 0;
+}
+
+long long pb_loc(int filenum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
+        return ftell(file_handles[filenum]) + 1;
+    }
+    return 0;
+}
+
 void pb_seek(int filenum, long pos) {
     if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
         fseek(file_handles[filenum], (long)(pos - 1), SEEK_SET);
