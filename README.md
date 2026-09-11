@@ -52,6 +52,8 @@ silently dropped during code generation.
 | `RESET` | `pb_reset` (runtime) | close every open file handle |
 | `FLUSH #f` | `pb_flush` (runtime) | `fflush` a file buffer to disk |
 | `NAME old$ AS new$` | `pb_name` (runtime) | rename a file (`rename`) |
+| `ON GOTO` | computed `switch`-style branch | jump to one of N labels selected by a 1-based index |
+| `ON GOSUB` | computed `GOSUB` + `RETURN` | call one of N subroutines selected by a 1-based index |
 
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
@@ -311,6 +313,13 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.5 — batch 12: computed branches (2026-09-11)
+
+`ON GOTO` / `ON GOSUB` implemented (parser + codegen + interpreter), sample-verified
+4/4 including out-of-range fallthrough. Fixes an infinite loop in the GOSUB
+dispatch when a stale return address survived an `ON GOSUB` fallthrough
+(return address is now cleared at the merge point).
 
 ### v0.1.4 — batch statement expansion, round 2 (2026-09-11)
 

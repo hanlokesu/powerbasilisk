@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 75 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 77 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 216 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 214 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (75)
+## ✅ Implemented (77)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -95,6 +95,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | UNLOCK | STATEMENT | `core` |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
+| `ON GOTO` | STATEMENT | PB/Win + PB/CC | Computed branch to one of several labels |
+| `ON GOSUB` | STATEMENT | PB/Win + PB/CC | Computed call to one of several subroutines (RETURN returns) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

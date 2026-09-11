@@ -1379,8 +1379,56 @@ impl Parser {
                         return Ok(Statement::OnErrorGoto(label));
                     }
                 }
+                // ON expr GOTO label1, label2, ... / ON expr GOSUB ...
+                let expr = self.parse_expression()?;
+                let is_gosub = match self.peek() {
+                    Token::GoTo => {
+                        self.advance();
+                        false
+                    }
+                    Token::GoSub => {
+                        self.advance();
+                        true
+                    }
+                    _ => {
+                        self.consume_to_eol();
+                        return Ok(Statement::Noop("ON".to_string(), line));
+                    }
+                };
+                let mut labels: Vec<String> = Vec::new();
+                loop {
+                    match self.peek().clone() {
+                        Token::Identifier(s) => {
+                            self.advance();
+                            labels.push(s);
+                        }
+                        Token::IntegerLiteral(n) => {
+                            self.advance();
+                            labels.push(n.to_string());
+                        }
+                        _ => break,
+                    }
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
                 self.consume_to_eol();
-                Ok(Statement::Noop("ON ERROR".to_string(), line))
+                if labels.is_empty() {
+                    return Ok(Statement::Noop("ON GOTO/GOSUB".to_string(), line));
+                }
+                if is_gosub {
+                    Ok(Statement::OnGoSub {
+                        expr: Box::new(expr),
+                        labels,
+                    })
+                } else {
+                    Ok(Statement::OnGoTo {
+                        expr: Box::new(expr),
+                        labels,
+                    })
+                }
             }
             Token::Error => {
                 // ERROR n — set the PB error code (readable via ERR)

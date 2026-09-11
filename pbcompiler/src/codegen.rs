@@ -2348,6 +2348,8 @@ impl Compiler {
             Statement::GoSub(label) => self.compile_gosub(fb, label),
             Statement::Return => self.compile_return(fb),
             Statement::GoTo(label) => self.compile_goto(fb, label),
+            Statement::OnGoTo { expr, labels } => self.compile_on_goto(fb, expr, labels),
+            Statement::OnGoSub { expr, labels } => self.compile_on_gosub(fb, expr, labels),
             // Stubs: statements that compile to no-ops
             Statement::OnErrorGoto(_) | Statement::OnErrorGotoZero | Statement::ResumeNext => {
                 Ok(())
@@ -4283,8 +4285,103 @@ impl Compiler {
         Ok(())
     }
 
-    /// Emit the RETURN dispatch block at the end of a function.
-    /// This reads the gosub_ret_addr and switch-dispatches to the correct return point.
+    fn compile_on_goto(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        expr: &Expr,
+        labels: &[String],
+    ) -> PbResult<()> {
+        // ON n GOTO label1, label2, ... — n is 1-based; out-of-range falls through
+        let n = self.compile_expr(fb, expr)?;
+        let ni = self.to_i32(fb, &n);
+        if let Some(ctx) = self.gosub_context.as_ref() {
+            let after = fb.next_label("on.after");
+            if !labels.is_empty() {
+                for (i, label) in labels.iter().enumerate() {
+                    let idx = fb.const_i32((i + 1) as i32);
+                    let cond = fb.icmp("eq", &ni, &idx);
+                    let then_b = fb.next_label(&format!("on.goto.{}", i));
+                    if i + 1 < labels.len() {
+                        let next_test = fb.next_label(&format!("on.test.{}", i + 1));
+                        fb.condbr(&cond, &then_b, &next_test);
+                        fb.label(&then_b);
+                        match ctx.label_blocks.get(label) {
+                            Some(block) => fb.br(block),
+                            None => fb.br(&after),
+                        }
+                        fb.label(&next_test);
+                    } else {
+                        fb.condbr(&cond, &then_b, &after);
+                        fb.label(&then_b);
+                        match ctx.label_blocks.get(label) {
+                            Some(block) => fb.br(block),
+                            None => fb.br(&after),
+                        }
+                        fb.label(&after);
+                    }
+                }
+            } else {
+                fb.label(&after);
+            }
+        }
+        Ok(())
+    }
+
+    fn compile_on_gosub(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        expr: &Expr,
+        labels: &[String],
+    ) -> PbResult<()> {
+        // ON n GOSUB label1, label2, ... — like GOSUB but selected by n (1-based)
+        let n = self.compile_expr(fb, expr)?;
+        let ni = self.to_i32(fb, &n);
+        if let Some(ref mut ctx) = self.gosub_context {
+            let after = fb.next_label("on.after");
+            if !labels.is_empty() {
+                for (i, label) in labels.iter().enumerate() {
+                    let idx = fb.const_i32((i + 1) as i32);
+                    let cond = fb.icmp("eq", &ni, &idx);
+                    let then_b = fb.next_label(&format!("on.gosub.{}", i));
+                    let next_test = if i + 1 < labels.len() {
+                        Some(fb.next_label(&format!("on.gtest.{}", i + 1)))
+                    } else {
+                        None
+                    };
+                    match &next_test {
+                        Some(nt) => fb.condbr(&cond, &then_b, nt),
+                        None => fb.condbr(&cond, &then_b, &after),
+                    }
+                    fb.label(&then_b);
+                    // gosub action: store unique return id, branch to target
+                    let return_id = (ctx.return_points.len() + 1) as i32;
+                    let return_label = fb.next_label(&format!("gosub.ret.{}", return_id));
+                    ctx.return_points.push(return_label.clone());
+                    let id_val = fb.const_i32(return_id);
+                    let ret_addr_ptr = ctx.ret_addr_ptr.clone();
+                    fb.store(&id_val, &ret_addr_ptr);
+                    match ctx.label_blocks.get(label) {
+                        Some(block) => fb.br(block),
+                        None => fb.br(&after),
+                    }
+                    fb.label(&return_label);
+                    fb.br(&after);
+                    if let Some(nt) = next_test {
+                        fb.label(&nt);
+                    }
+                }
+                fb.label(&after);
+                // Clear the return address so a later fallthrough to the
+                // dispatch block cannot loop back to a stale return point.
+                let zero = fb.const_i32(0);
+                fb.store(&zero, &ctx.ret_addr_ptr.clone());
+            } else {
+                fb.label(&after);
+            }
+        }
+        Ok(())
+    }
+
     fn emit_return_dispatch(&mut self, fb: &mut FunctionBuilder) {
         let ctx = match self.gosub_context.take() {
             Some(ctx) if !ctx.return_points.is_empty() => ctx,

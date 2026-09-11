@@ -475,6 +475,30 @@ impl Interpreter {
             Statement::Label(_) => Ok(Flow::Normal), // labels are markers, skip during execution
             Statement::GoTo(label) => Ok(Flow::GoTo(label.clone())),
             Statement::GoSub(label) => Ok(Flow::GoSub(label.clone())),
+            Statement::OnGoTo { expr, labels } => {
+                let n = self.eval_expr(expr)?;
+                let idx = match n {
+                    Value::Long(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    Value::Integer(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    Value::Dword(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    _ => {
+                        return Ok(Flow::Normal);
+                    }
+                };
+                Ok(Flow::GoTo(labels[idx].clone()))
+            }
+            Statement::OnGoSub { expr, labels } => {
+                let n = self.eval_expr(expr)?;
+                let idx = match n {
+                    Value::Long(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    Value::Integer(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    Value::Dword(v) if v >= 1 && (v as usize) <= labels.len() => v as usize - 1,
+                    _ => {
+                        return Ok(Flow::Normal);
+                    }
+                };
+                Ok(Flow::GoSub(labels[idx].clone()))
+            }
             Statement::Return => Ok(Flow::GoSubReturn),
             Statement::OnErrorGoto(label) => {
                 self.error_trap = Some(label.clone());

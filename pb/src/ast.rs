@@ -174,6 +174,14 @@ pub enum Statement {
     Return,
     GoTo(String),
     Label(String),
+    OnGoTo {
+        expr: Box<Expr>,
+        labels: Vec<String>,
+    },
+    OnGoSub {
+        expr: Box<Expr>,
+        labels: Vec<String>,
+    },
     OnErrorGoto(String),
     OnErrorGotoZero,
     ResumeNext,
