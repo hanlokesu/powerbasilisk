@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-10 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-11 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 53 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 68 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 238 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 223 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (53)
+## ✅ Implemented (68)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -70,6 +70,23 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SHELL | STATEMENT | `ShellExecuteA` |
 | SLEEP | STATEMENT | `pb_sleep, "SLEEP"` |
 | SWAP | STATEMENT | `"SWAP"` |
+| ARRAY REVERSE | STATEMENT | `pb_array_reverse` |
+| ARRAY SHUFFLE | STATEMENT | `pb_array_shuffle` |
+| CHDRIVE | STATEMENT | `_chdrive` |
+| DATA | STATEMENT | `pb_data_append` |
+| ISINFINITE | FUNCTION | `pb_isinfinite` |
+| ISNORMAL | FUNCTION | `pb_isnormal` |
+| MKBYT$ | FUNCTION | `pb_mkbyt` |
+| PEEK | FUNCTION | `pb_peek8/16/32/64/f/d` |
+| PLAY SOUND | STATEMENT | `Beep` |
+| PLAY WAVE | STATEMENT | `PlaySoundA` |
+| POKE | STATEMENT | `pb_poke8/16/32/64/f/d` |
+| PUT$ | FUNCTION | `pb_put_string` |
+| ROTATE LEFT/RIGHT | STATEMENT | `pb_rotate_left/right` |
+| SETEOF | STATEMENT | `pb_seteof` |
+| SHIFT LEFT/RIGHT | STATEMENT | `pb_shift_left/right` |
+| SPLIT | STATEMENT | `pb_split` |
+| TIX | FUNCTION | `pb_tix` |
 | UNLOCK | STATEMENT | `pb_unlock` |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `pb_write_file` |

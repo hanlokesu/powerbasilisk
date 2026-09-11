@@ -182,6 +182,8 @@ pub enum Statement {
     LineInputFile(LineInputFileStmt),
     Kill(Expr),
     Block(Vec<Statement>), // multiple statements from one parse (e.g. LOCAL a, b)
+    Data(Vec<String>),     // DATA item1, item2, ... (string constants)
+    Restore,               // RESTORE — reset DATA read cursor
     Noop(String, usize),   // (unimplemented statement name, source line)
 }
 

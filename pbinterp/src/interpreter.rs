@@ -497,6 +497,8 @@ impl Interpreter {
                 }
                 Ok(Flow::Normal)
             }
+            Statement::Data(_) => Ok(Flow::Normal),
+            Statement::Restore => Ok(Flow::Normal),
             Statement::Noop(_, _) => Ok(Flow::Normal),
         }
     }

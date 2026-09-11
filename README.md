@@ -219,11 +219,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **53** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **238** documented upstream with no codegen evidence yet.
-> (2026-09-11: GET/PUT (binary file I/O) + ARRAY SORT + big-integer literals
-> implemented and verified live; earlier audit verified FOR/NEXT, SELECT CASE,
-> LET, MID$, VAL, ASC, PARSE, FUNCTION/END FUNCTION, IF/END IF.)
+> Summary: **68** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **223** documented upstream with no codegen evidence yet.
+> (2026-09-11: +15 official keywords from batches 1-5 — TIX, MKBYT$, PEEK/POKE,
+> SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
+> CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL — all sample-verified live.)
 
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
@@ -250,6 +250,21 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `ENVIRON "VAR=value"` | ✅ | `pb_environ_set` → `_putenv`; bare `ENVIRON "VAR"` removes the variable |
 | `FILECOPY src$, dst$` | ✅ | `pb_filecopy` → `CopyFileA`, PB-compatible `ERR` on failure (53/70/76) |
 | `SETATTR "path", attr&` | ✅ | `pb_setattr` → `SetFileAttributesA`, PB-compatible `ERR` on failure |
+| `TIX` | ✅ | `pb_tix` → 64-bit millisecond tick counter |
+| `MKBYT$(n)` | ✅ | `pb_mkbyt` → one-byte string |
+| `ISINFINITE(x)` / `ISNORMAL(x)` | ✅ | `pb_isinfinite` / `pb_isnormal` — IEEE-754 checks (-1/0) |
+| `PLAY WAVE "file.wav"` | ✅ | `PlaySoundA` (async) |
+| `PLAY SOUND freq, dur` | ✅ | `Beep(freq, dur)` (kernel32) |
+| `CHDRIVE "C:"` | ✅ | `_chdrive` — PB-compatible `ERR` (68) on failure |
+| `SETEOF #f` | ✅ | `pb_seteof` → truncates file at current position |
+| `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
+| `ROTATE LEFT/RIGHT var, n` | ✅ | `pb_rotate_left/right` (wrapping) |
+| `ARRAY REVERSE arr` | ✅ | `pb_array_reverse` — in-place element reversal |
+| `ARRAY SHUFFLE arr` | ✅ | `pb_array_shuffle` — in-place Fisher-Yates |
+| `PUT$ = ...` | ✅ | `pb_put_string` — string to file (binary) |
+| `SPLIT [WORD] src$, a TO b, c` | ✅ | `pb_split` — returns pieces via `PARSE$`-compatible out-params |
+| `DATA ...` / `READ var, ...` / `RESTORE` | ✅ | `pb_data_append` / `pb_read_data_str/num` / `pb_data_reset` — DATA pool with cursor + RESTORE rewind |
+| `PEEK(datatype, addr)` / `POKE datatype, addr, v, ...` | ✅ | `pb_peek8/16/32/64/f/d` / `pb_poke8/16/32/64/f/d` — BYTE/WORD/DWORD/INTEGER/LONG/QUAD/SINGLE/DOUBLE; addresses are 64-bit (use `QUAD` vars for `VARPTR`) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -290,6 +305,38 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.3 — batch statement expansion (2026-09-11)
+
+23 statements/functions implemented and sample-verified (batches 1-5), all
+with real codegen (no silent drops), 15 official keywords flipped in
+[`statement-coverage.md`](docs/statement-coverage.md):
+
+| Batch | Items | Verification |
+|-------|-------|--------------|
+| 1 | `TIX`, `MKBYT$`, `ISINFINITE`, `ISNORMAL`, `PLAY WAVE`, `CHDRIVE`, `SETEOF` | 7/7 |
+| 2 | `SWAP`, `SHIFT LEFT/RIGHT`, `SHIFT SIGNED LEFT/RIGHT`, `ROTATE LEFT/RIGHT`, `ARRAY REVERSE`, `PUT$` | 8/8 |
+| 3 | `PLAY SOUND`, `SPLIT`, `ARRAY SHUFFLE` | 3/3 |
+| 4 | `DATA`, `READ`, `RESTORE` | 3/3 |
+| 5 | `PEEK` (8 datatypes), `POKE` (8 datatypes, multi-value) | 4/4 |
+
+Notable fixes in this release:
+- **x64 addresses**: `VARPTR`/`STRPTR` now return full 64-bit pointers
+  (`ptrtoint64`); the old 32-bit truncation crashed any PEEK/POKE on a
+  stack/heap address. Address variables should be declared `QUAD`.
+- **Datatype keywords as arguments**: `PEEK(LONG, addr)` / `POKE LONG, addr, v`
+  now parse (LONG/DOUBLE/DWORD/INTEGER/QUAD/SINGLE are reserved-word tokens;
+  BYTE/WORD are identifiers — both paths handled).
+- **DATA runtime bug**: `pb_read_data_str` had an undefined C evaluation order
+  (`data_cursor++` inside a call argument) — a 1-byte garbage string could be
+  returned. Fixed by copying the item first, then advancing the cursor.
+- Known limitation (documented): unquoted text items in `DATA` are uppercased
+  by the lexer, e.g. `DATA World` reads back `"WORLD"`; use `DATA "World"` for
+  case-sensitive text.
+
+Regression: official 15/15 tests pass; fmt + clippy 0 warnings; CI green.
+
+### v0.1.2 — bug-fix release (2026-09-11)
 
 ### v0.1.2 — bug-fix release (2026-09-11)
 

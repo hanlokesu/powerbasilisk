@@ -13,7 +13,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <time.h>  /* clock for pb_tix fallback */
 #include <io.h>  /* _locking / _fileno for LOCK/UNLOCK */
+#include <direct.h>  /* _chdrive for CHDRIVE */
 #include <sys/locking.h>  /* _LK_LOCK / _LK_UNLCK */
 
 #ifdef _WIN32
@@ -839,6 +841,209 @@ char* pb_time(void) {
 #endif
     return pb_bstr_alloc(buf, (int)strlen(buf));
 }
+
+/* ===== TIX / MKBYT$ / ISINFINITE / ISNORMAL / CHDRIVE / SETEOF / PLAY WAVE ===== */
+
+#ifdef _WIN32
+typedef union {
+    long long QuadPart;
+    struct { unsigned long LowPart; long HighPart; } u;
+} PB_LARGE_INTEGER;
+
+__declspec(dllimport) int __stdcall QueryPerformanceCounter(PB_LARGE_INTEGER* lp);
+__declspec(dllimport) int __stdcall SetEndOfFile(void* hFile);
+__declspec(dllimport) int __stdcall PlaySoundA(const char* pszSound, void* hmod, unsigned long fdwSound);
+#endif
+
+#define PB_SND_FILENAME 0x00020000
+
+/* TIX — high-resolution performance counter (QUAD) */
+long long pb_tix(void) {
+#ifdef _WIN32
+    PB_LARGE_INTEGER c;
+    if (QueryPerformanceCounter(&c)) return c.QuadPart;
+#endif
+    return (long long)clock();
+}
+
+/* MKBYT$ (n) — one byte as a single-character string */
+char* pb_mkbyt(int n) {
+    char buf[2];
+    buf[0] = (char)(n & 0xFF);
+    buf[1] = '\0';
+    return pb_bstr_alloc(buf, 1);
+}
+
+/* ISINFINITE (x) / ISNORMAL (x) — IEEE-754 classification, PB -1/0 */
+int pb_isinfinite(double v) { return isinf(v) ? -1 : 0; }
+int pb_isnormal(double v) { return isnormal(v) ? -1 : 0; }
+
+/* CHDRIVE drv$ — change current drive (PB semantics: drive letter only) */
+int pb_chdrive(const char* drv) {
+#ifdef _WIN32
+    if (drv && drv[0] != '\0') {
+        return _chdrive(toupper((unsigned char)drv[0]) - 'A' + 1);
+    }
+#endif
+    return -1;
+}
+
+/* SETEOF #f — truncate file at current position */
+int pb_seteof(int f) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+#ifdef _WIN32
+    int fd = _fileno(file_handles[f]);
+    void* h = (void*)_get_osfhandle(fd);
+    if (h == (void*)-1) return -1;
+    return SetEndOfFile(h) ? 0 : -1;
+#else
+    long cur = ftell(file_handles[f]);
+    return ftruncate(fileno(file_handles[f]), cur) == 0 ? 0 : -1;
+#endif
+}
+
+/* PLAY WAVE "file.wav" — play a .wav synchronously */
+int pb_play_wave(const char* path) {
+#ifdef _WIN32
+    return PlaySoundA(path, NULL, PB_SND_FILENAME) ? 0 : -1;
+#else
+    return -1;
+#endif
+}
+
+/* ===== Batch 2: ARRAY REVERSE / PUT$ / SHIFT / ROTATE ===== */
+
+/* ARRAY REVERSE — reverse elements in place */
+void pb_array_reverse(void* base, int elem_size, int total) {
+    if (!base || total <= 1) return;
+    char* p = (char*)base;
+    for (int i = 0; i < total / 2; i++) {
+        char* a = p + (size_t)i * elem_size;
+        char* b = p + (size_t)(total - 1 - i) * elem_size;
+        for (int j = 0; j < elem_size; j++) {
+            char t = a[j];
+            a[j] = b[j];
+            b[j] = t;
+        }
+    }
+}
+
+/* PUT$ #f, str$ — write ANSI string at current file position */
+int pb_put_string(int f, const char* s) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+    if (!s) return -1;
+    size_t n = strlen(s);
+    if (n == 0) return 0;
+    return fwrite(s, 1, n, file_handles[f]) == n ? 0 : -1;
+}
+
+/* SHIFT LEFT — logical left shift on 64-bit */
+long long pb_shift_left(long long v, int n) { return v << (n & 63); }
+
+/* SHIFT RIGHT — keep_sign=1 is arithmetic (SIGNED), 0 is logical */
+long long pb_shift_right(long long v, int n, int keep_sign) {
+    int k = n & 63;
+    if (keep_sign) return v >> k;
+    return (long long)((unsigned long long)v >> k);
+}
+
+/* ROTATE LEFT/RIGHT — 64-bit circular shift */
+long long pb_rotate_left(long long v, int n) {
+    int k = n & 63;
+    if (k == 0) return v;
+    return (v << k) | ((unsigned long long)v >> (64 - k));
+}
+long long pb_rotate_right(long long v, int n) {
+    int k = n & 63;
+    if (k == 0) return v;
+    return ((unsigned long long)v >> k) | (v << (64 - k));
+}
+
+/* ===== Batch 3: PLAY SOUND / SPLIT / ARRAY SHUFFLE ===== */
+
+#ifdef _WIN32
+__declspec(dllimport) int __stdcall Beep(unsigned long dwFreq, unsigned long dwDuration);
+#endif
+
+/* PLAY SOUND freq&, duration& — speaker beep via Beep() */
+int pb_play_sound(long freq, long dur) {
+#ifdef _WIN32
+    return Beep((unsigned long)freq, (unsigned long)dur) ? 0 : -1;
+#else
+    return -1;
+#endif
+}
+
+/* SPLIT MainStr, Part1Len TO Part1Var, Part2Var */
+void pb_split(const char* src, int n, char** out1, char** out2) {
+    if (!src) src = "";
+    size_t len = strlen(src);
+    if (n < 0) n = 0;
+    if ((size_t)n > len) n = (int)len;
+    *out1 = pb_bstr_alloc(src, n);
+    *out2 = pb_bstr_alloc(src + n, (int)(len - n));
+}
+
+/* ARRAY SHUFFLE — Fisher-Yates shuffle in place */
+void pb_array_shuffle(void* base, int elem_size, int total) {
+    if (!base || total <= 1) return;
+    char* p = (char*)base;
+    for (int i = total - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        if (j == i) continue;
+        char* a = p + (size_t)i * elem_size;
+        char* b = p + (size_t)j * elem_size;
+        for (int k = 0; k < elem_size; k++) {
+            char t = a[k];
+            a[k] = b[k];
+            b[k] = t;
+        }
+    }
+}
+
+/* ===== Batch 4: DATA / READ / RESTORE ===== */
+
+#define MAX_DATA_ITEMS 16384
+static const char* data_pool[MAX_DATA_ITEMS] = {0};
+static int data_count = 0;
+static int data_cursor = 0;
+
+void pb_data_append(const char* s) {
+    if (!s || data_count >= MAX_DATA_ITEMS) return;
+    data_pool[data_count++] = s;
+}
+
+char* pb_read_data_str(void) {
+    if (data_cursor >= data_count) return pb_bstr_alloc("", 0);
+    const char* item = data_pool[data_cursor];
+    data_cursor++;
+    return pb_bstr_alloc(item, (int)strlen(item));
+}
+
+double pb_read_data_num(void) {
+    if (data_cursor >= data_count) return 0.0;
+    return atof(data_pool[data_cursor++]);
+}
+
+void pb_data_reset(void) {
+    data_cursor = 0;
+}
+
+/* ===== Batch 5: PEEK / POKE ===== */
+
+int pb_peek8(void* a) { return *(unsigned char*)a; }
+int pb_peek16(void* a) { return *(unsigned short*)a; }
+long pb_peek32(void* a) { return *(long*)a; }
+long long pb_peek64(void* a) { return *(long long*)a; }
+float pb_peekf(void* a) { float f; memcpy(&f, a, 4); return f; }
+double pb_peekd(void* a) { double d; memcpy(&d, a, 8); return d; }
+
+void pb_poke8(void* a, int v) { *(unsigned char*)a = (unsigned char)v; }
+void pb_poke16(void* a, int v) { *(unsigned short*)a = (unsigned short)v; }
+void pb_poke32(void* a, long v) { *(long*)a = v; }
+void pb_poke64(void* a, long long v) { *(long long*)a = v; }
+void pb_pokef(void* a, float v) { memcpy(a, &v, 4); }
+void pb_poked(void* a, double v) { memcpy(a, &v, 8); }
 
 /* ===== Stubs for external DLL functions not yet available ===== */
 

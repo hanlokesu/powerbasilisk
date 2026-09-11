@@ -1134,6 +1134,54 @@ impl Parser {
         self.tokens.get(self.pos + offset).map(|t| &t.token)
     }
 
+    fn parse_data_items(&mut self) -> Vec<String> {
+        let mut items = Vec::new();
+        loop {
+            match self.peek().clone() {
+                Token::StringLiteral(s) => {
+                    items.push(s);
+                    self.advance();
+                }
+                Token::IntegerLiteral(n) => {
+                    items.push(n.to_string());
+                    self.advance();
+                }
+                Token::FloatLiteral(f) => {
+                    items.push(f.to_string());
+                    self.advance();
+                }
+                Token::Identifier(s) => {
+                    items.push(s);
+                    self.advance();
+                }
+                Token::Minus => {
+                    self.advance();
+                    match self.peek().clone() {
+                        Token::IntegerLiteral(n) => {
+                            items.push(format!("-{}", n));
+                            self.advance();
+                        }
+                        Token::FloatLiteral(f) => {
+                            items.push(format!("-{}", f));
+                            self.advance();
+                        }
+                        _ => items.push("-".to_string()),
+                    }
+                }
+                _ => break,
+            }
+            if self.at_eol_or_eof() {
+                break;
+            }
+            if self.peek() == &Token::Comma {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+        items
+    }
+
     fn parse_statement(&mut self) -> PbResult<Statement> {
         self.skip_eol();
         let line = self.current_line();
@@ -1491,6 +1539,38 @@ impl Parser {
             Token::Identifier(ref name) => {
                 let name_upper = name.to_uppercase();
 
+                // DATA item1, item2, ... — string constants for READ
+                if name_upper == "DATA" {
+                    self.advance(); // consume DATA
+                    let items = self.parse_data_items();
+                    self.consume_to_eol();
+                    return Ok(Statement::Data(items));
+                }
+                // RESTORE [label] — reset the DATA cursor
+                if name_upper == "RESTORE" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Restore);
+                }
+                // READ var1, var2, ... — read next DATA items
+                if name_upper == "READ" {
+                    self.advance(); // consume READ
+                    let mut args = Vec::new();
+                    while !self.at_eol_or_eof() {
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        } else {
+                            break;
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "READ".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // LINE INPUT #filenum, var$
                 if name_upper == "LINE" {
                     // Peek ahead: LINE INPUT #...
@@ -1657,6 +1737,115 @@ impl Parser {
                         line,
                     }));
                 }
+                // PLAY WAVE "file.wav" — two-word statement
+                if name_upper == "PLAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "WAVE")
+                {
+                    self.advance(); // consume PLAY
+                    self.advance(); // consume WAVE
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "PLAY WAVE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // SPLIT [WORD] MainStr, Part1Len TO Part1Var, Part2Var
+                if name_upper == "SPLIT" {
+                    self.advance(); // consume SPLIT
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase() == "WORD") {
+                        self.advance(); // consume optional WORD (ignored)
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?);
+                    if self.peek() == &Token::To {
+                        self.advance(); // consume TO
+                    }
+                    args.push(self.parse_expression()?);
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?);
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "SPLIT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // SHIFT [SIGNED] {LEFT|RIGHT} ivar, count / ROTATE {LEFT|RIGHT} ivar, count
+                if (name_upper == "SHIFT" || name_upper == "ROTATE")
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "LEFT" | "RIGHT" | "SIGNED"))
+                {
+                    let mut parts = vec![name_upper.clone()];
+                    self.advance(); // consume SHIFT/ROTATE
+                    if name_upper == "SHIFT"
+                        && matches!(self.peek(), Token::Identifier(w) if w.to_uppercase() == "SIGNED")
+                    {
+                        parts.push("SIGNED".to_string());
+                        self.advance();
+                    }
+                    if let Token::Identifier(w) = self.peek() {
+                        let d = w.to_uppercase();
+                        if d == "LEFT" || d == "RIGHT" {
+                            parts.push(d);
+                            self.advance();
+                        }
+                    }
+                    let stmt_name = parts.join(" ");
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: stmt_name,
+                        args,
+                        line,
+                    }));
+                }
+                // ARRAY SHUFFLE arr() [FOR n]
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SHUFFLE")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume SHUFFLE
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY SHUFFLE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // ARRAY REVERSE arr() [FOR n]
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "REVERSE")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume REVERSE
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY REVERSE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // ARRAY SORT arr() [FOR n] [, DESCEND|ASCEND]
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SORT")
@@ -1677,6 +1866,24 @@ impl Parser {
                 }
                 // GET #filenum [, pos], var / PUT #filenum [, pos], var
                 // (binary file read/write; args = [filenum, (pos), var])
+                // PUT$ [#] filenum&, StrgExpr — write ANSI string at file position
+                if name_upper == "PUT$" {
+                    self.advance(); // consume PUT$
+                    if self.peek() == &Token::Hash {
+                        self.advance(); // consume optional #
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "PUT_STR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 if (name_upper == "GET" || name_upper == "PUT")
                     && self.peek_at(1) == Some(&Token::Hash)
                 {
@@ -1705,6 +1912,22 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "SEEK".to_string(),
                         args: vec![file_num, pos],
+                        line,
+                    }));
+                }
+                // SETEOF #filenum — truncate at current position
+                if name_upper == "SETEOF" && self.peek_at(1) == Some(&Token::Hash) {
+                    self.advance(); // consume SETEOF
+                    self.advance(); // consume #
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "SETEOF".to_string(),
+                        args,
                         line,
                     }));
                 }
@@ -1854,6 +2077,25 @@ impl Parser {
                 // Or a label target in single-line IF: IF cond THEN LabelName ELSE ...
                 self.advance(); // consume identifier
                 let mut args = Vec::new();
+                // PEEK/POKE datatype keyword as first arg: POKE LONG, addr, 12345
+                if args.is_empty() && !self.at_eol_or_eof() {
+                    let dt = match self.peek() {
+                        Token::Long => Some("LONG"),
+                        Token::Double => Some("DOUBLE"),
+                        Token::Dword => Some("DWORD"),
+                        Token::Integer => Some("INTEGER"),
+                        Token::Quad => Some("QUAD"),
+                        Token::Single => Some("SINGLE"),
+                        _ => None,
+                    };
+                    if let Some(d) = dt {
+                        self.advance();
+                        args.push(Expr::Variable(d.to_string()));
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                    }
+                }
                 if !self.at_eol_or_eof() && !matches!(self.peek(), Token::Else | Token::ElseIf) {
                     // BYVAL/BYCOPY modifier in no-paren calls: Foo a, BYVAL %NULL
                     let mut has_byval = matches!(self.peek(), Token::Byval);
@@ -2651,6 +2893,26 @@ impl Parser {
         loop {
             if self.peek() == &Token::RParen || self.at_end() {
                 break;
+            }
+            // PEEK/POKE datatype keyword as first argument: PEEK(LONG, addr)
+            if args.is_empty() {
+                let dt = match self.peek() {
+                    Token::Long => Some("LONG"),
+                    Token::Double => Some("DOUBLE"),
+                    Token::Dword => Some("DWORD"),
+                    Token::Integer => Some("INTEGER"),
+                    Token::Quad => Some("QUAD"),
+                    Token::Single => Some("SINGLE"),
+                    _ => None,
+                };
+                if let Some(d) = dt {
+                    self.advance();
+                    args.push(Expr::Variable(d.to_string()));
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    continue;
+                }
             }
             // Skip ANY keyword (used in PARSE$ calls: PARSE$(str$, ANY "|"))
             if matches!(self.peek(), Token::Identifier(ref s) if s.eq_ignore_ascii_case("ANY"))

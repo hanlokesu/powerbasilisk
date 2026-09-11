@@ -439,6 +439,13 @@ impl FunctionBuilder {
         Val::new(r, IrType::I32)
     }
 
+    /// 64-bit pointer→int (full x64 address, for VARPTR/STRPTR)
+    pub fn ptrtoint64(&mut self, val: &Val) -> Val {
+        let r = self.next_reg();
+        writeln!(self.body, "  {} = ptrtoint ptr {} to i64", r, val.name).unwrap();
+        Val::new(r, IrType::I64)
+    }
+
     /// `%r = inttoptr i32 %val to ptr` (32-bit target)
     pub fn inttoptr(&mut self, val: &Val) -> Val {
         let r = self.next_reg();
