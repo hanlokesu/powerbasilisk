@@ -1,0 +1,31 @@
+' Batch 13: CLIPBOARD SET/GET TEXT, RESET, INPUT FLUSH
+OPTION EXPLICIT
+FUNCTION PBMAIN() AS LONG
+    LOCAL s AS STRING
+    LOCAL rc AS LONG
+
+    CLIPBOARD SET TEXT "hello clipboard", rc
+    IF rc = 0 THEN
+        PRINT "CLIP-SET-PASS"
+    ELSE
+        PRINT "CLIP-SET-FAIL rc="; rc
+    END IF
+
+    CLIPBOARD GET TEXT TO s
+    IF s = "hello clipboard" THEN
+        PRINT "CLIP-GET-PASS"
+    ELSE
+        PRINT "CLIP-GET-FAIL [ "; s; " ]"
+    END IF
+
+    CLIPBOARD RESET, rc
+    CLIPBOARD GET TEXT TO s
+    IF s = "" THEN
+        PRINT "CLIP-RESET-PASS"
+    ELSE
+        PRINT "CLIP-RESET-FAIL [ "; s; " ]"
+    END IF
+
+    INPUT FLUSH
+    PRINT "INPUT-FLUSH-PASS"
+END FUNCTION

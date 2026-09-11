@@ -182,6 +182,18 @@ pub enum Statement {
         expr: Box<Expr>,
         labels: Vec<String>,
     },
+    ClipboardSetText {
+        text: Expr,
+        result: Option<Expr>,
+    },
+    ClipboardGetText {
+        target: Expr,
+        result: Option<Expr>,
+    },
+    ClipboardReset {
+        result: Option<Expr>,
+    },
+    InputFlush,
     OnErrorGoto(String),
     OnErrorGotoZero,
     ResumeNext,

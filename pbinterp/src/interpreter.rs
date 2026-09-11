@@ -500,6 +500,10 @@ impl Interpreter {
                 Ok(Flow::GoSub(labels[idx].clone()))
             }
             Statement::Return => Ok(Flow::GoSubReturn),
+            Statement::ClipboardSetText { .. }
+            | Statement::ClipboardGetText { .. }
+            | Statement::ClipboardReset { .. }
+            | Statement::InputFlush => Ok(Flow::Normal),
             Statement::OnErrorGoto(label) => {
                 self.error_trap = Some(label.clone());
                 Ok(Flow::Normal)

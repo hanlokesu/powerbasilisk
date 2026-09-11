@@ -54,6 +54,9 @@ silently dropped during code generation.
 | `NAME old$ AS new$` | `pb_name` (runtime) | rename a file (`rename`) |
 | `ON GOTO` | computed `switch`-style branch | jump to one of N labels selected by a 1-based index |
 | `ON GOSUB` | computed `GOSUB` + `RETURN` | call one of N subroutines selected by a 1-based index |
+| `CLIPBOARD SET TEXT / GET TEXT / RESET` | Win32 clipboard | text to/from the system clipboard |
+| `INPUT FLUSH` | `pb_input_flush` (runtime) | discard buffered console input |
+| `OPTION EXPLICIT` / `REM` / `GLOBAL` | accepted | declarations and comments parse cleanly |
 
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
@@ -313,6 +316,13 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.6 — batch 13: clipboard + misc (2026-09-11)
+
+`CLIPBOARD SET TEXT / GET TEXT / RESET` implemented via Win32 clipboard APIs
+(OpenClipboard / SetClipboardData / GetClipboardData), `INPUT FLUSH` added,
+and `OPTION EXPLICIT` / `REM` / `GLOBAL` verified as supported and marked
+implemented in the coverage matrix. Sample-verified 4/4 + validation 3/3.
 
 ### v0.1.5 — batch 12: computed branches (2026-09-11)
 

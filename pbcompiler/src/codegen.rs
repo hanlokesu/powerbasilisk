@@ -1426,6 +1426,14 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_clipboard_set_text", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_clipboard_get_text", &IrType::Ptr, &[], false);
+        self.module
+            .declare_function("pb_clipboard_reset", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_input_flush", &IrType::Void, &[], false);
+        self.module
             .declare_function("pb_lof", &IrType::I64, &[IrType::I32], false);
         self.module
             .declare_function("pb_loc", &IrType::I64, &[IrType::I32], false);
@@ -2350,6 +2358,25 @@ impl Compiler {
             Statement::GoTo(label) => self.compile_goto(fb, label),
             Statement::OnGoTo { expr, labels } => self.compile_on_goto(fb, expr, labels),
             Statement::OnGoSub { expr, labels } => self.compile_on_gosub(fb, expr, labels),
+            Statement::ClipboardSetText { text, result } => {
+                self.compile_clipboard_set(fb, text, result.as_ref())
+            }
+            Statement::ClipboardGetText { target, result } => {
+                self.compile_clipboard_get(fb, target, result.as_ref())
+            }
+            Statement::ClipboardReset { result } => {
+                let rc = fb.call(&IrType::I32, "pb_clipboard_reset", &[]);
+                if let Some(res) = result {
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, res) {
+                        fb.store(&rc, &ptr);
+                    }
+                }
+                Ok(())
+            }
+            Statement::InputFlush => {
+                fb.call_void("pb_input_flush", &[]);
+                Ok(())
+            }
             // Stubs: statements that compile to no-ops
             Statement::OnErrorGoto(_) | Statement::OnErrorGotoZero | Statement::ResumeNext => {
                 Ok(())
@@ -4377,6 +4404,47 @@ impl Compiler {
                 fb.store(&zero, &ctx.ret_addr_ptr.clone());
             } else {
                 fb.label(&after);
+            }
+        }
+        Ok(())
+    }
+
+    fn compile_clipboard_set(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        text: &Expr,
+        result: Option<&Expr>,
+    ) -> PbResult<()> {
+        let v = self.compile_expr(fb, text)?;
+        let rc = fb.call(&IrType::I32, "pb_clipboard_set_text", &[v]);
+        if let Some(res) = result {
+            if let Some((ptr, _, _)) = self.lvalue_ptr(fb, res) {
+                fb.store(&rc, &ptr);
+            }
+        }
+        Ok(())
+    }
+
+    fn compile_clipboard_get(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        target: &Expr,
+        result: Option<&Expr>,
+    ) -> PbResult<()> {
+        let val = fb.call(&IrType::Ptr, "pb_clipboard_get_text", &[]);
+        if let Expr::Variable(orig) = target {
+            let name = normalize_name(orig);
+            if let Some(info) = self.symbols.lookup(&name) {
+                let ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                let converted =
+                    self.convert_value(fb, &val, &info.ir_type.clone(), &info.pb_type.clone());
+                fb.store(&converted, &ptr);
+            }
+        }
+        if let Some(res) = result {
+            if let Some((ptr, _, _)) = self.lvalue_ptr(fb, res) {
+                let one = fb.const_i32(1);
+                fb.store(&one, &ptr);
             }
         }
         Ok(())

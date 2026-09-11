@@ -32,6 +32,15 @@ __declspec(dllimport) int __stdcall SetFileAttributesA(const char* lpFileName, u
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) unsigned long __stdcall GetPriorityClass(void* hProcess);
 __declspec(dllimport) int __stdcall SetPriorityClass(void* hProcess, unsigned long dwPriorityClass);
+/* Win32 clipboard (user32) */
+__declspec(dllimport) int __stdcall OpenClipboard(void* hWndNewOwner);
+__declspec(dllimport) int __stdcall CloseClipboard(void);
+__declspec(dllimport) int __stdcall EmptyClipboard(void);
+__declspec(dllimport) void* __stdcall SetClipboardData(unsigned int uFormat, void* hMem);
+__declspec(dllimport) void* __stdcall GetClipboardData(unsigned int uFormat);
+__declspec(dllimport) void* __stdcall GlobalAlloc(unsigned int uFlags, unsigned long dwBytes);
+__declspec(dllimport) void* __stdcall GlobalLock(void* hMem);
+__declspec(dllimport) int __stdcall GlobalUnlock(void* hMem);
 typedef unsigned long DWORD;
 #endif
 
@@ -1134,6 +1143,52 @@ void pb_array_delete(char* base, int elem_size, long long total, long long index
         memset(base + (total - count) * elem_size, 0,
                (size_t)(count * elem_size));
     }
+}
+
+/* CLIPBOARD SET TEXT / GET TEXT / RESET (Win32) */
+#define CF_TEXT 1
+#define GMEM_MOVEABLE 0x0042
+int pb_clipboard_set_text(const char* text) {
+    if (!OpenClipboard(0)) return -1;
+    EmptyClipboard();
+    unsigned long len = (unsigned long)strlen(text);
+    void* h = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    int ok = -1;
+    if (h) {
+        char* p = (char*)GlobalLock(h);
+        if (p) {
+            memcpy(p, text, len + 1);
+            GlobalUnlock(h);
+        }
+        if (SetClipboardData(CF_TEXT, h)) ok = 0;
+    }
+    CloseClipboard();
+    return ok;
+}
+
+char* pb_clipboard_get_text(void) {
+    char* empty = pb_bstr_alloc("", 0);
+    if (!OpenClipboard(0)) return empty;
+    void* h = GetClipboardData(CF_TEXT);
+    if (!h) { CloseClipboard(); return empty; }
+    char* p = (char*)GlobalLock(h);
+    if (!p) { CloseClipboard(); return empty; }
+    unsigned long len = (unsigned long)strlen(p);
+    char* r = pb_bstr_alloc(p, len);
+    GlobalUnlock(h);
+    CloseClipboard();
+    return r;
+}
+
+int pb_clipboard_reset(void) {
+    if (!OpenClipboard(0)) return -1;
+    EmptyClipboard();
+    CloseClipboard();
+    return 0;
+}
+
+void pb_input_flush(void) {
+    fflush(stdin);
 }
 
 /* ===== Batch 5: PEEK / POKE ===== */

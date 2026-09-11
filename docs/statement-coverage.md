@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 77 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 82 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 214 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 209 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (77)
+## ✅ Implemented (82)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -97,6 +97,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | WRITE# | STATEMENT | `core` |
 | `ON GOTO` | STATEMENT | PB/Win + PB/CC | Computed branch to one of several labels |
 | `ON GOSUB` | STATEMENT | PB/Win + PB/CC | Computed call to one of several subroutines (RETURN returns) |
+| `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | PB/Win + PB/CC | Win32 clipboard read/write/reset |
+| `INPUT FLUSH` | STATEMENT | PB/CC only | Flush console input buffer |
+| `OPTION EXPLICIT` | STATEMENT | PB/Win + PB/CC | Accepted (requires explicit declarations) |
+| `REM` | STATEMENT | PB/Win + PB/CC | Comments accepted at top level and in bodies |
+| `GLOBAL` | STATEMENT | PB/Win + PB/CC | Global variable declarations |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

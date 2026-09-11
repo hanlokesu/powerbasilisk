@@ -1195,7 +1195,15 @@ impl Parser {
             Token::Print => self.parse_print_statement(),
             Token::Input => {
                 self.advance(); // consume INPUT
-                                // INPUT #filenum, var1, var2, ...
+                                // INPUT FLUSH — discard buffered console input
+                if let Token::Identifier(s) = self.peek() {
+                    if s.eq_ignore_ascii_case("FLUSH") {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::InputFlush);
+                    }
+                }
+                // INPUT #filenum, var1, var2, ...
                 if self.peek() == &Token::Hash {
                     self.advance(); // consume #
                     let file_num = self.parse_expression()?;
@@ -2106,6 +2114,9 @@ impl Parser {
                         line,
                     }));
                 }
+                if name_upper == "CLIPBOARD" {
+                    return self.parse_clipboard_statement(line);
+                }
                 // LOCK / UNLOCK #filenum [, record& [, length&]]
                 if (name_upper == "LOCK" || name_upper == "UNLOCK")
                     && self.peek_at(1) == Some(&Token::Hash)
@@ -2714,6 +2725,68 @@ impl Parser {
             }
         }
         Ok(patterns)
+    }
+
+    fn parse_clipboard_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume CLIPBOARD
+        match self.peek() {
+            Token::Identifier(s) if s.eq_ignore_ascii_case("SET") => {
+                self.advance();
+                if let Token::Identifier(s2) = self.peek() {
+                    if s2.eq_ignore_ascii_case("TEXT") {
+                        self.advance();
+                        let text = self.parse_expression()?;
+                        let result = if self.peek() == &Token::Comma {
+                            self.advance();
+                            Some(self.parse_expression()?)
+                        } else {
+                            None
+                        };
+                        self.consume_to_eol();
+                        return Ok(Statement::ClipboardSetText { text, result });
+                    }
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("CLIPBOARD SET".to_string(), line))
+            }
+            Token::Identifier(s) if s.eq_ignore_ascii_case("GET") => {
+                self.advance();
+                if let Token::Identifier(s2) = self.peek() {
+                    if s2.eq_ignore_ascii_case("TEXT") {
+                        self.advance();
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let target = self.parse_expression()?;
+                            let result = if self.peek() == &Token::Comma {
+                                self.advance();
+                                Some(self.parse_expression()?)
+                            } else {
+                                None
+                            };
+                            self.consume_to_eol();
+                            return Ok(Statement::ClipboardGetText { target, result });
+                        }
+                    }
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("CLIPBOARD GET TEXT".to_string(), line))
+            }
+            Token::Identifier(s) if s.eq_ignore_ascii_case("RESET") => {
+                self.advance();
+                let result = if self.peek() == &Token::Comma {
+                    self.advance();
+                    Some(self.parse_expression()?)
+                } else {
+                    None
+                };
+                self.consume_to_eol();
+                Ok(Statement::ClipboardReset { result })
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop("CLIPBOARD".to_string(), line))
+            }
+        }
     }
 
     fn parse_print_statement(&mut self) -> PbResult<Statement> {
