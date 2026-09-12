@@ -102,7 +102,25 @@ and expression functions with no implementation (`Unknown function — 0`).
 
 ## Getting Started (new users)
 
-The quickest path on a brand-new machine:
+**Option A — no toolchain needed (recommended): download the prebuilt
+package from [Releases](https://github.com/hanlokesu/powerbasilisk/releases).**
+Pick the latest `PowerBasilisk-Enhanced-vX.Y.Z-x64.zip`; it already contains
+the compiled `pbcompiler.exe`, the 64-bit runtime `pb_runtime_x64.obj`, sample
+programs and a one-click `compile.bat`. Unzip and run:
+
+```bat
+cd PowerBasilisk-Enhanced-v0.1.9-x64
+compile.bat          :: builds examples\demo.bas -> examples\demo.exe
+```
+
+> **Which download should I use?** The green **Code → Download ZIP** button
+> (named `powerbasilisk-main.zip` by GitHub) is the **raw source tree only** —
+> no executable inside; it is meant for developers building from source. New
+> users who just want to compile PB programs should use the **Releases**
+> package instead. (GitHub also auto-attaches "Source code (zip)" archives to
+> every Release — those are source-only as well, ignore them.)
+
+**Option B — build from source:** the quickest path on a brand-new machine:
 
 1. **Double-click `setup.bat`** (or run
    `powershell -NoProfile -ExecutionPolicy Bypass -File setup.ps1`).
