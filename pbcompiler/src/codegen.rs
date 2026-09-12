@@ -1491,6 +1491,18 @@ impl Compiler {
             ],
             false,
         );
+        self.module.declare_function(
+            "pb_array_arrayix",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_filescan",
+            &IrType::Void,
+            &[IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_clipboard_set_text", &IrType::I32, &[IrType::Ptr], false);
         self.module
@@ -3944,6 +3956,37 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "ARRAY ARRAYIX" => {
+                // ARRAY ARRAYIX arr() — set each element to its element index
+                if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let is_string = if arr_info.elem_ir_type == IrType::Ptr {
+                            1
+                        } else {
+                            0
+                        };
+                        fb.call_void(
+                            "pb_array_arrayix",
+                            &[
+                                base,
+                                fb.const_i32(elem_size),
+                                fb.const_i64(arr_info.total_elements as i64),
+                                fb.const_i32(is_string),
+                            ],
+                        );
+                    }
+                }
+                return Ok(());
+            }
             "HOST ADDR" => {
                 // HOST ADDR [hostname$] TO ip&
                 let host_ptr = if let Some(h) = call.args.first() {
@@ -4221,6 +4264,31 @@ impl Compiler {
                     let sv1 = self.compile_expr(fb, &call.args[1])?;
                     let pos = self.to_i64(fb, &sv1);
                     fb.call_void("pb_seek", &[f, pos]);
+                }
+                return Ok(());
+            }
+            "FILESCAN" => {
+                // FILESCAN [#] fnum&, RECORDS TO y& [, WIDTH TO x&]
+                if !call.args.is_empty() {
+                    let sv0 = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &sv0);
+                    let rec_tmp = fb.alloca(&IrType::I64);
+                    let wid_tmp = fb.alloca(&IrType::I64);
+                    fb.call_void("pb_filescan", &[f, rec_tmp.clone(), wid_tmp.clone()]);
+                    if let Some(rec_arg) = call.args.get(1) {
+                        if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, rec_arg) {
+                            let v = fb.load(&IrType::I64, &rec_tmp);
+                            let converted = self.convert_value(fb, &v, &ir, &pb);
+                            fb.store(&converted, &ptr);
+                        }
+                    }
+                    if let Some(wid_arg) = call.args.get(2) {
+                        if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, wid_arg) {
+                            let v = fb.load(&IrType::I64, &wid_tmp);
+                            let converted = self.convert_value(fb, &v, &ir, &pb);
+                            fb.store(&converted, &ptr);
+                        }
+                    }
                 }
                 return Ok(());
             }

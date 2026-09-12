@@ -242,8 +242,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **145** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **156** documented upstream with no codegen evidence yet.
+> Summary: **150** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **151** documented upstream with no codegen evidence yet.
 > (2026-09-13: +11 official keywords from batch 19 — TCP OPEN/ACCEPT/SEND/RECV/
 > LINE INPUT/PRINT/CLOSE + UDP OPEN/SEND/RECV/CLOSE — Winsock sockets, verified
 > live via loopback TCP/UDP echo; 2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
@@ -364,7 +364,30 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.13 (2026-09-13) — Batch 20: array element ops + file scanning, coverage cleanup
+
+Five statements moved from *Not implemented* to *Implemented*
+(coverage: **150 implemented / 151 not implemented / 202 tier-3 DDT**):
+
+- **ARRAY ARRAYIX** `arr()` — set every element to its own element index
+  (numeric and string arrays; batch 20).
+- **FILESCAN** `[#] fnum&, RECORDS TO y& [, WIDTH TO x&]` — count records in an
+  open file: INPUT mode counts CRLF-delimited records and longest record width;
+  BINARY mode counts PB packed strings (2-byte length prefix, `0xFFFF` marker +
+  4-byte length for strings > 65535 bytes). Runtime now tracks the open mode
+  (`file_modes[]`) so the same function serves both file kinds.
+- **LOCAL** / **DECLARE** / **TYPE/END TYPE** — promoted to implemented after a
+  live declaration test (local/static variables, `DECLARE SUB` prototypes, UDT
+  definitions and field access verified end-to-end).
+- Note: `STATIC` remains Not implemented — it currently behaves like LOCAL
+  (value resets on every call); a real static-storage implementation is tracked
+  for a later batch.
+- Verified live: `examples/batch20_test.bas` — ARRAYIX `1,2,3,4,5`, SCAN >20 = 3,
+  SCAN =25 = 4, DELETE/INSERT shifts correct, FILESCAN 3 records / width 16.
+- Official regression: **14/14 ALL PASS**, fmt + clippy clean.
+
 ### v0.1.12 (2026-09-13) — Batch 19: TCP + UDP sockets (11 statements)
+ — Batch 19: TCP + UDP sockets (11 statements)
 
 Real Winsock networking for PB programs — the first network layer in the enhanced
 compiler. 11 statements moved from *Not implemented* to *Implemented*

@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 145 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 150 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 156 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 151 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (145)
+## ✅ Implemented (150)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -168,6 +168,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `OPTION EXPLICIT` | STATEMENT | PB/Win + PB/CC | Accepted (requires explicit declarations) |
 | `REM` | STATEMENT | PB/Win + PB/CC | Comments accepted at top level and in bodies |
 | `GLOBAL` | STATEMENT | PB/Win + PB/CC | Global variable declarations |
+| `ARRAY ARRAYIX` | STATEMENT | PB/Win + PB/CC | Each element = its index (batch 20) |
+| `DECLARE` | STATEMENT | PB/Win + PB/CC | DECLARE SUB/FUNCTION prototypes (batch 20) |
+| `FILESCAN` | STATEMENT | PB/Win + PB/CC | Records/width scan, INPUT+BINARY modes (batch 20) |
+| `LOCAL` | STATEMENT | PB/Win + PB/CC | Local variable declarations (batch 20) |
+| `TYPE/END TYPE` | BLOCK | PB/Win + PB/CC | UDT definitions (batch 20) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -375,13 +380,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (167, alphabetical)
+## ⬜ Not implemented (162, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
 
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -401,7 +405,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | COMM SEND | STATEMENT | PB/Win + PB/CC | Established |
 | COMM SET | STATEMENT | PB/Win + PB/CC | Established |
 | COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | Established |
-| DECLARE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
 | DISPLAY COLOR | STATEMENT | PB/Win only | Established |
@@ -411,7 +414,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
-| FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | HEADER | STATEMENT | PB/Win only | Established |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
@@ -421,7 +423,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LOCAL | STATEMENT | PB/Win + PB/CC | Established |
 | LPRINT | STATEMENT | PB/Win + PB/CC | Established |
 | LPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
 | LPRINT CLOSE | STATEMENT | PB/Win + PB/CC | Established |
@@ -457,7 +458,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
-| TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | WINDOW GET | STATEMENT | PB/Win only | Established |
 | WINDOW SET | STATEMENT | PB/Win only | Established |

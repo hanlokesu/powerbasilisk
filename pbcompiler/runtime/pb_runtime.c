@@ -655,6 +655,7 @@ char* pb_remove(const char* str, const char* chars) {
 
 #define MAX_FILE_HANDLES 256
 static FILE* file_handles[MAX_FILE_HANDLES] = {0};
+static int file_modes[MAX_FILE_HANDLES] = {0}; /* 0=INPUT 1=OUTPUT 2=APPEND 3=BINARY */
 
 int pb_freefile(void) {
     for (int i = 1; i < MAX_FILE_HANDLES; i++) {
@@ -677,10 +678,12 @@ int pb_open(const char* path, int mode, int filenum) {
             if (!file_handles[filenum]) {
                 file_handles[filenum] = fopen(path, "w+b");
             }
+            file_modes[filenum] = mode;
             return (file_handles[filenum] != NULL) ? 0 : -1;
         default: fmode = "r"; break;
     }
     file_handles[filenum] = fopen(path, fmode);
+    if (file_handles[filenum]) file_modes[filenum] = mode;
     return (file_handles[filenum] != NULL) ? 0 : -1;
 }
 
@@ -688,7 +691,54 @@ void pb_close(int filenum) {
     if (filenum >= 1 && filenum < MAX_FILE_HANDLES && file_handles[filenum]) {
         fclose(file_handles[filenum]);
         file_handles[filenum] = NULL;
+        file_modes[filenum] = 0;
     }
+}
+
+/* FILESCAN [#] fnum&, RECORDS TO y& [, WIDTH TO x&]
+   INPUT mode: count CRLF/EOF-terminated records; WIDTH = longest record.
+   BINARY mode: PB packed strings (2-byte length prefix, 0xFFFF marker + 4-byte
+   length for strings > 65535 bytes); WIDTH = longest string length. */
+void pb_filescan(int filenum, long long* records, long long* width) {
+    FILE* f = (filenum >= 1 && filenum < MAX_FILE_HANDLES) ? file_handles[filenum] : NULL;
+    if (!f) { *records = 0; *width = 0; return; }
+    long pos = ftell(f);
+    rewind(f);
+    long long rec = 0, w = 0;
+    if (file_modes[filenum] == 3) {
+        /* BINARY: PB packed strings */
+        for (;;) {
+            unsigned char h[2];
+            size_t n = fread(h, 1, 2, f);
+            if (n < 2) break;
+            unsigned int len = h[0] | (h[1] << 8);
+            if (len == 0xFFFF) {
+                unsigned char l4[4];
+                if (fread(l4, 1, 4, f) < 4) break;
+                len = l4[0] | (l4[1] << 8) | (l4[2] << 16) | ((unsigned int)l4[3] << 24);
+            }
+            if (fseek(f, (long)len, SEEK_CUR) != 0) break;
+            rec++;
+            if ((long long)len > w) w = len;
+        }
+    } else {
+        /* INPUT: CRLF-delimited records */
+        int ch;
+        long long cur = 0;
+        int in_rec = 0;
+        while ((ch = fgetc(f)) != EOF) {
+            if (ch == '\r' || ch == '\n') {
+                if (in_rec) { rec++; if (cur > w) w = cur; cur = 0; in_rec = 0; }
+            } else {
+                in_rec = 1;
+                cur++;
+            }
+        }
+        if (in_rec) { rec++; if (cur > w) w = cur; }
+    }
+    fseek(f, pos, SEEK_SET);
+    *records = rec;
+    *width = w;
 }
 
 void pb_print_file(int filenum, const char* text) {
@@ -1303,6 +1353,36 @@ void pb_array_delete(char* base, int elem_size, long long total, long long index
     } else {
         memset(base + (total - count) * elem_size, 0,
                (size_t)(count * elem_size));
+    }
+}
+
+/* ARRAY ARRAYIX arr() — set each element to its element index (1-based).
+   Numeric arrays: value = index (widened to element size).
+   String arrays: element = decimal text of index (BSTR). */
+void pb_array_arrayix(char* base, int elem_size, long long total, int type) {
+    for (long long i = 1; i <= total; i++) {
+        char* p = base + (i - 1) * elem_size;
+        if (type == 0) {
+            if (elem_size == 1) {
+                signed char t = (signed char)i;
+                memcpy(p, &t, 1);
+            } else if (elem_size == 2) {
+                short t = (short)i;
+                memcpy(p, &t, 2);
+            } else if (elem_size == 4) {
+                int t = (int)i;
+                memcpy(p, &t, 4);
+            } else {
+                long long t = i;
+                memcpy(p, &t, 8);
+            }
+        } else {
+            char buf[24];
+            _i64toa_s(i, buf, 24, 10);
+            char** sp = (char**)p;
+            if (*sp) SysFreeString(*sp);
+            *sp = (char*)SysAllocStringByteLen(buf, (unsigned int)strlen(buf));
+        }
     }
 }
 

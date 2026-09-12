@@ -1981,6 +1981,53 @@ impl Parser {
                         line,
                     }));
                 }
+                // ARRAY ARRAYIX arr()
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "ARRAYIX")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume ARRAYIX
+                    let args = vec![self.parse_primary()?];
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY ARRAYIX".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // FILESCAN [#] fnum&, RECORDS TO y& [, WIDTH TO x&]
+                if name_upper == "FILESCAN" {
+                    self.advance(); // consume FILESCAN
+                    let mut args = Vec::new();
+                    if self.peek() == &Token::Hash {
+                        self.advance(); // consume #
+                    }
+                    args.push(self.parse_expression()?); // file number
+                    self.expect(&Token::Comma)?;
+                    if let Token::Identifier(w) = self.peek() {
+                        if w.to_uppercase() == "RECORDS" {
+                            self.advance(); // consume RECORDS
+                            self.expect(&Token::To)?;
+                            args.push(self.parse_expression()?); // records target
+                        }
+                    }
+                    if self.peek() == &Token::Comma {
+                        self.advance(); // consume comma
+                        if let Token::Identifier(w) = self.peek() {
+                            if w.to_uppercase() == "WIDTH" {
+                                self.advance(); // consume WIDTH
+                                self.expect(&Token::To)?;
+                                args.push(self.parse_expression()?); // width target
+                            }
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "FILESCAN".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // BIT {SET|RESET|TOGGLE} intvar, bitnumber / BIT CALC intvar, bitnumber, expr
                 if name_upper == "BIT"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
