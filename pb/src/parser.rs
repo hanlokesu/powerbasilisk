@@ -2224,6 +2224,15 @@ impl Parser {
                 if name_upper == "CLIPBOARD" {
                     return self.parse_clipboard_statement(line);
                 }
+                if name_upper == "GLOBALMEM" {
+                    return self.parse_globalmem_statement(line);
+                }
+                if name_upper == "MOUSEPTR" {
+                    return self.parse_mouseptr_statement(line);
+                }
+                if name_upper == "UCODEPAGE" {
+                    return self.parse_ucodepage_statement(line);
+                }
                 // HOST ADDR [hostname$] TO ip&  /  HOST NAME [ip&] TO hostname$
                 if name_upper == "HOST"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
@@ -2921,6 +2930,80 @@ impl Parser {
                 Ok(Statement::Noop("CLIPBOARD".to_string(), line))
             }
         }
+    }
+
+    fn parse_globalmem_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume GLOBALMEM
+        let op = match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop("GLOBALMEM".to_string(), line));
+            }
+        };
+        if !matches!(op.as_str(), "ALLOC" | "FREE" | "LOCK" | "SIZE" | "UNLOCK") {
+            self.consume_to_eol();
+            return Ok(Statement::Noop(format!("GLOBALMEM {op}"), line));
+        }
+        self.advance(); // consume op
+        let mut args = vec![self.parse_expression()?];
+        if self.peek() == &Token::To {
+            self.advance(); // consume TO (reserved word)
+        }
+        if !matches!(self.peek(), Token::Eol | Token::Colon) {
+            args.push(self.parse_expression()?);
+        }
+        self.consume_to_eol();
+        Ok(Statement::Call(CallStmt {
+            name: format!("GLOBALMEM {op}"),
+            args,
+            line,
+        }))
+    }
+
+    fn parse_mouseptr_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume MOUSEPTR
+        let mut args = vec![self.parse_expression()?];
+        if self.peek() == &Token::To {
+            self.advance(); // consume TO (reserved word)
+            args.push(self.parse_expression()?);
+        }
+        self.consume_to_eol();
+        Ok(Statement::Call(CallStmt {
+            name: "MOUSEPTR".to_string(),
+            args,
+            line,
+        }))
+    }
+
+    fn parse_ucodepage_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume UCODEPAGE
+        let first = match self.peek() {
+            Token::Identifier(w) => {
+                let u = w.to_uppercase();
+                if u == "ANSI" {
+                    self.advance();
+                    Expr::IntegerLit(0)
+                } else if u == "OEM" {
+                    self.advance();
+                    Expr::IntegerLit(1)
+                } else {
+                    self.parse_expression()?
+                }
+            }
+            _ => self.parse_expression()?,
+        };
+        let mut args = vec![first];
+        if self.peek() == &Token::To {
+            self.advance();
+            args.push(self.parse_expression()?);
+        }
+        self.consume_to_eol();
+        Ok(Statement::Call(CallStmt {
+            name: "UCODEPAGE".to_string(),
+            args,
+            line,
+        }))
     }
 
     fn parse_print_statement(&mut self) -> PbResult<Statement> {

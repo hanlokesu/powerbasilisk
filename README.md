@@ -224,9 +224,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **102** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **199** documented upstream with no codegen evidence yet.
-> (2026-09-12: +27 official keywords from batches 1-16 — TIX, MKBYT$, PEEK/POKE,
+> Summary: **105** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **196** documented upstream with no codegen evidence yet.
+> (2026-09-12: +30 official keywords from batches 1-17 — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
 > CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL, MKx binary-string family,
 > DESKTOP GET CLIENT/LOC/PPI — all sample-verified live.)
@@ -342,6 +342,24 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.10 (2026-09-12) — Batch 17: GLOBALMEM, MOUSEPTR, UCODEPAGE
+
+- **GLOBALMEM ALLOC count TO h&** — allocate movable global memory
+  (`GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT)`). The 64-bit handle is stored in a
+  runtime slot table and the PB variable receives a 1-based **slot id**, so it
+  always fits a LONG/DWORD (no truncation).
+- **GLOBALMEM SIZE h& TO size&** — `GlobalSize` of the block.
+- **GLOBALMEM LOCK h& TO ptr** — `GlobalLock`, returns the pointer (0 on failure).
+- **GLOBALMEM UNLOCK h& TO locked&** — `GlobalUnlock`, 1 = still locked, 0 = fully unlocked.
+- **GLOBALMEM FREE h& TO result&** — `GlobalFree`, result 0 on success, nonzero on failure.
+- **MOUSEPTR style [TO prev&]** — console cursor styles 0-13 mapped to Win32 stock
+  cursors (0/12 hide the cursor, 13 = app-starting hourglass; PB/CC only).
+- **UCODEPAGE ANSI|OEM|num [TO prev&]** — records the desired codepage
+  (ANSI=CP_ACP, OEM=CP_OEMCP, or an explicit numeric codepage); returns the
+  previous setting. Stored for future ANSI<->UNICODE conversions.
+- Tests: `examples/batch17_test.bas` (9/9), official regression **15/15 ALL PASS**,
+  fmt + clippy clean.
+
 ### v0.1.9 (2026-09-12) — Batch 16: MKx binary-string family + DESKTOP GET CLIENT/LOC/PPI
 
 - **MKx binary-string family** — numeric values to fixed-length little-endian

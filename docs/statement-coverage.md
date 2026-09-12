@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 102 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 105 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 199 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 196 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (102)
+## ✅ Implemented (105)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -60,6 +60,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FUNCTION / END FUNCTION | STATEMENT | `core` |
 | GET | STATEMENT | `core` |
 | GET$ | STATEMENT | `pb_get_string` (read N bytes into string var) |
+| GLOBALMEM | STATEMENT | `pb_globalmem_alloc/free/lock/size/unlock` (moveable global memory via slot ids) |
 | IF | STATEMENT | `core` |
 | IF/END IF | BLOCK | `core` |
 | INCR | STATEMENT | `core` |
@@ -84,6 +85,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MKS$ | STATEMENT | `pb_mksingle` (4-byte IEEE-754) |
 | MKWRD$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
 | MKDIR | STATEMENT | `core` |
+| MOUSEPTR | STATEMENT | `pb_mouseptr` (stock cursors 0-13, PB/CC only) |
 | MSGBOX | STATEMENT | `PB/Win only` |
 | NAME | STATEMENT | `core` |
 | OPEN | STATEMENT | `core` |
@@ -114,6 +116,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SWAP | STATEMENT | `core` |
 | TIX | STATEMENT | `core` |
 | UNLOCK | STATEMENT | `core` |
+| UCODEPAGE | STATEMENT | `pb_ucodepage` (records ANSI/OEM/numeric codepage) |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
 | `ON GOTO` | STATEMENT | PB/Win + PB/CC | Computed branch to one of several labels |
@@ -330,7 +333,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (199, alphabetical)
+## ⬜ Not implemented (196, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -397,7 +400,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GLOBALMEM | STATEMENT | PB/Win + PB/CC | Established |
 | HEADER | STATEMENT | PB/Win only | Established |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
@@ -416,7 +418,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
 | MKE$ | STATEMENT | PB/Win + PB/CC | Established |
-| MOUSEPTR | STATEMENT | PB/CC only | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
@@ -451,7 +452,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
 | TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
-| UCODEPAGE | STATEMENT | PB/Win + PB/CC | Established |
 | UDP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | UDP OPEN | STATEMENT | PB/Win + PB/CC | Established |

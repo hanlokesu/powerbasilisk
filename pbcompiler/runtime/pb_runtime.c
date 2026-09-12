@@ -37,6 +37,11 @@ __declspec(dllimport) int __stdcall SystemParametersInfoA(unsigned int uiAction,
 __declspec(dllimport) void* __stdcall GetDC(void* hWnd);
 __declspec(dllimport) int __stdcall GetDeviceCaps(void* hdc, int nIndex);
 __declspec(dllimport) int __stdcall ReleaseDC(void* hWnd, void* hDC);
+__declspec(dllimport) void* __stdcall GlobalFree(void* hMem);
+__declspec(dllimport) unsigned long long __stdcall GlobalSize(void* hMem);
+__declspec(dllimport) void* __stdcall LoadCursorA(void* hInstance, const char* lpCursorName);
+__declspec(dllimport) void* __stdcall SetCursor(void* hCursor);
+__declspec(dllimport) int __stdcall ShowCursor(int bShow);
 __declspec(dllimport) int __stdcall OpenClipboard(void* hWndNewOwner);
 __declspec(dllimport) int __stdcall CloseClipboard(void);
 __declspec(dllimport) int __stdcall EmptyClipboard(void);
@@ -271,6 +276,79 @@ int pb_str_len(const char* s) {
     if (!s) return 0;
     const unsigned int* p = (const unsigned int*)s - 1;  /* BSTR length prefix */
     return (int)*p;
+}
+
+/* GLOBALMEM: allocate moveable global memory, return 1-based slot id so the
+ * handle fits a PB LONG/DWORD on 64-bit. Slot table avoids truncation. */
+#define GMEM_MOVEABLE 0x0002u
+#define GMEM_ZEROINIT 0x0040u
+static void* gm_table[256];
+static int gm_alloc_slot(void) {
+    for (int i = 1; i < 256; i++) {
+        if (!gm_table[i]) return i;
+    }
+    return 0;
+}
+long pb_globalmem_alloc(long count) {
+    void* h = GlobalAlloc(GMEM_MOVEABLE | GMEM_ZEROINIT, (unsigned long long)count);
+    if (!h) return 0;
+    int slot = gm_alloc_slot();
+    if (!slot) { GlobalFree(h); return 0; }
+    gm_table[slot] = h;
+    return slot;
+}
+long pb_globalmem_free(long slot) {
+    if (slot <= 0 || slot >= 256) return slot;
+    void* h = gm_table[slot];
+    if (!h) return slot;
+    void* r = GlobalFree(h);
+    gm_table[slot] = NULL;
+    return r ? slot : 0; /* success -> 0, failure -> original handle value */
+}
+void* pb_globalmem_lock(long slot) {
+    if (slot <= 0 || slot >= 256) return NULL;
+    return GlobalLock(gm_table[slot]);
+}
+long pb_globalmem_size(long slot) {
+    if (slot <= 0 || slot >= 256) return 0;
+    return (long)GlobalSize(gm_table[slot]);
+}
+long pb_globalmem_unlock(long slot) {
+    if (slot <= 0 || slot >= 256) return 0;
+    return GlobalUnlock(gm_table[slot]) ? 1 : 0; /* non-zero = still locked */
+}
+
+/* MOUSEPTR: style 0 = hide, 1..13 = stock cursors, other = fail closed */
+long pb_mouseptr(long style) {
+    unsigned short idc = 0;
+    switch (style) {
+        case 0: ShowCursor(0); return 1;
+        case 1: case 4: idc = 32512; break; /* IDC_ARROW */
+        case 2: idc = 32515; break;         /* IDC_CROSS */
+        case 3: idc = 32513; break;         /* IDC_IBEAM */
+        case 5: idc = 32648; break;         /* IDC_SIZEALL */
+        case 6: idc = 32645; break;         /* IDC_SIZENESW */
+        case 7: idc = 32647; break;         /* IDC_SIZENS */
+        case 8: idc = 32644; break;         /* IDC_SIZENWSE */
+        case 9: idc = 32646; break;         /* IDC_SIZEWE */
+        case 10: idc = 32516; break;        /* IDC_UPARROW */
+        case 11: idc = 32514; break;        /* IDC_WAIT */
+        case 12: ShowCursor(0); return 1; /* no pointer */
+        case 13: idc = 32651; break;        /* IDC_APPSTARTING */
+        default: return 0;                  /* opaque cursor handle: fail closed */
+    }
+    void* h = LoadCursorA(NULL, (const char*)(size_t)idc);
+    if (!h) return 0;
+    return SetCursor(h) ? 1 : 0;
+}
+
+/* UCODEPAGE: record codepage for future ANSI<->UNICODE conversions.
+ * ANSI = CP_ACP(0), OEM = CP_OEMCP(1), numeric = explicit codepage. */
+static long pb_ucodepage_cur = 0;
+long pb_ucodepage(long cp) {
+    long old = pb_ucodepage_cur;
+    pb_ucodepage_cur = cp;
+    return old;
 }
 
 /* Public BSTR free wrapper — called from LLVM IR codegen (cdecl) */

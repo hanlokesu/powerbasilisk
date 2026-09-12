@@ -1329,6 +1329,20 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_globalmem_alloc", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_globalmem_free", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_globalmem_lock", &IrType::Ptr, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_globalmem_size", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_globalmem_unlock", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_mouseptr", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_ucodepage", &IrType::I32, &[IrType::I32], false);
+        self.module
             .declare_function("pb_isinfinite", &IrType::I32, &[IrType::Double], false);
         self.module
             .declare_function("pb_isnormal", &IrType::I32, &[IrType::Double], false);
@@ -3642,6 +3656,88 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "GLOBALMEM ALLOC" => {
+                // GLOBALMEM ALLOC count TO vHndl
+                if call.args.len() >= 2 {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let n = self.to_i32(fb, &cv);
+                    let h = fb.call(&IrType::I32, "pb_globalmem_alloc", &[n]);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.store(&h, &ptr);
+                }
+                return Ok(());
+            }
+            "GLOBALMEM FREE" => {
+                // GLOBALMEM FREE mHndl TO vHndl
+                if call.args.len() >= 2 {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let m = self.to_i32(fb, &cv);
+                    let h = fb.call(&IrType::I32, "pb_globalmem_free", &[m]);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.store(&h, &ptr);
+                }
+                return Ok(());
+            }
+            "GLOBALMEM LOCK" => {
+                // GLOBALMEM LOCK mHndl TO vPtr
+                if call.args.len() >= 2 {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let m = self.to_i32(fb, &cv);
+                    let p = fb.call(&IrType::Ptr, "pb_globalmem_lock", &[m]);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.store(&p, &ptr);
+                }
+                return Ok(());
+            }
+            "GLOBALMEM SIZE" => {
+                // GLOBALMEM SIZE mHndl TO vSize
+                if call.args.len() >= 2 {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let m = self.to_i32(fb, &cv);
+                    let sz = fb.call(&IrType::I32, "pb_globalmem_size", &[m]);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.store(&sz, &ptr);
+                }
+                return Ok(());
+            }
+            "GLOBALMEM UNLOCK" => {
+                // GLOBALMEM UNLOCK mHndl TO vLocked
+                if call.args.len() >= 2 {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let m = self.to_i32(fb, &cv);
+                    let lk = fb.call(&IrType::I32, "pb_globalmem_unlock", &[m]);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.store(&lk, &ptr);
+                }
+                return Ok(());
+            }
+            "MOUSEPTR" => {
+                // MOUSEPTR style [TO var&]
+                if !call.args.is_empty() {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let st = self.to_i32(fb, &cv);
+                    let r = fb.call(&IrType::I32, "pb_mouseptr", &[st]);
+                    if call.args.len() >= 2 {
+                        let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                        fb.store(&r, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "UCODEPAGE" => {
+                // UCODEPAGE ANSI|OEM|NumExpr [TO PrevPage&]
+                if !call.args.is_empty() {
+                    let cv = self.compile_expr(fb, &call.args[0])?;
+                    let cp = self.to_i32(fb, &cv);
+                    let old = fb.call(&IrType::I32, "pb_ucodepage", &[cp]);
+                    if call.args.len() >= 2 {
+                        let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                        fb.store(&old, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+
             "PLAY SOUND" => {
                 // PLAY SOUND freq&, duration& — speaker beep
                 if call.args.len() >= 2 {
