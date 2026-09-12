@@ -224,11 +224,12 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **75** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **216** documented upstream with no codegen evidence yet.
-> (2026-09-11: +25 official keywords from batches 1-10 — TIX, MKBYT$, PEEK/POKE,
+> Summary: **102** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **199** documented upstream with no codegen evidence yet.
+> (2026-09-12: +27 official keywords from batches 1-16 — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
-> CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL — all sample-verified live.)
+> CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL, MKx binary-string family,
+> DESKTOP GET CLIENT/LOC/PPI — all sample-verified live.)
 
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
@@ -276,6 +277,15 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `ARRAY DELETE arr(i) [FOR count]` | ✅ | `pb_array_delete` — element(s) removed, tail zeroed |
 | `ARRAY INSERT arr(i), value` | ✅ | `pb_array_insert_num/str` — element inserted, last shifts out (fixed arrays) |
 | `ARRAY SCAN arr(), OP expr, TO var` | ✅ | `pb_array_scan_num/str` — first matching relative index, 0 = none (`= <> < > <= >=`) |
+| `MKI$` / `MKWRD$` | ✅ | `pb_mkint` (2-byte little-endian) |
+| `MKL$` / `MKDWD$` | ✅ | `pb_mklong` (4-byte little-endian) |
+| `MKQ$` / `MKCUR$` / `MKCUX$` | ✅ | `pb_mkquad` (8-byte little-endian) |
+| `MKS$` | ✅ | `pb_mksingle` (4-byte IEEE-754) |
+| `MKD$` | ✅ | `pb_mkdouble` (8-byte IEEE-754) |
+| `DESKTOP GET CLIENT TO w&, h&` | ✅ | work-area size (`SystemParametersInfoA` SPI_GETWORKAREA) |
+| `DESKTOP GET LOC TO x&, y&` | ✅ | work-area origin (same call) |
+| `DESKTOP GET PPI TO x&, y&` | ✅ | `GetDeviceCaps` LOGPIXELSX/Y |
+| `LEN(str)` fix | ✅ | BSTR byte-length prefix (`pb_str_len`) — correct length for strings containing NUL bytes |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -332,6 +342,29 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.9 (2026-09-12) — Batch 16: MKx binary-string family + DESKTOP GET CLIENT/LOC/PPI
+
+- **MKx binary-string family** — numeric values to fixed-length little-endian
+  ANSI strings (`pb_mkint` / `pb_mklong` / `pb_mkquad` / `pb_mksingle` / `pb_mkdouble`):
+  - `MKI$` / `MKWRD$` → 2 bytes · `MKL$` / `MKDWD$` → 4 bytes ·
+    `MKQ$` / `MKCUR$` / `MKCUX$` → 8 bytes · `MKS$` → 4-byte single ·
+    `MKD$` → 8-byte double.
+  - `MKE$` (10-byte extended precision) remains unimplemented (x87 format).
+  - Compatible with the CVx family (`CVI`/`CVL`/`CVQ`/...) for round-tripping.
+- **DESKTOP GET CLIENT TO w&, h&** — size of the desktop work area (screen minus
+  system tray), via `SystemParametersInfoA(SPI_GETWORKAREA)`.
+- **DESKTOP GET LOC TO x&, y&** — origin of the work area (0,0 with bottom/right
+  tray; TrayWidth/TrayHeight when tray is left/top).
+- **DESKTOP GET PPI TO x&, y&** — display resolution in pixels per inch
+  (`GetDeviceCaps` LOGPIXELSX/Y).
+- **Fixed: `LEN()` on binary strings** — was `strlen` (stopped at the first NUL
+  byte); now uses the BSTR byte-length prefix (`pb_str_len`). String literals now
+  carry a 4-byte length prefix like runtime BSTRs, so `LEN(MKL$(1000))` = 4,
+  `LEN(MKQ$(1000))` = 8, etc. Fixed-length (`STRING * N`) buffers keep strlen
+  semantics.
+- Tests: `examples/batch16_test.bas` (11/11), official regression **15/15 ALL PASS**,
+  fmt + clippy clean.
+
 ### v0.1.7 (2026-09-12) — Batch 14: ARRAY COPY / SWAP / UNIQUE + HOST ADDR / HOST NAME
 - `ARRAY COPY src(), dest()` — duplicate a whole array into another (fixed-array memcpy).
 - `ARRAY SWAP a(), b()` — exchange all elements of two arrays.

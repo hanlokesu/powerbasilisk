@@ -33,6 +33,10 @@ __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) unsigned long __stdcall GetPriorityClass(void* hProcess);
 __declspec(dllimport) int __stdcall SetPriorityClass(void* hProcess, unsigned long dwPriorityClass);
 /* Win32 clipboard (user32) */
+__declspec(dllimport) int __stdcall SystemParametersInfoA(unsigned int uiAction, unsigned int uiParam, void* pvParam, unsigned int fWinIni);
+__declspec(dllimport) void* __stdcall GetDC(void* hWnd);
+__declspec(dllimport) int __stdcall GetDeviceCaps(void* hdc, int nIndex);
+__declspec(dllimport) int __stdcall ReleaseDC(void* hWnd, void* hDC);
 __declspec(dllimport) int __stdcall OpenClipboard(void* hWndNewOwner);
 __declspec(dllimport) int __stdcall CloseClipboard(void);
 __declspec(dllimport) int __stdcall EmptyClipboard(void);
@@ -220,6 +224,54 @@ char* pb_bstr_alloc(const char* src, unsigned int len) {
 #endif
 }
 
+
+/* MKx family: numeric -> binary ANSI string (pb_mkbyt already exists) */
+char* pb_mkint(int v) {
+    short s = (short)v;
+    return pb_bstr_alloc((const char*)&s, 2);      /* MKI$, MKWRD$ */
+}
+char* pb_mklong(int v) {
+    long l = (long)v;
+    return pb_bstr_alloc((const char*)&l, 4);      /* MKL$, MKDWD$ */
+}
+char* pb_mkquad(long long v) {
+    return pb_bstr_alloc((const char*)&v, 8);      /* MKQ$, MKCUR$, MKCUX$ */
+}
+char* pb_mksingle(float v) {
+    return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
+}
+char* pb_mkdouble(double v) {
+    return pb_bstr_alloc((const char*)&v, 8);      /* MKD$ */
+}
+
+/* DESKTOP GET CLIENT / LOC / PPI (work area = screen minus taskbar) */
+typedef struct { long left, top, right, bottom; } PB_RECT;
+#define PB_SPI_GETWORKAREA 0x0030
+void pb_desktop_get_client(long* w, long* h) {
+    PB_RECT rc = {0, 0, 0, 0};
+    SystemParametersInfoA(PB_SPI_GETWORKAREA, 0, &rc, 0);
+    *w = rc.right - rc.left;
+    *h = rc.bottom - rc.top;
+}
+void pb_desktop_get_loc(long* x, long* y) {
+    PB_RECT rc = {0, 0, 0, 0};
+    SystemParametersInfoA(PB_SPI_GETWORKAREA, 0, &rc, 0);
+    *x = rc.left;
+    *y = rc.top;
+}
+void pb_desktop_get_ppi(long* x, long* y) {
+    void* dc = GetDC(NULL);
+    *x = GetDeviceCaps(dc, 88);   /* LOGPIXELSX */
+    *y = GetDeviceCaps(dc, 90);   /* LOGPIXELSY */
+    ReleaseDC(NULL, dc);
+}
+
+/* LEN() — BSTR byte length (unlike strlen, handles embedded NUL bytes) */
+int pb_str_len(const char* s) {
+    if (!s) return 0;
+    const unsigned int* p = (const unsigned int*)s - 1;  /* BSTR length prefix */
+    return (int)*p;
+}
 
 /* Public BSTR free wrapper — called from LLVM IR codegen (cdecl) */
 void pb_bstr_free(char* bstr) {

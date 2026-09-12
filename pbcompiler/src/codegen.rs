@@ -1085,6 +1085,8 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_str_len", &IrType::I32, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_bstr_free", &IrType::Void, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_str_concat",
@@ -1298,6 +1300,34 @@ impl Compiler {
             .declare_function("pb_tix", &IrType::I64, &[], false);
         self.module
             .declare_function("pb_mkbyt", &IrType::Ptr, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_mkint", &IrType::Ptr, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_mklong", &IrType::Ptr, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_mkquad", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_mksingle", &IrType::Ptr, &[IrType::Float], false);
+        self.module
+            .declare_function("pb_mkdouble", &IrType::Ptr, &[IrType::Double], false);
+        self.module.declare_function(
+            "pb_desktop_get_client",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_desktop_get_loc",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_desktop_get_ppi",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_isinfinite", &IrType::I32, &[IrType::Double], false);
         self.module
@@ -3585,6 +3615,33 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "DESKTOP GET CLIENT" => {
+                // DESKTOP GET CLIENT TO ncWidth&, ncHeight& (work area)
+                if call.args.len() >= 2 {
+                    let (wp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let (hp, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.call_void("pb_desktop_get_client", &[wp, hp]);
+                }
+                return Ok(());
+            }
+            "DESKTOP GET LOC" => {
+                // DESKTOP GET LOC TO x&, y& (work area origin)
+                if call.args.len() >= 2 {
+                    let (xp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let (yp, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.call_void("pb_desktop_get_loc", &[xp, yp]);
+                }
+                return Ok(());
+            }
+            "DESKTOP GET PPI" => {
+                // DESKTOP GET PPI TO x&, y& (pixels per inch)
+                if call.args.len() >= 2 {
+                    let (xp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let (yp, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    fb.call_void("pb_desktop_get_ppi", &[xp, yp]);
+                }
+                return Ok(());
+            }
             "PLAY SOUND" => {
                 // PLAY SOUND freq&, duration& — speaker beep
                 if call.args.len() >= 2 {
@@ -5689,6 +5746,64 @@ impl Compiler {
                     Some(Ok(fb.const_i32(0)))
                 }
             }
+            "MKI" | "MKWRD" => {
+                // MKI$ / MKWRD$ — 2-byte binary string
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime("MKI$/MKWRD$ requires 1 argument")));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let b = self.to_i32(fb, &val);
+                    fb.call(&IrType::Ptr, "pb_mkint", &[b])
+                }))
+            }
+            "MKL" | "MKDWD" => {
+                // MKL$ / MKDWD$ — 4-byte binary string
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime("MKL$/MKDWD$ requires 1 argument")));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let b = self.to_i32(fb, &val);
+                    fb.call(&IrType::Ptr, "pb_mklong", &[b])
+                }))
+            }
+            "MKQ" | "MKCUR" | "MKCUX" => {
+                // MKQ$ / MKCUR$ / MKCUX$ — 8-byte binary string
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime(
+                        "MKQ$/MKCUR$/MKCUX$ requires 1 argument",
+                    )));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let b = self.to_i64(fb, &val);
+                    fb.call(&IrType::Ptr, "pb_mkquad", &[b])
+                }))
+            }
+            "MKS" => {
+                // MKS$ — 4-byte binary string (single precision)
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime("MKS$ requires 1 argument")));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let d = self.to_f64(fb, &val);
+                    let f = fb.fptrunc(&d, &IrType::Float);
+                    fb.call(&IrType::Ptr, "pb_mksingle", &[f])
+                }))
+            }
+            "MKD" => {
+                // MKD$ — 8-byte binary string (double precision)
+                if args.is_empty() {
+                    return Some(Err(PbError::runtime("MKD$ requires 1 argument")));
+                }
+                let v = self.compile_expr(fb, &args[0]);
+                Some(v.map(|val| {
+                    let d = self.to_f64(fb, &val);
+                    fb.call(&IrType::Ptr, "pb_mkdouble", &[d])
+                }))
+            }
             "MKBYT" => {
                 // MKBYT$ (n) — one byte as a single-character string
                 if args.is_empty() {
@@ -6004,7 +6119,17 @@ impl Compiler {
 
     fn builtin_len(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
         let s = self.compile_expr(fb, &args[0])?;
-        Ok(fb.call(&IrType::I32, "strlen", &[s]))
+        // FixedString variables are raw buffers (no BSTR prefix): keep strlen
+        if let Expr::Variable(name) = &args[0] {
+            let nn = normalize_name(name);
+            if let Some(info) = self.symbols.lookup(&nn) {
+                if matches!(info.pb_type, PbType::FixedString(_)) {
+                    return Ok(fb.call(&IrType::I32, "strlen", &[s]));
+                }
+            }
+        }
+        // Constants carry a BSTR prefix; runtime strings are BSTRs: byte-length prefix
+        Ok(fb.call(&IrType::I32, "pb_str_len", &[s]))
     }
 
     fn builtin_chr(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

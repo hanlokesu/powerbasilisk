@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 90 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 102 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 202 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 199 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (90)
+## ✅ Implemented (102)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -71,6 +71,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LSET | STATEMENT | `core` |
 | MID$ | STATEMENT | `core` |
 | MKBYT$ | STATEMENT | `pb_mkbyt` (1-byte binary string) |
+| MKCUR$ | STATEMENT | `pb_mkquad` (8-byte little-endian, currency) |
+| MKCUX$ | STATEMENT | `pb_mkquad` (8-byte little-endian, extended currency) |
+| MKD$ | STATEMENT | `pb_mkdouble` (8-byte IEEE-754) |
+| MKDWD$ | STATEMENT | `pb_mklong` (4-byte little-endian, double-word) |
+| MKI$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
+| MKL$ | STATEMENT | `pb_mklong` (4-byte little-endian) |
+| MKQ$ | STATEMENT | `pb_mkquad` (8-byte little-endian) |
+| MKS$ | STATEMENT | `pb_mksingle` (4-byte IEEE-754) |
+| MKWRD$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
 | MKDIR | STATEMENT | `core` |
 | MSGBOX | STATEMENT | `PB/Win only` |
 | NAME | STATEMENT | `core` |
@@ -398,7 +407,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| MKBYT$, MKCUR$, MKCUX$, MKD$, MKDWD$, MKE$, MKI$, MKL$, MKQ$, MKS$ AND MKWRD$ | STATEMENT | PB/Win + PB/CC | Established |
+| MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | MOUSEPTR | STATEMENT | PB/CC only | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |

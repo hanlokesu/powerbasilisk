@@ -236,20 +236,32 @@ impl ModuleBuilder {
         writeln!(self.globals, "@{} = dllexport global {} {}", name, ty, init).unwrap();
     }
 
-    /// Add a global string constant. Returns the global name.
+    /// Add a global string constant with a BSTR-style 4-byte length prefix.
+    /// Returns a GEP constant-expression string pointing at the payload.
     pub fn add_string_constant(&mut self, value: &str) -> (String, usize) {
         let name = format!(".str.{}", self.str_counter);
         self.str_counter += 1;
-        let len = value.len() + 1; // +1 for null terminator
-                                   // Escape special characters for LLVM IR string
+        let n = value.len(); // payload byte count (no terminator)
         let escaped = llvm_escape_string(value);
+        let n0 = n & 0xFF;
+        let n1 = (n >> 8) & 0xFF;
+        let n2 = (n >> 16) & 0xFF;
+        let n3 = (n >> 24) & 0xFF;
         writeln!(
             self.globals,
-            "@{} = private unnamed_addr constant [{} x i8] c\"{}\\00\"",
-            name, len, escaped
+            "@{} = private unnamed_addr constant [{} x i8] c\"\\{:02X}\\{:02X}\\{:02X}\\{:02X}{}\\00\"",
+            name, n + 5, n0, n1, n2, n3, escaped
         )
         .unwrap();
-        (format!("@{}", name), len)
+        // Payload starts 4 bytes in (right after the length prefix)
+        (
+            format!(
+                "getelementptr ([{} x i8], ptr @{}, i64 0, i64 4)",
+                n + 5,
+                name
+            ),
+            n,
+        )
     }
 
     /// Create a new function builder. Call `finish()` and pass result to `add_function_body()`.

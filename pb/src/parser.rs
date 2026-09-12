@@ -1760,28 +1760,33 @@ impl Parser {
                     }));
                 }
 
-                // DESKTOP GET SIZE TO ncWidth&, ncHeight&
+                // DESKTOP GET SIZE/CLIENT/LOC/PPI TO ...
                 if name_upper == "DESKTOP"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "GET")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "SIZE")
                 {
-                    self.advance(); // consume DESKTOP
-                    self.advance(); // consume GET
-                    self.advance(); // consume SIZE
-                    if self.peek() == &Token::To {
-                        self.advance(); // consume TO (reserved word)
+                    let what = match self.peek_at(2) {
+                        Some(Token::Identifier(w)) => w.to_uppercase(),
+                        _ => String::new(),
+                    };
+                    if matches!(what.as_str(), "SIZE" | "CLIENT" | "LOC" | "PPI") {
+                        self.advance(); // consume DESKTOP
+                        self.advance(); // consume GET
+                        self.advance(); // consume SIZE/CLIENT/LOC/PPI
+                        if self.peek() == &Token::To {
+                            self.advance(); // consume TO (reserved word)
+                        }
+                        let mut args = vec![self.parse_expression()?];
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: format!("DESKTOP GET {what}"),
+                            args,
+                            line,
+                        }));
                     }
-                    let mut args = vec![self.parse_expression()?];
-                    while self.peek() == &Token::Comma {
-                        self.advance();
-                        args.push(self.parse_expression()?);
-                    }
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "DESKTOP GET SIZE".to_string(),
-                        args,
-                        line,
-                    }));
                 }
 
                 if matches!(name_upper.as_str(), "LSET" | "RSET") {
