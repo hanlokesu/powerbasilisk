@@ -323,7 +323,7 @@ arrays, and core string/numeric built-ins — **✅**
 - `HOST ADDR [hostname$] TO ip&` — resolve a host name to an IP address (winsock `gethostbyname`).
 - `HOST NAME [ip&] TO hostname$` — resolve an IP address to a host name (`gethostbyaddr` / `gethostname`).
 - Links `ws2_32` for all EXE/DLL targets; requires Windows SDK lib dir (auto-detected).
-- Known upstream limitation (not fixed here): re-REDIM of an already-declared array does not update its size; declare each array with a single REDIM.
+- **Fixed** re-REDIM bug: a second `REDIM` of an already-declared array was silently dropped (array kept its first size, causing out-of-bounds writes). Arrays are now pre-scanned per function and stack-allocated at their maximum declared size; each `REDIM` refreshes the active bounds.
 
 
 ### v0.1.6 — batch 13: clipboard + misc (2026-09-11)

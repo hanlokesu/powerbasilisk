@@ -2066,6 +2066,9 @@ impl Compiler {
         // Set up GOSUB context (must happen before compile_body)
         self.setup_gosub_context(&mut fb, &fd.body);
 
+        // Allocate REDIM'd arrays at their max size before compiling the body
+        self.prescan_redim_arrays(&mut fb, &fd.body)?;
+
         // Compile body
         self.compile_body(&mut fb, &fd.body)?;
 
@@ -2601,6 +2604,100 @@ impl Compiler {
 
     // ========== DIM ==========
 
+    /// Pre-scan a function body for every REDIM so each array is stack-allocated
+    /// at its maximum declared size. Fixes re-REDIM being silently dropped
+    /// (a second REDIM used to hit `lookup_array().is_some() -> return` and the
+    /// array kept its first size, causing out-of-bounds writes).
+    fn prescan_redim_arrays(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        body: &[Statement],
+    ) -> PbResult<()> {
+        // Pass 1: element types from array declarations (`LOCAL sa() AS STRING`),
+        // so a Variant REDIM can inherit the declared type.
+        let mut elem_types: HashMap<String, PbType> = HashMap::new();
+        fn collect_types(stmts: &[Statement], map: &mut HashMap<String, PbType>) {
+            for st in stmts {
+                match st {
+                    Statement::Dim(d) => {
+                        if d.bounds.is_empty() {
+                            let n = normalize_name(&d.name);
+                            map.entry(n).or_insert_with(|| d.pb_type.clone());
+                        }
+                    }
+                    Statement::Block(b) => collect_types(b, map),
+                    _ => {}
+                }
+            }
+        }
+        collect_types(body, &mut elem_types);
+
+        // Pass 2: max element count per array across all REDIM statements.
+        let mut max_total: HashMap<String, (PbType, usize)> = HashMap::new();
+        let eval_const = Self::eval_const_expr;
+        fn collect_dims(
+            stmts: &[Statement],
+            elem_types: &HashMap<String, PbType>,
+            map: &mut HashMap<String, (PbType, usize)>,
+            eval_const: fn(&Expr) -> Result<i64, &'static str>,
+        ) {
+            for st in stmts {
+                match st {
+                    Statement::Redim(d) if !d.bounds.is_empty() => {
+                        let n = normalize_name(&d.name);
+                        let pb_type = if matches!(d.pb_type, PbType::Variant) {
+                            elem_types.get(&n).cloned().unwrap_or(PbType::Long)
+                        } else {
+                            d.pb_type.clone()
+                        };
+                        let mut total = 1usize;
+                        for b in &d.bounds {
+                            let lo = eval_const(&b.lower).unwrap_or(0);
+                            let up = eval_const(&b.upper).unwrap_or(0);
+                            total *= (up - lo + 1) as usize;
+                        }
+                        let pt = pb_type.clone();
+                        let e = map.entry(n).or_insert_with(|| (pt.clone(), 0));
+                        if total > e.1 {
+                            *e = (pt, total);
+                        }
+                    }
+                    Statement::Block(b) => collect_dims(b, elem_types, map, eval_const),
+                    _ => {}
+                }
+            }
+        }
+        collect_dims(body, &elem_types, &mut max_total, eval_const);
+
+        // Pass 3: allocate each array at its max size (skips globals; those are
+        // allocated by declare_global_array when the real REDIM is compiled).
+        for (name, (pb_type, total)) in max_total {
+            if self.pending_global_arrays.contains_key(&name) {
+                continue;
+            }
+            if self.symbols.lookup_array(&name).is_some() {
+                continue;
+            }
+            let elem_ir = Self::ir_type_for(&pb_type);
+            let array_ir = IrType::Array(total, Box::new(elem_ir.clone()));
+            let ptr = fb.alloca(&array_ir);
+            fb.store(&Val::new("zeroinitializer", array_ir.clone()), &ptr);
+            let dims = vec![(1i64, total as i64)];
+            self.symbols.insert_local_array(
+                name,
+                ArrayInfo {
+                    ptr_name: ptr.name,
+                    array_ir_type: array_ir,
+                    elem_ir_type: elem_ir.clone(),
+                    pb_type,
+                    dims,
+                    total_elements: total,
+                },
+            );
+        }
+        Ok(())
+    }
+
     fn compile_dim(&mut self, fb: &mut FunctionBuilder, dim: &DimStatement) -> PbResult<()> {
         let name = normalize_name(&dim.name);
 
@@ -2611,8 +2708,40 @@ impl Compiler {
                 self.declare_global_array(&name, &pb_type, &dim.bounds);
                 return Ok(());
             }
-            // Already declared as global array → skip
-            if self.symbols.lookup_array(&name).is_some() {
+            // Already declared (prescan allocated it at max size) → update the
+            // bounds/type info in place instead of skipping, so a second REDIM
+            // correctly changes the array size.
+            if let Some(prev) = self.symbols.lookup_array(&name).cloned() {
+                let arr_pb_type = if matches!(dim.pb_type, PbType::Variant) {
+                    prev.pb_type.clone()
+                } else {
+                    dim.pb_type.clone()
+                };
+                let elem_ir = Self::ir_type_for(&arr_pb_type);
+                let mut dims = Vec::new();
+                let mut total = 1usize;
+                for bound in &dim.bounds {
+                    let lower = Self::eval_const_expr(&bound.lower).unwrap_or(0);
+                    let upper = Self::eval_const_expr(&bound.upper).unwrap_or(0);
+                    let count = (upper - lower + 1) as usize;
+                    dims.push((lower, count as i64));
+                    total *= count;
+                }
+                // Keep the original max-size allocation (from prescan); only
+                // refresh metadata. Never re-allocate here: prescan already
+                // sized every REDIM'd array at its maximum, and re-alloca would
+                // zero the array and destroy earlier data.
+                self.symbols.insert_local_array(
+                    name,
+                    ArrayInfo {
+                        ptr_name: prev.ptr_name.clone(),
+                        array_ir_type: prev.array_ir_type.clone(),
+                        elem_ir_type: elem_ir.clone(),
+                        pb_type: arr_pb_type,
+                        dims,
+                        total_elements: total,
+                    },
+                );
                 return Ok(());
             }
             // Local array
