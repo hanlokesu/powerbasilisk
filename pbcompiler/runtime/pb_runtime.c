@@ -1746,7 +1746,11 @@ void pb_unlock(int filenum, long record, long length) {
 }
 
 /* ===== TCP / UDP sockets (batch 19) ===== */
-typedef unsigned long long pb_sock_t;
+#ifdef _WIN64
+typedef unsigned long long pb_sock_t;   /* SOCKET is 64-bit on x64 */
+#else
+typedef unsigned int pb_sock_t;         /* SOCKET is 32-bit on x86 (stdcall @N decoration must match) */
+#endif
 struct pb_sockaddr_in {
     short sin_family;
     unsigned short sin_port;

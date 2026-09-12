@@ -37,8 +37,10 @@ fn main() {
     });
 
     let runtime_lib = get_flag_value(&args, "--runtime-lib");
+    let target =
+        get_flag_value(&args, "--target").unwrap_or_else(|| codegen::DEFAULT_TARGET.to_string());
     let lib_dir = get_flag_value(&args, "--lib-dir").or_else(|| {
-        let d = detect_sdk_lib_dir();
+        let d = detect_sdk_lib_dir(&target);
         match &d {
             Some(path) => {
                 eprintln!(
@@ -59,8 +61,6 @@ fn main() {
     let split_threshold = get_flag_value(&args, "--split-threshold")
         .and_then(|s| s.parse::<usize>().ok())
         .unwrap_or(0);
-    let target =
-        get_flag_value(&args, "--target").unwrap_or_else(|| codegen::DEFAULT_TARGET.to_string());
 
     let opts = codegen::CompileOptions {
         dll_mode,
@@ -94,7 +94,7 @@ fn get_flag_value(args: &[String], flag: &str) -> Option<String> {
 /// Auto-detect the Windows SDK import-library directory so users do not have
 /// to pass --lib-dir by hand. Scans the standard install roots and picks the
 /// newest installed version whose `um\x64` folder exists.
-fn detect_sdk_lib_dir() -> Option<String> {
+fn detect_sdk_lib_dir(target: &str) -> Option<String> {
     let roots = [
         r"C:\Program Files (x86)\Windows Kits\10\Lib",
         r"C:\Program Files\Windows Kits\10\Lib",
@@ -116,12 +116,17 @@ fn detect_sdk_lib_dir() -> Option<String> {
             if ver.is_empty() {
                 continue;
             }
-            let um64 = root_path.join(&name).join("um").join("x64");
-            if !um64.is_dir() {
+            let arch = if target.contains("i686") || target.contains("i386") {
+                "x86"
+            } else {
+                "x64"
+            };
+            let um_dir = root_path.join(&name).join("um").join(arch);
+            if !um_dir.is_dir() {
                 continue;
             }
             if best.as_ref().is_none_or(|(bv, _)| ver > *bv) {
-                best = Some((ver, um64.to_string_lossy().into_owned()));
+                best = Some((ver, um_dir.to_string_lossy().into_owned()));
             }
         }
     }
