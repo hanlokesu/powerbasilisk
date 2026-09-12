@@ -1760,6 +1760,30 @@ impl Parser {
                     }));
                 }
 
+                // DESKTOP GET SIZE TO ncWidth&, ncHeight&
+                if name_upper == "DESKTOP"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "SIZE")
+                {
+                    self.advance(); // consume DESKTOP
+                    self.advance(); // consume GET
+                    self.advance(); // consume SIZE
+                    if self.peek() == &Token::To {
+                        self.advance(); // consume TO (reserved word)
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DESKTOP GET SIZE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+
                 if matches!(name_upper.as_str(), "LSET" | "RSET") {
                     self.advance(); // consume LSET/RSET
                                     // LSET target$ = value  (and RSET)
@@ -1771,6 +1795,23 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: name_upper.clone(),
+                        args: vec![target, value],
+                        line,
+                    }));
+                }
+
+                if matches!(name_upper.as_str(), "CSET") {
+                    self.advance(); // consume CSET
+                                    // CSET [ABS] result_var = string_expression [USING ...]
+                                    // (ABS / USING not supported yet — plain centering only)
+                    let target = self.parse_primary()?;
+                    if self.peek() == &Token::Eq {
+                        self.advance();
+                    }
+                    let value = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CSET".to_string(),
                         args: vec![target, value],
                         line,
                     }));
@@ -2106,6 +2147,24 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "PUT_STR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // GET$ [#] filenum&, Count&, StrgVar — read Count bytes into a string var
+                if name_upper == "GET$" {
+                    self.advance(); // consume GET$
+                    if self.peek() == &Token::Hash {
+                        self.advance(); // consume optional #
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "GET_STR".to_string(),
                         args,
                         line,
                     }));

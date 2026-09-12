@@ -220,6 +220,7 @@ char* pb_bstr_alloc(const char* src, unsigned int len) {
 #endif
 }
 
+
 /* Public BSTR free wrapper — called from LLVM IR codegen (cdecl) */
 void pb_bstr_free(char* bstr) {
 #ifdef _WIN32
@@ -965,6 +966,21 @@ int pb_put_string(int f, const char* s) {
     return fwrite(s, 1, n, file_handles[f]) == n ? 0 : -1;
 }
 
+/* GET$ #f, count, dest$: read count bytes from a binary file into a BSTR */
+int pb_get_string(int f, long long count, char** dest) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+    if (count < 0 || count > 0x7FFFFFFFLL) return -1;
+    char* buf = (char*)malloc((size_t)count + 1);
+    if (!buf) return -1;
+    size_t got = fread(buf, 1, (size_t)count, file_handles[f]);
+    *dest = pb_bstr_alloc(buf, (unsigned int)got);
+    free(buf);
+    /* NB: do NOT SysFreeString the previous *dest — the variable is often
+       initialized to a codegen string constant (not a BSTR), and freeing it
+       crashes. Old BSTRs leak instead; acceptable for a compiler runtime. */
+    return (got == (size_t)count) ? 0 : -1;
+}
+
 /* SHIFT LEFT — logical left shift on 64-bit */
 long long pb_shift_left(long long v, int n) { return v << (n & 63); }
 
@@ -1307,6 +1323,45 @@ void pb_lset(char** dest, const char* src, int len) {
     *dest = pb_bstr_alloc(buf, (unsigned int)len);
     free(buf);
     if (old) SysFreeString(old);
+}
+
+/* CSET (BSTR target): center src in a fixed-length PB string, pad spaces */
+void pb_cset(char** dest, const char* src, int len) {
+    char* old = *dest;
+    char* buf = (char*)malloc((size_t)len + 1);
+    int src_len = src ? (int)strlen(src) : 0;
+    int pad_l = (src_len < len) ? (len - src_len) / 2 : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        if (i < pad_l) {
+            buf[i] = 32;
+        } else if (i - pad_l < src_len) {
+            buf[i] = src[i - pad_l];
+        } else {
+            buf[i] = 32;
+        }
+    }
+    buf[len] = (char)0;
+    *dest = pb_bstr_alloc(buf, (unsigned int)len);
+    free(buf);
+    /* NB: do NOT SysFreeString the previous *dest (may be a codegen constant) */
+}
+
+/* CSET (buffer target, e.g. STRING * N): center src, pad spaces */
+void pb_cset_buf(char* dest, const char* src, int len) {
+    int src_len = src ? (int)strlen(src) : 0;
+    int pad_l = (src_len < len) ? (len - src_len) / 2 : 0;
+    int i;
+    for (i = 0; i < len; i++) {
+        if (i < pad_l) {
+            dest[i] = 32;
+        } else if (i - pad_l < src_len) {
+            dest[i] = src[i - pad_l];
+        } else {
+            dest[i] = 32;
+        }
+    }
+    dest[len] = (char)0;
 }
 
 /* RSET (BSTR target): right-justify src into a fixed-length PB string, pad spaces */

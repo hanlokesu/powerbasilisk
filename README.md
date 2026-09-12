@@ -315,6 +315,22 @@ arrays, and core string/numeric built-ins — **✅**
 
 ---
 
+
+### v0.1.8 (2026-09-12) — batch 15: CSET, GET$, DESKTOP GET SIZE (+ MKBYT$ confirmed)
+
+- **CSET** `result_var = expr`: center-justifies a string in a fixed-length buffer
+  (`pb_cset` / `pb_cset_buf`, pad left `(len-src)/2` spaces). ABS/USING not yet.
+- **GET$** `[#]filenum&, Count&, StrgVar`: reads `Count` bytes from a BINARY file
+  into a string variable (`pb_get_string`).
+- **DESKTOP GET SIZE TO w&, h&**: screen size via `GetSystemMetrics` (SM_CXSCREEN /
+  SM_CYSCREEN).
+- **MKBYT$** confirmed implemented (runtime + codegen existed; coverage CSV/MD rows
+  were malformed and are now fixed and marked implemented).
+- Runtime note: string-writing helpers no longer `SysFreeString` the previous
+  variable value — PB vars are often initialized to codegen string constants
+  (not BSTRs) and freeing them crashed (0xC0000005). Old BSTRs leak instead.
+- Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
+  fmt + clippy clean.
 ## Changelog
 ### v0.1.7 (2026-09-12) — Batch 14: ARRAY COPY / SWAP / UNIQUE + HOST ADDR / HOST NAME
 - `ARRAY COPY src(), dest()` — duplicate a whole array into another (fixed-array memcpy).

@@ -1321,6 +1321,26 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_get_string",
+            &IrType::I32,
+            &[IrType::I32, IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_cset",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_cset_buf",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_mkbyt", &IrType::Ptr, &[IrType::I32], false);
+        self.module.declare_function(
             "pb_shift_left",
             &IrType::I64,
             &[IrType::I64, IrType::I32],
@@ -1575,6 +1595,8 @@ impl Compiler {
         self.module.declare_external_global("pb_err", &IrType::I32);
         self.module
             .declare_dllimport("GetCommandLineA", &IrType::Ptr, &[]);
+        self.module
+            .declare_dllimport("GetSystemMetrics", &IrType::I32, &[IrType::I32]);
         self.module.declare_dllimport(
             "MessageBoxA",
             &IrType::I32,
@@ -3405,6 +3427,24 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "CSET" => {
+                // CSET target$ = value → pb_cset(&target, value, len)
+                if call.args.len() >= 2 {
+                    let value = self.compile_expr(fb, &call.args[1])?;
+                    let (ptr, pb_type) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let len = match pb_type {
+                        PbType::FixedString(n) => n as i32,
+                        _ => 256,
+                    };
+                    let len_const = fb.const_i32(len);
+                    if matches!(pb_type, PbType::FixedString(_)) {
+                        fb.call_void("pb_cset_buf", &[ptr, value, len_const]);
+                    } else {
+                        fb.call_void("pb_cset", &[ptr, value, len_const]);
+                    }
+                }
+                return Ok(());
+            }
             "RESET" => {
                 fb.call_void("pb_reset", &[]);
                 return Ok(());
@@ -3518,6 +3558,30 @@ impl Compiler {
                     let f = self.to_i32(fb, &sv);
                     let str_val = self.compile_expr(fb, &call.args[1])?;
                     fb.call_void("pb_put_string", &[f, str_val]);
+                }
+                return Ok(());
+            }
+            "GET_STR" => {
+                // GET$ [#] filenum&, Count&, StrgVar — read Count bytes into a string var
+                if call.args.len() >= 3 {
+                    let fv = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &fv);
+                    let cv = self.compile_expr(fb, &call.args[1])?;
+                    let count = self.to_i64(fb, &cv);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
+                    fb.call_void("pb_get_string", &[f, count, ptr]);
+                }
+                return Ok(());
+            }
+            "DESKTOP GET SIZE" => {
+                // DESKTOP GET SIZE TO ncWidth&, ncHeight&
+                if call.args.len() >= 2 {
+                    let (wp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
+                    let (hp, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    let w = fb.call(&IrType::I32, "GetSystemMetrics", &[fb.const_i32(0)]);
+                    let h = fb.call(&IrType::I32, "GetSystemMetrics", &[fb.const_i32(1)]);
+                    fb.store(&w, &wp);
+                    fb.store(&h, &hp);
                 }
                 return Ok(());
             }

@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 87 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 90 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 204 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 202 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (87)
+## ✅ Implemented (90)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -38,11 +38,13 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | BIT CALC | STATEMENT | `core` |
 | CALL | STATEMENT | `core` |
 | CHDIR | STATEMENT | `core` |
+| CSET | STATEMENT | `pb_cset`/`pb_cset_buf` (center-justify, pads spaces) |
 | CHDRIVE | STATEMENT | `core` |
 | CLOSE | STATEMENT | `core` |
 | CLS | STATEMENT | `PB/CC only` |
 | DATA | STATEMENT | `core` |
 | DECR | STATEMENT | `core` |
+| DESKTOP GET SIZE | STATEMENT | `GetSystemMetrics` (SM_CXSCREEN/SM_CYSCREEN) |
 | DIM | STATEMENT | `core` |
 | END | STATEMENT | `core` |
 | ENVIRON | STATEMENT | `core` |
@@ -54,6 +56,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FOR / NEXT | STATEMENT | `core` |
 | FUNCTION / END FUNCTION | STATEMENT | `core` |
 | GET | STATEMENT | `core` |
+| GET$ | STATEMENT | `pb_get_string` (read N bytes into string var) |
 | IF | STATEMENT | `core` |
 | IF/END IF | BLOCK | `core` |
 | INCR | STATEMENT | `core` |
@@ -67,7 +70,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LOCK | STATEMENT | `core` |
 | LSET | STATEMENT | `core` |
 | MID$ | STATEMENT | `core` |
-| MKBYT$ | MKCUR$ | `MKCUX$` |
+| MKBYT$ | STATEMENT | `pb_mkbyt` (1-byte binary string) |
 | MKDIR | STATEMENT | `core` |
 | MSGBOX | STATEMENT | `PB/Win only` |
 | NAME | STATEMENT | `core` |
