@@ -1,5 +1,6 @@
 ' ARRAY SORT verification (LONG + STRING arrays)
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL i, ok AS LONG
     LOCAL arr() AS LONG
     LOCAL sarr() AS STRING
@@ -25,4 +26,6 @@ FUNCTION PBMAIN() AS LONG
         FOR i = 1 TO 6: PRINT "arr("; i; ")="; arr(i): NEXT i
         FOR i = 1 TO 4: PRINT "sarr("; i; ")="; sarr(i): NEXT i
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

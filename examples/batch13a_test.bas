@@ -12,6 +12,7 @@ SUB Bump(n AS LONG)
 END SUB
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     REM comment inside main
     LOCAL s AS STRING
     g_count = 10
@@ -21,4 +22,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "FAIL g_count="; g_count
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -33,6 +33,8 @@
 #ENDIF
 #INCLUDE "win32api.inc"
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     PRINT "META-ALL-ACCEPTED"
     FUNCTION = 0
+    MSGBOX "Press OK to exit.", 0, "Done"
 END FUNCTION

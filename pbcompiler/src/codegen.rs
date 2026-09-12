@@ -1231,6 +1231,8 @@ impl Compiler {
         self.module
             .declare_function("pb_time", &IrType::Ptr, &[], false);
         self.module
+            .declare_function("pb_waitkey", &IrType::Ptr, &[], false);
+        self.module
             .declare_function("pb_environ", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_exe_path", &IrType::Ptr, &[], false);
@@ -5265,6 +5267,9 @@ impl Compiler {
                     }
                     "TIME" if orig_name.ends_with('$') => {
                         return Ok(fb.call(&IrType::Ptr, "pb_time", &[]));
+                    }
+                    "WAITKEY" if orig_name.ends_with('$') => {
+                        return Ok(fb.call(&IrType::Ptr, "pb_waitkey", &[]));
                     }
                     "CURDIR" if orig_name.ends_with('$') => {
                         let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));

@@ -1,5 +1,6 @@
 ' Batch 8: ARRAY DELETE
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a() AS LONG
     LOCAL i AS LONG
     LOCAL ok AS LONG
@@ -24,4 +25,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "ARRAY-DELETE-FOR-FAIL a(1)="; a(1); " a(2)="; a(2)
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

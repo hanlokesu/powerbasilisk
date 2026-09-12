@@ -1,5 +1,6 @@
 ' GET/PUT binary file I/O + list declarations (LOCAL a, b AS TYPE)
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL f, a, b AS LONG
     LOCAL q1, q2 AS QUAD
     f = FREEFILE
@@ -19,4 +20,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "GETPUT-FAIL b="; b; " q="; q2
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

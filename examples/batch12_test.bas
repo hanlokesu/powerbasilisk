@@ -1,5 +1,6 @@
 ' Batch 12: ON GOTO / ON GOSUB
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL i AS LONG
     LOCAL r AS LONG
     r = 0
@@ -80,4 +81,6 @@ t2:
     r = r + 2
     RETURN
 tdone:
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,6 +1,7 @@
 OPTION EXPLICIT
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a() AS LONG
     LOCAL sa() AS STRING
     LOCAL i AS LONG
@@ -43,4 +44,6 @@ FUNCTION PBMAIN() AS LONG
         PRINT "REDIM FAIL code="; ok
         FUNCTION = 1
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

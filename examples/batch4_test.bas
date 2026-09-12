@@ -1,5 +1,6 @@
 ' Batch 4: DATA / READ / RESTORE
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a AS STRING
     LOCAL n AS LONG
     LOCAL d AS DOUBLE
@@ -24,4 +25,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "RESTORE-FAIL ["; a; "]"
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

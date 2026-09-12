@@ -1,5 +1,6 @@
 ' Batch 3: PLAY SOUND / SPLIT / ARRAY SHUFFLE
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL s AS STRING
     LOCAL a AS STRING
     LOCAL b AS STRING
@@ -32,4 +33,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "SHUFFLE-FAIL sum="; sum
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

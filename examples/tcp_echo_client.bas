@@ -2,6 +2,7 @@
 ' tcp_echo_client.bas - TCP echo client (pair with tcp_echo_server.bas)
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     DIM r AS STRING
     TCP OPEN PORT 23456 AT "127.0.0.1" AS #1 TIMEOUT 5000
     PRINT "client: connected"
@@ -10,4 +11,6 @@ FUNCTION PBMAIN() AS LONG
     PRINT "client: got [" + r + "]"
     TCP CLOSE #1
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,4 +1,4 @@
-' PowerBasilisk Enhanced — Full Feature Demo
+' PowerBasilisk Enhanced  Full Feature Demo
 ' Compile: pbcompiler build demo.bas --exe --target x86_64-pc-windows-msvc --runtime-lib pb_runtime_x64.obj
 '
 ' Shows every feature implemented by this branch:
@@ -11,6 +11,7 @@
 '   6) System         : MSGBOX, BEEP, SLEEP, RANDOMIZE+RND, SWAP, CURDIR$, ISFILE, SHELL
 '
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
   LOCAL f AS LONG
   LOCAL s AS STRING
   LOCAL t AS STRING
@@ -246,5 +247,7 @@ FUNCTION PBMAIN() AS LONG
 ShowSubroutine:
   PRINT "  (inside GOSUB subroutine)"
   RETURN
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 
 END FUNCTION

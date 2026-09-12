@@ -1,5 +1,6 @@
 ' Batch 5: PEEK / POKE
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL x AS LONG
     LOCAL addr AS QUAD
     LOCAL b AS LONG
@@ -35,4 +36,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "POKE-MULTI-FAIL b="; b
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

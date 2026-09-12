@@ -1,7 +1,6 @@
 #COMPILE EXE
 ' batch18_test.bas - #-metastatement directives (29 audited in batch 18)
 ' Exercises conditional compilation, stack size, alignment and debug options.
-#COMPILE EXE
 #DIM ALL
 #OPTION EXPLICIT
 #LINK "kernel32.lib"
@@ -35,6 +34,8 @@
 #ENDIF
 #INCLUDE "win32api.inc"
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     PRINT "META-ALL-ACCEPTED"
     FUNCTION = 0
+    MSGBOX "Press OK to exit.", 0, "Done"
 END FUNCTION

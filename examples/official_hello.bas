@@ -28,7 +28,10 @@
 #RESOURCE VERSION$ "ProductVersion",   "10.0"
 '
 FUNCTION PBMAIN () AS LONG
+    LOCAL waitk AS STRING
 
     MSGBOX "Hello, World!"
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 
 END FUNCTION

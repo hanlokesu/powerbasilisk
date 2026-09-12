@@ -1,5 +1,6 @@
 ' OPEN FOR BINARY: existing file must NOT be truncated (PB semantics)
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL f AS LONG
     LOCAL a AS LONG
     LOCAL b AS LONG
@@ -31,4 +32,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "BINARY-FAIL buf="; buf; " b="; b
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

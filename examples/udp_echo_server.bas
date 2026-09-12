@@ -3,6 +3,7 @@
 ' Run udp_echo_server.exe and udp_echo_client.exe in two consoles (server first).
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     DIM buf AS STRING
     DIM ip AS LONG
     DIM port AS LONG
@@ -14,4 +15,6 @@ FUNCTION PBMAIN() AS LONG
     PRINT "server: replied"
     UDP CLOSE #1
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

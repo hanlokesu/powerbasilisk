@@ -1,5 +1,6 @@
 ' Batch 10: ARRAY SCAN
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a() AS LONG
     LOCAL i AS LONG
     LOCAL idx AS LONG
@@ -48,4 +49,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "ARRAY-SCAN-STR-FAIL idx="; idx
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

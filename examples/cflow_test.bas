@@ -1,5 +1,6 @@
 ' Control-flow verification: one-line IF, DO WHILE, DO..UNTIL, WHILE/WEND
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL t, i AS LONG
     ' one-line IF ... THEN ... ELSE
     t = 0
@@ -31,4 +32,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "CFLOW-FAIL T="; t
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

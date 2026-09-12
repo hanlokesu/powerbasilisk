@@ -1,5 +1,6 @@
 ' Batch 1: TIX / MKBYT$ / ISINFINITE / ISNORMAL / CHDRIVE / PLAY WAVE / SETEOF
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL t AS QUAD
     LOCAL b AS STRING
     LOCAL f AS LONG
@@ -32,4 +33,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "SETEOF-FAIL len="; LEN(s)
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,5 +1,6 @@
 ' QUAD display: PRINT and PRINT # must not truncate 64-bit values
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL q AS QUAD
     LOCAL f AS LONG
     LOCAL s AS STRING
@@ -14,4 +15,6 @@ FUNCTION PBMAIN() AS LONG
     CLOSE #f
     KILL "qprint.dat"
     PRINT "file="; s
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

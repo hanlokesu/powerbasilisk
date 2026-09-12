@@ -1,5 +1,6 @@
 ' ELSEIF chain verification
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL t, a AS LONG
     a = 2
     IF a = 1 THEN
@@ -25,4 +26,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "ELSEIF-FAIL T="; t
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

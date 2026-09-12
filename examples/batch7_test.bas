@@ -1,5 +1,6 @@
 ' Batch 7: LOF / LOC / SEEK functions
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL f AS LONG
     LOCAL len1 AS QUAD
     LOCAL pos1 AS QUAD
@@ -33,4 +34,6 @@ FUNCTION PBMAIN() AS LONG
     END IF
     CLOSE #f
     KILL "lof_test.tmp"
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

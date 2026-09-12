@@ -1,6 +1,7 @@
-' equate_demo.bas — 验证 PB 内置 string equates（官方 18 个）
-' 把每个 equate 的字节序列写入 equate_result.txt，逐一对照官方表
+' equate_demo.bas   PB  string equates 18 
+'  equate  equate_result.txt
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL f AS LONG
 
     f = FREEFILE
@@ -25,10 +26,12 @@ FUNCTION PBMAIN() AS LONG
     PRINT #f, "QCQ=" + $QCQ
     PRINT #f, "WHITESPACE=" + $WHITESPACE
 
-    ' 拼接用例：$CRLF 是最常用的
+    ' $CRLF 
     PRINT #f, "LINE1" + $CRLF + "LINE2"
 
     CLOSE #f
 
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

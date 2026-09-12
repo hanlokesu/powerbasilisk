@@ -1,5 +1,6 @@
 ' Batch 6: BIT / BIT SET/RESET/TOGGLE / BIT CALC / PROCESS PRIORITY
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL f AS LONG
     LOCAL p AS LONG
 
@@ -53,4 +54,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "PROCESS-SET-FAIL p="; p
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,6 +1,7 @@
 OPTION EXPLICIT
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a() AS LONG
     LOCAL b() AS LONG
     LOCAL sa() AS STRING
@@ -85,4 +86,6 @@ FUNCTION PBMAIN() AS LONG
 
     PRINT "BATCH14 ALL PASS"
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

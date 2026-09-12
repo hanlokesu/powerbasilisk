@@ -3,6 +3,7 @@
 ' Note: client uses UDP OPEN without PORT (random local port, PB semantics).
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     DIM buf AS STRING
     DIM ip AS LONG
     DIM port AS LONG
@@ -13,4 +14,6 @@ FUNCTION PBMAIN() AS LONG
     PRINT "client: got [" + buf + "]"
     UDP CLOSE #1
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,4 +1,5 @@
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL ok AS LONG
     LOCAL s AS STRING
     LOCAL w AS LONG
@@ -57,4 +58,6 @@ FUNCTION PBMAIN() AS LONG
         PRINT "FAIL code="; ok
         FUNCTION = 1
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

@@ -1,5 +1,6 @@
 ' Batch 9: ARRAY INSERT
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a() AS LONG
     LOCAL i AS LONG
 
@@ -15,4 +16,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "ARRAY-INSERT-FAIL a(1)="; a(1); " a(2)="; a(2); " a(3)="; a(3); " a(4)="; a(4); " a(5)="; a(5)
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

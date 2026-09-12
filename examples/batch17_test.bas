@@ -1,6 +1,7 @@
 #COMPILE EXE
 #DIM ALL
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL h1, sz, lk, h2, old, p2, prev AS LONG
     LOCAL p AS QUAD
     LOCAL fails AS LONG
@@ -35,4 +36,6 @@ FUNCTION PBMAIN() AS LONG
 
     IF fails = 0 THEN PRINT "BATCH17 ALL PASS" ELSE PRINT "BATCH17 FAIL count="; fails
     FUNCTION = fails
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

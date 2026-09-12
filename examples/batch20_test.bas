@@ -3,6 +3,7 @@
 ' Status changes (batch 20): ARRAY SCAN/INSERT/DELETE promoted to IMPLEMENTED (verified),
 ' ARRAY ARRAYIX and FILESCAN newly implemented.
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     DIM a(1 TO 5) AS LONG
     a(1) = 10
     a(2) = 20
@@ -43,4 +44,6 @@ FUNCTION PBMAIN() AS LONG
     CLOSE #1
     KILL "b20_scan.txt"
     FUNCTION = 0
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

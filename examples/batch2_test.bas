@@ -1,5 +1,6 @@
 ' Batch 2: SWAP / SHIFT / ROTATE / ARRAY REVERSE / PUT$
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a AS LONG
     LOCAL b AS LONG
     LOCAL n AS LONG
@@ -50,4 +51,6 @@ FUNCTION PBMAIN() AS LONG
     CLOSE #f
     KILL "putstr_test.dat"
     IF s = "ABC123" THEN PRINT "PUT$-PASS" ELSE PRINT "PUT$-FAIL ["; s; "]"
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

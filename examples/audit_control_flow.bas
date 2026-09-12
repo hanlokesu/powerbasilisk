@@ -4,6 +4,7 @@ FUNCTION Add2(x AS LONG) AS LONG
 END FUNCTION
 
 FUNCTION PBMAIN() AS LONG
+    LOCAL waitk AS STRING
     LOCAL a, b, i, t AS LONG
     LOCAL s AS STRING
     ' LET (implicit) + IF/END IF
@@ -36,4 +37,6 @@ FUNCTION PBMAIN() AS LONG
     ELSE
         PRINT "AUDIT-FAIL T="; t
     END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
 END FUNCTION

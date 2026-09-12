@@ -15,6 +15,7 @@
 #include <math.h>
 #include <time.h>  /* clock for pb_tix fallback */
 #include <io.h>  /* _locking / _fileno for LOCK/UNLOCK */
+#include <conio.h>  /* _getch for WAITKEY$ */
 #include <direct.h>  /* _chdrive for CHDRIVE */
 #include <sys/locking.h>  /* _LK_LOCK / _LK_UNLCK */
 
@@ -1049,6 +1050,28 @@ char* pb_time(void) {
     strcpy(buf, "00:00:00");
 #endif
     return pb_bstr_alloc(buf, (int)strlen(buf));
+}
+
+/* WAITKEY$ — waits for one key press (console), returns the key as a 1-char string.
+   Interactive console: _getch (immediate, no Enter needed).
+   Redirected stdin (pipes / CI): getchar so automated tests can feed a key. */
+char* pb_waitkey(void) {
+    int c;
+    if (_isatty(_fileno(stdin))) {
+        c = _getch();
+        if (c == 0 || c == 0xE0) {
+            /* extended key: read the scan code and return an empty string */
+            _getch();
+            return pb_bstr_alloc("", 0);
+        }
+    } else {
+        c = getchar();
+        if (c == EOF) c = ' ';
+    }
+    char buf[2];
+    buf[0] = (char)c;
+    buf[1] = '\0';
+    return pb_bstr_alloc(buf, 1);
 }
 
 /* ===== TIX / MKBYT$ / ISINFINITE / ISNORMAL / CHDRIVE / SETEOF / PLAY WAVE ===== */
