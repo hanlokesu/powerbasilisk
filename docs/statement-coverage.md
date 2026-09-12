@@ -45,6 +45,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DATA | STATEMENT | `core` |
 | DECR | STATEMENT | `core` |
 | DESKTOP GET SIZE | STATEMENT | `GetSystemMetrics` (SM_CXSCREEN/SM_CYSCREEN) |
+| DESKTOP GET CLIENT | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA → w,h (work area) |
+| DESKTOP GET LOC | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA → x,y (origin) |
+| DESKTOP GET PPI | STATEMENT | `GetDeviceCaps` LOGPIXELSX/Y (pixels per inch) |
 | DIM | STATEMENT | `core` |
 | END | STATEMENT | `core` |
 | ENVIRON | STATEMENT | `core` |
@@ -327,34 +330,52 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (238, alphabetical)
+## ⬜ Not implemented (199, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
+
+| \#ALIGN METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#BLOAT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#BREAK METASTATEMENT | STATEMENT | PB/CC only | Established |
+| \#COM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#COMPILE METASTATEMENT | STATEMENT | PB/Win only | Established |
+| \#COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#CONSOLE METASTATEMENT | STATEMENT | PB/CC only | Established |
+| \#DEBUG BOUNDS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
+| \#DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#DEBUG DISPLAY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+| \#DEBUG ERROR METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+| \#DEBUG NUMERIC METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
+| \#DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#INCLUDE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#MESSAGES METASTATEMENT | STATEMENT | PB/Win only | Established |
+| \#OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#OPTION METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
+| \#PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#PBFORMS METASTATEMENT | STATEMENT | PB/Win only | Established |
+| \#REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#RESOURCE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
+| \#STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+| \#UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY COPY | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY DELETE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY INSERT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY REVERSE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SCAN | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SWAP | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY UNIQUE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ASM | STATEMENT | PB/Win + PB/CC | Established |
 | ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
-| BIT | STATEMENT | PB/Win + PB/CC | Established |
-| BIT CALC | STATEMENT | PB/Win + PB/CC | Established |
 | CALL DWORD | STATEMENT | PB/Win + PB/CC | Established |
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
-| CHDRIVE | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
-| CLIPBOARD | STATEMENT | PB/Win + PB/CC | Established |
 | COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM OPEN | STATEMENT | PB/Win + PB/CC | Established |
@@ -364,13 +385,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | COMM SEND | STATEMENT | PB/Win + PB/CC | Established |
 | COMM SET | STATEMENT | PB/Win + PB/CC | Established |
 | COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | Established |
-| CSET | STATEMENT | PB/Win + PB/CC | Established |
-| DATA | STATEMENT | PB/Win + PB/CC | Established |
 | DECLARE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| DESKTOP GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
-| DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | Established |
-| DESKTOP GET PPI | STATEMENT | PB/Win + PB/CC | Proposed New |
-| DESKTOP GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
 | DISPLAY COLOR | STATEMENT | PB/Win only | Established |
@@ -381,20 +396,13 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
-| GET$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GLOBAL | STATEMENT | PB/Win + PB/CC | Established |
 | GLOBALMEM | STATEMENT | PB/Win + PB/CC | Established |
 | HEADER | STATEMENT | PB/Win only | Established |
-| HOST ADDR | STATEMENT | PB/Win + PB/CC | Established |
-| HOST NAME | STATEMENT | PB/Win + PB/CC | Established |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
-| INPUT FLUSH | STATEMENT | PB/CC only | Established |
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
 | INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
 | INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
-| ISINFINITE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ISNORMAL | STATEMENT | PB/Win + PB/CC | Proposed New |
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
@@ -412,29 +420,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
-| ON GOSUB | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| ON GOTO | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
-| PLAY SOUND | STATEMENT | PB/Win + PB/CC | Proposed New |
-| PLAY WAVE | STATEMENT | PB/Win + PB/CC | Established |
 | PREFIX | BLOCK | PB/Win + PB/CC | Established |
-| PROCESS GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
-| PUT$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
 | REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
 | REGISTER | STATEMENT | PB/Win + PB/CC | Established |
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
-| REM | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| ROTATE | STATEMENT | PB/Win + PB/CC | Established |
-| SETEOF | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| SHIFT | STATEMENT | PB/Win + PB/CC | Established |
-| SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
 | TCP ACCEPT | STATEMENT | PB/Win + PB/CC | Established |
 | TCP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
@@ -452,7 +447,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | THREAD STATUS | STATEMENT | PB/Win + PB/CC | Established |
 | THREAD SUSPEND | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
-| TIX | STATEMENT | PB/Win + PB/CC | Established |
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
@@ -540,35 +534,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT STYLE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT TEXT SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT WIDTH | STATEMENT | PB/Win + PB/CC | Established |
-| \#ALIGN METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#BLOAT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#BREAK METASTATEMENT | STATEMENT | PB/CC only | Established |
-| \#COM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#COMPILE METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#CONSOLE METASTATEMENT | STATEMENT | PB/CC only | Established |
-| \#DEBUG BOUNDS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#DEBUG DISPLAY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| \#DEBUG ERROR METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| \#DEBUG NUMERIC METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#INCLUDE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#MESSAGES METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#OPTION METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#PBFORMS METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#RESOURCE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
 
