@@ -380,6 +380,7 @@ fn link_dll(obj_path: &Path, dll_path: &Path, opts: &CompileOptions) -> PbResult
             "-ladvapi32".to_string(),
             "-lole32".to_string(),
             "-lwinmm".to_string(),
+            "-lws2_32".to_string(),
         ]);
     }
 
@@ -430,6 +431,7 @@ fn link_exe(obj_paths: &[&Path], exe_path: &Path, opts: &CompileOptions) -> PbRe
             "-ladvapi32".to_string(),
             "-lole32".to_string(),
             "-lwinmm".to_string(),
+            "-lws2_32".to_string(),
         ]);
     }
 
@@ -1433,6 +1435,32 @@ impl Compiler {
             .declare_function("pb_clipboard_reset", &IrType::I32, &[], false);
         self.module
             .declare_function("pb_input_flush", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_array_copy",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_swap",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_unique",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_host_addr",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_host_name", &IrType::Ptr, &[IrType::I32], false);
         self.module
             .declare_function("pb_lof", &IrType::I64, &[IrType::I32], false);
         self.module
@@ -3122,6 +3150,78 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "ARRAY COPY" | "ARRAY SWAP" => {
+                // ARRAY COPY src(), dest()  /  ARRAY SWAP a(), b()
+                if let (Some(Expr::FunctionCall(sn, _)), Some(Expr::FunctionCall(dn, _))) =
+                    (call.args.first(), call.args.get(1))
+                {
+                    let sname = normalize_name(sn);
+                    let dname = normalize_name(dn);
+                    let s_info = self.symbols.lookup_array(&sname).cloned();
+                    let d_info = self.symbols.lookup_array(&dname).cloned();
+                    if let (Some(si), Some(di)) = (s_info, d_info) {
+                        let sbase = Val::new(si.ptr_name.clone(), IrType::Ptr);
+                        let dbase = Val::new(di.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &si.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let total = si.total_elements.min(di.total_elements) as i64;
+                        let fn_name = if call.name == "ARRAY SWAP" {
+                            "pb_array_swap"
+                        } else {
+                            "pb_array_copy"
+                        };
+                        fb.call_void(
+                            fn_name,
+                            &[dbase, sbase, fb.const_i32(elem_size), fb.const_i64(total)],
+                        );
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY UNIQUE" => {
+                // ARRAY UNIQUE arr() [FOR count] — in-place dedup, returns new count
+                if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let is_string = if arr_info.elem_ir_type == IrType::Ptr {
+                            1
+                        } else {
+                            0
+                        };
+                        let start = if let Some(cx) = call.args.get(1) {
+                            let cv = self.compile_expr(fb, cx)?;
+                            self.to_i64(fb, &cv)
+                        } else {
+                            fb.const_i64(0)
+                        };
+                        // start is 1-based in PB; ignore range for now, scan whole array
+                        let _ = start;
+                        fb.call_void(
+                            "pb_array_unique",
+                            &[
+                                base,
+                                fb.const_i32(elem_size),
+                                fb.const_i64(arr_info.total_elements as i64),
+                                fb.const_i32(is_string),
+                            ],
+                        );
+                    }
+                }
+                return Ok(());
+            }
             "ARRAY SORT" => {
                 // ARRAY SORT arr() [FOR n] [, DESCEND|ASCEND]
                 if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
@@ -3425,6 +3525,48 @@ impl Compiler {
                             );
                         }
                     }
+                }
+                return Ok(());
+            }
+            "HOST ADDR" => {
+                // HOST ADDR [hostname$] TO ip&
+                let host_ptr = if let Some(h) = call.args.first() {
+                    self.compile_expr(fb, h)?
+                } else {
+                    let (n, _) = self.module.add_string_constant("");
+                    Val::new(n, IrType::Ptr)
+                };
+                if let Some(t) = call.args.get(1) {
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
+                        fb.call_void("pb_host_addr", &[host_ptr, ptr]);
+                    }
+                }
+                return Ok(());
+            }
+            "HOST NAME" => {
+                // HOST NAME [ip&] TO hostname$
+                let ip = if let Some(h) = call.args.first() {
+                    let hv = self.compile_expr(fb, h)?;
+                    self.to_i32(fb, &hv)
+                } else {
+                    fb.const_i32(0)
+                };
+                let val = fb.call(&IrType::Ptr, "pb_host_name", &[ip]);
+                if let (Some(Expr::Variable(_orig)), Some(info)) = (
+                    call.args.get(1),
+                    call.args.get(1).and_then(|t| {
+                        if let Expr::Variable(orig) = t {
+                            let name = normalize_name(orig);
+                            self.symbols.lookup(&name)
+                        } else {
+                            None
+                        }
+                    }),
+                ) {
+                    let ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                    let converted =
+                        self.convert_value(fb, &val, &info.ir_type.clone(), &info.pb_type.clone());
+                    fb.store(&converted, &ptr);
                 }
                 return Ok(());
             }

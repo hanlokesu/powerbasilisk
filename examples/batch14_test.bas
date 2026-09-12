@@ -1,0 +1,88 @@
+OPTION EXPLICIT
+
+FUNCTION PBMAIN() AS LONG
+    LOCAL a() AS LONG
+    LOCAL b() AS LONG
+    LOCAL sa() AS STRING
+    LOCAL s2() AS STRING
+    LOCAL sb() AS STRING
+    LOCAL i AS LONG
+    LOCAL ip AS LONG
+    LOCAL host AS STRING
+
+    ' ---- ARRAY COPY (LONG) ----
+    REDIM a(1 TO 5)
+    REDIM b(1 TO 5)
+    FOR i = 1 TO 5
+        a(i) = i * 10
+    NEXT i
+    ARRAY COPY a(), b()
+    IF b(1) <> 10 OR b(3) <> 30 OR b(5) <> 50 THEN
+        PRINT "COPY FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- ARRAY SWAP (LONG) ----
+    REDIM a(1 TO 3)
+    REDIM b(1 TO 3)
+    a(1) = 1: a(2) = 2: a(3) = 3
+    b(1) = 7: b(2) = 8: b(3) = 9
+    ARRAY SWAP a(), b()
+    IF a(1) <> 7 OR a(3) <> 9 OR b(2) <> 2 THEN
+        PRINT "SWAP FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- ARRAY COPY (STRING) ----
+    REDIM s2(1 TO 3)
+    REDIM sb(1 TO 3)
+    s2(1) = "one": s2(2) = "two": s2(3) = "three"
+    ARRAY COPY s2(), sb()
+    IF sb(1) <> "one" OR sb(3) <> "three" THEN
+        PRINT "SCOPY FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- ARRAY UNIQUE (LONG) ----
+    REDIM a(1 TO 6)
+    a(1) = 1: a(2) = 2: a(3) = 2
+    a(4) = 3: a(5) = 3: a(6) = 3
+    ARRAY UNIQUE a()
+    IF a(1) <> 1 OR a(2) <> 2 OR a(3) <> 3 THEN
+        PRINT "UNIQUE FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- ARRAY UNIQUE (STRING) ----
+    REDIM sa(1 TO 4)
+    sa(1) = "x": sa(2) = "y": sa(3) = "x": sa(4) = "z"
+    ARRAY UNIQUE sa()
+    IF sa(1) <> "x" OR sa(2) <> "y" OR sa(3) <> "z" THEN
+        PRINT "SUNIQUE FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- HOST ADDR ----
+    HOST ADDR "localhost" TO ip
+    IF ip = 0 THEN
+        PRINT "HOSTADDR FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    ' ---- HOST NAME (ip 0 = local machine) ----
+    HOST NAME 0 TO host
+    IF LEN(host) = 0 THEN
+        PRINT "HOSTNAME FAIL"
+        FUNCTION = 1
+        EXIT FUNCTION
+    END IF
+
+    PRINT "BATCH14 ALL PASS"
+    FUNCTION = 0
+END FUNCTION

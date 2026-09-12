@@ -316,6 +316,15 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+### v0.1.7 (2026-09-12) — Batch 14: ARRAY COPY / SWAP / UNIQUE + HOST ADDR / HOST NAME
+- `ARRAY COPY src(), dest()` — duplicate a whole array into another (fixed-array memcpy).
+- `ARRAY SWAP a(), b()` — exchange all elements of two arrays.
+- `ARRAY UNIQUE arr()` — remove duplicate elements in place (LONG/STRING), dedupes full array.
+- `HOST ADDR [hostname$] TO ip&` — resolve a host name to an IP address (winsock `gethostbyname`).
+- `HOST NAME [ip&] TO hostname$` — resolve an IP address to a host name (`gethostbyaddr` / `gethostname`).
+- Links `ws2_32` for all EXE/DLL targets; requires Windows SDK lib dir (auto-detected).
+- Known upstream limitation (not fixed here): re-REDIM of an already-declared array does not update its size; declare each array with a single REDIM.
+
 
 ### v0.1.6 — batch 13: clipboard + misc (2026-09-11)
 

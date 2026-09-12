@@ -6,21 +6,27 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-11 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-12 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 82 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 87 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 209 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 204 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (82)
+## ✅ Implemented (87)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
+| ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
+| ARRAY UNIQUE | STATEMENT | `pb_array_unique` (in-place dedup; UBOUND shrink not modeled) |
 | ARRAY DELETE | STATEMENT | `core` |
+| HOST ADDR | STATEMENT | `pb_host_addr` (gethostbyname, winsock) |
+| HOST NAME | STATEMENT | `pb_host_name` (gethostbyaddr/gethostname, winsock) |
+
 | ARRAY INSERT | STATEMENT | `core` |
 | ARRAY REVERSE | STATEMENT | `core` |
 | ARRAY SCAN | STATEMENT | `core` |

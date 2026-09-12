@@ -1811,6 +1811,49 @@ impl Parser {
                         line,
                     }));
                 }
+                // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "COPY" | "SWAP"))
+                {
+                    let op = {
+                        if let Token::Identifier(w) = self.peek_at(1).unwrap() {
+                            w.to_uppercase()
+                        } else {
+                            unreachable!()
+                        }
+                    };
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume COPY/SWAP
+                    let src = self.parse_primary()?;
+                    self.expect(&Token::Comma)?;
+                    let dst = self.parse_primary()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("ARRAY {}", op),
+                        args: vec![src, dst],
+                        line,
+                    }));
+                }
+                // ARRAY UNIQUE arr() [FOR count]
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "UNIQUE")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume UNIQUE
+                    let arr = self.parse_primary()?;
+                    let mut args = vec![arr];
+                    if self.peek() == &Token::For {
+                        self.advance(); // consume FOR
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY UNIQUE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // ARRAY SCAN arr(), OP expr, TO var& (op: = <> < > <= >=)
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SCAN")
@@ -2116,6 +2159,33 @@ impl Parser {
                 }
                 if name_upper == "CLIPBOARD" {
                     return self.parse_clipboard_statement(line);
+                }
+                // HOST ADDR [hostname$] TO ip&  /  HOST NAME [ip&] TO hostname$
+                if name_upper == "HOST"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                    if matches!(w.to_uppercase().as_str(), "ADDR" | "NAME"))
+                {
+                    let op = {
+                        if let Token::Identifier(w) = self.peek_at(1).unwrap() {
+                            w.to_uppercase()
+                        } else {
+                            unreachable!()
+                        }
+                    };
+                    self.advance(); // consume HOST
+                    self.advance(); // consume ADDR/NAME
+                    let mut args = Vec::new();
+                    if self.peek() != &Token::To {
+                        args.push(self.parse_expression()?);
+                    }
+                    self.expect(&Token::To)?;
+                    args.push(self.parse_expression()?);
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("HOST {}", op),
+                        args,
+                        line,
+                    }));
                 }
                 // LOCK / UNLOCK #filenum [, record& [, length&]]
                 if (name_upper == "LOCK" || name_upper == "UNLOCK")

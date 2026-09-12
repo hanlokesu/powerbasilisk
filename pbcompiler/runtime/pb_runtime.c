@@ -41,6 +41,21 @@ __declspec(dllimport) void* __stdcall GetClipboardData(unsigned int uFormat);
 __declspec(dllimport) void* __stdcall GlobalAlloc(unsigned int uFlags, unsigned long dwBytes);
 __declspec(dllimport) void* __stdcall GlobalLock(void* hMem);
 __declspec(dllimport) int __stdcall GlobalUnlock(void* hMem);
+/* WinSock2 (HOST ADDR / HOST NAME) */
+typedef struct _pb_hostent {
+    char* h_name;
+    char** h_aliases;
+    int h_addrtype;
+    int h_length;
+    char** h_addr_list;
+} pb_hostent;
+typedef struct _pb_in_addr { unsigned long s_addr; } pb_in_addr;
+__declspec(dllimport) pb_hostent* __stdcall gethostbyname(const char* name);
+__declspec(dllimport) pb_hostent* __stdcall gethostbyaddr(const char* addr, int len, int type);
+__declspec(dllimport) char* __stdcall inet_ntoa(pb_in_addr in);
+__declspec(dllimport) int __stdcall gethostname(char* name, int namelen);
+__declspec(dllimport) int __stdcall WSAStartup(unsigned short wVersionRequested, void* lpWSAData);
+__declspec(dllimport) int __stdcall WSACleanup(void);
 typedef unsigned long DWORD;
 #endif
 
@@ -1187,6 +1202,51 @@ int pb_clipboard_reset(void) {
     return 0;
 }
 
+static int pb_winsock_inited = 0;
+static int pb_winsock_init(void) {
+    if (pb_winsock_inited) return 0;
+    unsigned short ver = 0x0202; /* 2.2 */
+    char data[408] = {0};
+    if (WSAStartup(ver, data) != 0) return -1;
+    pb_winsock_inited = 1;
+    return 0;
+}
+
+void pb_host_addr(const char* host, unsigned long* out) {
+    *out = 0;
+    if (pb_winsock_init() != 0) return;
+    char local[256] = {0};
+    const char* name = host;
+    if (!name || !name[0]) {
+        if (gethostname(local, 255) == 0) {
+            name = local;
+        } else {
+            return;
+        }
+    }
+    pb_hostent* he = gethostbyname(name);
+    if (!he || !he->h_addr_list || !he->h_addr_list[0]) return;
+    unsigned long ip = 0;
+    memcpy(&ip, he->h_addr_list[0], 4);
+    *out = ip;
+}
+
+char* pb_host_name(unsigned long ip) {
+    if (pb_winsock_init() != 0) return pb_bstr_alloc("", 0);
+    if (ip == 0) {
+        char buf[256] = {0};
+        if (gethostname(buf, 255) != 0) return pb_bstr_alloc("", 0);
+        return pb_bstr_alloc(buf, (unsigned int)strlen(buf));
+    }
+    pb_in_addr ia;
+    ia.s_addr = ip;
+    char* dotted = inet_ntoa(ia);
+    if (!dotted) return pb_bstr_alloc("", 0);
+    pb_hostent* he = gethostbyaddr((char*)&ia, 4, 2 /* AF_INET */);
+    if (!he || !he->h_name) return pb_bstr_alloc("", 0);
+    return pb_bstr_alloc(he->h_name, (unsigned int)strlen(he->h_name));
+}
+
 void pb_input_flush(void) {
     fflush(stdin);
 }
@@ -1434,6 +1494,54 @@ void pb_array_sort(char* base, int elem_size, int count, int type) {
         case 3: qsort(base, (size_t)count, (size_t)elem_size, cmp_str); break;
         case 4: qsort(base, (size_t)count, (size_t)elem_size, cmp_f32); break;
     }
+}
+
+void pb_array_copy(char* dest, char* src, int elem_size, long long total) {
+    if (!dest || !src || total <= 0) return;
+    memcpy(dest, src, (size_t)(elem_size * total));
+}
+
+void pb_array_swap(char* a, char* b, int elem_size, long long total) {
+    if (!a || !b || a == b || total <= 0) return;
+    size_t bytes = (size_t)(elem_size * total);
+    char* tmp = (char*)malloc(bytes);
+    if (!tmp) return;
+    memcpy(tmp, a, bytes);
+    memcpy(a, b, bytes);
+    memcpy(b, tmp, bytes);
+    free(tmp);
+}
+
+long long pb_array_unique(char* base, int elem_size, long long total, int is_string) {
+    if (!base || total <= 1) return total;
+    long long write = 0;
+    for (long long i = 0; i < total; i++) {
+        int dup = 0;
+        for (long long j = 0; j < write; j++) {
+            int eq;
+            if (is_string) {
+                char* a = *(char**)(base + j * elem_size);
+                char* b = *(char**)(base + i * elem_size);
+                eq = (a && b && strcmp(a, b) == 0) || (!a && !b);
+            } else {
+                eq = memcmp(base + j * elem_size, base + i * elem_size, elem_size) == 0;
+            }
+            if (eq) { dup = 1; break; }
+        }
+        if (!dup) {
+            if (write != i) memmove(base + write * elem_size, base + i * elem_size, elem_size);
+            write++;
+        }
+    }
+    /* zero the tail — fixed-size array model (PB decrements UBOUND; we cannot resize) */
+    for (long long k = write; k < total; k++) {
+        if (is_string) {
+            *(char**)(base + k * elem_size) = NULL;
+        } else {
+            memset(base + k * elem_size, 0, elem_size);
+        }
+    }
+    return write;
 }
 
 /* LOCK/UNLOCK: lock a byte range of the file (C runtime _locking) */
