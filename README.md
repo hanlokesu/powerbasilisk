@@ -364,7 +364,22 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.14 (2026-09-13) — WAITKEY$ + press-any-key exit on every example
+
+- **WAITKEY$** implemented (official PB console function). Interactive consoles
+  use `_getch` (returns the moment a key is pressed, no Enter needed); when
+  stdin is redirected (pipes / CI) it reads a char from stdin instead, so
+  automated tests can feed a key — verified live: `x | example.exe` exits
+  cleanly with the key echoed back.
+- **All 41 `examples/*.bas` now end with a user-visible wait** so the output
+  stays on screen until the user presses a key: console programs print
+  `Press any key to exit...` then `waitk = WAITKEY$`; GUI programs
+  (`#CONSOLE OFF`) show a `MSGBOX "Press OK to exit."`.
+- Verified: 41/41 examples compile, representative runs exit only after the
+  fed key, official regression **14/14 ALL PASS**, fmt + clippy clean.
+
 ### v0.1.13 (2026-09-13) — Batch 20: array element ops + file scanning, coverage cleanup
+ — Batch 20: array element ops + file scanning, coverage cleanup
 
 Five statements moved from *Not implemented* to *Implemented*
 (coverage: **150 implemented / 151 not implemented / 202 tier-3 DDT**):
