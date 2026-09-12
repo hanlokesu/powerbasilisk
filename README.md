@@ -242,9 +242,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **105** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **196** documented upstream with no codegen evidence yet.
-> (2026-09-12: +30 official keywords from batches 1-17 — TIX, MKBYT$, PEEK/POKE,
+> Summary: **134** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **167** documented upstream with no codegen evidence yet.
+> (2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
 > CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL, MKx binary-string family,
 > DESKTOP GET CLIENT/LOC/PPI — all sample-verified live.)
@@ -360,6 +360,21 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.11 (2026-09-13) — Batch 18: #-metastatement audit (29 directives)
+
+All 29 PowerBASIC **metastatements** (`#COMPILE`, `#DIM`, `#IF/#ELSEIF/#ELSE/#ENDIF`,
+`#INCLUDE`, `#OPTION`, `#LINK`, `#STACK`, `#ALIGN`, `#BLOAT`, `#BREAK`, `#COM`,
+`#COMPILER`, `#CONSOLE`, `#DEBUG *`, `#EXPORT`, `#MESSAGES`, `#OPTIMIZE`, `#PAGE`,
+`#PBFORMS`, `#REGISTER`, `#RESOURCE`, `#TOOLS`, `#UNIQUE`, `#UTILITY`) are now
+formally **implemented as compile-time directives**: the preprocessor/parser accept
+them, conditionals (`#IF/#ELSEIF/#ELSE/#ENDIF`) are honored, and nothing leaks into
+`*.unimplemented.log`. Verified with a dedicated test source exercising every
+directive; behavior was already working, the audit documents it and removes them
+from the unimplemented list.
+
+- Tests: `examples/meta_test.bas` (compiles clean, runs, no unimplemented report),
+  official regression **15/15 ALL PASS**, fmt + clippy clean.
+
 ### v0.1.10 (2026-09-12) — Batch 17: GLOBALMEM, MOUSEPTR, UCODEPAGE
 
 - **GLOBALMEM ALLOC count TO h&** — allocate movable global memory

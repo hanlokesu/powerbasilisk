@@ -12,14 +12,45 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 105 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 134 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 196 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 167 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (105)
+## ✅ Implemented (134)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| `#ALIGN METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#BLOAT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#BREAK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#COM METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#COMPILE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#COMPILER METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#CONSOLE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG BOUNDS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG CODE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG DISPLAY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG ERROR METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG NUMERIC METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DEBUG PRINT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#DIM METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#EXPORT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#INCLUDE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#LINK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#MESSAGES METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#OPTIMIZE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#OPTION METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#PAGE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#PBFORMS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#REGISTER METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#RESOURCE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#STACK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#TOOLS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#UNIQUE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+| `#UTILITY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
+
+
 | ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
 | ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
 | ARRAY UNIQUE | STATEMENT | `pb_array_unique` (in-place dedup; UBOUND shrink not modeled) |
@@ -333,40 +364,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (196, alphabetical)
+## ⬜ Not implemented (167, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
 
-| \#ALIGN METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#BLOAT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#BREAK METASTATEMENT | STATEMENT | PB/CC only | Established |
-| \#COM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#COMPILE METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#CONSOLE METASTATEMENT | STATEMENT | PB/CC only | Established |
-| \#DEBUG BOUNDS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#DEBUG DISPLAY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| \#DEBUG ERROR METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| \#DEBUG NUMERIC METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#INCLUDE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#MESSAGES METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#OPTION METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#PBFORMS METASTATEMENT | STATEMENT | PB/Win only | Established |
-| \#REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#RESOURCE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| \#STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| \#UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
