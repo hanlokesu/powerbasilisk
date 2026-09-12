@@ -1744,3 +1744,210 @@ void pb_unlock(int filenum, long record, long length) {
         _locking(_fileno(file_handles[filenum]), _LK_UNLCK, nb);
     }
 }
+
+/* ===== TCP / UDP sockets (batch 19) ===== */
+typedef unsigned long long pb_sock_t;
+struct pb_sockaddr_in {
+    short sin_family;
+    unsigned short sin_port;
+    unsigned long sin_addr;
+    char sin_zero[8];
+};
+
+__declspec(dllimport) pb_sock_t __stdcall socket(int af, int type, int protocol);
+__declspec(dllimport) int __stdcall connect(pb_sock_t s, const void* name, int namelen);
+__declspec(dllimport) int __stdcall bind(pb_sock_t s, const void* name, int namelen);
+__declspec(dllimport) int __stdcall listen(pb_sock_t s, int backlog);
+__declspec(dllimport) pb_sock_t __stdcall accept(pb_sock_t s, void* addr, int* addrlen);
+__declspec(dllimport) int __stdcall send(pb_sock_t s, const char* buf, int len, int flags);
+__declspec(dllimport) int __stdcall recv(pb_sock_t s, char* buf, int len, int flags);
+__declspec(dllimport) int __stdcall sendto(pb_sock_t s, const char* buf, int len, int flags, const void* to, int tolen);
+__declspec(dllimport) int __stdcall recvfrom(pb_sock_t s, char* buf, int len, int flags, void* from, int* fromlen);
+__declspec(dllimport) int __stdcall closesocket(pb_sock_t s);
+__declspec(dllimport) unsigned short __stdcall htons(unsigned short hostshort);
+__declspec(dllimport) unsigned long __stdcall inet_addr(const char* cp);
+__declspec(dllimport) int __stdcall setsockopt(pb_sock_t s, int level, int optname, const char* optval, int optlen);
+
+#define PB_MAX_SOCK 256
+static pb_sock_t pb_sock[PB_MAX_SOCK];
+static int pb_sock_state[PB_MAX_SOCK];  /* 0=free 1=tcp 2=udp 3=tcp-server */
+#define PB_SOCK_INVALID ((pb_sock_t)-1)
+
+static unsigned long pb_net_ip(const char* host) {
+    unsigned long ip = inet_addr(host);
+    if (ip == (unsigned long)-1) {
+        pb_hostent* he = gethostbyname(host);
+        if (he && he->h_addr_list && he->h_addr_list[0]) {
+            memcpy(&ip, he->h_addr_list[0], 4);
+        } else {
+            return (unsigned long)-1;
+        }
+    }
+    return ip;
+}
+
+static void pb_net_fill_addr(struct pb_sockaddr_in* a, unsigned long ip, int port) {
+    memset(a, 0, sizeof(*a));
+    a->sin_family = 2; /* AF_INET */
+    a->sin_port = htons((unsigned short)port);
+    a->sin_addr = ip;
+}
+
+int pb_tcp_open(int mode, int port, const char* addr, int filenum, long timeout) {
+    if (pb_winsock_init() != 0) return -1;
+    if (filenum < 1 || filenum >= PB_MAX_SOCK) return -1;
+    if (pb_sock_state[filenum] != 0) return -1;
+    pb_sock_t s = socket(2, 1, 6); /* AF_INET, SOCK_STREAM, TCP */
+    if (s == PB_SOCK_INVALID) return -1;
+    struct pb_sockaddr_in a;
+    if (mode == 1) {
+        /* server: bind + listen */
+        pb_net_fill_addr(&a, 0, port);
+        if (bind(s, &a, sizeof(a)) != 0 || listen(s, 8) != 0) { closesocket(s); return -1; }
+        pb_sock[filenum] = s;
+        pb_sock_state[filenum] = 3;
+        return 0;
+    }
+    /* client: connect */
+    unsigned long ip = pb_net_ip(addr);
+    if (ip == (unsigned long)-1) { closesocket(s); return -1; }
+    if (timeout > 0) {
+        int t = (int)timeout;
+        setsockopt(s, 0xFFFF, 0x1006, (const char*)&t, 4); /* SO_RCVTIMEO */
+        setsockopt(s, 0xFFFF, 0x1005, (const char*)&t, 4); /* SO_SNDTIMEO */
+    }
+    pb_net_fill_addr(&a, ip, port);
+    if (connect(s, &a, sizeof(a)) != 0) { closesocket(s); return -1; }
+    pb_sock[filenum] = s;
+    pb_sock_state[filenum] = 1;
+    return 0;
+}
+
+int pb_tcp_accept(int srv, int newf) {
+    if (srv < 1 || srv >= PB_MAX_SOCK || pb_sock_state[srv] != 3) return -1;
+    if (newf < 1 || newf >= PB_MAX_SOCK || pb_sock_state[newf] != 0) return -1;
+    struct pb_sockaddr_in a;
+    int alen = sizeof(a);
+    pb_sock_t s = accept(pb_sock[srv], &a, &alen);
+    if (s == PB_SOCK_INVALID) return -1;
+    pb_sock[newf] = s;
+    pb_sock_state[newf] = 1;
+    return 0;
+}
+
+int pb_tcp_send(int f, const char* data) {
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    int len = (int)strlen(data ? data : "");
+    int off = 0;
+    while (off < len) {
+        int n = send(pb_sock[f], data + off, len - off, 0);
+        if (n <= 0) return -1;
+        off += n;
+    }
+    return 0;
+}
+
+int pb_tcp_recv(int f, long count, char** out) {
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    if (count < 0) count = 0;
+    char* buf = pb_bstr_alloc(NULL, (unsigned int)count);
+    int n = recv(pb_sock[f], buf, (int)count, 0);
+    if (n <= 0) n = 0;
+    buf[n] = 0;
+    *out = buf;
+    return n;
+}
+
+int pb_tcp_line_input(int f, char** out) {
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    char tmp[4096];
+    int n = 0;
+    while (n < 4095) {
+        char c = 0;
+        int r = recv(pb_sock[f], &c, 1, 0);
+        if (r <= 0) break;
+        if (c == '\n') break;
+        if (c != '\r') tmp[n++] = c;
+    }
+    char* buf = pb_bstr_alloc(NULL, (unsigned int)n);
+    memcpy(buf, tmp, n);
+    buf[n] = 0;
+    *out = buf;
+    return n;
+}
+
+int pb_tcp_print(int f, const char* data, int newline) {
+    if (pb_tcp_send(f, data) != 0) return -1;
+    if (newline) return pb_tcp_send(f, "\r\n");
+    return 0;
+}
+
+int pb_tcp_close(int f) {
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) return -1;
+    closesocket(pb_sock[f]);
+    pb_sock_state[f] = 0;
+    return 0;
+}
+
+int pb_udp_open(int port, int filenum, long timeout) {
+    if (pb_winsock_init() != 0) return -1;
+    if (filenum < 1 || filenum >= PB_MAX_SOCK) return -1;
+    if (pb_sock_state[filenum] != 0) return -1;
+    pb_sock_t s = socket(2, 2, 17); /* AF_INET, SOCK_DGRAM, UDP */
+    if (s == PB_SOCK_INVALID) return -1;
+    struct pb_sockaddr_in a;
+    pb_net_fill_addr(&a, 0, port);
+    if (timeout > 0) {
+        int t = (int)timeout;
+        setsockopt(s, 0xFFFF, 0x1006, (const char*)&t, 4);
+    }
+    if (bind(s, &a, sizeof(a)) != 0) { closesocket(s); return -1; }
+    pb_sock[filenum] = s;
+    pb_sock_state[filenum] = 2;
+    return 0;
+}
+
+int pb_udp_send(int f, unsigned long ip, int port, const char* data);
+
+int pb_udp_send_str(int f, const char* ipstr, int port, const char* data) {
+    return pb_udp_send(f, inet_addr(ipstr ? ipstr : "0.0.0.0"), port, data);
+}
+
+int pb_udp_send(int f, unsigned long ip, int port, const char* data) {
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) return -1;
+    struct pb_sockaddr_in a;
+    pb_net_fill_addr(&a, ip, port);
+    int len = (int)strlen(data ? data : "");
+    int n = sendto(pb_sock[f], data, len, 0, &a, sizeof(a));
+    return (n < 0) ? -1 : 0;
+}
+
+
+static unsigned short ntohs_s(unsigned short v) {
+    return (unsigned short)((v >> 8) | (v << 8));
+}
+
+int pb_udp_recv(int f, unsigned long* ip, int* port, char** out) {
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) return -1;
+    char tmp[65536];
+    struct pb_sockaddr_in a;
+    int alen = sizeof(a);
+    int n = recvfrom(pb_sock[f], tmp, 65535, 0, &a, &alen);
+    if (n <= 0) n = 0;
+    char* buf = pb_bstr_alloc(NULL, (unsigned int)n);
+    memcpy(buf, tmp, n);
+    buf[n] = 0;
+    if (ip) *ip = a.sin_addr;
+    if (port) *port = ntohs_s(a.sin_port);
+    *out = buf;
+    return n;
+}
+
+int pb_udp_close(int f) {
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) return -1;
+    closesocket(pb_sock[f]);
+    pb_sock_state[f] = 0;
+    return 0;
+}
+
+

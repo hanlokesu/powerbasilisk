@@ -1550,6 +1550,76 @@ impl Compiler {
         self.module
             .declare_function("pb_peekd", &IrType::Double, &[IrType::Ptr], false);
         self.module.declare_function(
+            "pb_tcp_open",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_tcp_accept",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_tcp_send",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_tcp_recv",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_tcp_line_input",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_tcp_print",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_tcp_close", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_udp_open",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_udp_send",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_udp_send_str",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_udp_recv",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_udp_close", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
             "pb_poke8",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32],
@@ -3914,6 +3984,117 @@ impl Compiler {
                         self.convert_value(fb, &val, &info.ir_type.clone(), &info.pb_type.clone());
                     fb.store(&converted, &ptr);
                 }
+                return Ok(());
+            }
+            "TCP OPEN" => {
+                // TCP OPEN [SERVER] {PORT p | srvc} [AT addr$] AS #f [TIMEOUT t]
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let mode = self.to_i32(fb, &_e0);
+                let _e1 = self.compile_expr(fb, &call.args[1])?;
+                let port = self.to_i32(fb, &_e1);
+                let addr = self.compile_expr(fb, &call.args[2])?;
+                let _e3 = self.compile_expr(fb, &call.args[3])?;
+                let fnum = self.to_i32(fb, &_e3);
+                let _e4 = self.compile_expr(fb, &call.args[4])?;
+                let timeout = self.to_i32(fb, &_e4);
+                fb.call_void("pb_tcp_open", &[mode, port, addr, fnum, timeout]);
+                return Ok(());
+            }
+            "TCP ACCEPT" => {
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let srv = self.to_i32(fb, &_e0);
+                let _e1 = self.compile_expr(fb, &call.args[1])?;
+                let newf = self.to_i32(fb, &_e1);
+                fb.call_void("pb_tcp_accept", &[srv, newf]);
+                return Ok(());
+            }
+            "TCP SEND" => {
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                let data = self.compile_expr(fb, &call.args[1])?;
+                fb.call_void("pb_tcp_send", &[fnum, data]);
+                return Ok(());
+            }
+            "TCP RECV" => {
+                // TCP RECV #f, count&, var$
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                let _e1 = self.compile_expr(fb, &call.args[1])?;
+                let count = self.to_i32(fb, &_e1);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                    fb.call_void("pb_tcp_recv", &[fnum, count, ptr]);
+                }
+                return Ok(());
+            }
+            "TCP LINE INPUT" => {
+                // TCP LINE INPUT #f, var$
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    fb.call_void("pb_tcp_line_input", &[fnum, ptr]);
+                }
+                return Ok(());
+            }
+            "TCP PRINT" => {
+                // TCP PRINT #f, expr [;]
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                let data = self.compile_expr(fb, &call.args[1])?;
+                let _e2 = self.compile_expr(fb, &call.args[2])?;
+                let nl = self.to_i32(fb, &_e2);
+                fb.call_void("pb_tcp_print", &[fnum, data, nl]);
+                return Ok(());
+            }
+            "TCP CLOSE" => {
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                fb.call_void("pb_tcp_close", &[fnum]);
+                return Ok(());
+            }
+            "UDP OPEN" => {
+                // UDP OPEN [PORT p] AS #f [TIMEOUT t]
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let port = self.to_i32(fb, &_e0);
+                let _e1 = self.compile_expr(fb, &call.args[1])?;
+                let fnum = self.to_i32(fb, &_e1);
+                let _e2 = self.compile_expr(fb, &call.args[2])?;
+                let timeout = self.to_i32(fb, &_e2);
+                fb.call_void("pb_udp_open", &[port, fnum, timeout]);
+                return Ok(());
+            }
+            "UDP SEND" => {
+                // UDP SEND #f, AT ip&, pNum&, data$  (ip may be LONG or string)
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                let ip = self.compile_expr(fb, &call.args[1])?;
+                let _e2 = self.compile_expr(fb, &call.args[2])?;
+                let port = self.to_i32(fb, &_e2);
+                let data = self.compile_expr(fb, &call.args[3])?;
+                if ip.ty == IrType::Ptr {
+                    fb.call_void("pb_udp_send_str", &[fnum, ip, port, data]);
+                } else {
+                    let ip32 = self.to_i32(fb, &ip);
+                    fb.call_void("pb_udp_send", &[fnum, ip32, port, data]);
+                }
+                return Ok(());
+            }
+            "UDP RECV" => {
+                // UDP RECV #f, FROM ip&, pNum&, buf$
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                if let Some((ip_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    if let Some((port_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        if let Some((buf_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                            fb.call_void("pb_udp_recv", &[fnum, ip_ptr, port_ptr, buf_ptr]);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "UDP CLOSE" => {
+                let _e0 = self.compile_expr(fb, &call.args[0])?;
+                let fnum = self.to_i32(fb, &_e0);
+                fb.call_void("pb_udp_close", &[fnum]);
                 return Ok(());
             }
             "ARRAY DELETE" => {

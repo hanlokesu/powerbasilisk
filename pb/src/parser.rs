@@ -2233,6 +2233,10 @@ impl Parser {
                 if name_upper == "UCODEPAGE" {
                     return self.parse_ucodepage_statement(line);
                 }
+                // TCP / UDP socket statements (batch 19)
+                if name_upper == "TCP" || name_upper == "UDP" {
+                    return self.parse_net_statement(line);
+                }
                 // HOST ADDR [hostname$] TO ip&  /  HOST NAME [ip&] TO hostname$
                 if name_upper == "HOST"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
@@ -2974,6 +2978,263 @@ impl Parser {
             args,
             line,
         }))
+    }
+
+    fn parse_net_statement(&mut self, line: usize) -> PbResult<Statement> {
+        let proto = if let Token::Identifier(w) = self.peek() {
+            w.to_uppercase()
+        } else {
+            self.consume_to_eol();
+            return Ok(Statement::Noop("NET".to_string(), line));
+        };
+        self.advance(); // consume TCP/UDP
+        let op = match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Open => "OPEN".to_string(),
+            Token::Print => "PRINT".to_string(),
+            Token::Close => "CLOSE".to_string(),
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop(proto.clone(), line));
+            }
+        };
+        self.advance(); // consume op
+
+        match op.as_str() {
+            "OPEN" => {
+                if proto == "UDP" {
+                    // UDP OPEN [PORT expr] AS #f [TIMEOUT t]
+                    let mut port = Expr::IntegerLit(0);
+                    if let Token::Identifier(w) = self.peek() {
+                        if w.eq_ignore_ascii_case("PORT") {
+                            self.advance();
+                            port = self.parse_expression()?;
+                        }
+                    }
+                    let mut filenum = Expr::IntegerLit(0);
+                    if self.peek() == &Token::As {
+                        self.advance();
+                        if self.peek() == &Token::Hash {
+                            self.advance();
+                        }
+                        filenum = self.parse_expression()?;
+                    }
+                    let mut timeout = Expr::IntegerLit(-1);
+                    if let Token::Identifier(w) = self.peek() {
+                        if w.eq_ignore_ascii_case("TIMEOUT") {
+                            self.advance();
+                            timeout = self.parse_expression()?;
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "UDP OPEN".to_string(),
+                        args: vec![port, filenum, timeout],
+                        line,
+                    }));
+                }
+                // TCP OPEN [SERVER] {PORT expr | srvc_expr} [AT addr_expr] AS #f [TIMEOUT t]
+                let mut mode = Expr::IntegerLit(0);
+                let mut port: Option<Expr> = None;
+                let mut addr = Expr::StringLit("".to_string());
+                let mut timeout = Expr::IntegerLit(-1);
+                if let Token::Identifier(w) = self.peek() {
+                    if w.eq_ignore_ascii_case("SERVER") {
+                        self.advance();
+                        mode = Expr::IntegerLit(1);
+                    }
+                }
+                if let Token::Identifier(w) = self.peek() {
+                    if w.eq_ignore_ascii_case("PORT") {
+                        self.advance();
+                        port = Some(self.parse_expression()?);
+                    } else if !w.eq_ignore_ascii_case("AT")
+                        && !w.eq_ignore_ascii_case("AS")
+                        && !w.eq_ignore_ascii_case("TIMEOUT")
+                    {
+                        // service name or numeric service string
+                        port = Some(self.parse_expression()?);
+                    }
+                }
+                let port_v = port.unwrap_or(Expr::IntegerLit(0));
+                if let Token::Identifier(w) = self.peek() {
+                    if w.eq_ignore_ascii_case("AT") {
+                        self.advance();
+                        addr = self.parse_expression()?;
+                    }
+                }
+                // AS #f
+                let mut filenum = Expr::IntegerLit(0);
+                if self.peek() == &Token::As {
+                    self.advance();
+                    if self.peek() == &Token::Hash {
+                        self.advance();
+                    }
+                    filenum = self.parse_expression()?;
+                }
+                while let Token::Identifier(w) = self.peek() {
+                    if w.eq_ignore_ascii_case("TIMEOUT") {
+                        self.advance();
+                        timeout = self.parse_expression()?;
+                        break;
+                    }
+                    self.advance();
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TCP OPEN".to_string(),
+                    args: vec![mode, port_v, addr, filenum, timeout],
+                    line,
+                }))
+            }
+            "ACCEPT" => {
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let srv = self.parse_expression()?;
+                self.expect(&Token::As)?;
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let newf = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("{proto} ACCEPT"),
+                    args: vec![srv, newf],
+                    line,
+                }))
+            }
+            "LINE" => {
+                if let Token::Input = self.peek() {
+                    self.advance();
+                }
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let var = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("{proto} LINE INPUT"),
+                    args: vec![f, var],
+                    line,
+                }))
+            }
+            "PRINT" => {
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let data = self.parse_expression()?;
+                let mut nl = Expr::IntegerLit(1);
+                if self.peek() == &Token::Semicolon {
+                    self.advance();
+                    nl = Expr::IntegerLit(0);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("{proto} PRINT"),
+                    args: vec![f, data, nl],
+                    line,
+                }))
+            }
+            "SEND" => {
+                if proto == "UDP" {
+                    // UDP SEND #f, AT ip&, port&, data$
+                    if self.peek() == &Token::Hash {
+                        self.advance();
+                    }
+                    let f = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    if let Token::Identifier(w) = self.peek() {
+                        if w.eq_ignore_ascii_case("AT") {
+                            self.advance();
+                        }
+                    }
+                    let ip = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let port = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let data = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "UDP SEND".to_string(),
+                        args: vec![f, ip, port, data],
+                        line,
+                    }));
+                }
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let data = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TCP SEND".to_string(),
+                    args: vec![f, data],
+                    line,
+                }))
+            }
+            "RECV" => {
+                if proto == "UDP" {
+                    // UDP RECV #f, FROM ip&, port&, buf$
+                    if self.peek() == &Token::Hash {
+                        self.advance();
+                    }
+                    let f = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    if let Token::Identifier(w) = self.peek() {
+                        if w.eq_ignore_ascii_case("FROM") {
+                            self.advance();
+                        }
+                    }
+                    let ip = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let port = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let buf = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "UDP RECV".to_string(),
+                        args: vec![f, ip, port, buf],
+                        line,
+                    }));
+                }
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let count = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let var = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TCP RECV".to_string(),
+                    args: vec![f, count, var],
+                    line,
+                }))
+            }
+            "CLOSE" => {
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("{proto} CLOSE"),
+                    args: vec![f],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop(format!("{proto} {op}"), line))
+            }
+        }
     }
 
     fn parse_ucodepage_statement(&mut self, line: usize) -> PbResult<Statement> {

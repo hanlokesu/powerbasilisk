@@ -12,14 +12,25 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 134 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 145 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 167 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 156 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (134)
+## ✅ Implemented (145)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| `TCP OPEN` | STATEMENT | winsock socket/connect/listen/bind; SO_RCVTIMEO |
+| `TCP ACCEPT` | STATEMENT | winsock accept; new file number |
+| `TCP SEND` | STATEMENT | winsock send |
+| `TCP RECV` | STATEMENT | winsock recv into PB string |
+| `TCP LINE INPUT` | STATEMENT | byte-wise recv until LF |
+| `TCP PRINT` | STATEMENT | send data + CRLF |
+| `TCP CLOSE` | STATEMENT | closesocket |
+| `UDP OPEN` | STATEMENT | winsock SOCK_DGRAM bind; PORT=server, no PORT=client |
+| `UDP SEND` | STATEMENT | sendto; AT accepts LONG or string address |
+| `UDP RECV` | STATEMENT | recvfrom; returns source ip/port |
+| `UDP CLOSE` | STATEMENT | closesocket |
 | `#ALIGN METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#BLOAT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#BREAK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
@@ -434,14 +445,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
-| TCP ACCEPT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| TCP LINE INPUT | STATEMENT | PB/Win + PB/CC | Established |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| TCP OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| TCP PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP RECV | STATEMENT | PB/Win + PB/CC | Established |
-| TCP SEND | STATEMENT | PB/Win + PB/CC | Established |
 | THREAD CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | THREAD CREATE | STATEMENT | PB/Win + PB/CC | Established |
 | THREAD GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
@@ -454,11 +458,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
 | TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
-| UDP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| UDP OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| UDP RECV | STATEMENT | PB/Win + PB/CC | Established |
-| UDP SEND | STATEMENT | PB/Win + PB/CC | Established |
 | WINDOW GET | STATEMENT | PB/Win only | Established |
 | WINDOW SET | STATEMENT | PB/Win only | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |

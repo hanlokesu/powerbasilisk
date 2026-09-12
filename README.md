@@ -242,9 +242,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **134** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **167** documented upstream with no codegen evidence yet.
-> (2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
+> Summary: **145** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **156** documented upstream with no codegen evidence yet.
+> (2026-09-13: +11 official keywords from batch 19 — TCP OPEN/ACCEPT/SEND/RECV/
+> LINE INPUT/PRINT/CLOSE + UDP OPEN/SEND/RECV/CLOSE — Winsock sockets, verified
+> live via loopback TCP/UDP echo; 2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
 > CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL, MKx binary-string family,
 > DESKTOP GET CLIENT/LOC/PPI — all sample-verified live.)
@@ -252,6 +254,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 ### Newly implemented by this branch
 | PB statement / function | Status | Maps to |
 | --- | --- | --- |
+| `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
+| `UDP OPEN/SEND/RECV/CLOSE` | ✅ | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
 | `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
 | `REPLACE old$ WITH new$ IN target$` | ✅ | `pb_replace` |
 | `ERASE array` | ✅ | `pb_erase_array` |
@@ -360,6 +364,47 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.12 (2026-09-13) — Batch 19: TCP + UDP sockets (11 statements)
+
+Real Winsock networking for PB programs — the first network layer in the enhanced
+compiler. 11 statements moved from *Not implemented* to *Implemented*
+(coverage: **145 implemented / 156 not implemented / 202 tier-3 DDT**):
+
+- **TCP OPEN** `[SERVER] {PORT p | srvc} [AT addr$] AS #f [TIMEOUT t]` — Winsock
+  socket + connect (client) or bind/listen (server); SO_RCVTIMEO from TIMEOUT.
+- **TCP ACCEPT** `#srv AS #new` — accept a pending connection into a new file number.
+- **TCP SEND** / **TCP RECV** — send / receive raw bytes (RECV into a PB string).
+- **TCP LINE INPUT** — read one CRLF-terminated line into a PB string.
+- **TCP PRINT** — send text + CRLF.
+- **TCP CLOSE** — close a socket.
+- **UDP OPEN** `[PORT p] AS #f [TIMEOUT t]` — SOCK_DGRAM; with PORT = server
+  (bind), without PORT = client (random local port, per official docs).
+- **UDP SEND** `#f, AT ip&, pNum&, data$` — sendto; **AT accepts either a LONG
+  IP value or a string like "127.0.0.1"** (runtime converts via inet_addr).
+- **UDP RECV** `#f, FROM ip&, pNum&, buf$` — recvfrom; writes source ip/port.
+- **UDP CLOSE** — close a UDP socket.
+
+Implementation notes (gotchas fixed in this batch):
+
+- TCP/UDP **OPEN / PRINT / CLOSE are reserved-word tokens** (`Token::Open`,
+  `Token::Print`, `Token::Close`), not identifiers — the parser op-dispatch must
+  match them explicitly or the whole statement silently became a NOOP.
+- `TCP ACCEPT #1 AS #2` — `AS #` needs an explicit `#` skip before parsing the
+  new file number; without it `parse_expression` hit `#` and the statement was
+  silently dropped (no codegen at all).
+- Winsock is declared by hand (`__declspec(dllimport)`) with a self-contained
+  `struct pb_sockaddr_in` — no `<winsock2.h>`; `ntohs` hand-rolled as
+  byte-swap (`ntohs_s`) and defined **before** first use.
+- Runtime socket table `pb_sock[256]` + `pb_sock_state[256]` (0 free / 1 tcp /
+  2 udp / 3 tcp-server).
+- Loopback-verified on this machine: TCP echo (client `BACK: echo-back`, server
+  `GOT: hello-from-client`) and UDP echo (both directions) — see
+  `examples/tcp_echo_server.bas`, `examples/tcp_echo_client.bas`,
+  `examples/udp_echo_server.bas`, `examples/udp_echo_client.bas`.
+
+- Tests: official regression **15/15 ALL PASS** (compiler now reports 15 with
+  crash_test included), fmt + clippy clean.
+
 ### v0.1.11 (2026-09-13) — Batch 18: #-metastatement audit (29 directives)
 
 All 29 PowerBASIC **metastatements** (`#COMPILE`, `#DIM`, `#IF/#ELSEIF/#ELSE/#ENDIF`,
