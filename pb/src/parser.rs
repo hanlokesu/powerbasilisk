@@ -1066,9 +1066,13 @@ impl Parser {
             }
             Token::Declare => true,
             Token::Type => {
-                // TYPE at start of line (new type decl, not inside body)
-                // Check if next is an identifier (type name), not a keyword
-                matches!(self.peek_at(1), Some(Token::Identifier(_)))
+                // TYPE at start of line (new type decl, not inside body).
+                // TYPE SET (statement) is NOT a top-level keyword.
+                match self.peek_at(1) {
+                    Some(Token::Identifier(w)) if w.to_uppercase() == "SET" => false,
+                    Some(Token::Identifier(_)) => true,
+                    _ => false,
+                }
             }
             _ => false,
         }
@@ -1354,6 +1358,28 @@ impl Parser {
                         dims.into_iter().map(Statement::Dim).collect(),
                     ))
                 }
+            }
+            Token::Type => {
+                // TYPE SET dest = src : copy bytes into a TYPE variable
+                if matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SET")
+                {
+                    self.advance(); // consume TYPE
+                    self.advance(); // consume SET
+                                    // parse_primary (not parse_expression): `dest = src` must not be
+                                    // swallowed as an Eq comparison expression
+                    let dest = self.parse_primary()?;
+                    self.expect(&Token::Eq)?;
+                    let src = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "TYPE SET".to_string(),
+                        args: vec![dest, src],
+                        line,
+                    }));
+                }
+                // Bare TYPE (no SET) inside a body: skip the line
+                self.consume_to_eol();
+                Ok(Statement::Noop("TYPE".to_string(), line))
             }
             Token::Global => {
                 // GLOBAL inside a sub (shouldn't happen but handle gracefully)
@@ -1866,6 +1892,41 @@ impl Parser {
                         line,
                     }));
                 }
+                // WINDOW SET TEXT hwnd, text$ / WINDOW GET TEXT hwnd TO var$
+                if name_upper == "WINDOW"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "TEXT")
+                {
+                    self.advance(); // consume WINDOW
+                    self.advance(); // consume SET
+                    self.advance(); // consume TEXT
+                    let mut args = vec![self.parse_expression()?]; // hwnd
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?); // text
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "WINDOW SET TEXT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                if name_upper == "WINDOW"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "TEXT")
+                {
+                    self.advance(); // consume WINDOW
+                    self.advance(); // consume GET
+                    self.advance(); // consume TEXT
+                    let mut args = vec![self.parse_expression()?]; // hwnd
+                    self.expect(&Token::To)?;
+                    args.push(self.parse_expression()?); // target var
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "WINDOW GET TEXT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
@@ -1887,6 +1948,22 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: format!("ARRAY {}", op),
                         args: vec![src, dst],
+                        line,
+                    }));
+                }
+                // ARRAY ASSIGN target() = source()
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "ASSIGN")
+                {
+                    self.advance(); // consume ARRAY
+                    self.advance(); // consume ASSIGN
+                    let target = self.parse_primary()?;
+                    self.expect(&Token::Eq)?;
+                    let src = self.parse_primary()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY ASSIGN".to_string(),
+                        args: vec![target, src],
                         line,
                     }));
                 }

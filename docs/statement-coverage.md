@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 174 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 179 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 127 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 122 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (174)
+## ✅ Implemented (179)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -167,7 +167,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `OPTION EXPLICIT` | STATEMENT | PB/Win + PB/CC | Accepted (requires explicit declarations) |
 | `REM` | STATEMENT | PB/Win + PB/CC | Comments accepted at top level and in bodies |
 | `GLOBAL` | STATEMENT | PB/Win + PB/CC | Global variable declarations |
-| `ARRAY ARRAYIX` | STATEMENT | PB/Win + PB/CC | Each element = its index (batch 20) |
+| `ARRAY ARRAYIX` |
+| `ARRAY ASSIGN` | STATEMENT | PB/Win + PB/CC | pb_array_copy: target() = source() element copy (batch 23) |
+ STATEMENT | PB/Win + PB/CC | Each element = its index (batch 20) |
 | `DECLARE` | STATEMENT | PB/Win + PB/CC | DECLARE SUB/FUNCTION prototypes (batch 20) |
 | `FILESCAN` | STATEMENT | PB/Win + PB/CC | Records/width scan, INPUT+BINARY modes (batch 20) |
 | `LOCAL` | STATEMENT | PB/Win + PB/CC | Local variable declarations (batch 20) |
@@ -196,6 +198,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `TRACE` | STATEMENT | PB/Win + PB/CC | TRACE NEW/ON/OFF/PRINT/CLOSE explicit log file (batch 22) |
 | `IMPORT` | STATEMENT | PB/Win + PB/CC | IMPORT ADDR LoadLibraryA+GetProcAddress into QUAD vars (batch 22) |
 | `CALL DWORD` | STATEMENT | PB/Win + PB/CC | indirect call via inttoptr; USING args + TO result (batch 22) |
+| `WINDOW SET` | STATEMENT | PB/Win only | SetConsoleTitleA console title; hwnd ignored (batch 23) |
+| `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
+| `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
+| `TYPE SET` | STATEMENT | PB/Win + PB/CC | pb_type_set / pb_type_set_str memcpy fill (batch 23) |
+
+
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -403,13 +411,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (127, alphabetical)
+## ⬜ Not implemented (122, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
 
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -455,15 +462,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| STATIC | STATEMENT | PB/Win + PB/CC | Established |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
 
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
-| TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| WINDOW GET | STATEMENT | PB/Win only | Established |
-| WINDOW SET | STATEMENT | PB/Win only | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT BOX | STATEMENT | PB/Win + PB/CC | Established |

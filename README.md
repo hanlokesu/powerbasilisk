@@ -242,9 +242,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **166** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **135** documented upstream with no codegen evidence yet.
-> (2026-09-13: +16 official keywords from batch 21 — COMM serial port
+> Summary: **179** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **122** documented upstream with no codegen evidence yet.
+> (2026-09-13: +5 official keywords from batch 23 — real STATIC semantics,
+> ARRAY ASSIGN, TYPE SET, WINDOW SET/GET TEXT console-title bridge, plus a
+> TYPE fixed-string field assignment bug fix; +16 official keywords from batch 21 — COMM serial port
 > OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT + THREAD
 > CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY — real Win32
 > CreateFileA/DCB serial + CreateThread thread control, verified live via
@@ -370,6 +372,32 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.17 (2026-09-13) — Batch 23: real STATIC semantics + ARRAY ASSIGN + TYPE SET + WINDOW console title (5 statements)
+
+Five long-standing *Not implemented* items moved to *Implemented*
+(coverage: **179 implemented / 122 not implemented / 202 tier-3 DDT**):
+
+- **STATIC** — variables declared with `STATIC` are now stored in
+  module-global slots (per-function unique names), so the value **persists
+  across calls** instead of being reset like `LOCAL`. `STATIC counter AS
+  LONG` now counts 1, 2, 3 across three calls (verified in
+  `examples/batch23_test.bas`).
+- **ARRAY ASSIGN** — `ARRAY ASSIGN target() = source()` copies the source
+  elements into the target array via `pb_array_copy` (element count =
+  min of both declared sizes).
+- **TYPE SET** — `TYPE SET dest = src` fills a TYPE variable with the
+  bytes of another TYPE variable (`pb_type_set`, raw memcpy) or of a
+  STRING (`pb_type_set_str`, memcpy min(len, size) + zero-fill).
+- **WINDOW SET TEXT / WINDOW GET TEXT** — console-title bridge:
+  `WINDOW SET TEXT hwnd, text$` calls SetConsoleTitleA and
+  `WINDOW GET TEXT hwnd TO s$` reads it back via GetConsoleTitleA
+  (the hwnd argument is ignored in console builds).
+
+Bug fixed along the way: assigning to a `STRING * N` field of a TYPE
+variable used to store a pointer into the fixed buffer (corrupting it);
+the TypeMember assignment path now uses strncpy + NUL-termination, the
+same as top-level fixed strings.
+
 ### v0.1.16 (2026-09-13) — Batch 22: LPRINT + TRACE + IMPORT ADDR + CALL DWORD (8 statements)
 
 Two statement families and the dynamic-library bridge moved from *Not

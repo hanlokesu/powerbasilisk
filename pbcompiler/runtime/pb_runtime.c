@@ -2382,6 +2382,8 @@ typedef void* FARPROC_PB;
 __declspec(dllimport) void* __stdcall LoadLibraryA(const char* lpFileName);
 __declspec(dllimport) void* __stdcall GetProcAddress(void* hModule, const char* lpProcName);
 __declspec(dllimport) int __stdcall FreeLibrary(void* hLibModule);
+__declspec(dllimport) int __stdcall SetConsoleTitleA(const char* lpConsoleTitle);
+__declspec(dllimport) unsigned long __stdcall GetConsoleTitleA(char* lpConsoleTitle, unsigned long nSize);
 #endif
 
 /* ---- BSTR helpers (4-byte LE length prefix + payload) ---- */
@@ -2516,4 +2518,31 @@ int pb_import_addr(char* procname, char* libname, void** out_addr, void** out_hn
 /* IMPORT CLOSE HndlVar */
 void pb_import_close(void* hndl) {
     if (hndl) FreeLibrary(hndl);
+}
+
+/* ---- Batch 23: WINDOW SET/GET TEXT (console title) + TYPE SET ---- */
+void pb_console_set_title(const char* s) {
+    SetConsoleTitleA(s ? s : "");
+}
+
+char* pb_console_get_title(void) {
+    char buf[1024];
+    unsigned long n = GetConsoleTitleA(buf, 1024);
+    if (n == 0) return pb_bstr_alloc("", 0);
+    if (n >= sizeof(buf)) n = sizeof(buf) - 1;
+    buf[n] = '\0';
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
+
+void pb_type_set(void* dest, const void* src, unsigned int size) {
+    if (!dest || !src || size == 0) return;
+    memcpy(dest, src, size);
+}
+
+void pb_type_set_str(void* dest, const char* src, unsigned int size) {
+    if (!dest || size == 0) return;
+    unsigned int n = src ? (unsigned int)strlen(src) : 0;
+    if (n > size) n = size;
+    if (n) memcpy(dest, src, n);
+    if (n < size) memset((char*)dest + n, 0, size - n);
 }

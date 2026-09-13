@@ -972,6 +972,18 @@ impl Compiler {
         }
     }
 
+    /// Byte size of an IR type (for TYPE SET memcpy sizing).
+    fn ir_size_bytes(ir: &IrType) -> u32 {
+        match ir {
+            IrType::I1 | IrType::I8 => 1,
+            IrType::I16 => 2,
+            IrType::I32 | IrType::Float => 4,
+            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+            IrType::Array(n, elem) => (*n as u32) * Self::ir_size_bytes(elem),
+            _ => 4,
+        }
+    }
+
     /// IR type for a struct field → FixedString becomes [N x i8] instead of ptr
     fn ir_type_for_field(pb_type: &PbType) -> IrType {
         match pb_type {
@@ -1296,6 +1308,22 @@ impl Compiler {
             "pb_array_sort",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_console_set_title", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_console_get_title", &IrType::Ptr, &[], false);
+        self.module.declare_function(
+            "pb_type_set",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_type_set_str",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
             false,
         );
         self.module
@@ -2792,9 +2820,20 @@ impl Compiler {
             }
             Expr::TypeMember(_, _) => {
                 let (field_ptr, field_pb) = self.compile_lvalue_ptr(fb, &assign.target)?;
-                let field_ir = Self::ir_type_for(&field_pb);
-                let converted = self.convert_value(fb, &value, &field_ir, &field_pb);
-                fb.store(&converted, &field_ptr);
+                // FixedString TYPE fields: buffer is inline [N x i8] 鈫?use strncpy,
+                // never store a pointer into the buffer.
+                if let PbType::FixedString(n) = &field_pb {
+                    let src = self.compile_expr(fb, &assign.value)?;
+                    let size = fb.const_i32((*n as i32) - 1);
+                    fb.call_void("strncpy", &[field_ptr.clone(), src, size]);
+                    let term_idx = fb.const_i32((*n as i32) - 1);
+                    let term_ptr = fb.gep_byte(&field_ptr, &term_idx);
+                    fb.store(&Val::new("0".to_string(), IrType::I8), &term_ptr);
+                } else {
+                    let field_ir = Self::ir_type_for(&field_pb);
+                    let converted = self.convert_value(fb, &value, &field_ir, &field_pb);
+                    fb.store(&converted, &field_ptr);
+                }
             }
             _ => {}
         }
@@ -3069,6 +3108,40 @@ impl Compiler {
         }
 
         // Scalar DIM
+        // STATIC: allocate in module globals so the value persists across calls
+        if dim.scope == DimScope::Static {
+            let global_name = match &self.current_fn_name {
+                Some(fn_name) => format!("__static_{}_{}", fn_name, name),
+                None => format!("__static_{}", name),
+            };
+            if let PbType::FixedString(n) = &dim.pb_type {
+                let buf_ir = IrType::Array(*n, Box::new(IrType::I8));
+                self.module
+                    .add_global(&global_name, &buf_ir, "zeroinitializer");
+                self.symbols.insert_local(
+                    name,
+                    format!("@{}", global_name),
+                    IrType::Ptr,
+                    dim.pb_type.clone(),
+                );
+                return Ok(());
+            }
+            let ir_type = Self::ir_type_for(&dim.pb_type);
+            if Self::is_string_pb(&dim.pb_type) {
+                self.module
+                    .add_global(&global_name, &ir_type, &self.empty_string_name.clone());
+            } else {
+                self.module
+                    .add_global(&global_name, &ir_type, &ir_type.zero_literal());
+            }
+            self.symbols.insert_local(
+                name,
+                format!("@{}", global_name),
+                ir_type,
+                dim.pb_type.clone(),
+            );
+            return Ok(());
+        }
         // FixedString(N) / ASCIIZ*N: allocate [N x i8] buffer on stack
         if let PbType::FixedString(n) = &dim.pb_type {
             let buf_ir = IrType::Array(*n, Box::new(IrType::I8));
@@ -3592,6 +3665,88 @@ impl Compiler {
                             fn_name,
                             &[dbase, sbase, fb.const_i32(elem_size), fb.const_i64(total)],
                         );
+                    }
+                }
+                return Ok(());
+            }
+            "ARRAY ASSIGN" => {
+                // ARRAY ASSIGN target() = source() 鈥?copy source elements into target
+                if let (Some(Expr::FunctionCall(tn, _)), Some(Expr::FunctionCall(sn, _))) =
+                    (call.args.first(), call.args.get(1))
+                {
+                    let tname = normalize_name(tn);
+                    let sname = normalize_name(sn);
+                    let t_info = self.symbols.lookup_array(&tname).cloned();
+                    let s_info = self.symbols.lookup_array(&sname).cloned();
+                    if let (Some(ti), Some(si)) = (t_info, s_info) {
+                        let tbase = Val::new(ti.ptr_name.clone(), IrType::Ptr);
+                        let sbase = Val::new(si.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &ti.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let total = ti.total_elements.min(si.total_elements) as i64;
+                        fb.call_void(
+                            "pb_array_copy",
+                            &[tbase, sbase, fb.const_i32(elem_size), fb.const_i64(total)],
+                        );
+                    }
+                }
+                return Ok(());
+            }
+            "WINDOW SET TEXT" => {
+                // WINDOW SET TEXT hwnd, text$ 鈥?console title (hwnd ignored)
+                if let Some(text) = call.args.get(1) {
+                    let tv = self.compile_expr(fb, text)?;
+                    fb.call_void("pb_console_set_title", std::slice::from_ref(&tv));
+                }
+                return Ok(());
+            }
+            "WINDOW GET TEXT" => {
+                // WINDOW GET TEXT hwnd TO s$ 鈥?console title (hwnd ignored)
+                if let Some(target) = call.args.get(1) {
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
+                        let title = fb.call(&IrType::Ptr, "pb_console_get_title", &[]);
+                        fb.store(&title, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TYPE SET" => {
+                // TYPE SET dest = src : copy bytes into a TYPE variable.
+                // src may be another TYPE variable or a STRING.
+                if let (Some(dest_expr), Some(src_expr)) = (call.args.first(), call.args.get(1)) {
+                    if let Some((dest_ptr, _, PbType::UserDefined(type_name))) =
+                        self.lvalue_ptr(fb, dest_expr)
+                    {
+                        let norm = normalize_name(&type_name);
+                        let size = if let Some(layout) = self.type_layouts.get(&norm) {
+                            layout
+                                .fields
+                                .iter()
+                                .map(|f| Self::ir_size_bytes(&f.ir_type))
+                                .sum::<u32>() as i32
+                        } else {
+                            0
+                        };
+                        if size > 0 {
+                            // src is another TYPE variable -> raw memcpy
+                            if let Some((src_ptr, _, src_pb)) = self.lvalue_ptr(fb, src_expr) {
+                                if matches!(src_pb, PbType::UserDefined(_)) {
+                                    fb.call_void(
+                                        "pb_type_set",
+                                        &[dest_ptr.clone(), src_ptr, fb.const_i32(size)],
+                                    );
+                                    return Ok(());
+                                }
+                            }
+                            // otherwise treat src as a STRING (payload pointer)
+                            let sv = self.compile_expr(fb, src_expr)?;
+                            fb.call_void("pb_type_set_str", &[dest_ptr, sv, fb.const_i32(size)]);
+                        }
                     }
                 }
                 return Ok(());
