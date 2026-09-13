@@ -6,15 +6,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-13 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-12 (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 179 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 184 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 122 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 117 | Documented upstream, no codegen evidence yet |
 
 ## ✅ Implemented (181)
 
@@ -201,6 +201,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `WINDOW SET` | STATEMENT | PB/Win only | SetConsoleTitleA console title; hwnd ignored (batch 23) |
 | `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
 | `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
+| `ON ERROR` | STATEMENT | PB/Win + PB/CC | run-time error trap: GOTO label / GOTO 0 / RESUME NEXT (batch 25) |
+| `REGISTER` | STATEMENT | PB/Win + PB/CC | optimization hint, accepted as LOCAL (batch 25) |
+| `RESUME` | STATEMENT | PB/Win + PB/CC | RESUME / RESUME NEXT / RESUME FLUSH / RESUME label (batch 25) |
 | `TYPE SET` | STATEMENT | PB/Win + PB/CC | pb_type_set / pb_type_set_str memcpy fill (batch 23) |
 | `DIR FUNCTION AND` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
@@ -451,17 +454,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
 | PREFIX | BLOCK | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
 | REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
-| REGISTER | STATEMENT | PB/Win + PB/CC | Established |
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
 

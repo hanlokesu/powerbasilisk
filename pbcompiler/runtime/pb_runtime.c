@@ -920,6 +920,10 @@ void pb_setattr(const char* path, int attr) {
 /* ===== ERR system variable (PB-compatible error code) ===== */
 int pb_err = 0;   /* readable from PB source as ERR; set by failing MKDIR/RMDIR/CHDIR/KILL */
 
+/* ===== ON ERROR GOTO runtime state ===== */
+int pb_err_stmt_id = 0;  /* id of the statement that triggered the error */
+int pb_err_active = 0;   /* 1 while executing the ON ERROR handler (trapping suspended) */
+
 /* ===== System builtins ===== */
 
 #ifdef _WIN32

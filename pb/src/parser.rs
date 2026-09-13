@@ -1335,6 +1335,17 @@ impl Parser {
                     ))
                 }
             }
+            // REGISTER var [AS type] [, ...] 鈥?optimization hint; accepted as LOCAL
+            Token::Register => {
+                let dims = self.parse_local_decl()?;
+                if dims.len() == 1 {
+                    Ok(Statement::Dim(dims.into_iter().next().unwrap()))
+                } else {
+                    Ok(Statement::Block(
+                        dims.into_iter().map(Statement::Dim).collect(),
+                    ))
+                }
+            }
             Token::Dim => {
                 let dims = self.parse_dim_statement(DimScope::Dim)?;
                 if dims.len() == 1 {
@@ -1420,6 +1431,12 @@ impl Parser {
                         };
                         self.consume_to_eol();
                         return Ok(Statement::OnErrorGoto(label));
+                    }
+                    // ON ERROR RESUME NEXT 鈥?disable error trapping
+                    if matches!(self.peek(), Token::Resume) || self.peek_plain_upper() == "RESUME" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::OnErrorGotoZero);
                     }
                 }
                 // ON expr GOTO label1, label2, ... / ON expr GOSUB ...
@@ -1516,8 +1533,34 @@ impl Parser {
             Token::Resume => {
                 self.advance();
                 // RESUME NEXT
+                if matches!(self.peek(), Token::Next) || self.peek_plain_upper() == "NEXT" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::ResumeNext);
+                }
+                // RESUME FLUSH
+                if self.peek_plain_upper() == "FLUSH" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::ResumeFlush);
+                }
+                // RESUME label / line_number
+                match self.peek().clone() {
+                    Token::Identifier(s) => {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::ResumeLabel(s));
+                    }
+                    Token::IntegerLiteral(n) => {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::ResumeLabel(n.to_string()));
+                    }
+                    _ => {}
+                }
+                // bare RESUME: re-execute the statement that errored
                 self.consume_to_eol();
-                Ok(Statement::ResumeNext)
+                Ok(Statement::Resume)
             }
             Token::GoSub => {
                 self.advance();

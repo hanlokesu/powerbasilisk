@@ -318,7 +318,7 @@ pub struct FunctionBuilder {
     /// Basic block label counter
     label_counter: usize,
     /// Current basic block label (for tracking)
-    current_label: String,
+    pub current_label: String,
     /// Whether the current block has been terminated
     terminated: bool,
 }

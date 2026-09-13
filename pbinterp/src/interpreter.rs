@@ -516,6 +516,10 @@ impl Interpreter {
                 // RESUME NEXT after error handler — just continue
                 Ok(Flow::Normal)
             }
+            Statement::Resume | Statement::ResumeFlush | Statement::ResumeLabel(_) => {
+                // RESUME / RESUME FLUSH / RESUME <label> — interp continues in place
+                Ok(Flow::Normal)
+            }
             Statement::Block(stmts) => {
                 for s in stmts {
                     match self.exec_statement(s)? {

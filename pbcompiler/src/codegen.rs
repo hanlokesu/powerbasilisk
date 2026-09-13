@@ -815,6 +815,12 @@ struct Compiler {
     // GOSUB/RETURN context for the current function being compiled
     gosub_context: Option<GosubContext>,
 
+    // ON ERROR GOTO context for the current function
+    // handler block name (None = error trapping disabled)
+    onerror_handler: Option<String>,
+    // (stmt_start_block, stmt_next_block) per checked call statement
+    onerror_checkpoints: Vec<(String, String)>,
+
     // Session struct mode: wrap all globals in a single struct
     session_mode: bool,
     session_fields: Vec<SessionFieldInfo>,
@@ -838,6 +844,14 @@ struct SessionFieldInfo {
     elem_ir_type: Option<IrType>,        // for arrays: element type
     array_dims: Option<Vec<(i64, i64)>>, // for arrays: (lower_bound, count) per dim
     total_elements: Option<usize>,       // for arrays: total element count
+}
+
+/// Which target a RESUME statement jumps to.
+enum ResumeMode {
+    /// Re-execute the statement that errored
+    Retry,
+    /// Continue with the statement after the one that errored
+    Next,
 }
 
 /// Tracks GOSUB/RETURN info for one function's compilation.
@@ -948,6 +962,8 @@ impl Compiler {
             empty_string_name: String::new(),
             type_layouts: HashMap::new(),
             gosub_context: None,
+            onerror_handler: None,
+            onerror_checkpoints: Vec::new(),
             session_mode: false,
             session_fields: Vec::new(),
             debug_mode: false,
@@ -1893,6 +1909,11 @@ impl Compiler {
             .declare_dllimport("Beep", &IrType::Void, &[IrType::I32, IrType::I32]);
         // PB-compatible ERR system variable (provided by pb_runtime.c)
         self.module.declare_external_global("pb_err", &IrType::I32);
+        // ON ERROR GOTO runtime state (provided by pb_runtime.c)
+        self.module
+            .declare_external_global("pb_err_stmt_id", &IrType::I32);
+        self.module
+            .declare_external_global("pb_err_active", &IrType::I32);
         self.module
             .declare_dllimport("GetCommandLineA", &IrType::Ptr, &[]);
         self.module
@@ -2408,6 +2429,8 @@ impl Compiler {
         self.current_fn_return_type = None;
         self.current_fn_retval_ptr = None;
         self.gosub_context = None;
+        self.onerror_handler = None;
+        self.onerror_checkpoints.clear();
 
         self.module.add_function_body(fb.finish());
         Ok(())
@@ -2465,6 +2488,8 @@ impl Compiler {
 
         self.current_fn_name = None;
         self.gosub_context = None;
+        self.onerror_handler = None;
+        self.onerror_checkpoints.clear();
 
         self.module.add_function_body(fb.finish());
         Ok(())
@@ -2514,6 +2539,12 @@ impl Compiler {
         for stmt in stmts {
             match stmt {
                 Statement::Label(name) => {
+                    labels.insert(name.clone());
+                }
+                Statement::OnErrorGoto(name) => {
+                    labels.insert(name.clone());
+                }
+                Statement::ResumeLabel(name) => {
                     labels.insert(name.clone());
                 }
                 Statement::GoSub(name) => {
@@ -2633,7 +2664,12 @@ impl Compiler {
 
         match stmt {
             Statement::Assign(a) => self.compile_assign(fb, a),
-            Statement::Call(c) => self.compile_call_stmt(fb, c),
+            Statement::Call(c) => {
+                self.compile_call_stmt(fb, c)?;
+                // ON ERROR GOTO: test for a run-time error after the statement
+                self.emit_error_check(fb)?;
+                Ok(())
+            }
             Statement::Data(items) => {
                 // DATA item1, item2, ... — register constants into the runtime pool
                 for item in items {
@@ -2730,8 +2766,44 @@ impl Compiler {
                 fb.call_void("pb_input_flush", &[]);
                 Ok(())
             }
-            // Stubs: statements that compile to no-ops
-            Statement::OnErrorGoto(_) | Statement::OnErrorGotoZero | Statement::ResumeNext => {
+            // ON ERROR GOTO label — enable error trapping with a handler
+            Statement::OnErrorGoto(label) => {
+                let block = self
+                    .gosub_context
+                    .as_ref()
+                    .and_then(|ctx| ctx.label_blocks.get(label).cloned())
+                    .unwrap_or_else(|| {
+                        // Safety net: labels were pre-collected, but keep the compiler
+                        // robust even if the map is somehow missing an entry.
+                        fb.next_label(&format!("label.{}", label))
+                    });
+                self.onerror_handler = Some(block);
+                Ok(())
+            }
+            // ON ERROR GOTO 0 / ON ERROR RESUME NEXT — disable error trapping
+            Statement::OnErrorGotoZero => {
+                self.onerror_handler = None;
+                Ok(())
+            }
+            // RESUME (bare) — re-execute the statement that errored
+            Statement::Resume => self.compile_resume(fb, ResumeMode::Retry),
+            // RESUME NEXT — continue after the statement that errored
+            Statement::ResumeNext => self.compile_resume(fb, ResumeMode::Next),
+            // RESUME FLUSH — continue with the next statement (no jump)
+            Statement::ResumeFlush => Ok(()),
+            // RESUME label — jump to a local label
+            Statement::ResumeLabel(label) => {
+                if let Some(block) = self
+                    .gosub_context
+                    .as_ref()
+                    .and_then(|ctx| ctx.label_blocks.get(label).cloned())
+                {
+                    fb.store(
+                        &fb.const_i32(0),
+                        &Val::new("@pb_err_active".to_string(), IrType::Ptr),
+                    );
+                    fb.br(&block);
+                }
                 Ok(())
             }
             Statement::Open(o) => self.compile_open(fb, o),
@@ -5655,6 +5727,76 @@ impl Compiler {
     }
 
     // ========== GOSUB / RETURN / GOTO / LABEL codegen ==========
+
+    /// After a call statement, if error trapping is enabled, test the runtime
+    /// error flag and branch to the ON ERROR handler when an error occurred.
+    fn emit_error_check(&mut self, fb: &mut FunctionBuilder) -> PbResult<()> {
+        let handler = match &self.onerror_handler {
+            Some(h) => h.clone(),
+            None => return Ok(()),
+        };
+        if fb.is_terminated() {
+            return Ok(());
+        }
+        let stmt_start = fb.current_label.clone();
+        let cont = fb.next_label("err.cont");
+        let id = self.onerror_checkpoints.len() as i32;
+
+        // err != 0 && !active  ->  jump handler (record statement id, set active)
+        // The stores happen only on the error path, so handler-internal calls
+        // can never clobber the recorded statement id.
+        let err_ptr = Val::new("@pb_err".to_string(), IrType::Ptr);
+        let act_ptr = Val::new("@pb_err_active".to_string(), IrType::Ptr);
+        let id_ptr = Val::new("@pb_err_stmt_id".to_string(), IrType::Ptr);
+        let err = fb.load(&IrType::I32, &err_ptr);
+        let errnz = fb.icmp("ne", &err, &fb.const_i32(0));
+        let act = fb.load(&IrType::I32, &act_ptr);
+        let actz = fb.icmp("eq", &act, &fb.const_i32(0));
+        let fire = fb.and(&errnz, &actz);
+        let err_setup = fb.next_label("err.setup");
+        fb.condbr(&fire, &err_setup, &cont);
+        fb.label(&err_setup);
+        fb.store(&fb.const_i32(id), &id_ptr);
+        fb.store(&fb.const_i32(1), &act_ptr);
+        fb.br(&handler);
+        fb.label(&cont);
+        self.onerror_checkpoints.push((stmt_start, cont));
+        Ok(())
+    }
+
+    /// Compile a RESUME statement: clear the "in handler" flag and jump back
+    /// to the statement that errored (Retry) or the one after it (Next).
+    fn compile_resume(&mut self, fb: &mut FunctionBuilder, mode: ResumeMode) -> PbResult<()> {
+        if fb.is_terminated() {
+            return Ok(());
+        }
+        // Clear the runtime error flag so the resumed statements don't re-trigger
+        fb.store(
+            &fb.const_i32(0),
+            &Val::new("@pb_err".to_string(), IrType::Ptr),
+        );
+        fb.store(
+            &fb.const_i32(0),
+            &Val::new("@pb_err_active".to_string(), IrType::Ptr),
+        );
+        let id = fb.load(
+            &IrType::I32,
+            &Val::new("@pb_err_stmt_id".to_string(), IrType::Ptr),
+        );
+        let default = fb.next_label("resume.default");
+        let cases: Vec<(i32, String)> = self
+            .onerror_checkpoints
+            .iter()
+            .enumerate()
+            .map(|(i, (start, next))| match mode {
+                ResumeMode::Retry => (i as i32, start.clone()),
+                ResumeMode::Next => (i as i32, next.clone()),
+            })
+            .collect();
+        fb.switch(&id, &default, &cases);
+        fb.label(&default);
+        Ok(())
+    }
 
     fn compile_label(&mut self, fb: &mut FunctionBuilder, name: &str) -> PbResult<()> {
         // If name matches a known SUB/FUNCTION, it was misparsed → emit a call instead

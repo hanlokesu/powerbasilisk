@@ -242,11 +242,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **181** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **120** documented upstream with no codegen evidence yet.
-> (2026-09-13: +2 official keywords from batch 24 — DIR function/statement
-> family (FindFirstFileA) and LET with whole TYPEs; GET$/PUT$ round-trip
-> confirmed against the official docs.)
+> Summary: **184** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **117** documented upstream with no codegen evidence yet.
+> (2026-09-12: +3 official keywords from batch 25 — ON ERROR run-time
+> trapping, RESUME (all four forms), REGISTER-as-LOCAL.)
 > (Earlier: +5 official keywords from batch 23 — real STATIC semantics,
 > ARRAY ASSIGN, TYPE SET, WINDOW SET/GET TEXT console-title bridge, plus a
 > TYPE fixed-string field assignment bug fix; +16 official keywords from batch 21 — COMM serial port
@@ -321,6 +320,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `DESKTOP GET LOC TO x&, y&` | ✅ | work-area origin (same call) |
 | `DESKTOP GET PPI TO x&, y&` | ✅ | `GetDeviceCaps` LOGPIXELSX/Y |
 | `LEN(str)` fix | ✅ | BSTR byte-length prefix (`pb_str_len`) — correct length for strings containing NUL bytes |
+| `ON ERROR GOTO / GOTO 0 / RESUME NEXT` | ✅ | per-function run-time error trap + disarm (batch 25) |
+| `RESUME / RESUME NEXT / RESUME FLUSH / RESUME label` | ✅ | four continuation forms after error handler (batch 25) |
+| `REGISTER` | ✅ | optimization hint, accepted as LOCAL (batch 25) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -377,6 +379,34 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.19 (2026-09-12) — Batch 25: ON ERROR / RESUME / REGISTER (3 statements)
+
+Three more *Not implemented* items moved to *Implemented*
+(coverage: **184 implemented / 117 not implemented / 202 tier-3 DDT**):
+
+- **ON ERROR GOTO** — run-time error trapping:
+  - ON ERROR GOTO {label|line} arms a per-function handler; the trap
+    fires when a statement sets a run-time error (ERR <> 0), records the
+    failing statement, and jumps to the handler.
+  - ON ERROR GOTO 0 / ON ERROR RESUME NEXT disarm the trap.
+  - Trapping is suspended while the handler runs, so handler code can call
+    statements without re-triggering.
+- **RESUME** — four continuation forms (all verified):
+  - RESUME re-executes the statement that failed.
+  - RESUME NEXT continues on the statement after the failed one.
+  - RESUME FLUSH does not transfer control — execution simply continues
+    on the line after the RESUME FLUSH (per the official docs).
+  - RESUME label continues at a local label.
+- **REGISTER** — accepted as an optimization hint with LOCAL
+  semantics (declarations and typing work exactly like LOCAL).
+- Error checking covers the runtime-call statements that set ERR
+  (MKDIR / RMDIR / KILL / ...). As in PB, numeric errors (divide-by-zero,
+  overflow) are not trapped and array bounds checks need #DEBUG ERROR ON.
+- Verified in examples/batch25_test.bas (6 scenarios: REGISTER typing,
+  GOTO+RESUME NEXT, RESUME retry, RESUME label, GOTO 0 disarm,
+  RESUME FLUSH, no-error no-trap). Official 14 tests: 14/14 pass;
+  fmt + clippy clean.
+
 ### v0.1.18 (2026-09-13) — Batch 24: DIR function/statement family + LET with TYPEs (2 statements)
 
 Two more *Not implemented* items moved to *Implemented*
