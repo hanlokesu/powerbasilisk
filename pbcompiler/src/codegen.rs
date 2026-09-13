@@ -6320,6 +6320,7 @@ impl Compiler {
             "CHR" => Some(self.builtin_chr(fb, args)),
             "ASC" => Some(self.builtin_asc(fb, args)),
             "STR" => Some(self.builtin_str(fb, args)),
+            "HEX" => Some(self.builtin_hex(fb, args)),
             "VAL" => Some(self.builtin_val(fb, args)),
             "LEFT" => Some(self.builtin_left(fb, args)),
             "RIGHT" => Some(self.builtin_right(fb, args)),
@@ -6998,6 +6999,44 @@ impl Compiler {
             "snprintf",
             &[buf.clone(), buf_size, fmt_ptr, f64_val],
             &[IrType::Ptr, IrType::I32, IrType::Ptr],
+        );
+        let len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
+        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf.clone(), len]);
+        fb.call_void("free", &[buf]);
+        Ok(bstr)
+    }
+
+    /// HEX$(n [, digits]) — hexadecimal string, PB semantics:
+    /// LONG/DWORD values are treated as unsigned 32-bit (so HEX$(-1) = "FFFFFFFF"),
+    /// QUAD values as unsigned 64-bit. Optional digits sets a minimum zero-padded width.
+    fn builtin_hex(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        // 32-bit (and smaller) types: zero-extend so negative LONGs format as u32 hex.
+        let v64 = if val.ty == IrType::I32 || val.ty == IrType::I16 || val.ty == IrType::I8 {
+            fb.zext(&val, &IrType::I64)
+        } else {
+            self.to_i64(fb, &val)
+        };
+        let buf_size = fb.const_i32(32);
+        let buf = fb.call(&IrType::Ptr, "malloc", std::slice::from_ref(&buf_size));
+        let (fmt_name, _) = self.module.add_string_constant("%0*llX");
+        let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+        let width = if args.len() >= 2 {
+            self.compile_expr(fb, &args[1])?
+        } else {
+            fb.const_i32(0)
+        };
+        fb.call_variadic_with_sig(
+            &IrType::I32,
+            "snprintf",
+            &[buf.clone(), buf_size, fmt_ptr, width, v64],
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I64,
+            ],
         );
         let len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
         let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf.clone(), len]);
