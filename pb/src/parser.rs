@@ -2358,6 +2358,14 @@ impl Parser {
                         line,
                     }));
                 }
+                // COMM serial port statements
+                if name_upper == "COMM" {
+                    return self.parse_comm_statement(line);
+                }
+                // THREAD statements
+                if name_upper == "THREAD" {
+                    return self.parse_thread_statement(line);
+                }
                 if matches!(
                     name_upper.as_str(),
                     "DIALOG"
@@ -2919,6 +2927,288 @@ impl Parser {
             }
         }
         Ok(patterns)
+    }
+
+    fn parse_comm_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume COMM
+        let op = match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Open => "OPEN".to_string(),
+            Token::Close => "CLOSE".to_string(),
+            Token::Print => "PRINT".to_string(),
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop("COMM".to_string(), line));
+            }
+        };
+        self.advance(); // consume op
+        match op.as_str() {
+            "OPEN" => {
+                // COMM OPEN "COM1:" AS #1 [, BAUD n] [, PARITY p$] [, DATA n] [, STOP n]
+                let port = self.parse_expression()?;
+                let mut args = vec![port];
+                if matches!(self.peek(), Token::As) {
+                    self.advance();
+                    if self.peek() == &Token::Hash {
+                        self.advance();
+                    }
+                    let ch = self.parse_expression()?;
+                    args.push(ch);
+                }
+                let mut baud = Expr::IntegerLit(0);
+                let mut parity = Expr::StringLit(String::new());
+                let mut data = Expr::IntegerLit(0);
+                let mut stop = Expr::IntegerLit(0);
+                while self.peek() == &Token::Comma {
+                    self.advance();
+                    if let Token::Identifier(w) = self.peek() {
+                        let opt = w.to_uppercase();
+                        self.advance();
+                        let v = self.parse_expression()?;
+                        match opt.as_str() {
+                            "BAUD" => baud = v,
+                            "PARITY" => parity = v,
+                            "DATA" => data = v,
+                            "STOP" => stop = v,
+                            _ => {}
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                self.consume_to_eol();
+                args.push(baud);
+                args.push(parity);
+                args.push(data);
+                args.push(stop);
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM OPEN".to_string(),
+                    args,
+                    line,
+                }))
+            }
+            "LINE" => {
+                // COMM LINE INPUT [#]f, var$
+                if let Token::Input = self.peek() {
+                    self.advance();
+                    if self.peek() == &Token::Hash {
+                        self.advance();
+                    }
+                    let f = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let var = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "COMM LINE INPUT".to_string(),
+                        args: vec![f, var],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("COMM LINE".to_string(), line))
+            }
+            "PRINT" => {
+                // COMM PRINT [#]f, exprlist
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let mut args = vec![self.parse_expression()?];
+                while self.peek() == &Token::Comma {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM PRINT".to_string(),
+                    args,
+                    line,
+                }))
+            }
+            "RECV" => {
+                // COMM RECV [#]f, bytes&, var$
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let bytes = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let var = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM RECV".to_string(),
+                    args: vec![f, bytes, var],
+                    line,
+                }))
+            }
+            "RESET" => {
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM RESET".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            "SEND" => {
+                // COMM SEND [#]f, string$
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let s = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM SEND".to_string(),
+                    args: vec![f, s],
+                    line,
+                }))
+            }
+            "SET" => {
+                // COMM SET [#]f, option ON|OFF  (option: DTR/RTS/BREAK)
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let opt = self.parse_expression()?;
+                let onoff = if matches!(self.peek(), Token::Identifier(w) if w.eq_ignore_ascii_case("ON"))
+                {
+                    self.advance();
+                    Expr::IntegerLit(1)
+                } else if matches!(self.peek(), Token::Identifier(w) if w.eq_ignore_ascii_case("OFF"))
+                {
+                    self.advance();
+                    Expr::IntegerLit(0)
+                } else {
+                    Expr::IntegerLit(0)
+                };
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM SET".to_string(),
+                    args: vec![f, opt, onoff],
+                    line,
+                }))
+            }
+            "TIMEOUT" => {
+                // COMM TIMEOUT [#]f, ms&
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                let f = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let ms = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM TIMEOUT".to_string(),
+                    args: vec![f, ms],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop(format!("COMM {op}"), line))
+            }
+        }
+    }
+
+    fn parse_thread_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume THREAD
+        let op = match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Close => "CLOSE".to_string(),
+            Token::Resume => "RESUME".to_string(),
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop("THREAD".to_string(), line));
+            }
+        };
+        self.advance(); // consume op
+        match op.as_str() {
+            "CREATE" => {
+                // THREAD CREATE func [TO id&]  /  THREAD CREATE func(args) TO id&
+                let func = self.parse_primary()?;
+                let mut args = vec![func];
+                if matches!(self.peek(), Token::To) {
+                    self.advance();
+                    let id = self.parse_expression()?;
+                    args.push(id);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "THREAD CREATE".to_string(),
+                    args,
+                    line,
+                }))
+            }
+            "CLOSE" | "SUSPEND" | "RESUME" => {
+                let id = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("THREAD {op}"),
+                    args: vec![id],
+                    line,
+                }))
+            }
+            "STATUS" => {
+                // THREAD STATUS id& TO st&
+                let id = self.parse_expression()?;
+                let mut args = vec![id];
+                if matches!(self.peek(), Token::To) {
+                    self.advance();
+                    let st = self.parse_expression()?;
+                    args.push(st);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "THREAD STATUS".to_string(),
+                    args,
+                    line,
+                }))
+            }
+            "GET" => {
+                // THREAD GET PRIORITY id& TO p&
+                let sub = match self.peek() {
+                    Token::Identifier(w) => w.to_uppercase(),
+                    _ => String::new(),
+                };
+                self.advance();
+                let id = self.parse_expression()?;
+                let mut args = vec![id];
+                if matches!(self.peek(), Token::To) {
+                    self.advance();
+                    let p = self.parse_expression()?;
+                    args.push(p);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("THREAD GET {sub}"),
+                    args,
+                    line,
+                }))
+            }
+            "SET" => {
+                // THREAD SET PRIORITY id&, p&
+                let sub = match self.peek() {
+                    Token::Identifier(w) => w.to_uppercase(),
+                    _ => String::new(),
+                };
+                self.advance();
+                let id = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let p = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("THREAD SET {sub}"),
+                    args: vec![id, p],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop(format!("THREAD {op}"), line))
+            }
+        }
     }
 
     fn parse_clipboard_statement(&mut self, line: usize) -> PbResult<Statement> {

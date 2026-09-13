@@ -67,6 +67,25 @@ __declspec(dllimport) int __stdcall gethostname(char* name, int namelen);
 __declspec(dllimport) int __stdcall WSAStartup(unsigned short wVersionRequested, void* lpWSAData);
 __declspec(dllimport) int __stdcall WSACleanup(void);
 typedef unsigned long DWORD;
+/* COMM serial + THREAD (batch 21) */
+typedef void* HANDLE;
+#define PB_INVALID_HANDLE ((void*)(long long)-1)
+__declspec(dllimport) void* __stdcall CreateFileA(const char* lpFileName, unsigned long dwDesiredAccess, unsigned long dwShareMode, void* lpSecurityAttributes, unsigned long dwCreationDisposition, unsigned long dwFlagsAndAttributes, void* hTemplateFile);
+__declspec(dllimport) int __stdcall GetCommState(void* hFile, void* lpDCB);
+__declspec(dllimport) int __stdcall SetCommState(void* hFile, void* lpDCB);
+__declspec(dllimport) int __stdcall SetCommTimeouts(void* hFile, void* lpCommTimeouts);
+__declspec(dllimport) int __stdcall ReadFile(void* hFile, void* lpBuffer, unsigned long nNumberOfBytesToRead, unsigned long* lpNumberOfBytesRead, void* lpOverlapped);
+__declspec(dllimport) int __stdcall WriteFile(void* hFile, const void* lpBuffer, unsigned long nNumberOfBytesToWrite, unsigned long* lpNumberOfBytesWritten, void* lpOverlapped);
+__declspec(dllimport) int __stdcall CloseHandle(void* hObject);
+__declspec(dllimport) int __stdcall FlushFileBuffers(void* hFile);
+__declspec(dllimport) int __stdcall EscapeCommFunction(void* hFile, unsigned long dwFunc);
+__declspec(dllimport) void* __stdcall CreateThread(void* lpThreadAttributes, unsigned long dwStackSize, void* lpStartAddress, void* lpParameter, unsigned long dwCreationFlags, unsigned long* lpThreadId);
+__declspec(dllimport) unsigned long __stdcall SuspendThread(void* hThread);
+__declspec(dllimport) unsigned long __stdcall ResumeThread(void* hThread);
+__declspec(dllimport) int __stdcall TerminateThread(void* hThread, unsigned long dwExitCode);
+__declspec(dllimport) int __stdcall GetExitCodeThread(void* hThread, unsigned long* lpExitCode);
+__declspec(dllimport) int __stdcall GetThreadPriority(void* hThread);
+__declspec(dllimport) int __stdcall SetThreadPriority(void* hThread, int nPriority);
 #endif
 
 /* ===== Debug/crash reporting ===== */
@@ -2058,3 +2077,293 @@ int pb_udp_close(int f) {
 }
 
 
+
+/* ============================================================
+ * COMM serial port statements (batch 21)
+ * ============================================================ */
+typedef struct _pb_dcb {
+    unsigned long DCBlength;
+    unsigned long BaudRate;
+    unsigned long fBits;
+    unsigned short wReserved;
+    unsigned short XonLim;
+    unsigned short XoffLim;
+    unsigned char ByteSize;
+    unsigned char Parity;
+    unsigned char StopBits;
+    char XonChar;
+    char XoffChar;
+    char ErrorChar;
+    char EofChar;
+    char EvtChar;
+    unsigned short wReserved1;
+} pb_dcb;
+
+typedef struct _pb_commtimeouts {
+    unsigned long ReadIntervalTimeout;
+    unsigned long ReadTotalTimeoutMultiplier;
+    unsigned long ReadTotalTimeoutConstant;
+    unsigned long WriteTotalTimeoutMultiplier;
+    unsigned long WriteTotalTimeoutConstant;
+} pb_commtimeouts;
+
+#define PB_MAXDWORD 0xFFFFFFFFUL
+#define PB_SETDTR 5
+#define PB_CLRDTR 6
+#define PB_SETRTS 3
+#define PB_CLRRTS 4
+#define PB_SETBREAK 8
+#define PB_CLRBREAK 9
+#define PB_GENERIC_READ_WRITE 0xC0000000UL
+#define PB_OPEN_EXISTING 3UL
+
+static HANDLE pb_comm_h[256];
+static int pb_comm_ok[256];
+
+int pb_comm_open(const char* port, int channel, int baud, const char* parity, int data, int stop) {
+    HANDLE h;
+    pb_dcb dcb;
+    pb_commtimeouts to;
+    if (channel < 0 || channel > 255 || port == NULL) return -1;
+    if (pb_comm_ok[channel]) {
+        CloseHandle(pb_comm_h[channel]);
+        pb_comm_ok[channel] = 0;
+        pb_comm_h[channel] = NULL;
+    }
+    h = CreateFileA(port, PB_GENERIC_READ_WRITE, 0, NULL, PB_OPEN_EXISTING, 0, NULL);
+    if (h == PB_INVALID_HANDLE) {
+        pb_comm_h[channel] = NULL;
+        pb_comm_ok[channel] = 0;
+        return -1;
+    }
+    memset(&dcb, 0, sizeof(dcb));
+    dcb.DCBlength = sizeof(dcb);
+    GetCommState(h, &dcb);
+    dcb.BaudRate = (baud > 0) ? (unsigned long)baud : 9600UL;
+    dcb.ByteSize = (unsigned char)((data > 0) ? data : 8);
+    dcb.StopBits = (unsigned char)((stop > 1) ? 2 : 1);
+    dcb.Parity = (unsigned char)((parity && parity[0] == 'E') ? 2 : ((parity && parity[0] == 'O') ? 1 : 0));
+    dcb.fBits = 1; /* fBinary = 1 */
+    SetCommState(h, &dcb);
+    memset(&to, 0, sizeof(to));
+    to.ReadIntervalTimeout = PB_MAXDWORD;
+    to.ReadTotalTimeoutMultiplier = 0;
+    to.ReadTotalTimeoutConstant = 0;
+    SetCommTimeouts(h, &to);
+    pb_comm_h[channel] = h;
+    pb_comm_ok[channel] = 1;
+    return 0;
+}
+
+int pb_comm_close(int channel) {
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) return -1;
+    CloseHandle(pb_comm_h[channel]);
+    pb_comm_h[channel] = NULL;
+    pb_comm_ok[channel] = 0;
+    return 0;
+}
+
+void pb_comm_reset(void) {
+    int i;
+    for (i = 0; i < 256; i++) {
+        if (pb_comm_ok[i]) pb_comm_close(i);
+    }
+}
+
+int pb_comm_send(int channel, const char* s) {
+    unsigned long written = 0;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || s == NULL) return -1;
+    WriteFile(pb_comm_h[channel], s, (unsigned long)strlen(s), &written, NULL);
+    FlushFileBuffers(pb_comm_h[channel]);
+    return (int)written;
+}
+
+int pb_comm_recv(int channel, long long bytes, char** dest) {
+    unsigned long got = 0;
+    char* buf;
+    long long n = (bytes > 0) ? bytes : 1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) return -1;
+    buf = (char*)malloc((size_t)n + 1);
+    if (buf == NULL) return -1;
+    if (!ReadFile(pb_comm_h[channel], buf, (unsigned long)n, &got, NULL)) {
+        free(buf);
+        return -1;
+    }
+    buf[got] = '\0';
+    {
+        char* nb = pb_bstr_alloc(buf, (int)got);
+        if (*dest) free(*dest);
+        *dest = nb;
+    }
+    free(buf);
+    return (int)got;
+}
+
+int pb_comm_line_input(int channel, char** dest) {
+    int n = 0, cap = 64, c;
+    char* buf;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) return -1;
+    buf = (char*)malloc((size_t)cap);
+    if (buf == NULL) return -1;
+    while (1) {
+        unsigned long got = 0;
+        char ch;
+        if (!ReadFile(pb_comm_h[channel], &ch, 1, &got, NULL) || got == 0) break;
+        c = (unsigned char)ch;
+        if (c == '\r') continue;
+        if (c == '\n') break;
+        if (n + 1 >= cap) {
+            cap *= 2;
+            buf = (char*)realloc(buf, (size_t)cap);
+            if (buf == NULL) return -1;
+        }
+        buf[n++] = (char)c;
+    }
+    buf[n] = '\0';
+    {
+        char* nb = pb_bstr_alloc(buf, n);
+        if (*dest) free(*dest);
+        *dest = nb;
+    }
+    free(buf);
+    return n;
+}
+
+void pb_comm_print_str(int channel, const char* s) {
+    if (channel >= 0 && channel <= 255 && pb_comm_ok[channel] && s != NULL) {
+        unsigned long written = 0;
+        WriteFile(pb_comm_h[channel], s, (unsigned long)strlen(s), &written, NULL);
+    }
+}
+
+void pb_comm_print_int(int channel, long long v) {
+    char buf[32];
+    snprintf(buf, sizeof(buf), "%lld", v);
+    pb_comm_print_str(channel, buf);
+}
+
+void pb_comm_print_dbl(int channel, double v) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%g", v);
+    pb_comm_print_str(channel, buf);
+}
+
+int pb_comm_set(int channel, const char* option, int on) {
+    unsigned long fn;
+    char opt[8];
+    int i = 0;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || option == NULL) return -1;
+    while (option[i] && i < 7) {
+        opt[i] = (char)toupper((unsigned char)option[i]);
+        i++;
+    }
+    opt[i] = '\0';
+    if (strcmp(opt, "DTR") == 0) fn = on ? PB_SETDTR : PB_CLRDTR;
+    else if (strcmp(opt, "RTS") == 0) fn = on ? PB_SETRTS : PB_CLRRTS;
+    else if (strcmp(opt, "BREAK") == 0) fn = on ? PB_SETBREAK : PB_CLRBREAK;
+    else return -1;
+    return EscapeCommFunction(pb_comm_h[channel], fn) ? 0 : -1;
+}
+
+int pb_comm_timeout(int channel, long long ms) {
+    pb_commtimeouts to;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) return -1;
+    memset(&to, 0, sizeof(to));
+    if (ms > 0) {
+        to.ReadIntervalTimeout = PB_MAXDWORD;
+        to.ReadTotalTimeoutConstant = (unsigned long)ms;
+        to.WriteTotalTimeoutConstant = (unsigned long)ms;
+    }
+    return SetCommTimeouts(pb_comm_h[channel], &to) ? 0 : -1;
+}
+
+/* ============================================================
+ * THREAD statements (batch 21)
+ *   thread id passed to PB code is a slot number (0..255),
+ *   real HANDLE is stored in pb_thr[] (same pattern as GLOBALMEM).
+ * ============================================================ */
+typedef struct _pb_thread_slot {
+    HANDLE h;
+    unsigned long tid;
+    int state; /* 0 free, 1 running, 2 suspended, 3 finished */
+} pb_thread_slot;
+
+static pb_thread_slot pb_thr[256];
+
+int pb_thread_create(void* func, unsigned long* out_id) {
+    int i;
+    unsigned long tid = 0;
+    if (func == NULL) return -1;
+#ifdef _WIN64
+    for (i = 0; i < 256; i++) {
+        if (!pb_thr[i].h) break;
+    }
+    if (i >= 256) return -1;
+    pb_thr[i].h = CreateThread(NULL, 0, (void* (__stdcall*)(void*))func, NULL, 0, &tid);
+    if (!pb_thr[i].h) return -1;
+    pb_thr[i].tid = tid;
+    pb_thr[i].state = 1;
+    if (out_id) *out_id = (unsigned long)i;
+    return 0;
+#else
+    /* 32-bit: PB functions use cdecl but CreateThread requires stdcall —
+       calling a cdecl function through a stdcall pointer corrupts the stack. */
+    if (out_id) *out_id = 0;
+    return -1;
+#endif
+}
+
+static pb_thread_slot* pb_thread_slot_of(unsigned long id) {
+    if (id >= 256) return NULL;
+    if (!pb_thr[id].h) return NULL;
+    return &pb_thr[id];
+}
+
+int pb_thread_close(unsigned long id) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    if (t == NULL) return -1;
+    TerminateThread(t->h, 0);
+    CloseHandle(t->h);
+    memset(t, 0, sizeof(*t));
+    return 0;
+}
+
+int pb_thread_suspend(unsigned long id) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    if (t == NULL) return -1;
+    if (SuspendThread(t->h) == (unsigned long)-1) return -1;
+    t->state = 2;
+    return 0;
+}
+
+int pb_thread_resume(unsigned long id) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    if (t == NULL) return -1;
+    if (ResumeThread(t->h) == (unsigned long)-1) return -1;
+    t->state = 1;
+    return 0;
+}
+
+int pb_thread_status(unsigned long id) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    unsigned long code = 0;
+    if (t == NULL) return 0;
+    GetExitCodeThread(t->h, &code);
+    if (code == 0x00000103UL) { /* STILL_ACTIVE */
+        return t->state; /* 1 running or 2 suspended */
+    }
+    t->state = 3;
+    return 3;
+}
+
+int pb_thread_get_priority(unsigned long id) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    if (t == NULL) return 0;
+    return GetThreadPriority(t->h);
+}
+
+int pb_thread_set_priority(unsigned long id, int prio) {
+    pb_thread_slot* t = pb_thread_slot_of(id);
+    if (t == NULL) return -1;
+    return SetThreadPriority(t->h, prio) ? 0 : -1;
+}

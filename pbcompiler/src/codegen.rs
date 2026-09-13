@@ -1715,6 +1715,99 @@ impl Compiler {
             &[IrType::I32, IrType::I64, IrType::I64],
             false,
         );
+        // COMM serial port (batch 21)
+        self.module.declare_function(
+            "pb_comm_open",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module
+            .declare_function("pb_comm_close", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_comm_reset", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_comm_send",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_recv",
+            &IrType::I32,
+            &[IrType::I32, IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_line_input",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_print_str",
+            &IrType::Void,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_print_int",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_print_dbl",
+            &IrType::Void,
+            &[IrType::I32, IrType::Double],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_set",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_comm_timeout",
+            &IrType::I32,
+            &[IrType::I32, IrType::I64],
+            false,
+        );
+        // THREAD (batch 21)
+        self.module.declare_function(
+            "pb_thread_create",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_thread_close", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_thread_suspend", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_thread_resume", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_thread_status", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_thread_get_priority",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_thread_set_priority",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
         self.module
             .declare_dllimport("Sleep", &IrType::Void, &[IrType::I32]);
         self.module
@@ -4236,6 +4329,199 @@ impl Compiler {
                     let old = self.compile_expr(fb, &call.args[0])?;
                     let new_s = self.compile_expr(fb, &call.args[1])?;
                     fb.call_void("pb_name", &[old, new_s]);
+                }
+                return Ok(());
+            }
+            "WAITKEY" => {
+                fb.call(&IrType::Ptr, "pb_waitkey", &[]);
+                return Ok(());
+            }
+            "COMM OPEN" => {
+                if call.args.len() >= 2 {
+                    let port = self.compile_expr(fb, &call.args[0])?;
+                    let sv0 = self.compile_expr(fb, &call.args[1])?;
+                    let ch = self.to_i32(fb, &sv0);
+                    let baud = if call.args.len() >= 3 {
+                        let v = self.compile_expr(fb, &call.args[2])?;
+                        self.to_i32(fb, &v)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    let parity = if call.args.len() >= 4 {
+                        self.compile_expr(fb, &call.args[3])?
+                    } else {
+                        let (n, _) = self.module.add_string_constant("");
+                        Val::new(n, IrType::Ptr)
+                    };
+                    let data = if call.args.len() >= 5 {
+                        let v = self.compile_expr(fb, &call.args[4])?;
+                        self.to_i32(fb, &v)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    let stop = if call.args.len() >= 6 {
+                        let v = self.compile_expr(fb, &call.args[5])?;
+                        self.to_i32(fb, &v)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call_void("pb_comm_open", &[port, ch, baud, parity, data, stop]);
+                }
+                return Ok(());
+            }
+            "COMM CLOSE" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    let ch = self.to_i32(fb, &v);
+                    fb.call_void("pb_comm_close", std::slice::from_ref(&ch));
+                }
+                return Ok(());
+            }
+            "COMM RESET" => {
+                fb.call_void("pb_comm_reset", &[]);
+                return Ok(());
+            }
+            "COMM LINE INPUT" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_comm_line_input", &[ch, ptr]);
+                    }
+                }
+                return Ok(());
+            }
+            "COMM RECV" => {
+                if call.args.len() >= 3 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    let v1 = self.compile_expr(fb, &call.args[1])?;
+                    let bytes = self.to_i64(fb, &v1);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.call_void("pb_comm_recv", &[ch, bytes, ptr]);
+                    }
+                }
+                return Ok(());
+            }
+            "COMM SEND" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    let s = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_comm_send", &[ch, s]);
+                }
+                return Ok(());
+            }
+            "COMM PRINT" => {
+                if !call.args.is_empty() {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    for arg in call.args.iter().skip(1) {
+                        let v = self.compile_expr(fb, arg)?;
+                        match &v.ty {
+                            IrType::I32 | IrType::I64 => {
+                                let vi = self.to_i64(fb, &v);
+                                fb.call_void("pb_comm_print_int", &[ch.clone(), vi]);
+                            }
+                            IrType::Double => fb.call_void("pb_comm_print_dbl", &[ch.clone(), v]),
+                            _ => fb.call_void("pb_comm_print_str", &[ch.clone(), v]),
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "COMM SET" => {
+                if call.args.len() >= 3 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    let opt = self.compile_expr(fb, &call.args[1])?;
+                    let v2 = self.compile_expr(fb, &call.args[2])?;
+                    let on = self.to_i32(fb, &v2);
+                    fb.call_void("pb_comm_set", &[ch, opt, on]);
+                }
+                return Ok(());
+            }
+            "COMM TIMEOUT" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let ch = self.to_i32(fb, &v0);
+                    let v1 = self.compile_expr(fb, &call.args[1])?;
+                    let ms = self.to_i64(fb, &v1);
+                    fb.call_void("pb_comm_timeout", &[ch, ms]);
+                }
+                return Ok(());
+            }
+            "THREAD CREATE" => {
+                if call.args.len() >= 2 {
+                    let func_name = match &call.args[0] {
+                        Expr::Variable(n) => normalize_name(n),
+                        Expr::FunctionCall(n, _) => normalize_name(n),
+                        _ => String::new(),
+                    };
+                    let ir_name = self
+                        .functions
+                        .get(&func_name)
+                        .map(|i| i.ir_name.clone())
+                        .or_else(|| self.subs.get(&func_name).map(|i| i.ir_name.clone()))
+                        .unwrap_or_default();
+                    if ir_name.is_empty() {
+                        self.warnings.push(format!(
+                            "line {}: THREAD CREATE: unknown thread function `{}`",
+                            call.line, func_name
+                        ));
+                        return Ok(());
+                    }
+                    let fp = Val::new(format!("@{}", ir_name), IrType::Ptr);
+                    if let Some((id_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_thread_create", &[fp, id_ptr]);
+                    }
+                }
+                return Ok(());
+            }
+            "THREAD CLOSE" | "THREAD SUSPEND" | "THREAD RESUME" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    let id = self.to_i32(fb, &v);
+                    let fn_name = match name.as_str() {
+                        "THREAD CLOSE" => "pb_thread_close",
+                        "THREAD SUSPEND" => "pb_thread_suspend",
+                        _ => "pb_thread_resume",
+                    };
+                    fb.call_void(fn_name, std::slice::from_ref(&id));
+                }
+                return Ok(());
+            }
+            "THREAD STATUS" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.to_i32(fb, &v0);
+                    if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let rc = fb.call(&IrType::I32, "pb_thread_status", &[id]);
+                        let converted = self.convert_value(fb, &rc, &ir, &pb);
+                        fb.store(&converted, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "THREAD GET PRIORITY" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.to_i32(fb, &v0);
+                    if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let rc = fb.call(&IrType::I32, "pb_thread_get_priority", &[id]);
+                        let converted = self.convert_value(fb, &rc, &ir, &pb);
+                        fb.store(&converted, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "THREAD SET PRIORITY" => {
+                if call.args.len() >= 2 {
+                    let v0 = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.to_i32(fb, &v0);
+                    let v1 = self.compile_expr(fb, &call.args[1])?;
+                    let p = self.to_i32(fb, &v1);
+                    fb.call_void("pb_thread_set_priority", &[id, p]);
                 }
                 return Ok(());
             }
@@ -7015,7 +7301,10 @@ impl Compiler {
         // PARSE$(string)                 — 1-arg form: space delimiter, count
         let s = self.compile_expr(fb, &args[0])?;
         let (delim, index) = if args.len() >= 3 {
-            (self.compile_expr(fb, &args[1])?, self.compile_expr(fb, &args[2])?)
+            (
+                self.compile_expr(fb, &args[1])?,
+                self.compile_expr(fb, &args[2])?,
+            )
         } else if args.len() == 2 {
             let (n, _) = self.module.add_string_constant(" ");
             (Val::new(n, IrType::Ptr), self.compile_expr(fb, &args[1])?)

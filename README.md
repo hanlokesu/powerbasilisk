@@ -242,9 +242,13 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **150** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **151** documented upstream with no codegen evidence yet.
-> (2026-09-13: +11 official keywords from batch 19 — TCP OPEN/ACCEPT/SEND/RECV/
+> Summary: **166** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **135** documented upstream with no codegen evidence yet.
+> (2026-09-13: +16 official keywords from batch 21 — COMM serial port
+> OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT + THREAD
+> CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY — real Win32
+> CreateFileA/DCB serial + CreateThread thread control, verified live via
+> a thread spin-loop test; +11 official keywords from batch 19 — TCP OPEN/ACCEPT/SEND/RECV/
 > LINE INPUT/PRINT/CLOSE + UDP OPEN/SEND/RECV/CLOSE — Winsock sockets, verified
 > live via loopback TCP/UDP echo; 2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
 > SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
@@ -255,6 +259,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | PB statement / function | Status | Maps to |
 | --- | --- | --- |
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
+| `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 (batch 21) |
+| `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) (batch 21) |
 | `UDP OPEN/SEND/RECV/CLOSE` | ✅ | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
 | `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
 | `REPLACE old$ WITH new$ IN target$` | ✅ | `pb_replace` |
@@ -364,6 +370,35 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.15 (2026-09-13) — Batch 21: COMM serial port + THREAD control (16 statements)
+
+Two statement families moved from *Not implemented* to *Implemented*
+(coverage: **166 implemented / 135 not implemented / 202 tier-3 DDT**):
+
+- **COMM** serial-port statements — `COMM OPEN` (CreateFileA + DCB
+  BaudRate/ByteSize/Parity/StopBits + SetCommTimeouts; PB comm channel
+  0..255), `COMM CLOSE`, `COMM RESET`, `COMM SEND`, `COMM RECV` (n bytes
+  into a PB string), `COMM LINE INPUT` (byte-wise ReadFile until LF),
+  `COMM PRINT` (str/int/dbl variants), `COMM SET` (EscapeCommFunction
+  DTR/RTS/BREAK on/off), `COMM TIMEOUT` (SetCommTimeouts constants).
+- **THREAD** control statements — `THREAD CREATE` (CreateThread on x64;
+  the PB-side id is a slot number 0..255 holding the real HANDLE, same
+  pattern as GLOBALMEM), `THREAD CLOSE` (TerminateThread + CloseHandle),
+  `THREAD SUSPEND` / `THREAD RESUME`, `THREAD STATUS` (GetExitCodeThread
+  STILL_ACTIVE: 1 running / 2 suspended / 3 finished), `THREAD GET
+  PRIORITY` / `THREAD SET PRIORITY` (Get/SetThreadPriority).
+  On 32-bit, THREAD CREATE deliberately fails closed (PB functions are
+  cdecl; calling through a stdcall thread-proc pointer would corrupt the
+  stack), so no crash is possible.
+- Fixed along the way: bare `WAITKEY$` as a statement now also generates
+  code (previously only `x$ = WAITKEY$` worked); `THREAD RESUME/CLOSE`
+  parsing now handles RESUME/CLOSE as reserved-word tokens.
+- Verified live: `examples/batch21_test.bas` — COMM gracefully fails on a
+  missing COM port (no crash); thread spin-loop reports id=0, status
+  1 (running) -> suspend 2 -> resume 1 -> close, priority 0; exit 0.
+- Official regression: **14/14 ALL PASS**, fmt + clippy clean, coverage
+  CSV/MD fully synced.
+
 ### v0.1.14 (2026-09-13) — WAITKEY$ + press-any-key exit on every example
 
 - **WAITKEY$** implemented (official PB console function). Interactive consoles

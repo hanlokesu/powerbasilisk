@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 150 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 166 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 151 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 135 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (150)
+## ✅ Implemented (166)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -173,6 +173,22 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `FILESCAN` | STATEMENT | PB/Win + PB/CC | Records/width scan, INPUT+BINARY modes (batch 20) |
 | `LOCAL` | STATEMENT | PB/Win + PB/CC | Local variable declarations (batch 20) |
 | `TYPE/END TYPE` | BLOCK | PB/Win + PB/CC | UDT definitions (batch 20) |
+| `COMM OPEN` | STATEMENT | PB/Win + PB/CC | CreateFileA + DCB/SetCommState/SetCommTimeouts; comm channel 0..255 (batch 21) |
+| `COMM CLOSE` | STATEMENT | PB/Win + PB/CC | CloseHandle per channel (batch 21) |
+| `COMM LINE` | STATEMENT | PB/Win + PB/CC | COMM LINE INPUT: byte-wise ReadFile until LF into PB string (batch 21) |
+| `COMM PRINT` | STATEMENT | PB/Win + PB/CC | WriteFile str/int/dbl variants (batch 21) |
+| `COMM RECV` | STATEMENT | PB/Win + PB/CC | ReadFile n bytes into PB string (batch 21) |
+| `COMM RESET` | STATEMENT | PB/Win + PB/CC | close all open COMM channels (batch 21) |
+| `COMM SEND` | STATEMENT | PB/Win + PB/CC | WriteFile + FlushFileBuffers (batch 21) |
+| `COMM SET` | STATEMENT | PB/Win + PB/CC | EscapeCommFunction DTR/RTS/BREAK on/off (batch 21) |
+| `COMM TIMEOUT` | STATEMENT | PB/Win + PB/CC | SetCommTimeouts read/write constants (batch 21) |
+| `THREAD CLOSE` | STATEMENT | PB/Win + PB/CC | TerminateThread + CloseHandle (batch 21) |
+| `THREAD CREATE` | STATEMENT | PB/Win + PB/CC | CreateThread (x64); PB slot id 0..255 (batch 21) |
+| `THREAD GET PRIORITY` | STATEMENT | PB/Win + PB/CC | GetThreadPriority (batch 21) |
+| `THREAD RESUME` | STATEMENT | PB/Win + PB/CC | ResumeThread (batch 21) |
+| `THREAD SET PRIORITY` | STATEMENT | PB/Win + PB/CC | SetThreadPriority (batch 21) |
+| `THREAD STATUS` | STATEMENT | PB/Win + PB/CC | GetExitCodeThread STILL_ACTIVE; 1 run / 2 susp / 3 done (batch 21) |
+| `THREAD SUSPEND` | STATEMENT | PB/Win + PB/CC | SuspendThread (batch 21) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -380,7 +396,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (162, alphabetical)
+## ⬜ Not implemented (135, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -396,15 +412,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CALL DWORD | STATEMENT | PB/Win + PB/CC | Established |
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
-| COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
-| COMM OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| COMM PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| COMM RECV | STATEMENT | PB/Win + PB/CC | Established |
-| COMM RESET | STATEMENT | PB/Win + PB/CC | Established |
-| COMM SEND | STATEMENT | PB/Win + PB/CC | Established |
-| COMM SET | STATEMENT | PB/Win + PB/CC | Established |
-| COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | Established |
 | DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
 | DISPLAY COLOR | STATEMENT | PB/Win only | Established |
@@ -447,13 +454,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD CREATE | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD STATUS | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD SUSPEND | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
