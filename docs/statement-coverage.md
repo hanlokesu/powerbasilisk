@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 122 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (179)
+## ✅ Implemented (181)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -202,6 +202,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
 | `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
 | `TYPE SET` | STATEMENT | PB/Win + PB/CC | pb_type_set / pb_type_set_str memcpy fill (batch 23) |
+| `DIR FUNCTION AND` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+| `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
 
 
 ## 🚧 Tier-3 DDT (deferred to next update)
@@ -411,7 +413,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (122, alphabetical)
+## ⬜ Not implemented (120, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -426,7 +428,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
-| DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
 | DISPLAY COLOR | STATEMENT | PB/Win only | Established |
 | DISPLAY FONT | STATEMENT | PB/Win only | Established |
@@ -442,7 +443,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
 | INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
 
 | MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |

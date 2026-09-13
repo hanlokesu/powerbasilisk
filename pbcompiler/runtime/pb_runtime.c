@@ -2546,3 +2546,99 @@ void pb_type_set_str(void* dest, const char* src, unsigned int size) {
     if (n) memcpy(dest, src, n);
     if (n < size) memset((char*)dest + n, 0, size - n);
 }
+
+/* ================= Batch 24: DIR$ / DIR statement (FindFirstFileA family) ================= */
+
+/* WIN32_FIND_DATAA layout (hand-rolled, no windows.h):
+   0  DWORD  dwFileAttributes
+   4  FILETIME ftCreationTime (8)
+   12 FILETIME ftLastAccessTime (8)
+   20 FILETIME ftLastWriteTime (8)
+   28 DWORD  nFileSizeHigh
+   32 DWORD  nFileSizeLow
+   36 DWORD  dwReserved0
+   40 DWORD  dwReserved1
+   44 CHAR   cFileName[260]
+   304 CHAR  cAlternateFileName[14]
+   total >= 592 bytes
+*/
+#define PB_FIND_DATA_SIZE 592
+#define PB_FILE_ATTRIBUTE_DIRECTORY 0x10UL
+
+#ifndef PB_B24_DEFS
+#define PB_B24_DEFS
+typedef void* HANDLE_PB24;
+#define PB_INVALID_HANDLE ((void*)(intptr_t)-1)
+__declspec(dllimport) void* __stdcall FindFirstFileA(const char* lpFileName, char* lpFindFileData);
+__declspec(dllimport) int __stdcall FindNextFileA(void* hFindFile, char* lpFindFileData);
+__declspec(dllimport) int __stdcall FindClose(void* hFindFile);
+#endif
+
+static void* g_dir_handle = PB_INVALID_HANDLE;
+static char g_dir_find_data[PB_FIND_DATA_SIZE];
+static int g_dir_only = 0;
+static unsigned long g_dir_attr = 0;
+
+static const char* g_dir_name(void) { return g_dir_find_data + 44; }
+static unsigned long g_dir_attrs(void) {
+    unsigned long a;
+    memcpy(&a, g_dir_find_data, sizeof(a));
+    return a;
+}
+static int g_dir_is_dot(void) {
+    const char* n = g_dir_name();
+    return (n[0] == '.' && n[1] == '\0') || (n[0] == '.' && n[1] == '.' && n[2] == '\0');
+}
+static int g_dir_match(void) {
+    if (g_dir_is_dot()) return 0;
+    unsigned long fa = g_dir_attrs();
+    if (g_dir_only) return (fa & g_dir_attr) == g_dir_attr;
+    /* default: normal files only (not directory / hidden / system / label) */
+    if (fa & (PB_FILE_ATTRIBUTE_DIRECTORY | 0x2UL | 0x4UL | 0x8UL)) return 0;
+    return 1;
+}
+static char* g_dir_make_bstr(void) {
+    const char* n = g_dir_name();
+    return pb_bstr_alloc(n, (unsigned int)strlen(n));
+}
+
+/* DIR$ mask [, ONLY attr]  -> first match; returns "" when none */
+char* pb_dir_first(char* mask, int only, unsigned long attr) {
+    if (g_dir_handle != PB_INVALID_HANDLE) {
+        FindClose(g_dir_handle);
+        g_dir_handle = PB_INVALID_HANDLE;
+    }
+    g_dir_only = only;
+    g_dir_attr = attr;
+    if (!mask || !*mask) return pb_bstr_alloc("", 0);
+    g_dir_handle = FindFirstFileA(mask, g_dir_find_data);
+    if (g_dir_handle == PB_INVALID_HANDLE) return pb_bstr_alloc("", 0);
+    for (;;) {
+        if (g_dir_match()) return g_dir_make_bstr();
+        if (!FindNextFileA(g_dir_handle, g_dir_find_data)) {
+            FindClose(g_dir_handle);
+            g_dir_handle = PB_INVALID_HANDLE;
+            return pb_bstr_alloc("", 0);
+        }
+    }
+}
+
+/* DIR$ (NEXT) -> next match; "" when exhausted */
+char* pb_dir_next(void) {
+    if (g_dir_handle == PB_INVALID_HANDLE) return pb_bstr_alloc("", 0);
+    for (;;) {
+        if (!FindNextFileA(g_dir_handle, g_dir_find_data)) {
+            FindClose(g_dir_handle);
+            g_dir_handle = PB_INVALID_HANDLE;
+            return pb_bstr_alloc("", 0);
+        }
+        if (g_dir_match()) return g_dir_make_bstr();
+    }
+}
+
+void pb_dir_close(void) {
+    if (g_dir_handle != PB_INVALID_HANDLE) {
+        FindClose(g_dir_handle);
+        g_dir_handle = PB_INVALID_HANDLE;
+    }
+}

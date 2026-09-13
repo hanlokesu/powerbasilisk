@@ -242,9 +242,12 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **179** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **122** documented upstream with no codegen evidence yet.
-> (2026-09-13: +5 official keywords from batch 23 — real STATIC semantics,
+> Summary: **181** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **120** documented upstream with no codegen evidence yet.
+> (2026-09-13: +2 official keywords from batch 24 — DIR function/statement
+> family (FindFirstFileA) and LET with whole TYPEs; GET$/PUT$ round-trip
+> confirmed against the official docs.)
+> (Earlier: +5 official keywords from batch 23 — real STATIC semantics,
 > ARRAY ASSIGN, TYPE SET, WINDOW SET/GET TEXT console-title bridge, plus a
 > TYPE fixed-string field assignment bug fix; +16 official keywords from batch 21 — COMM serial port
 > OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT + THREAD
@@ -292,6 +295,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PLAY WAVE "file.wav"` | ✅ | `PlaySoundA` (async) |
 | `PLAY SOUND freq, dur` | ✅ | `Beep(freq, dur)` (kernel32) |
 | `CHDRIVE "C:"` | ✅ | `_chdrive` — PB-compatible `ERR` (68) on failure |
+| `DIR$` / `DIR` function + statement family | ✅ | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` (batch 24) |
+| `LET t2 = t1` (whole TYPE) | ✅ | `pb_type_set` — full user-defined-type copy incl. fixed-string fields (batch 24) |
 | `SETEOF #f` | ✅ | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | `pb_rotate_left/right` (wrapping) |
@@ -372,6 +377,36 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.18 (2026-09-13) — Batch 24: DIR function/statement family + LET with TYPEs (2 statements)
+
+Two more *Not implemented* items moved to *Implemented*
+(coverage: **181 implemented / 120 not implemented / 202 tier-3 DDT**):
+
+- **DIR FUNCTION AND** — the full `DIR`/`DIR$` family backed by
+  `FindFirstFileA`/`FindNextFileA`/`FindClose` (hand-rolled dllimport in
+  the runtime):
+  - Function form: `s$ = DIR$(mask)` finds the first matching file,
+    `s$ = DIR$(NEXT)` returns each following match, and an empty string
+    means no more matches.
+  - Statement form: `DIR mask TO s$`, `DIR NEXT TO s$`, and
+    `DIR CLOSE` / `DIR$ CLOSE`.
+  - Attribute filtering: `DIR mask, ONLY attr TO s$` (and the equivalent
+    function form) returns only files whose attributes exactly match
+    `attr` (2=hidden, 4=system, 8=volume label); without `ONLY` only
+    normal files are returned and directories are skipped.
+  - Verified in `examples/batch24_test.bas`: `DIR$("batch24_dir_*.tmp")`
+    → first file, `DIR$(NEXT)` → second file, and the statement forms
+    reproduce the same sequence.
+- **LET *(WITH TYPES)*** — whole-TYPE assignment `t2 = t1` copies the
+  entire user-defined-type value (including fixed-length string fields)
+  in one operation. Verified in `examples/batch24_test.bas`.
+
+Also confirmed working in this batch (already implemented upstream, now
+explicitly covered by the official docs): `GET$` (read N bytes from a
+binary file into a string) and `PUT$` (write a string's bytes to a
+binary file) — `examples/batch24_test.bas` does a full
+`OPEN ... FOR BINARY` → `PUT$` → `SEEK` → `GET$` round-trip.
+
 ### v0.1.17 (2026-09-13) — Batch 23: real STATIC semantics + ARRAY ASSIGN + TYPE SET + WINDOW console title (5 statements)
 
 Five long-standing *Not implemented* items moved to *Implemented*

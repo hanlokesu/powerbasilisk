@@ -1326,6 +1326,16 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_dir_first",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_dir_next", &IrType::Ptr, &[], false);
+        self.module
+            .declare_function("pb_dir_close", &IrType::Void, &[], false);
         self.module
             .declare_function("pb_tix", &IrType::I64, &[], false);
         self.module
@@ -3990,6 +4000,42 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "DIR CLOSE" => {
+                fb.call_void("pb_dir_close", &[]);
+                return Ok(());
+            }
+            "DIR NEXT" => {
+                // DIR NEXT TO s$ - next matching filename
+                if let Some(target) = call.args.first() {
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, target)?;
+                    let r = fb.call(&IrType::Ptr, "pb_dir_next", &[]);
+                    fb.store(&r, &ptr);
+                }
+                return Ok(());
+            }
+            "DIR" => {
+                // DIR mask [, [ONLY] attr] TO s$
+                // args: [mask, target] | [mask, attr, target] | [mask, only, attr, target]
+                if call.args.len() >= 2 {
+                    let mask = self.compile_expr(fb, &call.args[0])?;
+                    let (only, attr) = match call.args.len() {
+                        4 => {
+                            let av = self.compile_expr(fb, &call.args[2])?;
+                            (fb.const_i32(1), self.to_i32(fb, &av))
+                        }
+                        3 => {
+                            let av = self.compile_expr(fb, &call.args[1])?;
+                            (fb.const_i32(0), self.to_i32(fb, &av))
+                        }
+                        _ => (fb.const_i32(0), fb.const_i32(0)),
+                    };
+                    let target = call.args.last().unwrap();
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, target)?;
+                    let r = fb.call(&IrType::Ptr, "pb_dir_first", &[mask, only, attr]);
+                    fb.store(&r, &ptr);
+                }
+                return Ok(());
+            }
             "DESKTOP GET SIZE" => {
                 // DESKTOP GET SIZE TO ncWidth&, ncHeight&
                 if call.args.len() >= 2 {
@@ -6541,6 +6587,42 @@ impl Compiler {
                     let zero2 = fb.const_i32(0);
                     fb.select(&exists, &neg_one, &zero2)
                 }))
+            }
+            "DIR" => {
+                // DIR$(mask [, ONLY attr]) or DIR$(NEXT) — returns BSTR filename
+                // (parser emits FunctionCall "DIR$"; normalize_name strips the $)
+                if args.len() == 1 {
+                    if let Expr::StringLit(s) = &args[0] {
+                        if s == "\u{0}DIRNEXT" {
+                            return Some(Ok(fb.call(&IrType::Ptr, "pb_dir_next", &[])));
+                        }
+                    }
+                    let mask = self.compile_expr(fb, &args[0]);
+                    return Some(mask.map(|m| {
+                        fb.call(
+                            &IrType::Ptr,
+                            "pb_dir_first",
+                            &[m, fb.const_i32(0), fb.const_i32(0)],
+                        )
+                    }));
+                }
+                if args.len() >= 2 {
+                    let m = match self.compile_expr(fb, &args[0]) {
+                        Ok(v) => v,
+                        Err(e) => return Some(Err(e)),
+                    };
+                    let av = match self.compile_expr(fb, &args[1]) {
+                        Ok(v) => v,
+                        Err(e) => return Some(Err(e)),
+                    };
+                    let av32 = self.to_i32(fb, &av);
+                    return Some(Ok(fb.call(
+                        &IrType::Ptr,
+                        "pb_dir_first",
+                        &[m, fb.const_i32(1), av32],
+                    )));
+                }
+                Some(Ok(fb.call(&IrType::Ptr, "pb_dir_next", &[])))
             }
             "CURDIR" => {
                 // CURDIR$ → current working directory, returned as a PB string

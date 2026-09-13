@@ -1698,6 +1698,58 @@ impl Parser {
                     return Ok(Statement::Kill(filename));
                 }
 
+                // DIR mask [, [ONLY] attr] TO s$ | DIR NEXT TO s$ | DIR CLOSE | DIR$ CLOSE
+                if name_upper == "DIR" || name_upper == "DIR$" {
+                    self.advance(); // consume DIR / DIR$
+                    let up2 = self.peek_plain_upper();
+                    if up2 == "CLOSE" || matches!(self.peek(), Token::Close) {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "DIR CLOSE".to_string(),
+                            args: Vec::new(),
+                            line,
+                        }));
+                    }
+                    if up2 == "NEXT" || matches!(self.peek(), Token::Next) {
+                        self.advance();
+                        self.expect(&Token::To)?;
+                        let target = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "DIR NEXT".to_string(),
+                            args: vec![target],
+                            line,
+                        }));
+                    }
+                    // DIR mask [, [ONLY] attr] TO target$
+                    let mask = self.parse_expression()?;
+                    let mut args = vec![mask];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        if let Token::Identifier(w) = self.peek() {
+                            if w.eq_ignore_ascii_case("ONLY") {
+                                self.advance();
+                                let attr = self.parse_expression()?;
+                                args.push(Expr::IntegerLit(1)); // ONLY flag
+                                args.push(attr);
+                                continue;
+                            }
+                        }
+                        let attr = self.parse_expression()?;
+                        args.push(attr);
+                    }
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    args.push(target);
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+
                 // TRY ... CATCH ... END TRY
                 if name_upper == "TRY" {
                     self.advance(); // consume TRY
@@ -4219,6 +4271,20 @@ impl Parser {
                 let expr = self.parse_expression()?;
                 self.expect(&Token::RParen)?;
                 Ok(expr)
+            }
+            Token::Identifier(name) if name.eq_ignore_ascii_case("DIR$") => {
+                // DIR$(NEXT) or DIR$(mask [, ONLY attr]) — NEXT is a keyword token
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if self.peek() == &Token::Next {
+                    self.advance();
+                    args.push(Expr::StringLit("\u{0}DIRNEXT".to_string())); // sentinel
+                } else if self.peek() != &Token::RParen {
+                    args = self.parse_arg_list()?;
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("DIR$".to_string(), args))
             }
             Token::Identifier(name) if name.eq_ignore_ascii_case("VARPTR") => {
                 self.advance();
