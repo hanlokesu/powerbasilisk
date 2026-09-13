@@ -1229,6 +1229,15 @@ impl Parser {
             Token::Close => self.parse_close_statement(),
             Token::Call => {
                 self.advance();
+                // CALL DWORD TargetPtr [USING proto(args)] [TO result]
+                if let Token::Identifier(w) = self.peek() {
+                    if w.to_uppercase() == "DWORD" {
+                        return self.parse_call_dword(line);
+                    }
+                }
+                if matches!(self.peek(), Token::Dword) {
+                    return self.parse_call_dword(line);
+                }
                 let name = self.consume_identifier()?;
                 let args = if self.peek() == &Token::LParen {
                     self.advance();
@@ -2366,6 +2375,18 @@ impl Parser {
                 if name_upper == "THREAD" {
                     return self.parse_thread_statement(line);
                 }
+                // LPRINT statements (direct line-printer output)
+                if name_upper == "LPRINT" {
+                    return self.parse_lprint_statement(line);
+                }
+                // TRACE statements (explicit trace file logging)
+                if name_upper == "TRACE" {
+                    return self.parse_trace_statement(line);
+                }
+                // IMPORT statements (explicit DLL loading)
+                if name_upper == "IMPORT" {
+                    return self.parse_import_statement(line);
+                }
                 if matches!(
                     name_upper.as_str(),
                     "DIALOG"
@@ -3209,6 +3230,217 @@ impl Parser {
                 Ok(Statement::Noop(format!("THREAD {op}"), line))
             }
         }
+    }
+
+    // LPRINT: LPRINT [expr list] / LPRINT ATTACH device$ / LPRINT CLOSE / FLUSH / FORMFEED
+    /// Upper-case the next token as a plain word, mapping reserved-word
+    /// tokens that double as TRACE/IMPORT operators (CLOSE, PRINT, OPEN, ON).
+    fn peek_plain_upper(&self) -> String {
+        match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Close => "CLOSE".to_string(),
+            Token::Print => "PRINT".to_string(),
+            Token::Open => "OPEN".to_string(),
+            Token::On => "ON".to_string(),
+            _ => String::new(),
+        }
+    }
+
+    fn parse_lprint_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume LPRINT
+        match self.peek() {
+            Token::Identifier(w) if w.eq_ignore_ascii_case("ATTACH") => {
+                self.advance();
+                let device = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT ATTACH".to_string(),
+                    args: vec![device],
+                    line,
+                }))
+            }
+            Token::Close => {
+                self.advance();
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT CLOSE".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("CLOSE") => {
+                self.advance();
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT CLOSE".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("FLUSH") => {
+                self.advance();
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT FLUSH".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("FORMFEED") => {
+                self.advance();
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT FORMFEED".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            _ => {
+                // LPRINT [expr][SPC(n)][TAB(n)][,][;] — same arg grammar as PRINT
+                let args = self.parse_print_args()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LPRINT".to_string(),
+                    args,
+                    line,
+                }))
+            }
+        }
+    }
+
+    // TRACE: TRACE NEW fname$ / ON / OFF / PRINT expr / CLOSE
+    fn parse_trace_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume TRACE
+        let op = self.peek_plain_upper();
+        self.advance();
+        match op.as_str() {
+            "NEW" => {
+                let fname = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TRACE NEW".to_string(),
+                    args: vec![fname],
+                    line,
+                }))
+            }
+            "PRINT" => {
+                let expr = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TRACE PRINT".to_string(),
+                    args: vec![expr],
+                    line,
+                }))
+            }
+            "ON" | "OFF" => {
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("TRACE {op}"),
+                    args: vec![],
+                    line,
+                }))
+            }
+            "CLOSE" => {
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TRACE CLOSE".to_string(),
+                    args: vec![],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop("TRACE".to_string(), line))
+            }
+        }
+    }
+
+    // IMPORT: IMPORT ADDR ProcName$, LibName$ TO AddrVar& [,HndlVar&] / IMPORT CLOSE Hndl
+    fn parse_import_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume IMPORT
+        let op = self.peek_plain_upper();
+        self.advance();
+        match op.as_str() {
+            "ADDR" => {
+                let procname = self.parse_expression()?;
+                if self.peek() == &Token::Comma {
+                    self.advance();
+                }
+                let libname = self.parse_expression()?;
+                let mut args = vec![procname, libname];
+                if matches!(self.peek(), Token::To) {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                }
+                if self.peek() == &Token::Comma {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                }
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "IMPORT ADDR".to_string(),
+                    args,
+                    line,
+                }))
+            }
+            "CLOSE" => {
+                let hndl = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "IMPORT CLOSE".to_string(),
+                    args: vec![hndl],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop("IMPORT".to_string(), line))
+            }
+        }
+    }
+
+    // CALL DWORD TargetPtr [USING proto(args)] [TO result]
+    fn parse_call_dword(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume DWORD
+        let target = self.parse_expression()?;
+        let mut args = vec![target];
+        let mut has_result = false;
+        if let Token::Identifier(w) = self.peek() {
+            if w.eq_ignore_ascii_case("USING") {
+                self.advance();
+                // proto name — parse as primary (may be a plain identifier)
+                let _proto = self.parse_primary()?;
+                if self.peek() == &Token::LParen {
+                    self.advance();
+                    while !self.at_eol_or_eof() && self.peek() != &Token::RParen {
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        } else {
+                            break;
+                        }
+                    }
+                    if self.peek() == &Token::RParen {
+                        self.advance();
+                    }
+                }
+                if matches!(self.peek(), Token::To) {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                    has_result = true;
+                }
+            }
+        }
+        self.consume_to_eol();
+        Ok(Statement::Call(CallStmt {
+            name: if has_result {
+                "CALL DWORD TO".to_string()
+            } else {
+                "CALL DWORD".to_string()
+            },
+            args,
+            line,
+        }))
     }
 
     fn parse_clipboard_statement(&mut self, line: usize) -> PbResult<Statement> {

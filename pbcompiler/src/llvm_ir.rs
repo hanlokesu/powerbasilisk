@@ -777,6 +777,34 @@ impl FunctionBuilder {
         writeln!(self.body, "  call void @{}({})", name, args_str.join(", ")).unwrap();
     }
 
+    /// Call a void function through an indirect pointer (CALL DWORD).
+    pub fn call_indirect_void(&mut self, target: &Val, args: &[Val]) {
+        let args_str: Vec<String> = args.iter().map(|a| a.typed()).collect();
+        writeln!(
+            self.body,
+            "  call void {}({})",
+            target.name,
+            args_str.join(", ")
+        )
+        .unwrap();
+    }
+
+    /// Call a function through an indirect pointer (CALL DWORD ... TO result).
+    pub fn call_indirect(&mut self, ret_ty: &IrType, target: &Val, args: &[Val]) -> Val {
+        let r = self.next_reg();
+        let args_str: Vec<String> = args.iter().map(|a| a.typed()).collect();
+        writeln!(
+            self.body,
+            "  {} = call {} {}({})",
+            r,
+            ret_ty,
+            target.name,
+            args_str.join(", ")
+        )
+        .unwrap();
+        Val::new(r, ret_ty.clone())
+    }
+
     /// Call a void function with x86_stdcallcc convention (Win32 API on 32-bit).
     pub fn call_void_stdcall(&mut self, name: &str, args: &[Val]) {
         let args_str: Vec<String> = args.iter().map(|a| a.typed()).collect();

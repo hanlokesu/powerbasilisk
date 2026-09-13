@@ -1808,6 +1808,47 @@ impl Compiler {
             &[IrType::I32, IrType::I32],
             false,
         );
+        // LPRINT (batch 22)
+        self.module
+            .declare_function("pb_lprint_attach", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_lprint_close", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_lprint_flush", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_lprint_formfeed", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_lprint_bstr", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_lprint_int", &IrType::Void, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_lprint_i64", &IrType::Void, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_lprint_dbl", &IrType::Void, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_lprint_crlf", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_lprint_tab", &IrType::Void, &[], false);
+        // TRACE (batch 22)
+        self.module
+            .declare_function("pb_trace_new", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_trace_on", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_trace_off", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_trace_print", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_trace_close", &IrType::Void, &[], false);
+        // IMPORT (batch 22)
+        self.module.declare_function(
+            "pb_import_addr",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_import_close", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_dllimport("Sleep", &IrType::Void, &[IrType::I32]);
         self.module
@@ -4522,6 +4563,156 @@ impl Compiler {
                     let v1 = self.compile_expr(fb, &call.args[1])?;
                     let p = self.to_i32(fb, &v1);
                     fb.call_void("pb_thread_set_priority", &[id, p]);
+                }
+                return Ok(());
+            }
+            "LPRINT" => {
+                // LPRINT expr[,|;]... — send each value to the attached device
+                for arg in &call.args {
+                    let val = self.compile_expr(fb, arg)?;
+                    if val.ty == IrType::Ptr {
+                        fb.call_void("pb_lprint_bstr", std::slice::from_ref(&val));
+                    } else if val.ty == IrType::I64 {
+                        fb.call_void("pb_lprint_i64", std::slice::from_ref(&val));
+                    } else if val.ty.is_int() {
+                        let v = self.to_i32(fb, &val);
+                        fb.call_void("pb_lprint_int", std::slice::from_ref(&v));
+                    } else if val.ty.is_float() {
+                        let v = self.to_f64(fb, &val);
+                        fb.call_void("pb_lprint_dbl", std::slice::from_ref(&v));
+                    }
+                }
+                fb.call_void("pb_lprint_crlf", &[]);
+                return Ok(());
+            }
+            "LPRINT ATTACH" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    fb.call_void("pb_lprint_attach", std::slice::from_ref(&v));
+                }
+                return Ok(());
+            }
+            "LPRINT CLOSE" => {
+                fb.call_void("pb_lprint_close", &[]);
+                return Ok(());
+            }
+            "LPRINT FLUSH" => {
+                fb.call_void("pb_lprint_flush", &[]);
+                return Ok(());
+            }
+            "LPRINT FORMFEED" => {
+                fb.call_void("pb_lprint_formfeed", &[]);
+                return Ok(());
+            }
+            "TRACE NEW" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    fb.call_void("pb_trace_new", std::slice::from_ref(&v));
+                }
+                return Ok(());
+            }
+            "TRACE ON" => {
+                fb.call_void("pb_trace_on", &[]);
+                return Ok(());
+            }
+            "TRACE OFF" => {
+                fb.call_void("pb_trace_off", &[]);
+                return Ok(());
+            }
+            "TRACE PRINT" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    if v.ty == IrType::Ptr {
+                        fb.call_void("pb_trace_print", std::slice::from_ref(&v));
+                    } else {
+                        // Non-string: format via num_to_string, then skip the
+                        // 4-byte BSTR prefix (runtime expects a C-string payload)
+                        let s = self.num_to_string(fb, &v);
+                        let off = fb.const_i32(4);
+                        let payload = fb.gep_byte(&s, &off);
+                        fb.call_void("pb_trace_print", std::slice::from_ref(&payload));
+                    }
+                }
+                return Ok(());
+            }
+            "TRACE CLOSE" => {
+                fb.call_void("pb_trace_close", &[]);
+                return Ok(());
+            }
+            "IMPORT ADDR" => {
+                if call.args.len() >= 2 {
+                    let pv = self.compile_expr(fb, &call.args[0])?;
+                    let lv = self.compile_expr(fb, &call.args[1])?;
+                    let mut out_addr = Val::new("null".to_string(), IrType::Ptr);
+                    let mut out_hndl = Val::new("null".to_string(), IrType::Ptr);
+                    if call.args.len() >= 3 {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                            out_addr = ptr;
+                        }
+                    }
+                    if call.args.len() >= 4 {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                            out_hndl = ptr;
+                        }
+                    }
+                    fb.call_void(
+                        "pb_import_addr",
+                        &[pv, lv, out_addr.clone(), out_hndl.clone()],
+                    );
+                }
+                return Ok(());
+            }
+            "IMPORT CLOSE" => {
+                if let Some(arg) = call.args.first() {
+                    let v = self.compile_expr(fb, arg)?;
+                    let p = self.to_i64(fb, &v);
+                    let ptr = fb.inttoptr(&p);
+                    fb.call_void("pb_import_close", std::slice::from_ref(&ptr));
+                }
+                return Ok(());
+            }
+            "CALL DWORD" | "CALL DWORD TO" => {
+                if let Some(arg) = call.args.first() {
+                    let target = self.compile_expr(fb, arg)?;
+                    // IMPORT ADDR stores a truncated 32-bit address in a PB DWORD;
+                    // zero-extend so the upper half is clean before inttoptr.
+                    let t64 = if target.ty == IrType::I32
+                        || target.ty == IrType::I16
+                        || target.ty == IrType::I8
+                    {
+                        fb.zext(&target, &IrType::I64)
+                    } else {
+                        self.to_i64(fb, &target)
+                    };
+                    let tptr = fb.inttoptr(&t64);
+                    // args[1..] are the callee arguments; with "TO", the last one is the
+                    // result target (a lvalue)
+                    let has_result = name == "CALL DWORD TO";
+                    let call_count = if has_result {
+                        call.args.len().saturating_sub(2)
+                    } else {
+                        call.args.len().saturating_sub(1)
+                    };
+                    let mut callee_args: Vec<Val> = Vec::new();
+                    for i in 1..=call_count {
+                        let v = self.compile_expr(fb, &call.args[i])?;
+                        callee_args.push(v);
+                    }
+                    if has_result && call.args.len() >= 2 {
+                        if let Some((ptr, ir, pb)) =
+                            self.lvalue_ptr(fb, &call.args[call.args.len() - 1])
+                        {
+                            if ir.is_int() || ir.is_float() {
+                                let rc = fb.call_indirect(&ir, &tptr, &callee_args);
+                                let conv = self.convert_value(fb, &rc, &ir, &pb);
+                                fb.store(&conv, &ptr);
+                            } else {
+                                fb.call_indirect_void(&tptr, &callee_args);
+                            }
+                        }
+                    } else {
+                        fb.call_indirect_void(&tptr, &callee_args);
+                    }
                 }
                 return Ok(());
             }

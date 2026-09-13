@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-12 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-13 (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 166 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 174 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 135 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 127 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (166)
+## ✅ Implemented (174)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -60,7 +60,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `#TOOLS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#UNIQUE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#UTILITY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-
 
 | ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
 | ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
@@ -189,6 +188,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `THREAD SET PRIORITY` | STATEMENT | PB/Win + PB/CC | SetThreadPriority (batch 21) |
 | `THREAD STATUS` | STATEMENT | PB/Win + PB/CC | GetExitCodeThread STILL_ACTIVE; 1 run / 2 susp / 3 done (batch 21) |
 | `THREAD SUSPEND` | STATEMENT | PB/Win + PB/CC | SuspendThread (batch 21) |
+| `LPRINT` | STATEMENT | PB/Win + PB/CC | direct device/file output via LPRINT ATTACH (batch 22) |
+| `LPRINT ATTACH` | STATEMENT | PB/Win + PB/CC | CreateFileA open device; quoted string/device name (batch 22) |
+| `LPRINT CLOSE` | STATEMENT | PB/Win + PB/CC | CloseHandle (batch 22) |
+| `LPRINT FLUSH` | STATEMENT | PB/Win + PB/CC | FlushFileBuffers (batch 22) |
+| `LPRINT FORMFEED` | STATEMENT | PB/Win + PB/CC | form feed char 0x0C (batch 22) |
+| `TRACE` | STATEMENT | PB/Win + PB/CC | TRACE NEW/ON/OFF/PRINT/CLOSE explicit log file (batch 22) |
+| `IMPORT` | STATEMENT | PB/Win + PB/CC | IMPORT ADDR LoadLibraryA+GetProcAddress into QUAD vars (batch 22) |
+| `CALL DWORD` | STATEMENT | PB/Win + PB/CC | indirect call via inttoptr; USING args + TO result (batch 22) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -396,7 +403,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (135, alphabetical)
+## ⬜ Not implemented (127, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -409,7 +416,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ASM | STATEMENT | PB/Win + PB/CC | Established |
 | ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
-| CALL DWORD | STATEMENT | PB/Win + PB/CC | Established |
+
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
 | DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
@@ -423,18 +430,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | HEADER | STATEMENT | PB/Win only | Established |
-| IMPORT | STATEMENT | PB/Win + PB/CC | Established |
+
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
 | INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
 | INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT FLUSH | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | Established |
+
 | MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
@@ -455,7 +458,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
-| TRACE | STATEMENT | PB/Win + PB/CC | Established |
+
 | TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |

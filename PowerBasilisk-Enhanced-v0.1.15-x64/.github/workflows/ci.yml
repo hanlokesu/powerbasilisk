@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy, rustfmt
+
+    - name: Cache cargo
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.toml') }}
+        restore-keys: ${{ runner.os }}-cargo-
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Clippy
+      run: cargo clippy --all-targets -- -D warnings
+
+    - name: Build
+      run: cargo build --release
+
+    - name: Build runtime (32-bit)
+      run: clang -c --target=i686-pc-windows-msvc pbcompiler/runtime/pb_runtime.c -o pbcompiler/runtime/pb_runtime.obj
+      shell: bash
+
+    - name: Build runtime (64-bit)
+      run: clang -c --target=x86_64-pc-windows-msvc pbcompiler/runtime/pb_runtime.c -o pbcompiler/runtime/pb_runtime_x64.obj
+      shell: bash
+
+    - name: Run compiler tests (32-bit)
+      run: |
+        $compiler = "target/release/pbcompiler.exe"
+        $runtime = "pbcompiler/runtime/pb_runtime.obj"
+        $tests = Get-ChildItem "pbcompiler/tests/l*.bas"
+        $failed = 0
+        foreach ($test in $tests) {
+          Write-Host "=== $($test.Name) ==="
+          $base = $test.FullName -replace '\.bas$', ''
+          & $compiler build $test.FullName -o $base --exe --runtime-lib $runtime
+          if ($LASTEXITCODE -ne 0) { Write-Host "COMPILE FAILED"; $failed++; continue }
+          & "$base.exe"
+          if ($LASTEXITCODE -ne 0) { Write-Host "TEST FAILED (exit $LASTEXITCODE)"; $failed++ }
+          else { Write-Host "PASSED" }
+        }
+        if ($failed -gt 0) { Write-Host "$failed test(s) failed"; exit 1 }
+        Write-Host "All $($tests.Count) tests passed"
+        exit 0
+      shell: pwsh
+
+    - name: Run compiler tests (64-bit)
+      run: |
+        $compiler = "target/release/pbcompiler.exe"
+        $runtime = "pbcompiler/runtime/pb_runtime_x64.obj"
+        $tests = Get-ChildItem "pbcompiler/tests/l*.bas"
+        $failed = 0
+        foreach ($test in $tests) {
+          Write-Host "=== $($test.Name) (x64) ==="
+          $base = "$($test.FullName -replace '\.bas$', '')_x64"
+          & $compiler build $test.FullName -o $base --exe --target x86_64-pc-windows-msvc --runtime-lib $runtime
+          if ($LASTEXITCODE -ne 0) { Write-Host "COMPILE FAILED"; $failed++; continue }
+          & "$base.exe"
+          if ($LASTEXITCODE -ne 0) { Write-Host "TEST FAILED (exit $LASTEXITCODE)"; $failed++ }
+          else { Write-Host "PASSED" }
+        }
+        if ($failed -gt 0) { Write-Host "$failed test(s) failed"; exit 1 }
+        Write-Host "All $($tests.Count) tests passed (x64)"
+        exit 0
+      shell: pwsh

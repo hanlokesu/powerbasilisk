@@ -2367,3 +2367,153 @@ int pb_thread_set_priority(unsigned long id, int prio) {
     if (t == NULL) return -1;
     return SetThreadPriority(t->h, prio) ? 0 : -1;
 }
+
+/* ================= Batch 22: LPRINT / TRACE / IMPORT ================= */
+
+/* Win32 constants / imports used below (file uses hand-rolled dllimport, no windows.h) */
+#ifndef PB_B22_DEFS
+#define PB_B22_DEFS
+#define PB_GENERIC_WRITE     0x40000000UL
+#define PB_FILE_SHARE_WRITE  0x00000002UL
+#define PB_OPEN_ALWAYS       4UL
+#define PB_FORMFEED_CHAR     12
+typedef void* HMODULE_PB;
+typedef void* FARPROC_PB;
+__declspec(dllimport) void* __stdcall LoadLibraryA(const char* lpFileName);
+__declspec(dllimport) void* __stdcall GetProcAddress(void* hModule, const char* lpProcName);
+__declspec(dllimport) int __stdcall FreeLibrary(void* hLibModule);
+#endif
+
+/* ---- BSTR helpers (4-byte LE length prefix + payload) ---- */
+static unsigned int pb_bstr_len(const char* s) {
+    if (!s) return 0;
+    return (unsigned int)((unsigned char)s[0] | ((unsigned char)s[1] << 8) |
+                          ((unsigned char)s[2] << 16) | ((unsigned char)s[3] << 24));
+}
+static void pb_bstr_cpy(char* dst, size_t cap, const char* s) {
+    /* copy payload of BSTR s into dst (capped, NUL-terminated) */
+    if (!dst) return;
+    if (!s) { dst[0] = '\0'; return; }
+    unsigned int n = pb_bstr_len(s);
+    if (n >= cap) n = (unsigned int)(cap - 1);
+    memcpy(dst, s + 4, n);
+    dst[n] = '\0';
+}
+
+/* ---- LPRINT: direct line-printer device output ---- */
+static HANDLE pb_lpt_handle = NULL;
+static int pb_lpt_col = 0; /* current column for comma (14-column) handling */
+
+/* LPRINT ATTACH device$  (open device/file for direct writes; "" or NULL = close) */
+int pb_lprint_attach(char* device) {
+    if (pb_lpt_handle) { CloseHandle(pb_lpt_handle); pb_lpt_handle = NULL; }
+    pb_lpt_col = 0;
+    if (!device || strlen(device) == 0) return 0; /* close-only */
+    char path[512];
+    strncpy(path, device, sizeof(path) - 1);
+    path[sizeof(path) - 1] = '\0';
+    HANDLE h = CreateFileA(path, PB_GENERIC_WRITE, PB_FILE_SHARE_WRITE, NULL,
+                           PB_OPEN_ALWAYS, 0, NULL);
+    if (h == PB_INVALID_HANDLE) return -1;
+    pb_lpt_handle = h;
+    return 0;
+}
+/* LPRINT CLOSE */
+void pb_lprint_close(void) {
+    if (pb_lpt_handle) { CloseHandle(pb_lpt_handle); pb_lpt_handle = NULL; }
+}
+/* LPRINT FLUSH */
+void pb_lprint_flush(void) {
+    if (pb_lpt_handle) FlushFileBuffers(pb_lpt_handle);
+}
+/* LPRINT FORMFEED */
+void pb_lprint_formfeed(void) {
+    if (pb_lpt_handle) {
+        char c = 12; DWORD w;
+        WriteFile(pb_lpt_handle, &c, 1, &w, NULL);
+        pb_lpt_col = 0;
+    }
+}
+/* raw bytes to device */
+static void pb_lpt_write(const char* buf, unsigned int len) {
+    if (!pb_lpt_handle || !buf) return;
+    DWORD w;
+    WriteFile(pb_lpt_handle, buf, len, &w, NULL);
+    pb_lpt_col += (int)len;
+}
+/* LPRINT "..." — BSTR payload, no CRLF */
+void pb_lprint_bstr(char* s) {
+    if (s) pb_lpt_write(s, (unsigned int)strlen(s));
+}
+void pb_lprint_int(int n) {
+    char b[32]; int l = sprintf(b, "%d", n);
+    pb_lpt_write(b, (unsigned int)l);
+}
+void pb_lprint_i64(long long n) {
+    char b[32]; int l = sprintf(b, "%lld", n);
+    pb_lpt_write(b, (unsigned int)l);
+}
+void pb_lprint_dbl(double d) {
+    char b[64]; int l = sprintf(b, "%.6g", d);
+    pb_lpt_write(b, (unsigned int)l);
+}
+/* LPRINT statement terminator: CRLF unless trailing semicolon (simplified: always CRLF) */
+void pb_lprint_crlf(void) {
+    pb_lpt_write("\r\n", 2);
+    pb_lpt_col = 0;
+}
+/* LPRINT comma: advance to next 14-column position */
+void pb_lprint_tab(void) {
+    if (!pb_lpt_handle) return;
+    int pad = (14 - (pb_lpt_col % 14));
+    if (pad == 0) pad = 14;
+    char buf[14]; memset(buf, ' ', 14);
+    pb_lpt_write(buf, (unsigned int)pad);
+}
+
+/* ---- TRACE: explicit trace file logging ---- */
+static FILE* pb_trace_fp = NULL;
+static int pb_trace_enabled = 0;
+
+/* TRACE NEW fname$ */
+int pb_trace_new(char* fname) {
+    if (pb_trace_fp) { fclose(pb_trace_fp); pb_trace_fp = NULL; }
+    pb_trace_fp = fopen(fname ? fname : "", "w");
+    pb_trace_enabled = (pb_trace_fp != NULL);
+    return pb_trace_fp ? 0 : -1;
+}
+void pb_trace_on(void) { pb_trace_enabled = 1; }
+void pb_trace_off(void) { pb_trace_enabled = 0; }
+void pb_trace_print(char* s) {
+    if (!pb_trace_enabled || !pb_trace_fp || !s) return;
+    fputs(s, pb_trace_fp);
+    fputc('\n', pb_trace_fp);
+    fflush(pb_trace_fp);
+}
+void pb_trace_close(void) {
+    if (pb_trace_fp) { fclose(pb_trace_fp); pb_trace_fp = NULL; }
+    pb_trace_enabled = 0;
+}
+
+/* ---- IMPORT: explicit DLL loading ---- */
+/* IMPORT ADDR ProcName$, LibName$ TO AddrVar& [,HndlVar&] */
+int pb_import_addr(char* procname, char* libname, void** out_addr, void** out_hndl) {
+    /* procname/libname arrive as C-string payloads. Out slots must be 8-byte
+       (PB QUAD variables) because x64 system-DLL addresses exceed 32 bits. */
+    char pname[512], lname[1024];
+    strncpy(pname, procname ? procname : "", sizeof(pname) - 1);
+    pname[sizeof(pname) - 1] = '\0';
+    strncpy(lname, libname ? libname : "", sizeof(lname) - 1);
+    lname[sizeof(lname) - 1] = '\0';
+    void* m = LoadLibraryA(lname);
+    if (!m) return -1;
+    void* fp = GetProcAddress(m, pname);
+    if (!fp) { FreeLibrary(m); return -1; }
+    if (out_addr) *out_addr = fp;
+    if (out_hndl) *out_hndl = m;
+    return 0;
+}
+/* IMPORT CLOSE HndlVar */
+void pb_import_close(void* hndl) {
+    if (hndl) FreeLibrary(hndl);
+}
