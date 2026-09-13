@@ -370,6 +370,34 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.16 (2026-09-13) — Batch 22: LPRINT + TRACE + IMPORT ADDR + CALL DWORD (8 statements)
+
+Two statement families and the dynamic-library bridge moved from *Not
+implemented* to *Implemented* (coverage: **174 implemented / 127 not
+implemented / 202 tier-3 DDT**):
+
+- **LPRINT** — `LPRINT ATTACH` (CreateFileA open of a device or file;
+  quoted string or device name), `LPRINT` (write text/number/CRLF),
+  `LPRINT CLOSE` (CloseHandle), `LPRINT FLUSH` (FlushFileBuffers),
+  `LPRINT FORMFEED` (form-feed 0x0C). Output goes to the attached device
+  until detached.
+- **TRACE** — `TRACE NEW` (open explicit trace log file), `TRACE ON` /
+  `TRACE OFF` (enable/disable gating), `TRACE PRINT` (append a line;
+  numbers are formatted through the numeric-to-string path), `TRACE
+  CLOSE`. Unlike upstream's silent drop, the log file is real and gated.
+- **IMPORT / CALL DWORD** — `IMPORT ADDR "proc", "dll" TO a&&, h&&`
+  resolves LoadLibraryA + GetProcAddress into **QUAD (8-byte) variables**
+  — required because x64 system-DLL addresses exceed 32 bits; storing a
+  truncated DWORD and zero-extending it produces a bad pointer. `CALL
+  DWORD a&& USING fn() TO r&` performs the indirect call (USING argument
+  list + optional TO result supported), and `IMPORT CLOSE h&&` releases
+  the module.
+
+Runtime notes: the new `pb_lprint_*` / `pb_trace_*` / `pb_import_*`
+helpers follow the established payload-pointer convention (runtime
+arguments are C-string payloads; numeric TRACE arguments skip the 4-byte
+BSTR prefix in codegen). The official 14-test suite still passes 14/14.
+
 ### v0.1.15 (2026-09-13) — Batch 21: COMM serial port + THREAD control (16 statements)
 
 Two statement families moved from *Not implemented* to *Implemented*
