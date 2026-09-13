@@ -7010,21 +7010,36 @@ impl Compiler {
     }
 
     fn builtin_parse(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
-        // PARSE$(string, delimiter, index) or PARSE$(string, delimiter) for count
+        // PARSE$(string, delimiter, index) — 3-arg form (official)
+        // PARSE$(string, index)          — 2-arg form: space delimiter (official)
+        // PARSE$(string)                 — 1-arg form: space delimiter, count
         let s = self.compile_expr(fb, &args[0])?;
-        let delim = self.compile_expr(fb, &args[1])?;
-        let index = if args.len() >= 3 {
-            let idx = self.compile_expr(fb, &args[2])?;
-            self.to_i32(fb, &idx)
+        let (delim, index) = if args.len() >= 3 {
+            (self.compile_expr(fb, &args[1])?, self.compile_expr(fb, &args[2])?)
+        } else if args.len() == 2 {
+            let (n, _) = self.module.add_string_constant(" ");
+            (Val::new(n, IrType::Ptr), self.compile_expr(fb, &args[1])?)
         } else {
-            fb.const_i32(0) // 0 means "return count"
+            let (n, _) = self.module.add_string_constant(" ");
+            (Val::new(n, IrType::Ptr), fb.const_i32(0))
         };
-        Ok(fb.call(&IrType::Ptr, "pb_parse", &[s, delim, index]))
+        let index_i32 = self.to_i32(fb, &index);
+        Ok(fb.call(&IrType::Ptr, "pb_parse", &[s, delim, index_i32]))
     }
 
     fn builtin_parsecount(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        // PARSECOUNT(string)         — space delimiter (official)
+        // PARSECOUNT(string, delim)  — explicit delimiter
+        if args.is_empty() {
+            return Ok(fb.const_i32(0));
+        }
         let s = self.compile_expr(fb, &args[0])?;
-        let delim = self.compile_expr(fb, &args[1])?;
+        let delim = if args.len() >= 2 {
+            self.compile_expr(fb, &args[1])?
+        } else {
+            let (n, _) = self.module.add_string_constant(" ");
+            Val::new(n, IrType::Ptr)
+        };
         Ok(fb.call(&IrType::I32, "pb_parsecount", &[s, delim]))
     }
 
