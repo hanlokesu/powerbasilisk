@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +7 official function keywords from batch 44 — SWITCH/SWITCH$ first-true select chain, HI/LO bit extraction (BYTE/WORD/LONG), FILEATTR file attribute queries (mode/open/OS handle/enumerate), FILENAME$ open-file name, PATHSCAN$ disk-scanned path parts (FULL/PATH/NAME/EXTN/NAMEX). Function-class, coverage counts unchanged.)
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
@@ -319,6 +320,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `BITS$(director, s$)` | ✅ | 43 (v0.1.37) | pb_bits_str — STRING/WSTRING identity copy (ANSI-only build) |
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
+| `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
+| `HI(DataType, v)` / `LO(DataType, v)` | ✅ | 44 (v0.1.38) | bit extraction — `lshr` + mask per DataType (BYTE=8/WORD·INTEGER=16/LONG=32 bits) |
+| `FILEATTR([#]f, attr)` | ✅ | 44 (v0.1.38) | pb_fileattr — open state, mode bits (Input 1/Output 2/Random 4/Append 10/Binary 32), OS handle, enumerate |
+| `FILENAME$([#]f)` | ✅ | 44 (v0.1.38) | pb_filename — file-system name of an open file (tracked in pb_open/pb_close) |
+| `PATHSCAN$(director, spec$ [, pathspec$])` | ✅ | 44 (v0.1.38) | pb_pathscan — FindFirstFileA existence check across `;`-separated dirs + FULL/PATH/NAME/EXTN/NAMEX parts |
 | DAYNAME$(n&) | ✅ | 42 (v0.1.36) | pb_dayname — 0=Sunday..6=Saturday, runtime name table |
 | MONTHNAME$(n&) | ✅ | 42 (v0.1.36) | pb_monthname — 1=January..12=December, runtime name table |
 | DATACOUNT | ✅ | 42 (v0.1.36) | pb_data_count — current procedure DATA pool size |
@@ -451,6 +457,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.38 (2026-09-15) — Batch 44: SWITCH/SWITCH$ / HI/LO / FILEATTR / FILENAME$ / PATHSCAN$
+- **SWITCH(expr1, val1, ...)** / **SWITCH$(...)**: returns the value paired with the first true (non-zero) condition; all-false returns 0 / empty string. Implemented as a chain of LLVM `select` instructions — no branches needed.
+- **HI(DataType, v)** / **LO(DataType, v)**: high / low part extraction. DataType BYTE→8 bits, WORD/INTEGER→16 bits, LONG→32 bits (value promoted to 64-bit first).
+- **FILEATTR([#]filenum&, fattr)**: full official table — −3 device type, −2 logical position, −1 record length (RANDOM)/128 (INPUT)/1, 0 open state, 1 mode bits (Input=1, Output=2, Random=4, Append=10, Binary=32), 2 OS file handle, 3 enumerate nth open file (−1 when none).
+- **FILENAME$(filenum&)**: file-system name of an open file, tracked by pb_open/pb_close.
+- **PATHSCAN$(director, filespec$ [, pathspec$])**: verifies the file exists (FindFirstFileA) across a `;`-separated directory list, then resolves FULL/PATH/NAME/EXTN/NAMEX parts — like PATHNAME$ but disk-checked.
+- Tests: examples/batch44_test.bas (11/11), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+
 
 ### v0.1.37 (2026-09-15) — Batch 43: BITS$ / PATHNAME$ / PRINTERCOUNT
 - **BITS$(director, s$)** — returns a copy of the string argument (STRING/WSTRING accepted; this build is ANSI-only, so the copy is identity). Maps to pb_bits_str.

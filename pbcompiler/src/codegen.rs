@@ -1680,6 +1680,20 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_printer_count", &IrType::I64, &[], false);
+        self.module.declare_function(
+            "pb_fileattr",
+            &IrType::I64,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_filename", &IrType::Ptr, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_pathscan",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_monthname", &IrType::Ptr, &[IrType::I64], false);
         self.module
@@ -8057,6 +8071,11 @@ impl Compiler {
             "BITS" => Some(self.builtin_str2(fb, args, "pb_bits_str")),
             "PATHNAME" => Some(self.builtin_str2(fb, args, "pb_pathname")),
             "PRINTERCOUNT" => Some(self.builtin_count0(fb, "pb_printer_count")),
+            "SWITCH" | "SWITCH$" => Some(self.builtin_switch(fb, args, name)),
+            "HI" | "LO" => Some(self.builtin_hilo(fb, args, name)),
+            "FILEATTR" => Some(self.builtin_fileattr(fb, args)),
+            "FILENAME" => Some(self.builtin_filename(fb, args)),
+            "PATHSCAN" => Some(self.builtin_strn(fb, args, "pb_pathscan", 2)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
             "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
@@ -9054,6 +9073,115 @@ impl Compiler {
 
     fn builtin_count0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
         Ok(fb.call(&IrType::I64, fname, &[]))
+    }
+
+    fn builtin_switch(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        _name: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() || !args.len().is_multiple_of(2) {
+            return Err(PbError::runtime(
+                "SWITCH: expected pairs of (condition, value)",
+            ));
+        }
+        // String vs numeric variant is decided by the first value's IR type
+        // (the lexer may or may not keep the trailing $ in the builtin name).
+        let is_str = self.compile_expr(fb, &args[1])?.ty == IrType::Ptr;
+        let mut conds = Vec::new();
+        let mut vals = Vec::new();
+        for pair in args.chunks(2) {
+            let c = self.compile_expr(fb, &pair[0])?;
+            let c1 = self.convert_value(fb, &c, &IrType::I64, &PbType::Long);
+            let cond = fb.icmp("ne", &c1, &fb.const_i64(0));
+            let v = self.compile_expr(fb, &pair[1])?;
+            let vv = if is_str {
+                self.convert_value(fb, &v, &IrType::Ptr, &PbType::String)
+            } else {
+                self.convert_value(fb, &v, &IrType::I64, &PbType::Long)
+            };
+            conds.push(cond);
+            vals.push(vv);
+        }
+        let default = if is_str {
+            fb.const_null_ptr()
+        } else {
+            fb.const_i64(0)
+        };
+        let mut acc = default;
+        for (cond, val) in conds.iter().zip(vals.iter()).rev() {
+            acc = fb.select(cond, val, &acc);
+        }
+        Ok(acc)
+    }
+
+    fn builtin_hilo(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        name: &str,
+    ) -> PbResult<Val> {
+        let dtype = match &args[0] {
+            Expr::StringLit(d) => d.clone(),
+            _ => return Err(PbError::runtime("HI/LO: expected a data type")),
+        };
+        let v = self.compile_expr(fb, &args[1])?;
+        let vi = self.convert_value(fb, &v, &IrType::I64, &PbType::Quad);
+        let bits: i64 = match dtype.as_str() {
+            "BYTE" => 8,
+            "WORD" | "INTEGER" => 16,
+            _ => 32,
+        };
+        let mask = (1i64 << bits) - 1;
+        let r = if name == "HI" {
+            let shifted = fb.lshr(&vi, &fb.const_i64(bits));
+            fb.and(&shifted, &fb.const_i64(mask))
+        } else {
+            fb.and(&vi, &fb.const_i64(mask))
+        };
+        Ok(r)
+    }
+
+    fn builtin_fileattr(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() != 2 {
+            return Err(PbError::runtime("FILEATTR requires 2 arguments"));
+        }
+        let a0 = self.compile_expr(fb, &args[0])?;
+        let a1 = self.compile_expr(fb, &args[1])?;
+        let f = self.convert_value(fb, &a0, &IrType::I32, &PbType::Long);
+        let at = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
+        Ok(fb.call(&IrType::I64, "pb_fileattr", &[f, at]))
+    }
+
+    fn builtin_filename(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() != 1 {
+            return Err(PbError::runtime("FILENAME$ requires 1 argument"));
+        }
+        let a0 = self.compile_expr(fb, &args[0])?;
+        let f = self.convert_value(fb, &a0, &IrType::I32, &PbType::Long);
+        Ok(fb.call(&IrType::Ptr, "pb_filename", &[f]))
+    }
+
+    fn builtin_strn(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+        min: usize,
+    ) -> PbResult<Val> {
+        if args.len() < min {
+            return Err(PbError::runtime(format!(
+                "{fname} requires at least {min} arguments"
+            )));
+        }
+        let mut a = Vec::new();
+        for e in args {
+            let v = self.compile_expr(fb, e)?;
+            let p = self.convert_value(fb, &v, &IrType::Ptr, &PbType::String);
+            a.push(p);
+        }
+        Ok(fb.call(&IrType::Ptr, fname, &a))
     }
 
     fn builtin_conv1(

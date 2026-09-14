@@ -5054,6 +5054,22 @@ impl Parser {
                 self.expect(&Token::RParen)?;
                 Ok(Expr::FunctionCall("DIR$".to_string(), args))
             }
+            Token::Identifier(name) if name.eq_ignore_ascii_case("FILEATTR") => {
+                // FILEATTR([#] filenum&, fattr) — optional # before the file number.
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
+                args.push(self.parse_expression()?);
+                while self.peek() == &Token::Comma {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("FILEATTR".to_string(), args))
+            }
             Token::Identifier(name)
                 if name.eq_ignore_ascii_case("BITS") || name.eq_ignore_ascii_case("BITS$") =>
             {
@@ -5084,6 +5100,61 @@ impl Parser {
                 }
                 self.expect(&Token::RParen)?;
                 Ok(Expr::FunctionCall("BITS$".to_string(), args))
+            }
+            Token::Identifier(name)
+                if name.eq_ignore_ascii_case("PATHSCAN")
+                    || name.eq_ignore_ascii_case("PATHSCAN$") =>
+            {
+                // PATHSCAN$(director, filespec$ [, pathspec$]) — director words are
+                // Identifier tokens (FULL/PATH/NAME/EXTN/NAMEX); convert to strings.
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if let Token::Identifier(ref w) = self.peek().clone() {
+                    args.push(Expr::StringLit(w.to_uppercase()));
+                    self.advance();
+                } else {
+                    args.push(self.parse_expression()?);
+                }
+                while self.peek() == &Token::Comma {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("PATHSCAN".to_string(), args))
+            }
+            Token::Identifier(name)
+                if name.eq_ignore_ascii_case("HI")
+                    || name.eq_ignore_ascii_case("HI$")
+                    || name.eq_ignore_ascii_case("LO")
+                    || name.eq_ignore_ascii_case("LO$") =>
+            {
+                // HI(DataType, value) / LO(DataType, value) — DataType is a type keyword
+                // (BYTE/WORD are Identifiers; INTEGER/DWORD/LONG are keyword tokens).
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let dtype = match self.peek().clone() {
+                    Token::Integer => "INTEGER".to_string(),
+                    Token::Dword => "DWORD".to_string(),
+                    Token::Long => "LONG".to_string(),
+                    Token::String_ => "STRING".to_string(),
+                    Token::Identifier(ref w) => w.to_uppercase(),
+                    _ => {
+                        return Err(PbError::parser(
+                            format!("HI/LO: expected a data type, got {:?}", self.peek()),
+                            self.peek_located().file.as_deref(),
+                            self.current_line(),
+                        ))
+                    }
+                };
+                self.advance();
+                self.expect(&Token::Comma)?;
+                let val = self.parse_expression()?;
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall(
+                    name.to_uppercase().trim_end_matches('$').to_string(),
+                    vec![Expr::StringLit(dtype), val],
+                ))
             }
             Token::Identifier(name)
                 if name.eq_ignore_ascii_case("PATHNAME")

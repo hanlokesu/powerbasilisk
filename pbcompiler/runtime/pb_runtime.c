@@ -968,7 +968,8 @@ char* pb_remove(const char* str, const char* chars) {
 
 #define MAX_FILE_HANDLES 256
 static FILE* file_handles[MAX_FILE_HANDLES] = {0};
-static int file_modes[MAX_FILE_HANDLES] = {0}; /* 0=INPUT 1=OUTPUT 2=APPEND 3=BINARY 4=RANDOM */
+static int file_modes[MAX_FILE_HANDLES] = {0};
+static char file_names[MAX_FILE_HANDLES][260]; /* 0=INPUT 1=OUTPUT 2=APPEND 3=BINARY 4=RANDOM */
 /* RANDOM-mode record state: record length, record buffer, current record (0-based) */
 static unsigned rec_len[MAX_FILE_HANDLES] = {0};
 static char* rec_buf[MAX_FILE_HANDLES] = {0};
@@ -996,11 +997,19 @@ int pb_open(const char* path, int mode, int filenum) {
                 file_handles[filenum] = fopen(path, "w+b");
             }
             file_modes[filenum] = mode;
+            if (file_handles[filenum]) {
+                strncpy(file_names[filenum], path, 259);
+                file_names[filenum][259] = 0;
+            }
             return (file_handles[filenum] != NULL) ? 0 : -1;
         default: fmode = "r"; break;
     }
     file_handles[filenum] = fopen(path, fmode);
-    if (file_handles[filenum]) file_modes[filenum] = mode;
+    if (file_handles[filenum]) {
+        file_modes[filenum] = mode;
+        strncpy(file_names[filenum], path, 259);
+        file_names[filenum][259] = 0;
+    }
     return (file_handles[filenum] != NULL) ? 0 : -1;
 }
 
@@ -1009,6 +1018,7 @@ void pb_close(int filenum) {
         fclose(file_handles[filenum]);
         file_handles[filenum] = NULL;
         file_modes[filenum] = 0;
+        file_names[filenum][0] = 0;
         if (rec_buf[filenum]) {
             free(rec_buf[filenum]);
             rec_buf[filenum] = NULL;
@@ -1016,6 +1026,52 @@ void pb_close(int filenum) {
         rec_len[filenum] = 0;
         rec_pos[filenum] = 0;
     }
+}
+
+/* FILEATTR([#] fnum&, fattr) — PB attribute query (see official FILEATTR function page). */
+long long pb_fileattr(int filenum, int attr) {
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES) return 0;
+    FILE* f = file_handles[filenum];
+    switch (attr) {
+        case -3: return f ? 1 : 0;                 /* 1 = file (COMM/TCP/UDP channels are devices; not in this table) */
+        case -2: return 1;                         /* logical first-byte position (BASE= not implemented -> 1) */
+        case -1:
+            if (!f) return 0;
+            if (file_modes[filenum] == 4) return rec_len[filenum];   /* RANDOM: record length */
+            if (file_modes[filenum] == 0) return 128;                /* INPUT: LEN= buffer default */
+            return 1;                                               /* BINARY/OUTPUT/APPEND: unbuffered */
+        case 0: return f ? -1 : 0;                 /* open state (non-zero = open) */
+        case 1:                                    /* file mode bits (PB codes) */
+            if (!f) return 0;
+            switch (file_modes[filenum]) {
+                case 0: return 1;    /* Input */
+                case 1: return 2;    /* Output */
+                case 4: return 4;    /* Random */
+                case 2: return 10;   /* Append(8) + Output(2) */
+                case 3: return 32;   /* Binary */
+            }
+            return 0;
+        case 2: return f ? (long long)_fileno(f) : 0;   /* OS file handle */
+        case 3: {                                    /* enumerate: nth open file number */
+            int cnt = 0;
+            for (int i = 1; i < MAX_FILE_HANDLES; i++) {
+                if (file_handles[i]) {
+                    cnt++;
+                    if (cnt == filenum) return i;
+                }
+            }
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/* FILENAME$([#] fnum&) — file-system name of an open file. */
+char* pb_filename(int filenum) {
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES || !file_handles[filenum]) {
+        return pb_bstr_alloc("", 0);
+    }
+    return pb_bstr_alloc(file_names[filenum], (int)strlen(file_names[filenum]));
 }
 
 /* FILESCAN [#] fnum&, RECORDS TO y& [, WIDTH TO x&]
@@ -3640,6 +3696,64 @@ void pb_dir_close(void) {
         g_dir_handle = PB_INVALID_HANDLE;
     }
 }
+/* PATHSCAN$(director, filespec$ [, pathspec$]) — find a file on disk and return
+   FULL/PATH/NAME/EXTN/NAMEX part (semantics per official PATHSCAN$ function page).
+   pathspec$ is a semicolon-separated list of directories to search. */
+char* pb_pathscan(const char* director, const char* filespec, const char* pathspec) {
+    char buf[1024];
+    const char* dirs = (pathspec && pathspec[0]) ? pathspec : "";
+    const char* p = dirs;
+    for (;;) {
+        const char* semi = strchr(p, ';');
+        int dlen = semi ? (int)(semi - p) : (int)strlen(p);
+        int total = dlen + 1 + (int)strlen(filespec ? filespec : "");
+        if (total >= 1024) return pb_bstr_alloc("", 0);
+        if (dlen > 0) {
+            memcpy(buf, p, dlen);
+            buf[dlen] = '\\';
+            strcpy(buf + dlen + 1, filespec ? filespec : "");
+        } else {
+            strcpy(buf, filespec ? filespec : "");
+        }
+        /* FindFirstFileA: 0xFFFFFFFF = INVALID_HANDLE_VALUE */
+        char find_data[592];
+        void* h = FindFirstFileA(buf, find_data);
+        if (h != PB_INVALID_HANDLE) {
+            /* file exists — now resolve the part on the FULL found path */
+            char found[1024];
+            strncpy(found, buf, 1023); found[1023] = 0;
+            /* remove the filespec tail from buf to get the directory, then
+               reconstruct: we simply parse buf itself (path + filespec). */
+            const char* slash = strrchr(buf, '\\');
+            const char* colon = strrchr(buf, ':');
+            const char* last = slash > colon ? slash : colon;
+            const char* dot = strrchr(buf, '.');
+            char out[1024];
+            int len = 0;
+            const char* dr = director ? director : "FULL";
+            if (strcmp(dr, "FULL") == 0) {
+                len = (int)strlen(buf); if (len > 1023) len = 1023; memcpy(out, buf, len);
+            } else if (strcmp(dr, "PATH") == 0) {
+                if (last) { len = (int)(last - buf) + 1; if (len > 1023) len = 1023; memcpy(out, buf, len); }
+            } else if (strcmp(dr, "EXTN") == 0) {
+                if (dot) { len = (int)strlen(dot); if (len > 1023) len = 1023; memcpy(out, dot, len); }
+            } else { /* NAME / NAMEX */
+                const char* start = last ? last + 1 : buf;
+                int slen = (int)strlen(start);
+                if (strcmp(dr, "NAME") == 0 && dot && dot > start) slen = (int)(dot - start);
+                len = slen; if (len > 1023) len = 1023;
+                memcpy(out, start, len);
+            }
+            out[len] = 0;
+            FindClose(h);
+            return pb_bstr_alloc(out, len);
+        }
+        if (!semi) break;
+        p = semi + 1;
+    }
+    return pb_bstr_alloc("", 0);
+}
+
 /* Batch 43: BITS$ / PATHNAME$ / PRINTERCOUNT
    LoadLibraryA-based EnumPrintersW probe; kept near the other dllimport
    consumers (pb_import_addr) rather than the file tail. */
