@@ -2636,6 +2636,58 @@ impl Parser {
                             line,
                         }));
                     }
+                    if op == "GET" || op == "SET" {
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        let is_text = sub == "TEXT";
+                        if is_text || sub == "STATE" {
+                            self.advance();
+                            let h = self.parse_expression()?;
+                            let mut args = vec![h];
+                            // optional BYCMD flag: MENU GET/SET ... h [, BYCMD] item TO dst
+                            let bycmd;
+                            if matches!(self.peek(), Token::Comma) {
+                                self.advance();
+                                if self.peek_plain_upper() == "BYCMD" {
+                                    self.advance();
+                                    bycmd = 1;
+                                    self.expect(&Token::Comma)?;
+                                } else {
+                                    bycmd = 0;
+                                }
+                            } else {
+                                bycmd = 0;
+                            }
+                            args.push(Expr::IntegerLit(bycmd));
+                            let pos = self.parse_expression()?;
+                            args.push(pos);
+                            if op == "GET" {
+                                self.expect(&Token::To)?;
+                                let dst = self.parse_expression()?;
+                                args.push(dst);
+                            } else {
+                                self.expect(&Token::Comma)?;
+                                let val = self.parse_expression()?;
+                                args.push(val);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: if is_text {
+                                    if op == "GET" {
+                                        "MENU_GET_TEXT".to_string()
+                                    } else {
+                                        "MENU_SET_TEXT".to_string()
+                                    }
+                                } else if op == "GET" {
+                                    "MENU_GET_STATE".to_string()
+                                } else {
+                                    "MENU_SET_STATE".to_string()
+                                },
+                                args,
+                                line,
+                            }));
+                        }
+                    }
                 }
 
                 // COLOR fore& [, back&] — console text attribute (PB/CC, batch 49)

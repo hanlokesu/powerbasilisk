@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 151 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (251)
+## ✅ Implemented (255)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -275,7 +275,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SET CAPTION | console-title bridge (SetConsoleTitleA) |
 | GRAPHIC SET POS | move pen position (MoveToEx, optional STEP) |
 | GRAPHIC SET STRETCHMODE | set stretch mode (SetStretchBltMode) |
-| GRAPHIC TEXT SIZE | measure string (GetTextExtentPoint32A) |
+| GRAPHIC TEXT SIZE | measure string (GetTextExtentPoint32A) 
+| `MENU GET STATE` | STATEMENT | pb_menu_get_state (GetMenuState/EnableMenuItem/CheckMenuItem) |
+| `MENU SET STATE` | STATEMENT | pb_menu_set_state (EnableMenuItem/CheckMenuItem) |
+| `MENU GET TEXT` | STATEMENT | pb_menu_get_text (GetMenuStringA) |
+| `MENU SET TEXT` | STATEMENT | pb_menu_set_text (ModifyMenuA) ||
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -439,10 +443,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MENU ATTACH | STATEMENT |
 | MENU CONTEXT | STATEMENT |
 | MENU DRAW BAR | STATEMENT |
-| MENU GET STATE | STATEMENT |
-| MENU GET TEXT | STATEMENT |
-| MENU SET STATE | STATEMENT |
-| MENU SET TEXT | STATEMENT |
 | SCROLLBAR | STATEMENT |
 | STATUSBAR | STATEMENT |
 | TAB | STATEMENT |

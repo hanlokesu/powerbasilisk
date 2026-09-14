@@ -1788,6 +1788,30 @@ impl Compiler {
             &[IrType::I64, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_menu_get_state",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_menu_set_state",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_menu_get_text",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_menu_set_text",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_menu_destroy", &IrType::I32, &[IrType::I64], false);
         self.module.declare_function(
@@ -4692,6 +4716,7 @@ impl Compiler {
                     let converted = self.convert_value(fb, &h, &target.0.ty, &target.1);
                     fb.store(&converted, &target.0);
                 }
+                return Ok(());
             }
             "MENU_ADD_STRING" => {
                 // args: hMenu, txt$, id&, state&
@@ -4703,6 +4728,7 @@ impl Compiler {
                 let state = self.compile_expr(fb, &call.args[3])?;
                 let s2 = self.convert_value(fb, &state, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_menu_add_string", &[h2, txt, id2, s2]);
+                return Ok(());
             }
             "MENU_ADD_POPUP" => {
                 // args: hMenu, hSub, id&
@@ -4713,6 +4739,7 @@ impl Compiler {
                 let id = self.compile_expr(fb, &call.args[2])?;
                 let id2 = self.convert_value(fb, &id, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_menu_add_popup", &[h2, hs2, id2]);
+                return Ok(());
             }
             "MENU_DELETE" => {
                 // args: hMenu, pos&
@@ -4721,6 +4748,7 @@ impl Compiler {
                 let pos = self.compile_expr(fb, &call.args[1])?;
                 let p2 = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_menu_delete", &[h2, p2]);
+                return Ok(());
             }
             "GRAPHIC_BITMAP_NEW" => {
                 // args: w&, h& [, hBmp TO target]
@@ -5149,6 +5177,53 @@ impl Compiler {
                     let dst = self.compile_expr(fb, &call.args[1])?;
                     fb.call_void("pb_filecopy", &[src, dst]);
                 }
+                return Ok(());
+            }
+            "MENU_GET_STATE" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let bycmd = self.compile_expr(fb, &call.args[1])?;
+                let pos = self.compile_expr(fb, &call.args[2])?;
+                if let Some((dst, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                    let hc = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                    let bc = self.convert_value(fb, &bycmd, &IrType::I32, &PbType::Long);
+                    let pc = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
+                    fb.call_void("pb_menu_get_state", &[hc, bc, pc, dst]);
+                }
+                return Ok(());
+            }
+            "MENU_SET_STATE" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let bycmd = self.compile_expr(fb, &call.args[1])?;
+                let pos = self.compile_expr(fb, &call.args[2])?;
+                let val = self.compile_expr(fb, &call.args[3])?;
+                let hc = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                let bc = self.convert_value(fb, &bycmd, &IrType::I32, &PbType::Long);
+                let pc = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
+                let vc = self.convert_value(fb, &val, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_menu_set_state", &[hc, bc, pc, vc]);
+                return Ok(());
+            }
+            "MENU_GET_TEXT" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let bycmd = self.compile_expr(fb, &call.args[1])?;
+                let pos = self.compile_expr(fb, &call.args[2])?;
+                if let Some((dst, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                    let hc = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                    let bc = self.convert_value(fb, &bycmd, &IrType::I32, &PbType::Long);
+                    let pc = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
+                    fb.call_void("pb_menu_get_text", &[hc, bc, pc, dst]);
+                }
+                return Ok(());
+            }
+            "MENU_SET_TEXT" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let bycmd = self.compile_expr(fb, &call.args[1])?;
+                let pos = self.compile_expr(fb, &call.args[2])?;
+                let txt = self.compile_str_payload(fb, &call.args[3])?;
+                let hc = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                let bc = self.convert_value(fb, &bycmd, &IrType::I32, &PbType::Long);
+                let pc = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_menu_set_text", &[hc, bc, pc, txt]);
                 return Ok(());
             }
             "SETATTR" => {

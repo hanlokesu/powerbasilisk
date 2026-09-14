@@ -27,6 +27,11 @@ __declspec(dllimport) void __stdcall SysFreeString(char* bstrString);
 __declspec(dllimport) unsigned long __stdcall GetFileAttributesA(const char* lpFileName);
 __declspec(dllimport) int __stdcall CharToOemA(const char* lpszSrc, char* lpszDst);
 __declspec(dllimport) int __stdcall OemToCharA(const char* lpszSrc, char* lpszDst);
+__declspec(dllimport) unsigned int __stdcall GetMenuState(void* h, unsigned int id, unsigned int f);
+__declspec(dllimport) int __stdcall EnableMenuItem(void* h, unsigned int id, unsigned int f);
+__declspec(dllimport) int __stdcall CheckMenuItem(void* h, unsigned int id, unsigned int f);
+__declspec(dllimport) int __stdcall GetMenuStringA(void* h, unsigned int id, char* buf, int max, unsigned int f);
+__declspec(dllimport) int __stdcall ModifyMenuA(void* h, unsigned int id, unsigned int f, unsigned int newid, const char* txt);
 __declspec(dllimport) int __stdcall GetDiskFreeSpaceExA(char* lpDir, unsigned long long* lpFreeAvail, unsigned long long* lpTotalBytes, unsigned long long* lpTotalFree);
 /* Win32 API for crash handling */
 __declspec(dllimport) void* __stdcall AddVectoredExceptionHandler(unsigned long First, void* Handler);
@@ -4296,6 +4301,41 @@ int pb_menu_add_popup(long long h, long long hSub, int id) {
 }
 int pb_menu_delete(long long h, int pos) {
     return DeleteMenu((void*)(intptr_t)h, (unsigned int)pos, 0x0400) ? 1 : 0; /* MF_BYPOSITION */
+}
+
+/* MENU GET STATE / SET STATE / GET TEXT / SET TEXT (batch 62) */
+int pb_menu_get_state(long long h, int bycmd, long pos, long* state) {
+    if (!state) return 0;
+    unsigned int f = GetMenuState((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), bycmd ? 0 : 0x0400);
+    if (f == (unsigned int)-1) return 0;
+    *state = (long)(f & 0xFFFF);
+    return 1;
+}
+int pb_menu_set_state(long long h, int bycmd, long pos, long state) {
+    unsigned int base = bycmd ? 0 : 0x0400; /* MF_BYCOMMAND=0, MF_BYPOSITION=0x400 */
+    int ok = 1;
+    unsigned int en = 0;
+    if (state & 1) en = 0x0001;      /* MF_GRAYED */
+    else if (state & 2) en = 0x0002; /* MF_DISABLED */
+    else en = 0x0000;                /* MF_ENABLED */
+    ok = ok && EnableMenuItem((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), base | en) != (unsigned int)-1;
+    if (state & 8) ok = ok && CheckMenuItem((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), base | 0x0008) != (unsigned int)-1;
+    else if (state & 0x10) ok = ok && CheckMenuItem((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), base | 0x0000) != (unsigned int)-1;
+    if (state & 0x80) ok = ok && EnableMenuItem((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), base | 0x0080) != (unsigned int)-1; /* MF_HILITE */
+    return ok ? 1 : 0;
+}
+int pb_menu_get_text(long long h, int bycmd, long pos, char** dest) {
+    if (!dest) return 0;
+    char buf[1024];
+    buf[0] = '\0';
+    int n = GetMenuStringA((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), buf, 1024, bycmd ? 0 : 0x0400);
+    if (n == 0) { *dest = pb_bstr_alloc("", 0); return 0; }
+    *dest = pb_bstr_alloc(buf, (unsigned int)strlen(buf));
+    return 1;
+}
+int pb_menu_set_text(long long h, int bycmd, long pos, char* txt) {
+    unsigned int base = bycmd ? 0 : 0x0400;
+    return ModifyMenuA((void*)(intptr_t)h, (unsigned int)(bycmd ? pos : pos - 1), base | 0x0040 | 0x0000, (unsigned int)pos, txt) ? 1 : 0; /* MF_STRING|MF_ENABLED */
 }
 int pb_menu_destroy(long long h) {
     return DestroyMenu((void*)(intptr_t)h) ? 1 : 0;

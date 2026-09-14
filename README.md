@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +4 official statement keywords from batch 62 — MENU GET STATE / MENU SET STATE (GetMenuState / EnableMenuItem / CheckMenuItem, PB-compatible 1-based positions mapped to Win32 MF_BYPOSITION), MENU GET TEXT / MENU SET TEXT (GetMenuStringA / ModifyMenuA). Coverage now 255 implemented / 147 tier-3 / 101 not implemented.
 > (2026-09-15: +8 official statement keywords from batch 61 — GRAPHIC GET PPI (GetDeviceCaps LOGPIXELS), GRAPHIC GET POS / GRAPHIC SET POS (GetCurrentPositionEx / MoveToEx with optional STEP), GRAPHIC TEXT SIZE (GetTextExtentPoint32A), GRAPHIC GET/SET STRETCHMODE (GetStretchBltMode / SetStretchBltMode), GRAPHIC GET/SET CAPTION (console-title bridge via GetConsoleTitleA / SetConsoleTitleA). Coverage now 251 implemented / 151 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 60 — GRAPHIC ARC / GRAPHIC PIE (GDI Arc/Pie with PB degree angles mapped to ellipse points), GRAPHIC POLYLINE (Polyline with coordinate array), GRAPHIC PAINT (FloodFill with border color). > (2026-09-15: +4 official statement keywords from batch 59 — GRAPHIC SET PIXEL (direct 32-bpp pixel write via GetDIBits/SetDIBits), GRAPHIC GET SIZE (bitmap width/height), GRAPHIC SET TEXTALIGN / GRAPHIC GET TEXTALIGN (text alignment mode). > (2026-09-15: +4 official statement keywords from batch 58 — GRAPHIC GET CANVAS (current bitmap handle), GRAPHIC GET DC (device context), GRAPHIC SET MIX / GRAPHIC GET MIX (ROP mode state, default R2_COPYPEN). Coverage now 235 implemented / 167 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official statement keywords from batch 57 — GRAPHIC BITMAP LOAD (LoadImageA from BMP file), GRAPHIC CHR SIZE (GetTextExtentPoint32A), GRAPHIC CELL / GRAPHIC CELL SIZE (character-cell metrics). Coverage now 231 implemented / 171 tier-3 / 101 not implemented.)
@@ -244,7 +245,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **251** statement-class keywords implemented · **151** DDT/GUI-class
+> Summary: **255** statement-class keywords implemented · **147** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -288,6 +289,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 ### Newly implemented by this branch
 | PB statement / function | Status | Batch | Maps to |
 | --- | --- | --- | --- |
+| `MENU GET STATE` | ✅ | 62 (v0.1.56) | GetMenuState (pb_menu_get_state) |
+| `MENU SET STATE` | ✅ | 62 (v0.1.56) | EnableMenuItem/CheckMenuItem (pb_menu_set_state) |
+| `MENU GET TEXT` | ✅ | 62 (v0.1.56) | GetMenuStringA (pb_menu_get_text) |
+| `MENU SET TEXT` | ✅ | 62 (v0.1.56) | ModifyMenuA (pb_menu_set_text) |
 | `GRAPHIC GET PPI` | ✅ | 61 (v0.1.55) | GetDeviceCaps LOGPIXELSX/LOGPIXELSY (pb_graphic_get_ppi) |
 | `GRAPHIC GET POS` | ✅ | 61 (v0.1.55) | GetCurrentPositionEx (pb_graphic_get_pos) |
 | `GRAPHIC SET POS` | ✅ | 61 (v0.1.55) | MoveToEx, optional STEP (pb_graphic_set_pos) |
@@ -503,6 +508,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.56 (2026-09-15) — Batch 62: MENU GET/SET STATE + MENU GET/SET TEXT
+
+- **MENU GET STATE hMenu [, BYCMD] item& TO state&** — GetMenuState; PB 1-based positions mapped to Win32 MF_BYPOSITION (pos-1); returns the menu-item flags (MF_STRING 0x40 included) as a LONG.
+- **MENU SET STATE hMenu [, BYCMD] item&, state&** — EnableMenuItem (MF_GRAYED=1 / MF_DISABLED=2 / MF_ENABLED=0) + CheckMenuItem (MF_CHECKED=8 / MF_UNCHECKED=0) + MF_HILITE=0x80 combination.
+- **MENU GET TEXT hMenu [, BYCMD] item& TO txt$** — GetMenuStringA into a PB string (pb_bstr_alloc), BYCMD or 1-based position mode.
+- **MENU SET TEXT hMenu [, BYCMD] item&, txt$** — ModifyMenuA (MF_STRING|MF_ENABLED) replacing the item text.
+- **Fix:** parser — MENU GET/SET BYCMD flag sits after the comma (`hMenu, BYCMD, item`); previous parser only checked before the comma and dropped every SET statement with a "Expected To, got Comma" parse warning.
+- **Fix:** codegen — MENU NEW BAR/POPUP, MENU ADD STRING, MENU ADD POPUP, MENU DELETE branches were missing `return Ok(())` and fell through to the unimplemented report, wrongly logging them as "no codegen implementation" while still emitting correct calls.
+- Tests: examples/batch62_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.55 (2026-09-15) — Batch 61: GRAPHIC GET PPI / GET+SET POS / TEXT SIZE / GET+SET STRETCHMODE / GET+SET CAPTION
 
