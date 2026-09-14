@@ -1919,6 +1919,111 @@ impl Parser {
                     return self.parse_mat_statement(line);
                 }
 
+                // REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]
+                if name_upper == "REGEXPR" {
+                    self.advance(); // consume REGEXPR
+                    let mask = self.parse_expression()?;
+                    // expect IN
+                    if !matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("IN"))
+                    {
+                        return Err(PbError::parser(
+                            "REGEXPR: expected IN".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let target = self.parse_expression()?;
+                    let mut start = None;
+                    if matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("AT"))
+                    {
+                        self.advance();
+                        start = Some(self.parse_expression()?);
+                    }
+                    // expect TO
+                    if !matches!(self.peek(), Token::To) {
+                        return Err(PbError::parser(
+                            "REGEXPR: expected TO".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let pos_var = self.parse_expression()?;
+                    let mut len_var = None;
+                    if matches!(self.peek(), Token::Comma) {
+                        self.advance();
+                        len_var = Some(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Regexpr {
+                        mask,
+                        target,
+                        start,
+                        pos_var,
+                        len_var,
+                    });
+                }
+
+                // REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$
+                if name_upper == "REGREPL" {
+                    self.advance(); // consume REGREPL
+                    let mask = self.parse_expression()?;
+                    if !matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("IN"))
+                    {
+                        return Err(PbError::parser(
+                            "REGREPL: expected IN".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let target = self.parse_expression()?;
+                    if !matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("WITH"))
+                    {
+                        return Err(PbError::parser(
+                            "REGREPL: expected WITH".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let repl = self.parse_expression()?;
+                    let mut start = None;
+                    if matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("AT"))
+                    {
+                        self.advance();
+                        start = Some(self.parse_expression()?);
+                    }
+                    if !matches!(self.peek(), Token::To) {
+                        return Err(PbError::parser(
+                            "REGREPL: expected TO".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let pos_var = self.parse_expression()?;
+                    if !matches!(self.peek(), Token::Comma) {
+                        return Err(PbError::parser(
+                            "REGREPL: expected , before target".to_string(),
+                            self.current_file(),
+                            self.current_line(),
+                        ));
+                    }
+                    self.advance();
+                    let out_var = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Regrepl {
+                        mask,
+                        target,
+                        repl,
+                        start,
+                        pos_var,
+                        out_var,
+                    });
+                }
+
                 // PROFILE filename$ — dump per-procedure call counts + ms
                 if name_upper == "PROFILE" {
                     self.advance(); // consume PROFILE

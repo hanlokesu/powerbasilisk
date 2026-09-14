@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **197** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **104** documented upstream with no codegen evidence yet.
+> Summary: **199** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **102** documented upstream with no codegen evidence yet.
+> (2026-09-15: +2 official keywords from batch 35 — REGEXPR / REGREPL (documented regex subset: literals, ., *, +, ?, ^, $, |, [class], \ escapes incl. \b word boundary and \c case toggle, () groups; leftmost-longest, case-insensitive default; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&] and REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$ with \00 = whole match; Tags \01-\99 and shortest-match \s not implemented, documented as subset).
 > (2026-09-15: +1 official keyword from batch 34 — PROFILE (per-procedure call counts and elapsed ms collected by the call-stack instrumentation; PROFILE filename$ writes "<Name>, <Call Count>, <Time mSec>" per line, PB-compatible).
 > (2026-09-15: +1 official keyword from batch 33 — CALLSTK call-stack tracing (CALLSTKCOUNT current depth, CALLSTK$(n) frame names 1-based innermost-first, CALLSTK filename$ writes the stack to a sequential file; pb_callstk_push/pop/count/get/dump).
 > (2026-09-15: +1 official keyword from batch 32 — MAT matrix algebra (CON / CON(expr) / IDN / ZER / elementwise + - assignment / scalar (expr)*a / 2-D TRN / * matrix multiply / INV Gauss-Jordan inverse; runtime pb_mat_* family with is_float element decoding).
@@ -302,7 +303,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `LET t2 = t1` (whole TYPE) |
 | `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) |
 | `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) |
-| `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) |
+| `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
+| `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -402,6 +405,14 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.29 (2026-09-15) — Batch 35: REGEXPR / REGREPL documented regex subset
+Two more *Not implemented* items moved to *Implemented* (coverage: **199 implemented / 102 not implemented / 202 tier-3 DDT**):
+- **REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]** — scans target$ for a matching expression; iPos&/iLen& receive the 1-based position and length of the leftmost-longest match, or 0 on no match.
+- **REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$** — replaces the first match with repl$ (\00 = whole match), assigns the new text to newtarget$, iPos& = position after the matched text in the new string (0 on no match).
+- Documented subset: literals (case-insensitive by default), `.` `*` `+` `?`, anchors `^` `$` (recomputed per current position, line-aware), alternation `|`, character classes `[a-z]` / `[^...]`, escapes `\b` `\n` `\r` `\t` `\e` `\f` `\q` `\c`, groups `()` for precedence. Tags (\01-\99) and shortest-match `\s` are NOT implemented (documented as subset).
+- Runtime: `pb_regex_scan` / `pb_regex_replace` — recursive backtracking matcher; no dependency on external regex libraries.
+- Tests: examples/batch35_test.bas (15/15), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.28 (2026-09-15) — Batch 34: PROFILE per-procedure profiling
 One more *Not implemented* item moved to *Implemented* (coverage: **197 implemented / 104 not implemented / 202 tier-3 DDT**):

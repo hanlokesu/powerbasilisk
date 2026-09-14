@@ -1203,6 +1203,30 @@ impl Compiler {
             .declare_function("pb_profile_enable", &IrType::Void, &[], false);
         self.module
             .declare_function("pb_profile_dump", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_regex_scan",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I64,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_regex_replace",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I64,
+                IrType::Ptr,
+            ],
+            false,
+        );
         self.module
             .declare_function("pb_field_get", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
@@ -3099,6 +3123,75 @@ impl Compiler {
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
             Statement::LineInputFile(li) => self.compile_line_input_file(fb, li),
+            Statement::Regexpr {
+                mask,
+                target,
+                start,
+                pos_var,
+                len_var,
+            } => {
+                let mask = self.compile_expr(fb, mask)?;
+                let target = self.compile_expr(fb, target)?;
+                let start_v = if let Some(s) = start {
+                    let sv = self.compile_expr(fb, s)?;
+                    self.to_i64(fb, &sv)
+                } else {
+                    fb.const_i64(1)
+                };
+                let pos_tmp = fb.alloca(&IrType::I64);
+                let len_tmp = fb.alloca(&IrType::I64);
+                fb.call_void(
+                    "pb_regex_scan",
+                    &[mask, target, start_v, pos_tmp.clone(), len_tmp.clone()],
+                );
+                if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, pos_var) {
+                    let v = fb.load(&IrType::I64, &pos_tmp);
+                    let converted = self.convert_value(fb, &v, &ir, &pb);
+                    fb.store(&converted, &ptr);
+                }
+                if let Some(len_arg) = len_var {
+                    if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, len_arg) {
+                        let v = fb.load(&IrType::I64, &len_tmp);
+                        let converted = self.convert_value(fb, &v, &ir, &pb);
+                        fb.store(&converted, &ptr);
+                    }
+                }
+                Ok(())
+            }
+            Statement::Regrepl {
+                mask,
+                target,
+                repl,
+                start,
+                pos_var,
+                out_var,
+            } => {
+                let mask = self.compile_expr(fb, mask)?;
+                let target = self.compile_expr(fb, target)?;
+                let repl = self.compile_expr(fb, repl)?;
+                let start_v = if let Some(s) = start {
+                    let sv = self.compile_expr(fb, s)?;
+                    self.to_i64(fb, &sv)
+                } else {
+                    fb.const_i64(1)
+                };
+                let pos_tmp = fb.alloca(&IrType::I64);
+                let ret = fb.call(
+                    &IrType::Ptr,
+                    "pb_regex_replace",
+                    &[mask, target, repl, start_v, pos_tmp.clone()],
+                );
+                if let Some((ptr, ir, pb)) = self.lvalue_ptr(fb, pos_var) {
+                    let v = fb.load(&IrType::I64, &pos_tmp);
+                    let converted = self.convert_value(fb, &v, &ir, &pb);
+                    fb.store(&converted, &ptr);
+                }
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, out_var) {
+                    let slen = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&ret));
+                    fb.call_void("pb_str_assign_copy", &[ptr, ret, slen]);
+                }
+                Ok(())
+            }
             Statement::Profile(filename) => {
                 let f = self.compile_expr(fb, filename)?;
                 fb.call_void("pb_profile_dump", &[f]);

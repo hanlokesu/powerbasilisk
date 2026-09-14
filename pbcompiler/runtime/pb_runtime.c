@@ -1412,6 +1412,256 @@ void pb_callstk_dump(const char* filename) {
 }
 
 /* PROFILE filename$: "<Name>, <Call Count>, <Time mSec>" per line */
+
+/* ===== Batch 35: REGEXPR / REGREPL (documented subset) =====
+   REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]
+   REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$
+   Documented subset: literals (case-insensitive by default), '.', '*', '+',
+   '?', '^', '$', '|', '[class] / [^class] (incl. a-z ranges), '\' escapes
+   (\b word boundary, \n \r \t \e \f \q, \c case-sensitive toggle, any other
+   escaped char = literal), '(' ')' groups for alternation precedence.
+   Longest match at the leftmost start position. Tags (\01..\99) and the
+   shortest-match '\s' operator are NOT implemented (documented as subset). */
+
+typedef struct { const char* pat; const char* s; const char* send; int cs; int depth; } pb_rex_t;
+
+static int pb_re_is_word_char(unsigned char c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+           (c >= '0' && c <= '9') || c == '_';
+}
+
+static const char* pb_rex_alt_split(const char* p) {
+    int d = 0;
+    while (*p) {
+        if (*p == '\\') { p += 2; continue; }
+        if (*p == '[') { while (*p && *p != ']') p++; p++; continue; }
+        if (*p == '(') d++;
+        else if (*p == ')') d--;
+        else if (*p == '|' && d == 0) return p;
+        p++;
+    }
+    return NULL;
+}
+
+static const char* pb_rex_alt_end(const char* p) {
+    int d = 0;
+    while (*p) {
+        if (*p == '\\') { p += 2; continue; }
+        if (*p == '[') { while (*p && *p != ']') p++; p++; continue; }
+        if (*p == '(') d++;
+        else if (*p == ')') { if (d == 0) return p; d--; }
+        p++;
+    }
+    return NULL;
+}
+
+static int pb_rex_char_eq(int a, int b, int cs) {
+    if (!cs) {
+        if (a >= 'A' && a <= 'Z') a += 32;
+        if (b >= 'A' && b <= 'Z') b += 32;
+    }
+    return a == b;
+}
+
+static const char* pb_rex_match_one(const char* pat, const char* s, const char* send, int cs) {
+    if (s >= send) return NULL;
+    unsigned char c = (unsigned char)*s;
+    if (pat[0] == '\\') {
+        switch (pat[1]) {
+            case 'n': return (c == 10) ? s + 1 : NULL;
+            case 'r': return (c == 13) ? s + 1 : NULL;
+            case 't': return (c == 9) ? s + 1 : NULL;
+            case 'e': return (c == 27) ? s + 1 : NULL;
+            case 'f': return (c == 12) ? s + 1 : NULL;
+            case 'q': return (c == '"') ? s + 1 : NULL;
+            case 'c': return NULL; /* directive handled in match_here */
+            default:
+                return (pb_rex_char_eq(c, (unsigned char)pat[1], cs)) ? s + 1 : NULL;
+        }
+    }
+    if (pat[0] == '.') return s + 1;
+    if (pat[0] == '[') {
+        const char* q = pat + 1;
+        int negate = 0;
+        if (*q == '^') { negate = 1; q++; }
+        int matched = 0;
+        while (*q && *q != ']') {
+            if (q[1] == '-' && q[2] && q[2] != ']') {
+                int lo = (unsigned char)q[0], hi = (unsigned char)q[2], cc = c;
+                if (!cs) {
+                    if (lo >= 'A' && lo <= 'Z') lo += 32;
+                    if (hi >= 'A' && hi <= 'Z') hi += 32;
+                    if (cc >= 'A' && cc <= 'Z') cc += 32;
+                }
+                if (cc >= lo && cc <= hi) matched = 1;
+                q += 3;
+            } else {
+                if (pb_rex_char_eq(c, (unsigned char)q[0], cs)) matched = 1;
+                q++;
+            }
+        }
+        if (negate) matched = !matched;
+        return matched ? s + 1 : NULL;
+    }
+    return pb_rex_char_eq(c, (unsigned char)pat[0], cs) ? s + 1 : NULL;
+}
+
+static const char* pb_rex_atom_end(const char* p) {
+    if (*p == '\\') return p + 2;
+    if (*p == '[') {
+        const char* q = p + 1;
+        while (*q && *q != ']') q++;
+        return (*q == ']') ? q + 1 : q;
+    }
+    if (*p == '(') {
+        const char* q = pb_rex_alt_end(p);
+        return q ? q + 1 : p + 1;
+    }
+    return p + 1;
+}
+
+/* match whole pattern at s; anchors recomputed from the CURRENT s every call */
+static const char* pb_rex_match_here(const char* pat, const char* s, const char* send,
+                                     const char* tbegin, int cs) {
+    if (!*pat) return s;
+    int at_line_start = (s == tbegin) ||
+        (s > tbegin && s[-1] == '\n') ||
+        (s >= tbegin + 2 && s[-2] == '\r' && s[-1] == '\n');
+    int at_line_end = (s == send) || (s < send && (s[0] == '\n' || (s[0] == '\r' && s + 1 < send && s[1] == '\n')));
+
+    {
+        const char* bar = pb_rex_alt_split(pat);
+        if (bar) {
+            char tmp[4096];
+            size_t l = (size_t)(bar - pat);
+            if (l >= sizeof(tmp)) return NULL;
+            memcpy(tmp, pat, l); tmp[l] = 0;
+            const char* e = pb_rex_match_here(tmp, s, send, tbegin, cs);
+            if (e) return e;
+            return pb_rex_match_here(bar + 1, s, send, tbegin, cs);
+        }
+    }
+    if (*pat == '^') {
+        if (!at_line_start) return NULL;
+        return pb_rex_match_here(pat + 1, s, send, tbegin, cs);
+    }
+    if (*pat == '$') {
+        if (!at_line_end) return NULL;
+        return pb_rex_match_here(pat + 1, s, send, tbegin, cs);
+    }
+    if (pat[0] == '\\' && pat[1] == 'c') {
+        return pb_rex_match_here(pat + 2, s, send, tbegin, cs ? 0 : 1);
+    }
+    if (pat[0] == '\\' && pat[1] == 'b') {
+        /* word boundary: previous/next char class change */
+        int prev_word = (s > tbegin) && pb_re_is_word_char((unsigned char)s[-1]);
+        int next_word = (s < send) && pb_re_is_word_char((unsigned char)s[0]);
+        if (prev_word == next_word) return NULL;
+        return pb_rex_match_here(pat + 2, s, send, tbegin, cs);
+    }
+    {
+        const char* aend = pb_rex_atom_end(pat);
+        char quant = *aend;
+        if (quant == '*' || quant == '+' || quant == '?') {
+            int min = (quant == '+') ? 1 : 0;
+            int max = (quant == '?') ? 1 : -1;
+            char atom[4096];
+            size_t alen = (size_t)(aend - pat);
+            if (alen >= sizeof(atom)) return NULL;
+            memcpy(atom, pat, alen); atom[alen] = 0;
+            const char* rest = aend + 1;
+            const char* cur = s;
+            int n = 0;
+            while ((max < 0 || n < max) && cur < send) {
+                const char* e = pb_rex_match_here(atom, cur, send, tbegin, cs);
+                if (!e || e == cur) break;
+                cur = e; n++;
+            }
+            while (n >= min) {
+                const char* e = pb_rex_match_here(rest, cur, send, tbegin, cs);
+                if (e) return e;
+                if (n == 0) break;
+                const char* prev = s;
+                for (int k = 1; k < n; k++) {
+                    const char* e2 = pb_rex_match_here(atom, prev, send, tbegin, cs);
+                    if (!e2) break;
+                    prev = e2;
+                }
+                cur = prev;
+                n--;
+            }
+            return NULL;
+        }
+    }
+    if (*pat == '(') {
+        const char* close = pb_rex_alt_end(pat);
+        if (!close) return NULL;
+        char inner[4096];
+        size_t ilen = (size_t)(close - pat - 1);
+        if (ilen >= sizeof(inner)) return NULL;
+        memcpy(inner, pat + 1, ilen); inner[ilen] = 0;
+        const char* e = pb_rex_match_here(inner, s, send, tbegin, cs);
+        if (!e) return NULL;
+        return pb_rex_match_here(close + 1, e, send, tbegin, cs);
+    }
+    {
+        const char* e = pb_rex_match_one(pat, s, send, cs);
+        if (!e) return NULL;
+        return pb_rex_match_here(pb_rex_atom_end(pat), e, send, tbegin, cs);
+    }
+}
+
+int pb_regex_scan(const char* mask, const char* target, long long start,
+                  long long* opos, long long* olen) {
+    *opos = 0; *olen = 0;
+    size_t tlen = strlen(target);
+    if (!mask || !mask[0]) return 0;
+    if (start < 1) start = 1;
+    if ((size_t)start > tlen + 1) return 0;
+    const char* begin = target + (size_t)(start - 1);
+    const char* send = target + tlen;
+    for (const char* s = begin; s <= send; s++) {
+        const char* e = pb_rex_match_here(mask, s, send, target, 0);
+        if (e) {
+            *opos = (long long)(s - target) + 1;
+            *olen = (long long)(e - s);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+char* pb_regex_replace(const char* mask, const char* target, const char* repl,
+                       long long start, long long* opos) {
+    *opos = 0;
+    long long pos = 0, len = 0;
+    if (!pb_regex_scan(mask, target, start, &pos, &len)) {
+        return pb_bstr_alloc(target, (int)strlen(target));
+    }
+    size_t tlen = strlen(target), rlen = strlen(repl);
+    size_t outsz = tlen - (size_t)len + rlen + 16;
+    char* out = (char*)malloc(outsz ? outsz : 1);
+    if (!out) return pb_bstr_alloc("", 0);
+    size_t pre = (size_t)(pos - 1);
+    memcpy(out, target, pre);
+    size_t o = pre;
+    for (size_t i = 0; i < rlen; i++) {
+        if (repl[i] == '\\' && i + 2 < rlen + 1 && repl[i + 1] == '0' && repl[i + 2] == '0') {
+            memcpy(out + o, target + pre, (size_t)len); o += (size_t)len; i += 2;
+        } else if (repl[i] == '\\' && i + 1 < rlen && (repl[i + 1] >= '1' && repl[i + 1] <= '9')) {
+            i++;
+        } else {
+            out[o++] = repl[i];
+        }
+    }
+    memcpy(out + o, target + pre + (size_t)len, tlen - pre - (size_t)len);
+    o += tlen - pre - (size_t)len;
+    out[o] = 0;
+    /* iPos& = 1-based position immediately following the matched text in the NEW string */
+    *opos = (long long)(pre + rlen + 1);
+    return out;
+}
+
 void pb_profile_dump(const char* filename) {
     if (!filename || !filename[0]) return;
     FILE* f = fopen(filename, "w");

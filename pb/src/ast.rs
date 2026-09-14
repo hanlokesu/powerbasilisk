@@ -238,6 +238,21 @@ pub enum Statement {
     Kill(Expr),
     CallStk(Expr), // CALLSTK filename$ — dump the call stack to a file (batch 33)
     Profile(Expr), // PROFILE filename$ — dump per-procedure call counts + ms (batch 34)
+    Regexpr {
+        mask: Expr,
+        target: Expr,
+        start: Option<Expr>,
+        pos_var: Expr,
+        len_var: Option<Expr>,
+    }, // REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&] (batch 35)
+    Regrepl {
+        mask: Expr,
+        target: Expr,
+        repl: Expr,
+        start: Option<Expr>,
+        pos_var: Expr,
+        out_var: Expr,
+    }, // REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$ (batch 35)
     Block(Vec<Statement>), // multiple statements from one parse (e.g. LOCAL a, b)
     Data(Vec<String>), // DATA item1, item2, ... (string constants)
     Restore,       // RESTORE — reset DATA read cursor

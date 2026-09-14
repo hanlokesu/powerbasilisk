@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-15 (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 197 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 199 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 104 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 102 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (197)
+## ✅ Implemented (199)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -205,6 +205,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `CALL DWORD` | STATEMENT | PB/Win + PB/CC | indirect call via inttoptr; USING args + TO result (batch 22) |
 | CALLSTK | STATEMENT | PB/Win + PB/CC | CALLSTKCOUNT depth / CALLSTK$(n) frame names / CALLSTK filename$ file dump (batch 33) |
 | PROFILE | STATEMENT | PB/Win + PB/CC | per-procedure call counts + elapsed ms via the call-stack frames; PROFILE filename$ dumps "<Name>, <Call Count>, <Time mSec>" (batch 34) |
+| REGEXPR | STATEMENT | PB/Win + PB/CC | documented regex subset scan; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&], leftmost-longest, case-insensitive default (batch 35) |
+| REGREPL | STATEMENT | PB/Win + PB/CC | documented regex subset replace; REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$, \00 = whole match (batch 35) |
 | `WINDOW SET` | STATEMENT | PB/Win only | SetConsoleTitleA console title; hwnd ignored (batch 23) |
 | `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
 | `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
@@ -429,7 +431,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (104, alphabetical)
+## ⬜ Not implemented (102, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -461,8 +463,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
-| REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
-| REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 
