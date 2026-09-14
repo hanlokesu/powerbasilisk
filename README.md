@@ -227,9 +227,16 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
 > Summary: **193** statement-class keywords implemented · **202** DDT/GUI-class
 > deferred (Tier 3) · **108** documented upstream with no codegen evidence yet.
-> (2026-09-14: +1 official keyword from batch 28 — THREADED thread-local
-> storage declaration, LLVM `thread_local` globals with per-thread copies.
-> Batch 27 added ON CALL, GET$$/PUT$$, MACRO; batch 26 PREFIX, TRY.)
+> (2026-09-14: +1 official keyword from batch 30 — ASMDATA/END ASMDATA
+> read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ`
+> lines + `END ASMDATA`, packed contiguously and never aligned, ANSI strings in DB,
+> WIDE UTF-16LE strings in DW, addressed via `CODEPTR(Name)` (emitted as
+> `@__asmdata_<NAME>` constant), verified byte-for-byte via `PEEK`. +1 from batch 29 —
+> ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
+> PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
+> automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +1 from batch 28 — THREADED thread-local storage declaration, LLVM `thread_local`
+> globals with per-thread copies.)
 > (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
 > procedure dispatch, GET$$/PUT$$ wide UTF-16LE string I/O, MACRO/END MACRO
 > compile-time text substitution. +2 from batch 26 — PREFIX/END PREFIX
