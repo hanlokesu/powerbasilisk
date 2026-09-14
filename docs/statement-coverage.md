@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 200 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
+| ✅ Implemented | 251 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 151 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (235)
+## ✅ Implemented (251)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -268,6 +268,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC PIE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
 | `GRAPHIC POLYLINE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
 | `GRAPHIC PAINT` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
+| GRAPHIC GET CAPTION | console-title bridge (GetConsoleTitleA) |
+| GRAPHIC GET POS | current pen position (GetCurrentPositionEx) |
+| GRAPHIC GET PPI | pixels per inch (GetDeviceCaps LOGPIXELS) |
+| GRAPHIC GET STRETCHMODE | current stretch mode (GetStretchBltMode) |
+| GRAPHIC SET CAPTION | console-title bridge (SetConsoleTitleA) |
+| GRAPHIC SET POS | move pen position (MoveToEx, optional STEP) |
+| GRAPHIC SET STRETCHMODE | set stretch mode (SetStretchBltMode) |
+| GRAPHIC TEXT SIZE | measure string (GetTextExtentPoint32A) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -372,7 +380,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC COPY | STATEMENT |
 | GRAPHIC GET BITS | STATEMENT |
 | GRAPHIC GET CANVAS | STATEMENT |
-| GRAPHIC GET CAPTION | STATEMENT |
 | GRAPHIC GET CLIENT | STATEMENT |
 | GRAPHIC GET CLIP | STATEMENT |
 | GRAPHIC GET DC | STATEMENT |
@@ -381,11 +388,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET MIX | STATEMENT |
 | GRAPHIC GET OVERLAP | STATEMENT |
 | GRAPHIC GET PIXEL | STATEMENT |
-| GRAPHIC GET POS | STATEMENT |
-| GRAPHIC GET PPI | STATEMENT |
 | GRAPHIC GET SCALE | STATEMENT |
 | GRAPHIC GET SCROLLTEXT | STATEMENT |
-| GRAPHIC GET STRETCHMODE | STATEMENT |
 | GRAPHIC GET VIEW | STATEMENT |
 | GRAPHIC GET WORDWRAP | STATEMENT |
 | GRAPHIC GET WRAP | STATEMENT |
@@ -403,7 +407,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SCALE | STATEMENT |
 | GRAPHIC SET AUTOSIZE | STATEMENT |
 | GRAPHIC SET BITS | STATEMENT |
-| GRAPHIC SET CAPTION | STATEMENT |
 | GRAPHIC SET CLIENT | STATEMENT |
 | GRAPHIC SET CLIP | STATEMENT |
 | GRAPHIC SET FIXED | STATEMENT |
@@ -412,10 +415,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SET LOC | STATEMENT |
 | GRAPHIC SET MIX | STATEMENT |
 | GRAPHIC SET OVERLAP | STATEMENT |
-| GRAPHIC SET POS | STATEMENT |
 | GRAPHIC SET SCROLLTEXT | STATEMENT |
 | GRAPHIC SET SIZE | STATEMENT |
-| GRAPHIC SET STRETCHMODE | STATEMENT |
 | GRAPHIC SET VIEW | STATEMENT |
 | GRAPHIC SET VIRTUAL | STATEMENT |
 | GRAPHIC SET WORDWRAP | STATEMENT |
@@ -423,7 +424,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SPLIT | STATEMENT |
 | GRAPHIC STRETCH | STATEMENT |
 | GRAPHIC STYLE | STATEMENT |
-| GRAPHIC TEXT SIZE | STATEMENT |
 | GRAPHIC WAITKEY$ | STATEMENT |
 | GRAPHIC WIDTH | STATEMENT |
 | GRAPHIC WINDOW | STATEMENT |

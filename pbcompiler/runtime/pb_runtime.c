@@ -71,6 +71,9 @@ __declspec(dllimport) int __stdcall FillRect(void* hdc, const void* lprc, void* 
 __declspec(dllimport) void* __stdcall CreatePen(int style, int width, unsigned long color);
 __declspec(dllimport) void* __stdcall GetStockObject(int fnObject);
 __declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt);
+__declspec(dllimport) int __stdcall GetCurrentPositionEx(void* hdc, void* lppt);
+__declspec(dllimport) int __stdcall GetStretchBltMode(void* hdc);
+__declspec(dllimport) int __stdcall SetStretchBltMode(void* hdc, int mode);
 __declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
@@ -3930,6 +3933,61 @@ int pb_graphic_set_textalign(long align) {
 }
 int pb_graphic_get_textalign(long* align) {
     *align = g_gr_textalign;
+    return 1;
+}
+
+/* GRAPHIC GET PPI / GET POS / SET POS / TEXT SIZE / STRETCHMODE / CAPTION (batch 61) */
+#define PB_LOGPIXELSX 88
+#define PB_LOGPIXELSY 90
+int pb_graphic_get_ppi(long* x, long* y) {
+    if (!g_gr_dc) return 0;
+    *x = GetDeviceCaps(g_gr_dc, PB_LOGPIXELSX);
+    *y = GetDeviceCaps(g_gr_dc, PB_LOGPIXELSY);
+    return 1;
+}
+int pb_graphic_get_pos(float* x, float* y) {
+    if (!g_gr_dc) return 0;
+    pb_pt pt;
+    pt.x = 0; pt.y = 0;
+    if (!GetCurrentPositionEx(g_gr_dc, (void*)&pt)) return 0;
+    *x = (float)pt.x;
+    *y = (float)pt.y;
+    return 1;
+}
+int pb_graphic_set_pos(float x, float y) {
+    if (!g_gr_dc) return 0;
+    MoveToEx(g_gr_dc, (int)x, (int)y, 0);
+    return 1;
+}
+int pb_graphic_text_size(char* txt, float* w, float* h) {
+    if (!g_gr_dc) return 0;
+    long sz[2];
+    sz[0] = 0; sz[1] = 0;
+    if (!GetTextExtentPoint32A(g_gr_dc, txt, (int)strlen(txt), (void*)sz)) return 0;
+    *w = (float)sz[0];
+    *h = (float)sz[1];
+    return 1;
+}
+int pb_graphic_get_stretchmode(long* m) {
+    if (!g_gr_dc) return 0;
+    *m = GetStretchBltMode(g_gr_dc);
+    return 1;
+}
+int pb_graphic_set_stretchmode(long m) {
+    if (!g_gr_dc) return 0;
+    SetStretchBltMode(g_gr_dc, (int)m);
+    return 1;
+}
+int pb_graphic_get_caption(char** dest) {
+    if (!dest) return 0;
+    char buf[1024];
+    buf[0] = '\0';
+    GetConsoleTitleA(buf, 1024);
+    *dest = pb_bstr_alloc(buf, (unsigned int)strlen(buf));
+    return 1;
+}
+int pb_graphic_set_caption(char* s) {
+    SetConsoleTitleA(s);
     return 1;
 }
 

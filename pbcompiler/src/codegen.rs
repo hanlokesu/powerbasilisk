@@ -1972,6 +1972,50 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_graphic_get_ppi", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_graphic_get_pos",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_pos",
+            &IrType::I32,
+            &[IrType::Float, IrType::Float],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_text_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_stretchmode",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_stretchmode",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_caption",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_caption",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
             .declare_function("pb_graphic_get_canvas", &IrType::I64, &[], false);
         self.module
             .declare_function("pb_graphic_get_dc", &IrType::I64, &[], false);
@@ -4759,6 +4803,54 @@ impl Compiler {
                         fb.call_void("pb_graphic_get_size", &[wp, hp]);
                     }
                 }
+            }
+            "GRAPHIC_GET_PPI" => {
+                if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_graphic_get_ppi", &[xp, yp]);
+                    }
+                }
+            }
+            "GRAPHIC_GET_POS" => {
+                if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_graphic_get_pos", &[xp, yp]);
+                    }
+                }
+            }
+            "GRAPHIC_SET_POS" => {
+                let x0 = self.compile_expr(fb, &call.args[0])?;
+                let y0 = self.compile_expr(fb, &call.args[1])?;
+                let xv = self.convert_value(fb, &x0, &IrType::Float, &PbType::Single);
+                let yv = self.convert_value(fb, &y0, &IrType::Float, &PbType::Single);
+                fb.call_void("pb_graphic_set_pos", &[xv, yv]);
+            }
+            "GRAPHIC_TEXT_SIZE" => {
+                let sp = self.compile_str_payload(fb, &call.args[0])?;
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.call_void("pb_graphic_text_size", &[sp, wp, hp]);
+                    }
+                }
+            }
+            "GRAPHIC_GET_STRETCHMODE" => {
+                if let Some((mp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_stretchmode", &[mp]);
+                }
+            }
+            "GRAPHIC_SET_STRETCHMODE" => {
+                let m0 = self.compile_expr(fb, &call.args[0])?;
+                let mv = self.convert_value(fb, &m0, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_set_stretchmode", &[mv]);
+            }
+            "GRAPHIC_GET_CAPTION" => {
+                if let Some((sp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_caption", &[sp]);
+                }
+            }
+            "GRAPHIC_SET_CAPTION" => {
+                let sp = self.compile_str_payload(fb, &call.args[0])?;
+                fb.call_void("pb_graphic_set_caption", &[sp]);
             }
             "GRAPHIC_SET_TEXTALIGN" => {
                 let a0 = self.compile_expr(fb, &call.args[0])?;
@@ -8613,6 +8705,14 @@ impl Compiler {
     }
 
     // ========== String binary ops ==========
+
+    fn compile_str_payload(&mut self, fb: &mut FunctionBuilder, expr: &Expr) -> PbResult<Val> {
+        // runtime string params expect a payload (C-string) pointer.
+        // add_string_constant already returns a getelementptr to the payload
+        // (4-byte BSTR length prefix skipped), and variables / concat results
+        // are payload pointers too — so plain compile_expr is correct.
+        self.compile_expr(fb, expr)
+    }
 
     fn compile_string_binop(
         &mut self,

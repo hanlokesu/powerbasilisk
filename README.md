@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +8 official statement keywords from batch 61 — GRAPHIC GET PPI (GetDeviceCaps LOGPIXELS), GRAPHIC GET POS / GRAPHIC SET POS (GetCurrentPositionEx / MoveToEx with optional STEP), GRAPHIC TEXT SIZE (GetTextExtentPoint32A), GRAPHIC GET/SET STRETCHMODE (GetStretchBltMode / SetStretchBltMode), GRAPHIC GET/SET CAPTION (console-title bridge via GetConsoleTitleA / SetConsoleTitleA). Coverage now 251 implemented / 151 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 60 — GRAPHIC ARC / GRAPHIC PIE (GDI Arc/Pie with PB degree angles mapped to ellipse points), GRAPHIC POLYLINE (Polyline with coordinate array), GRAPHIC PAINT (FloodFill with border color). > (2026-09-15: +4 official statement keywords from batch 59 — GRAPHIC SET PIXEL (direct 32-bpp pixel write via GetDIBits/SetDIBits), GRAPHIC GET SIZE (bitmap width/height), GRAPHIC SET TEXTALIGN / GRAPHIC GET TEXTALIGN (text alignment mode). > (2026-09-15: +4 official statement keywords from batch 58 — GRAPHIC GET CANVAS (current bitmap handle), GRAPHIC GET DC (device context), GRAPHIC SET MIX / GRAPHIC GET MIX (ROP mode state, default R2_COPYPEN). Coverage now 235 implemented / 167 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official statement keywords from batch 57 — GRAPHIC BITMAP LOAD (LoadImageA from BMP file), GRAPHIC CHR SIZE (GetTextExtentPoint32A), GRAPHIC CELL / GRAPHIC CELL SIZE (character-cell metrics). Coverage now 231 implemented / 171 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official statement keywords from batch 56 — GRAPHIC CIRCLE (Ellipse inscribed circle; not in the official CSV index, documented here), GRAPHIC POLYGON (Polygon from coordinate pairs), GRAPHIC GET CLIENT (bitmap dimensions), GRAPHIC GET LOC (0,0). Coverage now 227 implemented / 175 tier-3 / 101 not implemented.)
@@ -243,7 +244,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **243** statement-class keywords implemented · **159** DDT/GUI-class
+> Summary: **251** statement-class keywords implemented · **151** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -287,6 +288,14 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 ### Newly implemented by this branch
 | PB statement / function | Status | Batch | Maps to |
 | --- | --- | --- | --- |
+| `GRAPHIC GET PPI` | ✅ | 61 (v0.1.55) | GetDeviceCaps LOGPIXELSX/LOGPIXELSY (pb_graphic_get_ppi) |
+| `GRAPHIC GET POS` | ✅ | 61 (v0.1.55) | GetCurrentPositionEx (pb_graphic_get_pos) |
+| `GRAPHIC SET POS` | ✅ | 61 (v0.1.55) | MoveToEx, optional STEP (pb_graphic_set_pos) |
+| `GRAPHIC TEXT SIZE` | ✅ | 61 (v0.1.55) | GetTextExtentPoint32A (pb_graphic_text_size) |
+| `GRAPHIC GET STRETCHMODE` | ✅ | 61 (v0.1.55) | GetStretchBltMode (pb_graphic_get_stretchmode) |
+| `GRAPHIC SET STRETCHMODE` | ✅ | 61 (v0.1.55) | SetStretchBltMode (pb_graphic_set_stretchmode) |
+| `GRAPHIC GET CAPTION` | ✅ | 61 (v0.1.55) | GetConsoleTitleA + BSTR alloc (pb_graphic_get_caption) |
+| `GRAPHIC SET CAPTION` | ✅ | 61 (v0.1.55) | SetConsoleTitleA (pb_graphic_set_caption) |
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
 | `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
 | `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
@@ -494,6 +503,20 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.55 (2026-09-15) — Batch 61: GRAPHIC GET PPI / GET+SET POS / TEXT SIZE / GET+SET STRETCHMODE / GET+SET CAPTION
+
+- **GRAPHIC GET PPI TO x&, y&** — pixels per inch from the graphic target (GetDeviceCaps LOGPIXELSX / LOGPIXELSY, pb_graphic_get_ppi).
+- **GRAPHIC GET POS TO x!, y!** — current pen position in pixels (GetCurrentPositionEx, pb_graphic_get_pos).
+- **GRAPHIC SET POS [STEP] (x!, y!)** — move the pen position (MoveToEx; STEP makes the coordinates relative to the current position, pb_graphic_set_pos).
+- **GRAPHIC TEXT SIZE txt$ TO w!, h!** — measures the string with the target font (GetTextExtentPoint32A, pb_graphic_text_size; verified 34x16 for "Hello" on the 32-bpp DIB target).
+- **GRAPHIC GET STRETCHMODE TO n&** — current bitmap stretch mode (GetStretchBltMode; Windows default is BLACKONWHITE=1 on a fresh DC, pb_graphic_get_stretchmode).
+- **GRAPHIC SET STRETCHMODE n&** — set the stretch mode (SetStretchBltMode, pb_graphic_set_stretchmode).
+- **GRAPHIC GET CAPTION TO cap$** — reads the console window title into a string variable (GetConsoleTitleA + BSTR allocation, pb_graphic_get_caption).
+- **GRAPHIC SET CAPTION txt$** — sets the console window title (SetConsoleTitleA, pb_graphic_set_caption).
+- Fix (batch 61) — string literal payload: `add_string_constant` already returns a getelementptr to the payload (4-byte BSTR length prefix skipped), so runtime string params must NOT skip the prefix again.
+- Fix (batch 61) — `GRAPHIC TEXT SIZE` is a standalone statement (not a GET sub-operation); the parser previously dropped it, so the target variables stayed 0.
+- Tests: examples/batch61_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.54 (2026-09-15) — Batch 60: GRAPHIC ARC / PIE / POLYLINE / PAINT
 

@@ -1980,6 +1980,54 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "PPI" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_PPI".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "POS" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_POS".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "STRETCHMODE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let m = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_STRETCHMODE".to_string(),
+                                args: vec![m],
+                                line,
+                            }));
+                        }
+                        if sub == "CAPTION" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_CAPTION".to_string(),
+                                args: vec![c],
+                                line,
+                            }));
+                        }
                         if sub == "CANVAS" || sub == "DC" || sub == "MIX" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -2033,6 +2081,43 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "POS" {
+                            self.advance();
+                            if matches!(self.peek(), Token::Step) {
+                                self.advance();
+                            }
+                            self.expect(&Token::LParen)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_POS".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "STRETCHMODE" {
+                            self.advance();
+                            let m = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_STRETCHMODE".to_string(),
+                                args: vec![m],
+                                line,
+                            }));
+                        }
+                        if sub == "CAPTION" {
+                            self.advance();
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_CAPTION".to_string(),
+                                args: vec![c],
+                                line,
+                            }));
+                        }
                         if sub == "MIX" {
                             self.advance();
                             if matches!(self.peek(), Token::LParen) {
@@ -2049,6 +2134,22 @@ impl Parser {
                                 line,
                             }));
                         }
+                    }
+                    if gop == "TEXT" {
+                        // GRAPHIC TEXT SIZE txt$ TO w!, h!
+                        self.advance();
+                        self.expect(&Token::Identifier("SIZE".to_string()))?;
+                        let txt = self.parse_expression()?;
+                        self.expect(&Token::To)?;
+                        let w = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let h = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_TEXT_SIZE".to_string(),
+                            args: vec![txt, w, h],
+                            line,
+                        }));
                     }
                     if gop == "CHR" {
                         // GRAPHIC CHR SIZE (text$) TO w&, h&
