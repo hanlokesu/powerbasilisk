@@ -1934,6 +1934,34 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "WIDTH" || gop == "STYLE" {
+                        self.advance();
+                        let args = if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                            vec![self.parse_expression()?]
+                        } else {
+                            Vec::new()
+                        };
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if gop == "STYLE" {
+                                "GRAPHIC_STYLE".to_string()
+                            } else {
+                                "GRAPHIC_WIDTH".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "SAVE" {
+                        self.advance();
+                        let args = vec![self.parse_expression()?];
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_SAVE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if gop == "LINE" || gop == "BOX" || gop == "ELLIPSE" {
                         self.advance();
                         let mut args = Vec::new();

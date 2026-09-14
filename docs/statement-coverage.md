@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (218)
+## ✅ Implemented (221)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -243,6 +243,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC LINE | STATEMENT (draw line) | pb_graphic_line — MoveToEx + LineTo on attached target (batch 53) |
 | GRAPHIC BOX | STATEMENT (draw rectangle) | pb_graphic_box — Rectangle with optional fill (batch 53) |
 | GRAPHIC ELLIPSE | STATEMENT (draw ellipse) | pb_graphic_ellipse — Ellipse with optional fill (batch 53) |
+| `GRAPHIC WIDTH` | Statement | pb_graphic_width (gdi32 pen width) |
+| `GRAPHIC STYLE` | Statement | pb_graphic_style (gdi32 pen style) |
+| `GRAPHIC SAVE` | Statement | pb_graphic_save (GetObjectA + GetDIBits + BMP writer) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

@@ -1844,6 +1844,12 @@ impl Compiler {
             ],
             false,
         );
+        self.module
+            .declare_function("pb_graphic_width", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_graphic_style", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_graphic_save", &IrType::I32, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
@@ -4584,6 +4590,26 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_WIDTH" | "GRAPHIC_STYLE" => {
+                // args: [n&]
+                let f = if call.name == "GRAPHIC_STYLE" {
+                    "pb_graphic_style"
+                } else {
+                    "pb_graphic_width"
+                };
+                let v = if let Some(a0) = call.args.first() {
+                    let e = self.compile_expr(fb, a0)?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void(f, &[v]);
+            }
+            "GRAPHIC_SAVE" => {
+                // args: BmpName$
+                let fname = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("pb_graphic_save", &[fname]);
             }
             "GRAPHIC_BOX" | "GRAPHIC_ELLIPSE" => {
                 // args: x1,y1,x2,y2 [,corner[,color[,fillcolor[,fillstyle]]]]

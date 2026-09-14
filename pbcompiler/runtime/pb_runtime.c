@@ -74,6 +74,9 @@ __declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt
 __declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
+__declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
+__declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
+
 
 
 
@@ -3798,10 +3801,63 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
 
 static void* g_gr_dc = 0;
 static void* g_gr_bmp = 0;
+/* GRAPHIC WIDTH/STYLE/SAVE (batch 54) */
+static int g_gr_width = 1;
+static int g_gr_style = 0;
+int pb_graphic_width(int w) {
+    g_gr_width = w > 0 ? w : 1;
+    return 1;
+}
+int pb_graphic_style(int st) {
+    g_gr_style = st;
+    return 1;
+}
+int pb_graphic_save(char* fname) {
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    unsigned char bm[40]; /* BITMAP (64-bit: 24 bytes + 8-byte bmBits pointer) */
+    for (int i = 0; i < 40; i++) bm[i] = 0;
+    if (!GetObjectA(g_gr_bmp, 40, (void*)bm)) return 0;
+    int w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | (bm[7] << 24);
+    int h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | (bm[11] << 24);
+    if (w <= 0 || h <= 0) return 0;
+    if (w > 100000 || h > 100000) return 0;
+    int bpp = 32;
+    int row = ((w * bpp + 31) / 32) * 4;
+    int size = row * h;
+    unsigned char* bits = (unsigned char*)malloc(size);
+    if (!bits) return 0;
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    bi[0] = 40;
+    bi[4] = (unsigned char)(w & 255); bi[5] = (unsigned char)((w >> 8) & 255);
+    bi[6] = (unsigned char)((w >> 16) & 255); bi[7] = (unsigned char)((w >> 24) & 255);
+    bi[8] = (unsigned char)(h & 255); bi[9] = (unsigned char)((h >> 8) & 255);
+    bi[10] = (unsigned char)((h >> 16) & 255); bi[11] = (unsigned char)((h >> 24) & 255);
+    bi[12] = 1; bi[14] = (unsigned char)bpp;
+    if (!GetDIBits(g_gr_dc, g_gr_bmp, 0, (unsigned int)h, (void*)bits, (void*)bi, 0)) {
+        free(bits); return 0;
+    }
+    FILE* f = fopen(fname, "wb");
+    if (!f) { free(bits); return 0; }
+    int bfSize = 14 + 40 + size;
+    unsigned char bfh[14];
+    for (int i = 0; i < 14; i++) bfh[i] = 0;
+    bfh[0] = 'B'; bfh[1] = 'M';
+    bfh[2] = (unsigned char)(bfSize & 255); bfh[3] = (unsigned char)((bfSize >> 8) & 255);
+    bfh[4] = (unsigned char)((bfSize >> 16) & 255); bfh[5] = (unsigned char)((bfSize >> 24) & 255);
+    bfh[10] = 14 + 40;
+    fwrite(bfh, 1, 14, f);
+    fwrite(bi, 1, 40, f);
+    fwrite(bits, 1, size, f);
+    fclose(f);
+    free(bits);
+    return 1;
+}
+
 /* GRAPHIC LINE/BOX/ELLIPSE — drawing on attached target (batch 53) */
 int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
     if (!g_gr_dc) return 0;
-    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* old = SelectObject(g_gr_dc, pen);
     MoveToEx(g_gr_dc, x1, y1, 0);
     int ok = LineTo(g_gr_dc, x2, y2);
@@ -3811,7 +3867,7 @@ int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
 }
 int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
-    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
     void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5); /* NULL_BRUSH */
     void* oldb = SelectObject(g_gr_dc, br);
@@ -3824,7 +3880,7 @@ int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int
 }
 int pb_graphic_ellipse(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
-    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
     void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5);
     void* oldb = SelectObject(g_gr_dc, br);
