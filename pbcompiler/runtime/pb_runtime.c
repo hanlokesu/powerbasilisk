@@ -275,6 +275,70 @@ char* pb_mkquad(long long v) {
 char* pb_mksingle(float v) {
     return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
 }
+/* Batch 41: string utilities. */
+char* pb_clip(char* mode, char* s, long long start, long long count) {
+    size_t n = strlen(s);
+    long long from = 0, to = (long long)n;
+    if (strcmp(mode, "LEFT") == 0) { from = (count > (long long)n) ? (long long)n : count; }
+    else if (strcmp(mode, "RIGHT") == 0) { to = n - ((count > (long long)n) ? (long long)n : count); if (to < 0) to = 0; }
+    else { /* MID: remove from start (1-based), count chars */
+        long long s0 = start - 1; if (s0 < 0) s0 = 0; if (s0 > (long long)n) s0 = n;
+        long long e0 = s0 + (count < 0 ? 0 : count); if (e0 > (long long)n) e0 = n;
+        size_t ln = (size_t)(s0 + (n - e0));
+        char* buf = (char*)malloc(ln + 1);
+        memcpy(buf, s, (size_t)s0);
+        memcpy(buf + s0, s + e0, n - (size_t)e0);
+        buf[ln] = 0;
+        return pb_bstr_alloc(buf, (unsigned int)ln);
+    }
+    if (from >= to) return pb_bstr_alloc("", 0);
+    return pb_bstr_alloc(s + from, (unsigned int)(to - from));
+}
+char* pb_wrap(char* s, char* l, char* r) {
+    size_t nl = strlen(l), nr = strlen(r), ns = strlen(s);
+    char* buf = (char*)malloc(nl + ns + nr + 1);
+    memcpy(buf, l, nl); memcpy(buf + nl, s, ns); memcpy(buf + nl + ns, r, nr);
+    buf[nl + ns + nr] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)(nl + ns + nr));
+}
+char* pb_unwrap(char* s, char* l, char* r) {
+    size_t nl = strlen(l), nr = strlen(r), ns = strlen(s);
+    size_t from = 0, to = ns;
+    if (nl && ns >= nl && memcmp(s, l, nl) == 0) from = nl;
+    if (nr && ns - from >= nr && memcmp(s + ns - nr, r, nr) == 0) to = ns - nr;
+    if (to < from) to = from;
+    return pb_bstr_alloc(s + from, (unsigned int)(to - from));
+}
+char* pb_shrink(char* s, char* mask) {
+    size_t n = strlen(s);
+    char* buf = (char*)malloc(n + 1);
+    size_t o = 0;
+    char m = (mask && mask[0]) ? mask[0] : 0;
+    int first = 1;
+    for (size_t i = 0; i < n; i++) {
+        int ws = (s[i] == ' ' || s[i] == '\t' || s[i] == '\r' || s[i] == '\n');
+        if (ws) {
+            while (i + 1 < n && (s[i+1] == ' ' || s[i+1] == '\t' || s[i+1] == '\r' || s[i+1] == '\n')) i++;
+            if (!first) buf[o++] = m ? m : ' ';
+        } else {
+            first = 0;
+            buf[o++] = s[i];
+        }
+    }
+    while (o > 0 && (buf[o-1] == ' ' || buf[o-1] == '\t' || buf[o-1] == '\r' || buf[o-1] == '\n')) o--;
+    buf[o] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)o);
+}
+char* pb_build(char** arr, long long n) {
+    size_t total = 0;
+    for (long long i = 0; i < n; i++) total += strlen(arr[i]);
+    char* buf = (char*)malloc(total + 1);
+    size_t o = 0;
+    for (long long i = 0; i < n; i++) { size_t l = strlen(arr[i]); memcpy(buf + o, arr[i], l); o += l; }
+    buf[o] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)o);
+}
+
 /* Batch 40: OEM / UTF-8 code-page conversion. String args are payload pointers,
    string results are BSTRs. ACODE$ (wide-input) is not implemented: C-strlen
    cannot measure wide strings containing NUL bytes — honestly skipped. */

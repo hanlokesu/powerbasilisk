@@ -1638,6 +1638,32 @@ impl Compiler {
             .declare_function("pb_diskfree", &IrType::I64, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_disksize", &IrType::I64, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_clip",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_wrap",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_unwrap",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_shrink",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
             .declare_function("pb_chr_to_oem", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
@@ -8000,6 +8026,11 @@ impl Compiler {
             "OEMTOCHR" => Some(self.builtin_conv1(fb, args, "pb_oem_to_chr")),
             "CHRTOUTF8" => Some(self.builtin_conv1(fb, args, "pb_chr_to_utf8")),
             "UTF8TOCHR" => Some(self.builtin_conv1(fb, args, "pb_utf8_to_chr")),
+            "CLIP" => Some(self.builtin_clip(fb, args)),
+            "WRAP" => Some(self.builtin_conv3(fb, args, "pb_wrap")),
+            "UNWRAP" => Some(self.builtin_conv3(fb, args, "pb_unwrap")),
+            "SHRINK" => Some(self.builtin_shrink(fb, args)),
+            "BUILD" => Some(self.builtin_build(fb, args)),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8893,6 +8924,75 @@ impl Compiler {
             self.compile_expr(fb, &args[0])?
         };
         Ok(fb.call(&IrType::I64, fname, std::slice::from_ref(&s)))
+    }
+
+    fn builtin_conv3(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+    ) -> PbResult<Val> {
+        if args.len() != 3 {
+            return Err(PbError::runtime(format!(
+                "{fname} requires 3 arguments (got {})",
+                args.len()
+            )));
+        }
+        let a0 = self.compile_expr(fb, &args[0])?;
+        let a1 = self.compile_expr(fb, &args[1])?;
+        let a2 = self.compile_expr(fb, &args[2])?;
+        Ok(fb.call(&IrType::Ptr, fname, &[a0, a1, a2]))
+    }
+
+    fn builtin_clip(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() != 3 && args.len() != 4 {
+            return Err(PbError::runtime(format!(
+                "CLIP$ requires 3 or 4 arguments (got {}: {:?})",
+                args.len(),
+                args
+            )));
+        }
+        let mode = self.compile_expr(fb, &args[0])?;
+        let s = self.compile_expr(fb, &args[1])?;
+        let z = fb.const_i64(0);
+        let (start, count) = if args.len() == 4 {
+            (
+                self.compile_expr(fb, &args[2])?,
+                self.compile_expr(fb, &args[3])?,
+            )
+        } else {
+            (z.clone(), self.compile_expr(fb, &args[2])?)
+        };
+        Ok(fb.call(&IrType::Ptr, "pb_clip", &[mode, s, start, count]))
+    }
+
+    fn builtin_shrink(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("SHRINK$ requires 1 argument"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let mask = if args.len() > 1 {
+            self.compile_expr(fb, &args[1])?
+        } else {
+            fb.const_i64(0)
+        };
+        Ok(fb.call(&IrType::Ptr, "pb_shrink", &[s, mask]))
+    }
+
+    fn builtin_build(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("BUILD$ requires at least 1 argument"));
+        }
+        let n = args.len();
+        let arr_ty = IrType::Array(n, Box::new(IrType::Ptr));
+        let arr = fb.alloca(&arr_ty);
+        for (i, e) in args.iter().enumerate() {
+            let v = self.compile_expr(fb, e)?;
+            let slot = fb.gep_array(&arr_ty, &arr, &fb.const_i32(i as i32));
+            fb.store(&v, &slot);
+        }
+        let nv = fb.const_i64(n as i64);
+        Ok(fb.call(&IrType::Ptr, "pb_build", &[arr, nv]))
     }
 
     fn builtin_conv1(

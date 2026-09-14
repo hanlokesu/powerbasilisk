@@ -5054,6 +5054,41 @@ impl Parser {
                 self.expect(&Token::RParen)?;
                 Ok(Expr::FunctionCall("DIR$".to_string(), args))
             }
+            Token::Identifier(name)
+                if name.eq_ignore_ascii_case("CLIP") || name.eq_ignore_ascii_case("CLIP$") =>
+            {
+                // CLIP$(LEFT str, n) / CLIP$(RIGHT str, n) / CLIP$(MID str, start, n)
+                // LEFT/RIGHT/MID are keyword tokens — map them to string modes.
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                let mode = match self.peek() {
+                    Token::Identifier(ref w) if w.eq_ignore_ascii_case("LEFT") => {
+                        self.advance();
+                        "LEFT"
+                    }
+                    Token::Identifier(ref w) if w.eq_ignore_ascii_case("RIGHT") => {
+                        self.advance();
+                        "RIGHT"
+                    }
+                    Token::Identifier(ref w) if w.eq_ignore_ascii_case("MID") => {
+                        self.advance();
+                        "MID"
+                    }
+                    _ => "",
+                };
+                if !mode.is_empty() {
+                    args.push(Expr::StringLit(mode.to_string()));
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    args.extend(self.parse_arg_list()?);
+                } else if self.peek() != &Token::RParen {
+                    args = self.parse_arg_list()?;
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("CLIP".to_string(), args))
+            }
             Token::Identifier(name) if name.eq_ignore_ascii_case("VARPTR") => {
                 self.advance();
                 self.expect(&Token::LParen)?;
