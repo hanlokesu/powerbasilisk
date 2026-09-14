@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **199** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **102** documented upstream with no codegen evidence yet.
+> Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
+> (2026-09-15: +1 official keyword from batch 36 — MKE$ (8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler rather than the official 10-byte 80-bit format, so MKE$ and MKD$ yield the same bytes — documented difference).
 > (2026-09-15: +2 official keywords from batch 35 — REGEXPR / REGREPL (documented regex subset: literals, ., *, +, ?, ^, $, |, [class], \ escapes incl. \b word boundary and \c case toggle, () groups; leftmost-longest, case-insensitive default; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&] and REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$ with \00 = whole match; Tags \01-\99 and shortest-match \s not implemented, documented as subset).
 > (2026-09-15: +1 official keyword from batch 34 — PROFILE (per-procedure call counts and elapsed ms collected by the call-stack instrumentation; PROFILE filename$ writes "<Name>, <Call Count>, <Time mSec>" per line, PB-compatible).
 > (2026-09-15: +1 official keyword from batch 33 — CALLSTK call-stack tracing (CALLSTKCOUNT current depth, CALLSTK$(n) frame names 1-based innermost-first, CALLSTK filename$ writes the stack to a sequential file; pb_callstk_push/pop/count/get/dump).
@@ -305,7 +306,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) |
 | `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) |
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
-| `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
+| `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -405,6 +407,11 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.30 (2026-09-15) — Batch 36: MKE$ (EXT = 8-byte double)
+- **MKE$** — one more *Not implemented* item moved to *Implemented* (coverage: **200 implemented / 101 not implemented / 202 tier-3 DDT**).
+- EXT in this compiler is an 8-byte IEEE-754 double (the official PB 10-byte 80-bit extended format is not modelled), so MKE$ produces the same 8 bytes as MKD$. Documented difference — byte-level binary interchange with official PB EXT data is not supported.
+- Tests: examples/batch36_test.bas (3/3), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.29 (2026-09-15) — Batch 35: REGEXPR / REGREPL documented regex subset
 Two more *Not implemented* items moved to *Implemented* (coverage: **199 implemented / 102 not implemented / 202 tier-3 DDT**):

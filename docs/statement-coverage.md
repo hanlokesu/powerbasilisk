@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-15 (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 199 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 200 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 102 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (199)
+## ✅ Implemented (200)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -224,6 +224,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `MACRO/END MACRO` | BLOCK | preprocessor text expansion (single-line + multi-line) |
 | `ON CALL` | STATEMENT | dispatch table to SUB/FUNCTION (batch 27) |
 | `PUT$$` | STATEMENT | pb_put_wstring (WIDE write, UTF-16LE) |
+| MKE$ | STATEMENT | PB/Win + PB/CC | 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -431,7 +432,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (102, alphabetical)
+## ⬜ Not implemented (101, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -459,7 +460,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
 
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |

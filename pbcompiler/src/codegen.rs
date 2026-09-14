@@ -8261,8 +8261,11 @@ impl Compiler {
                     fb.call(&IrType::Ptr, "pb_mksingle", &[f])
                 }))
             }
-            "MKD" => {
+            "MKD" | "MKE" => {
                 // MKD$ — 8-byte binary string (double precision)
+                // MKE$ — EXT in this compiler is an 8-byte IEEE-754 double (the official
+                // PB 10-byte 80-bit extended format is not modelled), so MKE$ yields the
+                // same 8 bytes as MKD$. Documented in the coverage matrix.
                 if args.is_empty() {
                     return Some(Err(PbError::runtime("MKD$ requires 1 argument")));
                 }
