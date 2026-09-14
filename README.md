@@ -324,6 +324,36 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `ON ERROR GOTO / GOTO 0 / RESUME NEXT` | ✅ | per-function run-time error trap + disarm (batch 25) |
 | `RESUME / RESUME NEXT / RESUME FLUSH / RESUME label` | ✅ | four continuation forms after error handler (batch 25) |
 | `REGISTER` | ✅ | optimization hint, accepted as LOCAL (batch 25) |
+| `PREFIX "..." / END PREFIX` | ✅ | preprocessor text transform — prepends source to every line between (batch 26) |
+| `TRY / CATCH / FINALLY / EXIT TRY` | ✅ | structured run-time error trapping reusing the ON ERROR machinery (batch 26) |
+| `ON CALL` | ✅ | `ON expr CALL proc(args), fn(args) TO var` — 1-based dispatch to SUB/FUNCTION targets, out-of-range falls through (batch 27) |
+| `GET$$ #f, count, var$` / `PUT$$ #f, expr$` | ✅ | WIDE (UTF-16LE) string I/O — `pb_get_wstring` / `pb_put_wstring` via MultiByteToWideChar / WideCharToMultiByte (batch 27) |
+| `MACRO / END MACRO` | ✅ | preprocessor text substitution — single-line expression macros + multi-line statement macros (batch 27) |
+| `STATIC` (real semantics) | ✅ | module-global slot keeps value across calls (batch 23) |
+| `ARRAY ASSIGN dst() = src()` | ✅ | `pb_array_copy` — whole-array copy (batch 23) |
+| `TYPE SET t2 = t1` | ✅ | `pb_type_set` — same machinery as `LET` with TYPEs (batch 23) |
+| `WINDOW SET TEXT s$` / `WINDOW GET TEXT TO s$` | ✅ | `SetConsoleTitleA` / `GetConsoleTitleA` console-title bridge (batch 23) |
+| `LPRINT` / `LPRINT ATTACH/CLOSE/FLUSH/FORMFEED` | ✅ | `pb_lprint_*` — printer device output (batch 22) |
+| `TRACE` / `TRACE PRINT` | ✅ | `pb_trace_new` — trace buffer flushed to file (batch 22) |
+| `IMPORT ADDR func$ TO addr&` / `IMPORT CLOSE` | ✅ | `pb_import_addr` — runtime GetProcAddress (batch 22; target must be QUAD) |
+| `CALL DWORD target` | ✅ | indirect call through an imported / QUAD address (batch 22) |
+| `FILESCAN #f, RECORDS TO n, WIDTH TO w` | ✅ | `pb_filescan` — record count / max record width (batch 20) |
+| `ARRAY ARRAYIX arr(), i` | ✅ | element = index (batch 20) |
+| `DECLARE` / `TYPE/END TYPE` | ✅ | external declarations + user-defined types (batch 20) |
+| `ON GOTO n, ...` / `ON GOSUB n, ...` | ✅ | dispatch to line labels by expression value (1-based, out-of-range continues) |
+| `OPEN file FOR BINARY AS #f` + `GET #f, pos, var` / `PUT #f, pos, var` | ✅ | random-access binary I/O — `pb_open` r+b mode (no truncate) + `pb_get` / `pb_put` |
+| `CLIPBOARD SET TEXT s$` / `GET TEXT TO s$` / `RESET` | ✅ | `pb_clipboard_set_text/get_text/reset` — GlobalAlloc + Set/GetClipboardData |
+| `GLOBALMEM ALLOC/FREE/LOCK/SIZE/UNLOCK` | ✅ | `pb_globalmem_*` — Win32 global-memory heap |
+| `MOUSEPTR` | ✅ | `pb_mouseptr` — LoadCursorA cursor style |
+| `UCODEPAGE` | ✅ | `pb_ucodepage` — console output code page |
+| `HOST ADDR "name" TO a&` / `HOST NAME TO a&` | ✅ | `pb_host_addr` (gethostbyname) / `pb_host_name` (gethostname) |
+| `INPUT FLUSH` | ✅ | `pb_input_flush` — clears the keyboard type-ahead buffer |
+| `OPTION EXPLICIT` / `REM` | ✅ | strict declaration checking / comment statement |
+| `CSET var$ = expr` | ✅ | `pb_cset(_buf)` — assign into fixed-string buffer |
+| `HEX$` | ✅ | 64-bit integer → hex string |
+| `WAITKEY$` | ✅ | `pb_waitkey` — console `_getch`, redirected `getchar` dual mode (v0.1.14) |
+| `ARRAY SORT arr()` | ✅ | `pb_array_sort` — in-place sort |
+| `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
