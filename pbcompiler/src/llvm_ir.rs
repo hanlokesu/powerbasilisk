@@ -390,6 +390,11 @@ impl FunctionBuilder {
         self.terminated
     }
 
+    /// Append a raw IR instruction line (e.g. inline assembly).
+    pub fn raw_line(&mut self, line: &str) {
+        writeln!(self.body, "  {}", line).unwrap();
+    }
+
     /// Emit a label (starts a new basic block).
     pub fn label(&mut self, name: &str) {
         writeln!(self.body, "{}:", name).unwrap();

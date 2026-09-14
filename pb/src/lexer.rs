@@ -261,6 +261,53 @@ impl Lexer {
                     self.advance();
                     tokens.push(self.make_located(Token::Semicolon, start_line, start_col));
                 }
+                '[' => {
+                    self.advance();
+                    tokens.push(self.make_located(Token::LBracket, start_line, start_col));
+                }
+                ']' => {
+                    self.advance();
+                    tokens.push(self.make_located(Token::RBracket, start_line, start_col));
+                }
+                '!' => {
+                    // Inline-ASM shortcut: capture the rest of the line verbatim.
+                    // Stop at a single quote (PB line comment) or semicolon (ASM
+                    // comment) and skip the comment to end of line; stop at ':'
+                    // (next statement). Inside double quotes neither is a comment.
+                    self.advance();
+                    let mut raw = String::new();
+                    let mut in_str = false;
+                    while let Some(ch) = self.peek() {
+                        if ch == '"' {
+                            in_str = !in_str;
+                            raw.push(ch);
+                            self.advance();
+                            continue;
+                        }
+                        if !in_str && (ch == '\'' || ch == ';') {
+                            while let Some(c2) = self.peek() {
+                                if c2 == '\n' || c2 == '\r' {
+                                    break;
+                                }
+                                self.advance();
+                            }
+                            break;
+                        }
+                        if !in_str && ch == ':' {
+                            break;
+                        }
+                        if ch == '\n' || ch == '\r' {
+                            break;
+                        }
+                        raw.push(ch);
+                        self.advance();
+                    }
+                    tokens.push(self.make_located(
+                        Token::AsmText(raw.trim_end().to_string()),
+                        start_line,
+                        start_col,
+                    ));
+                }
                 ':' => {
                     self.advance();
                     tokens.push(self.make_located(Token::Colon, start_line, start_col));

@@ -109,7 +109,12 @@ pub enum Token {
     Colon, // : (label marker / statement separator)
     Hash,  // # (file number prefix)
     Dot,
-    DotDot, // .. (range in SELECT CASE)
+    DotDot,   // .. (range in SELECT CASE)
+    LBracket, // [ (inline-ASM indirect addressing)
+    RBracket, // ]
+
+    // Raw text of an inline-ASM line captured by the lexer (! prefix)
+    AsmText(String),
 
     // Special
     Underscore, // line continuation (shouldn't appear in final tokens)

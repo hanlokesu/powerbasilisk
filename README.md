@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (191 implemented / 110 not implemented / 202 tier-3 DDT).
+> table below (192 implemented / 109 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **191** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **110** documented upstream with no codegen evidence yet.
+> Summary: **192** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **109** documented upstream with no codegen evidence yet.
 > (2026-09-14: +1 official keyword from batch 28 — THREADED thread-local
 > storage declaration, LLVM `thread_local` globals with per-thread copies.
 > Batch 27 added ON CALL, GET$$/PUT$$, MACRO; batch 26 PREFIX, TRY.)
@@ -254,6 +254,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
 | `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
 | `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
+| `ASM` (`!` shortcut or `ASM` keyword) | ✅ | 29 (v0.1.23) | LLVM inline assembly — Intel dialect; PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`); mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block (register state preserved); x87 / MMX / SSE / SIMD pass through verbatim; works on both x86-64 and i686 targets |
 | `THREADED` | ✅ | 28 (v0.1.22) | LLVM `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
 | `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
 | `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | v0.1.0 | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
@@ -385,6 +386,29 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.23 (2026-09-14) — Batch 29: Inline ASM (`!` and `ASM` statements)
+
+One more *Not implemented* item moved to *Implemented* (coverage: **192 implemented / 109 not implemented / 202 tier-3 DDT**):
+
+- **ASM** — inline assembly via the `!` shortcut or the `ASM` keyword. Each ASM line is emitted as an
+  LLVM `call void asm sideeffect inteldialect ...` instruction; **consecutive ASM lines are merged into one
+  asm block so register state is preserved** (e.g. `! MOV EAX, [x]` then `! MOV y, EAX`). PB variable
+  operands are passed by pointer (`byte/word/dword/qword ptr [$N]`) with the width taken from the declared
+  PB type. Automatic register-shuffling handles the two x86 cases that cannot be encoded directly:
+  mem-to-mem operands (source loaded into a constraint-allocated scratch register) and 64-bit stores with an
+  immediate larger than i32 (split into lo/hi dword stores, which is also what makes QUAD stores work on
+  i686). Registers, immediates, bracketed memory operands and quoted strings pass through verbatim, so the
+  full instruction set is available — 8086→Pentium, x87 floating point (`FLD1`/`FSTP` to a DOUBLE),
+  MMX (`PXOR`/`EMMS`) and SSE (`XORPS`) were all compile- and run-verified.
+- Honest limits (documented): one run of consecutive ASM lines preserves registers, but there is no
+  label/jump support across statements; callee-saved registers are assumed preserved by the user;
+  `ASMDATA/END ASMDATA` data blocks remain Not implemented (next candidate).
+
+Verified: `examples/batch29_test.bas` (11/11 PASS on x86-64, incl. x87/MMX/SSE), `examples/batch29_x86_test.bas`
+(32-bit, exit code 0 — avoids the 32-bit `_printf` symbol gap in PRINT, which is a separate upstream issue),
+official regression 15/15 ALL PASS, fmt + clippy clean.
+
 ### v0.1.22 (2026-09-14) — Batch 28: THREADED (thread-local storage)
 
 One more *Not implemented* item moved to *Implemented*

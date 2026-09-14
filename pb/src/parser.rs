@@ -1351,6 +1351,12 @@ impl Parser {
                     ))
                 }
             }
+            // Inline assembly shortcut: ! opcode ... (raw text captured by lexer)
+            Token::AsmText(text) => {
+                let t = text.clone();
+                self.advance();
+                Ok(Statement::Asm(t))
+            }
             Token::Dim => {
                 let dims = self.parse_dim_statement(DimScope::Dim)?;
                 if dims.len() == 1 {
@@ -1795,6 +1801,73 @@ impl Parser {
                     let filename = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Kill(filename));
+                }
+
+                // ASM opcode ... — inline assembly (keyword form). Rebuild the
+                // line text from tokens (brackets, commas, identifiers, ints).
+                if name_upper == "ASM" {
+                    self.advance(); // consume ASM
+                    let mut parts: Vec<String> = Vec::new();
+                    loop {
+                        match self.peek() {
+                            Token::Eol | Token::Eof | Token::Colon => break,
+                            Token::Semicolon => {
+                                self.consume_to_eol();
+                                break;
+                            }
+                            Token::Identifier(w) => {
+                                parts.push(w.clone());
+                                self.advance();
+                            }
+                            Token::IntegerLiteral(v) => {
+                                parts.push(v.to_string());
+                                self.advance();
+                            }
+                            Token::Minus => {
+                                parts.push("-".to_string());
+                                self.advance();
+                            }
+                            Token::Comma => {
+                                parts.push(",".to_string());
+                                self.advance();
+                            }
+                            Token::LBracket => {
+                                parts.push("[".to_string());
+                                self.advance();
+                            }
+                            Token::RBracket => {
+                                parts.push("]".to_string());
+                                self.advance();
+                            }
+                            _ => {
+                                self.advance();
+                            }
+                        }
+                    }
+                    // Rebuild with Intel spacing: "MOV EAX, 123", negatives merged.
+                    let mut out = String::new();
+                    let mut prev_minus = false;
+                    for pt in &parts {
+                        if pt == "-" {
+                            prev_minus = true;
+                            continue;
+                        }
+                        if prev_minus {
+                            out.push('-');
+                            out.push_str(pt);
+                            prev_minus = false;
+                            continue;
+                        }
+                        if pt == "," {
+                            out.push_str(", ");
+                            continue;
+                        }
+                        if !out.is_empty() {
+                            out.push(' ');
+                        }
+                        out.push_str(pt);
+                    }
+                    return Ok(Statement::Asm(out));
                 }
 
                 // DIR mask [, [ONLY] attr] TO s$ | DIR NEXT TO s$ | DIR CLOSE | DIR$ CLOSE

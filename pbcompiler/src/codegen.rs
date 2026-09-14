@@ -2682,7 +2682,9 @@ impl Compiler {
     // ========== Body / Statement compilation ==========
 
     fn compile_body(&mut self, fb: &mut FunctionBuilder, stmts: &[Statement]) -> PbResult<()> {
-        for stmt in stmts {
+        let mut idx = 0usize;
+        while idx < stmts.len() {
+            let stmt = &stmts[idx];
             if fb.is_terminated() {
                 // If terminated but we hit a label, we still need to emit it
                 // (labels create new basic blocks and reset the terminated state)
@@ -2690,10 +2692,31 @@ impl Compiler {
                     Statement::Label(_) => {
                         // Fall through: compile the label (it creates a new block)
                     }
-                    _ => continue,
+                    _ => {
+                        idx += 1;
+                        continue;
+                    }
                 }
             }
+            if let Statement::Asm(t) = stmt {
+                // Merge consecutive ASM statements into one inline-asm block so
+                // register state is preserved across them (PB semantics).
+                let mut seq = vec![t.clone()];
+                let mut j = idx + 1;
+                while j < stmts.len() {
+                    if let Statement::Asm(t2) = &stmts[j] {
+                        seq.push(t2.clone());
+                        j += 1;
+                    } else {
+                        break;
+                    }
+                }
+                self.compile_asm_block(fb, &seq)?;
+                idx = j;
+                continue;
+            }
             self.compile_statement(fb, stmt)?;
+            idx += 1;
         }
         Ok(())
     }
@@ -2909,6 +2932,10 @@ impl Compiler {
                 fb.label(&merge_lbl);
                 Ok(())
             }
+            Statement::Asm(text) => {
+                self.compile_asm_block(fb, std::slice::from_ref(text))?;
+                Ok(())
+            }
             Statement::Noop(name, line) => {
                 self.warnings.push(format!(
                     "line {}: statement `{}` parsed but NOT implemented (NOOP) - no code generated",
@@ -2917,6 +2944,233 @@ impl Compiler {
                 Ok(())
             }
         }
+    }
+
+    // ========== Inline assembly (batch 29) ==========
+
+    /// Compile a run of consecutive inline-ASM statements (`! opcode` or
+    /// `ASM opcode`) into ONE LLVM `call void asm sideeffect inteldialect`
+    /// block. Keeping consecutive lines in a single block preserves register
+    /// state across them, matching PB semantics (e.g. `! MOV EAX, [x]` then
+    /// `! MOV y, EAX`).
+    ///
+    /// Every PB variable operand is passed by pointer ("r" constraint) and
+    /// referenced in the Intel-syntax text as `<width> ptr [$N]`, where N is
+    /// the 0-based operand slot. Registers, immediates, brackets and quoted
+    /// strings pass through verbatim.
+    ///
+    /// Automatic register-shuffling (inside the block):
+    ///  - mem-to-mem operands (`MOV y, x`): the source is loaded into a
+    ///    scratch register first (x86 cannot encode mem,mem).
+    ///  - `MOV qwordvar, <big immediate>`: split into two dword stores
+    ///    (lo / hi), which works on both 64-bit and 32-bit targets.
+    ///
+    /// Honest limits: register state is preserved within one run of
+    /// consecutive ASM lines only; labels / jumps across ASM lines are not
+    /// supported; callee-saved registers are assumed preserved by the user.
+    fn compile_asm_block(&mut self, fb: &mut FunctionBuilder, lines: &[String]) -> PbResult<()> {
+        #[derive(Clone)]
+        enum Op {
+            Mem { width: String, slot: usize },
+            Imm(i64),
+            Raw(String),
+            Comma,
+        }
+
+        let mut constraints: Vec<String> = Vec::new();
+        let mut args: Vec<String> = Vec::new();
+
+        // Resolve one token against the symbol table.
+        let resolve_var = |self_: &mut Self,
+                           tok: &str,
+                           constraints: &mut Vec<String>,
+                           args: &mut Vec<String>|
+         -> Option<Op> {
+            let norm = normalize_name(&tok.to_uppercase());
+            if let Some(info) = self_.symbols.lookup(&norm) {
+                let width = match &info.ir_type {
+                    IrType::I8 => "byte",
+                    IrType::I16 => "word",
+                    IrType::I32 => "dword",
+                    IrType::I64 => "qword",
+                    IrType::Float => "dword",
+                    IrType::Double => "qword",
+                    _ => {
+                        self_.warnings.push(format!(
+                            "inline asm: variable `{}` has unsupported type {} - operand skipped",
+                            tok, info.ir_type
+                        ));
+                        return None;
+                    }
+                };
+                let slot = constraints.len();
+                constraints.push("r".to_string());
+                args.push(format!("ptr {}", info.ptr_name));
+                Some(Op::Mem {
+                    width: width.to_string(),
+                    slot,
+                })
+            } else {
+                None
+            }
+        };
+
+        let mut instruction_texts: Vec<String> = Vec::new();
+
+        for line in lines {
+            let t = strip_asm_comment(line);
+            let t = t.trim();
+            if t.is_empty() {
+                continue;
+            }
+            let toks = split_asm_tokens(t);
+
+            let mut ops: Vec<Op> = Vec::new();
+            for (idx, tok) in toks.iter().enumerate() {
+                if idx == 0 {
+                    ops.push(Op::Raw(tok.to_lowercase()));
+                    continue;
+                }
+                if tok == "," {
+                    ops.push(Op::Comma);
+                    continue;
+                }
+                let mut used = false;
+                if tok.starts_with('[') && tok.ends_with(']') && tok.len() >= 2 {
+                    let inner = tok[1..tok.len() - 1].trim();
+                    if let Some(op) = resolve_var(self, inner, &mut constraints, &mut args) {
+                        ops.push(op);
+                        used = true;
+                    }
+                }
+                if !used {
+                    if let Some(op) = resolve_var(self, tok, &mut constraints, &mut args) {
+                        ops.push(op);
+                        used = true;
+                    }
+                }
+                if used {
+                    continue;
+                }
+                let trimmed = tok.trim();
+                let parsed = if let Some(rest) = trimmed.strip_prefix('-') {
+                    rest.parse::<i64>().ok().map(|v| -v)
+                } else {
+                    trimmed.parse::<i64>().ok()
+                };
+                if let Some(v) = parsed {
+                    ops.push(Op::Imm(v));
+                    continue;
+                }
+                ops.push(Op::Raw(tok.to_lowercase()));
+            }
+
+            // Special case: `mov qwordmem, <imm > u32::MAX>` -> two dword
+            // stores (lo, hi). Works on both x64 and i686 (which has no
+            // 64-bit general-purpose register).
+            if ops.len() == 4 {
+                if let (Op::Raw(opc), Op::Mem { width, slot }, Op::Comma, Op::Imm(v)) =
+                    (&ops[0], &ops[1], &ops[2], &ops[3])
+                {
+                    if opc == "mov" && width == "qword" && (*v as u64) > u32::MAX as u64 {
+                        let lo = (*v as u64 & 0xFFFF_FFFF) as u32;
+                        let hi = ((*v as u64) >> 32) as u32;
+                        let s_lo = constraints.len();
+                        constraints.push("r".to_string());
+                        args.push(format!("i32 {}", lo));
+                        let s_hi = constraints.len();
+                        constraints.push("r".to_string());
+                        args.push(format!("i32 {}", hi));
+                        instruction_texts.push(format!(
+                            "mov dword ptr [${}], ${}\nmov dword ptr [${}+4], ${}",
+                            slot, s_lo, slot, s_hi
+                        ));
+                        continue;
+                    }
+                }
+            }
+
+            // Rebuild this instruction's text.
+            let mut operand_parts: Vec<String> = Vec::new();
+            let mut shuffle_lines: Vec<String> = Vec::new();
+            if let Some(Op::Raw(opcode)) = ops.first() {
+                operand_parts.push(opcode.clone());
+            } else {
+                operand_parts.push("nop".to_string());
+            }
+
+            let n = ops.len();
+            let mut i = 1usize;
+            while i < n {
+                match &ops[i] {
+                    Op::Comma => {
+                        operand_parts.push(",".to_string());
+                        i += 1;
+                    }
+                    Op::Imm(v) => {
+                        operand_parts.push(v.to_string());
+                        i += 1;
+                    }
+                    Op::Mem { width, slot } => {
+                        let is_mem_mem_src = i >= 2
+                            && matches!(&ops[i - 1], Op::Comma)
+                            && matches!(&ops[i - 2], Op::Mem { .. });
+                        if is_mem_mem_src {
+                            // Scratch register via a constraint (never a
+                            // hard-coded name: on i686 an i64 "r" constraint
+                            // uses a register pair and would collide with a
+                            // fixed EAX; on x64 qword needs the full 64-bit
+                            // register).
+                            let scratch_slot = constraints.len();
+                            let scratch_ty = if width == "qword" { "i64" } else { "i32" };
+                            constraints.push("r".to_string());
+                            args.push(format!("{} 0", scratch_ty));
+                            shuffle_lines
+                                .push(format!("mov ${}, {} ptr [${}]", scratch_slot, width, slot));
+                            operand_parts.push(format!("${}", scratch_slot));
+                        } else {
+                            operand_parts.push(format!("{} ptr [${}]", width, slot));
+                        }
+                        i += 1;
+                    }
+                    Op::Raw(txt) => {
+                        operand_parts.push(txt.clone());
+                        i += 1;
+                    }
+                }
+            }
+
+            let mut text = shuffle_lines.join("\n");
+            if !text.is_empty() {
+                text.push('\n');
+            }
+            text.push_str(&operand_parts.join(" "));
+            instruction_texts.push(text.trim().to_string());
+        }
+
+        if instruction_texts.is_empty() {
+            return Ok(());
+        }
+        let asm_str = instruction_texts.join("\n");
+        let c = if constraints.is_empty() {
+            "~{memory}".to_string()
+        } else {
+            format!("{},~{{memory}}", constraints.join(","))
+        };
+        if args.is_empty() {
+            fb.raw_line(&format!(
+                "call void asm sideeffect inteldialect \"{}\", \"{}\"()",
+                asm_str, c
+            ));
+        } else {
+            fb.raw_line(&format!(
+                "call void asm sideeffect inteldialect \"{}\", \"{}\"({})",
+                asm_str,
+                c,
+                args.join(", ")
+            ));
+        }
+        Ok(())
     }
 
     // ========== Assign ==========
@@ -8576,6 +8830,72 @@ fn normalize_name(name: &str) -> String {
         return upper[..len - 1].to_string();
     }
     upper
+}
+
+/// Strip an inline-ASM comment: everything after ';' or a single quote
+/// (outside double quotes) is dropped.
+fn strip_asm_comment(text: &str) -> String {
+    let mut out = String::new();
+    let mut in_str = false;
+    for ch in text.chars() {
+        if ch == '"' {
+            in_str = !in_str;
+            out.push(ch);
+            continue;
+        }
+        if !in_str && (ch == ';' || ch == '\'') {
+            break;
+        }
+        out.push(ch);
+    }
+    out
+}
+
+/// Split an inline-ASM line into tokens. Whitespace and commas separate
+/// tokens; a bracketed memory operand `[...]` stays one token; double-quoted
+/// strings stay one token.
+fn split_asm_tokens(text: &str) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    let mut cur = String::new();
+    let mut in_bracket = false;
+    let mut in_str = false;
+    for ch in text.chars() {
+        match ch {
+            '"' => {
+                in_str = !in_str;
+                cur.push(ch);
+            }
+            '[' if !in_str => {
+                if !cur.is_empty() {
+                    out.push(std::mem::take(&mut cur));
+                }
+                in_bracket = true;
+                cur.push(ch);
+            }
+            ']' if in_bracket => {
+                in_bracket = false;
+                cur.push(ch);
+            }
+            ',' if !in_bracket && !in_str => {
+                if !cur.is_empty() {
+                    out.push(std::mem::take(&mut cur));
+                }
+                out.push(",".to_string());
+            }
+            c if c.is_whitespace() && !in_bracket && !in_str => {
+                if !cur.is_empty() {
+                    out.push(std::mem::take(&mut cur));
+                }
+            }
+            c => {
+                cur.push(c);
+            }
+        }
+    }
+    if !cur.is_empty() {
+        out.push(cur);
+    }
+    out
 }
 
 /// Infer PB type from variable name suffix.
