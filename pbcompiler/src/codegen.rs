@@ -1092,6 +1092,103 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_mat_fill",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I64,
+                IrType::Double,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_copy",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_add",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I64,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_scale",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I64,
+                IrType::Double,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_identity",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_trn",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_mul",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mat_inv",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
         self.module
             .declare_function("pb_field_get", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
@@ -2968,6 +3065,7 @@ impl Compiler {
             }
             Statement::Open(o) => self.compile_open(fb, o),
             Statement::Field(f) => self.compile_field(fb, f),
+            Statement::Mat(m) => self.compile_mat(fb, m),
             Statement::Close(c) => self.compile_close(fb, c),
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
@@ -6177,6 +6275,255 @@ impl Compiler {
         let filenum_i32 = self.to_i32(fb, &filenum);
         fb.call_void("pb_close", &[filenum_i32]);
         Ok(())
+    }
+
+    /// MAT a() = RHS — matrix algebra (batch 32).
+    fn compile_mat(&mut self, fb: &mut FunctionBuilder, m: &MatStmt) -> PbResult<()> {
+        let dst = match self.symbols.lookup_array(&m.dst) {
+            Some(info) => info.clone(),
+            None => {
+                self.warnings
+                    .push(format!("MAT: array '{}' not declared", m.dst));
+                return Ok(());
+            }
+        };
+        let dst_base = Val::new(dst.ptr_name.clone(), IrType::Ptr);
+        let es = Self::array_elem_size(&dst.elem_ir_type);
+        let es_i32 = fb.const_i32(es);
+        let is_float = fb.const_i32(
+            if matches!(dst.elem_ir_type, IrType::Float | IrType::Double) {
+                1
+            } else {
+                0
+            },
+        );
+
+        let dims = dst.dims.len();
+        let (rows_i32, cols_i32): (Option<Val>, Option<Val>) = if dims >= 2 {
+            (
+                Some(fb.const_i32(dst.dims[0].1 as i32)),
+                Some(fb.const_i32(dst.dims[1].1 as i32)),
+            )
+        } else {
+            (None, None)
+        };
+        let total = dst.total_elements as i64;
+        let total_i64 = fb.const_i64(total);
+
+        let src1_base = match &m.src1 {
+            Some(n) => match self.symbols.lookup_array(&normalize_name(n)) {
+                Some(info) => Some(Val::new(info.ptr_name.clone(), IrType::Ptr)),
+                None => {
+                    self.warnings
+                        .push(format!("MAT: source array '{}' not declared", n));
+                    return Ok(());
+                }
+            },
+            None => None,
+        };
+        let src2_base = match &m.src2 {
+            Some(n) => match self.symbols.lookup_array(&normalize_name(n)) {
+                Some(info) => Some(Val::new(info.ptr_name.clone(), IrType::Ptr)),
+                None => {
+                    self.warnings
+                        .push(format!("MAT: source array '{}' not declared", n));
+                    return Ok(());
+                }
+            },
+            None => None,
+        };
+
+        match m.op {
+            MatOp::Con => {
+                fb.call_void(
+                    "pb_mat_fill",
+                    &[
+                        dst_base.clone(),
+                        es_i32.clone(),
+                        is_float.clone(),
+                        total_i64.clone(),
+                        fb.const_f64(1.0),
+                    ],
+                );
+            }
+            MatOp::Zer => {
+                fb.call_void(
+                    "pb_mat_fill",
+                    &[
+                        dst_base.clone(),
+                        es_i32.clone(),
+                        is_float.clone(),
+                        total_i64.clone(),
+                        fb.const_f64(0.0),
+                    ],
+                );
+            }
+            MatOp::ConScalar => {
+                let v = self.compile_expr(fb, m.scalar.as_ref().unwrap())?;
+                let vf = self.to_f64(fb, &v);
+                fb.call_void(
+                    "pb_mat_fill",
+                    &[
+                        dst_base.clone(),
+                        es_i32.clone(),
+                        is_float.clone(),
+                        total_i64.clone(),
+                        vf,
+                    ],
+                );
+            }
+            MatOp::Assign => {
+                fb.call_void(
+                    "pb_mat_copy",
+                    &[
+                        dst_base.clone(),
+                        src1_base.clone().unwrap(),
+                        es_i32.clone(),
+                        total_i64.clone(),
+                    ],
+                );
+            }
+            MatOp::Add | MatOp::Sub => {
+                let sub = if m.op == MatOp::Sub {
+                    fb.const_i32(1)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void(
+                    "pb_mat_add",
+                    &[
+                        dst_base.clone(),
+                        src1_base.clone().unwrap(),
+                        src2_base.clone().unwrap(),
+                        es_i32.clone(),
+                        is_float.clone(),
+                        total_i64.clone(),
+                        sub,
+                    ],
+                );
+            }
+            MatOp::Scale => {
+                let v = self.compile_expr(fb, m.scalar.as_ref().unwrap())?;
+                let vf = self.to_f64(fb, &v);
+                fb.call_void(
+                    "pb_mat_scale",
+                    &[
+                        dst_base.clone(),
+                        es_i32.clone(),
+                        is_float.clone(),
+                        total_i64.clone(),
+                        vf,
+                        src1_base.clone().unwrap(),
+                    ],
+                );
+            }
+            MatOp::Idn => {
+                if dims >= 2 {
+                    fb.call_void(
+                        "pb_mat_identity",
+                        &[
+                            dst_base.clone(),
+                            es_i32.clone(),
+                            is_float.clone(),
+                            rows_i32.clone().unwrap(),
+                            cols_i32.clone().unwrap(),
+                        ],
+                    );
+                } else {
+                    self.warnings
+                        .push(format!("MAT IDN requires a 2-D array ({})", m.dst));
+                }
+            }
+            MatOp::Trn => {
+                if dims >= 2 {
+                    // rows/cols must be the SOURCE array's dimensions (dst dims are swapped)
+                    let src_info = self
+                        .symbols
+                        .lookup_array(&normalize_name(m.src1.as_ref().unwrap()))
+                        .unwrap()
+                        .clone();
+                    let src_rows = fb.const_i32(src_info.dims[0].1 as i32);
+                    let src_cols = fb.const_i32(src_info.dims[1].1 as i32);
+                    fb.call_void(
+                        "pb_mat_trn",
+                        &[
+                            dst_base.clone(),
+                            src1_base.clone().unwrap(),
+                            es_i32.clone(),
+                            is_float.clone(),
+                            src_rows,
+                            src_cols,
+                        ],
+                    );
+                } else {
+                    self.warnings
+                        .push(format!("MAT TRN requires 2-D arrays ({})", m.dst));
+                }
+            }
+            MatOp::Mul => {
+                if dims >= 2 {
+                    let l = rows_i32.clone().unwrap();
+                    let n = cols_i32.clone().unwrap();
+                    let src1_info = self
+                        .symbols
+                        .lookup_array(&normalize_name(m.src1.as_ref().unwrap()))
+                        .unwrap()
+                        .clone();
+                    let m2 = if src1_info.dims.len() >= 2 {
+                        fb.const_i32(src1_info.dims[1].1 as i32)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call_void(
+                        "pb_mat_mul",
+                        &[
+                            dst_base.clone(),
+                            src1_base.clone().unwrap(),
+                            src2_base.clone().unwrap(),
+                            es_i32.clone(),
+                            is_float.clone(),
+                            l,
+                            m2,
+                            n,
+                        ],
+                    );
+                } else {
+                    self.warnings
+                        .push(format!("MAT * requires 2-D arrays ({})", m.dst));
+                }
+            }
+            MatOp::Inv => {
+                if dims >= 2 {
+                    let n = rows_i32.clone().unwrap();
+                    fb.call(
+                        &IrType::I32,
+                        "pb_mat_inv",
+                        &[
+                            dst_base.clone(),
+                            src1_base.clone().unwrap(),
+                            es_i32.clone(),
+                            is_float.clone(),
+                            n,
+                        ],
+                    );
+                } else {
+                    self.warnings
+                        .push(format!("MAT INV requires a 2-D square array ({})", m.dst));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Element size in bytes for a MAT array element type.
+    fn array_elem_size(ir: &IrType) -> i32 {
+        match ir {
+            IrType::I8 | IrType::I1 => 1,
+            IrType::I16 => 2,
+            IrType::I32 | IrType::Float => 4,
+            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+            _ => 4,
+        }
     }
 
     /// FIELD #n, size AS var[, ...] / FIELD dyn$, size AS var[, ...]

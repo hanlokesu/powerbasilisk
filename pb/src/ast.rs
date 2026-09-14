@@ -184,6 +184,7 @@ pub enum Statement {
     PrintFile(PrintFileStmt),
     Open(OpenStmt),
     Field(FieldStmt),
+    Mat(MatStmt),
     Close(CloseStmt),
     Dim(DimStatement),
     Redim(DimStatement),
@@ -374,6 +375,35 @@ pub enum OpenMode {
     Input,
     Binary,
     Random,
+}
+
+/// MAT matrix-algebra statement (batch 32).
+/// `MAT dst() = RHS` where RHS is one of CON / CON(expr) / IDN / ZER /
+/// src() / src() + src() / src() - src() / src() * src() /
+/// (expr) * src() / INV(src()) / TRN(src()).
+#[derive(Debug, Clone)]
+pub struct MatStmt {
+    pub dst: String, // normalized destination array name
+    pub op: MatOp,
+    pub src1: Option<String>, // normalized source array name
+    pub src2: Option<String>, // second source (add/sub/mul)
+    pub scalar: Option<Expr>, // CON(expr) / (expr) * array
+    pub line: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum MatOp {
+    Assign,    // dst = src
+    Con,       // dst = CON         (all ones)
+    ConScalar, // dst = CON(expr)
+    Zer,       // dst = ZER
+    Idn,       // dst = IDN         (2-D square identity)
+    Add,       // dst = a + b
+    Sub,       // dst = a - b
+    Mul,       // dst = a * b       (2-D matrix multiply)
+    Scale,     // dst = (expr) * a
+    Trn,       // dst = TRN(a)      (2-D transpose)
+    Inv,       // dst = INV(a)      (2-D square inverse)
 }
 
 #[derive(Debug, Clone)]

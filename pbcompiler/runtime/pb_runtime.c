@@ -1312,6 +1312,123 @@ char* pb_field_get(pb_field_t* fv) {
     return out;
 }
 
+/* ===== Batch 32: MAT matrix algebra =====
+   Arrays are flat element buffers; elem_size is 1/2/4/8; is_float selects
+   SINGLE/DOUBLE element decoding (ints are sign-extended, floats IEEE).
+   Arithmetic is performed in double and stored back with element-type truncation.
+   No bounds checking (PB semantics). */
+
+static double pb_mat_read(const char* base, int es, int is_float, long long idx) {
+    if (is_float) {
+        if (es == 4) { float t; memcpy(&t, base + idx * 4, 4); return t; }
+        double t; memcpy(&t, base + idx * 8, 8); return t;
+    }
+    double v = 0.0;
+    if (es == 1) { signed char t; memcpy(&t, base + idx, 1); v = t; }
+    else if (es == 2) { short t; memcpy(&t, base + idx * 2, 2); v = t; }
+    else if (es == 4) { int t; memcpy(&t, base + idx * 4, 4); v = t; }
+    else { long long t; memcpy(&t, base + idx * 8, 8); v = (double)t; }
+    return v;
+}
+
+static void pb_mat_write(char* base, int es, int is_float, long long idx, double v) {
+    if (is_float) {
+        if (es == 4) { float t = (float)v; memcpy(base + idx * 4, &t, 4); return; }
+        memcpy(base + idx * 8, &v, 8); return;
+    }
+    if (es == 1) { signed char t = (signed char)v; memcpy(base + idx, &t, 1); }
+    else if (es == 2) { short t = (short)v; memcpy(base + idx * 2, &t, 2); }
+    else if (es == 4) { int t = (int)v; memcpy(base + idx * 4, &t, 4); }
+    else { memcpy(base + idx * 8, &v, 8); }
+}
+
+/* MAT a() = CON / CON(expr) / ZER — fill all elements */
+void pb_mat_fill(char* base, int es, int is_float, long long total, double val) {
+    for (long long i = 0; i < total; i++) pb_mat_write(base, es, is_float, i, val);
+}
+
+/* MAT a() = b() — element copy */
+void pb_mat_copy(char* dst, const char* src, int es, long long total) {
+    memcpy(dst, src, (size_t)(total * es));
+}
+
+/* MAT a() = b() + c() / b() - c() — elementwise, same size */
+void pb_mat_add(char* dst, const char* a, const char* b, int es, int is_float, long long total, int sub) {
+    for (long long i = 0; i < total; i++) {
+        double av = pb_mat_read(a, es, is_float, i);
+        double bv = pb_mat_read(b, es, is_float, i);
+        pb_mat_write(dst, es, is_float, i, sub ? av - bv : av + bv);
+    }
+}
+
+/* MAT a() = (expr) * b() — scalar multiplication */
+void pb_mat_scale(char* dst, int es, int is_float, long long total, double s, const char* a) {
+    for (long long i = 0; i < total; i++) pb_mat_write(dst, es, is_float, i, s * pb_mat_read(a, es, is_float, i));
+}
+
+/* MAT a() = IDN — 2-D square identity (rows == cols) */
+void pb_mat_identity(char* dst, int es, int is_float, int rows, int cols) {
+    for (int i = 0; i < rows; i++)
+        for (int j = 0; j < cols; j++)
+            pb_mat_write(dst, es, is_float, (long long)i * cols + j, i == j ? 1.0 : 0.0);
+}
+
+/* MAT a() = TRN(b()) — dst(rows x cols) = src(cols x rows); dst dims must be swapped */
+void pb_mat_trn(char* dst, const char* src, int es, int is_float, int src_rows, int src_cols) {
+    for (int i = 0; i < src_rows; i++)
+        for (int j = 0; j < src_cols; j++)
+            pb_mat_write(dst, es, is_float, (long long)j * src_rows + i, pb_mat_read(src, es, is_float, (long long)i * src_cols + j));
+}
+
+/* MAT a() = b() * c() — 2-D multiply: dst(l x n) = a(l x m) * b(m x n) */
+void pb_mat_mul(char* dst, const char* a, const char* b, int es, int is_float, int l, int m, int n) {
+    for (int i = 0; i < l; i++) {
+        for (int j = 0; j < n; j++) {
+            double acc = 0.0;
+            for (int k = 0; k < m; k++)
+                acc += pb_mat_read(a, es, is_float, (long long)i * m + k) * pb_mat_read(b, es, is_float, (long long)k * n + j);
+            pb_mat_write(dst, es, is_float, (long long)i * n + j, acc);
+        }
+    }
+}
+
+/* MAT a() = INV(b()) — 2-D square inverse via Gauss-Jordan on the augmented
+   matrix [A | I]. Returns 0 on success, -1 if singular. */
+int pb_mat_inv(char* dst, const char* src, int es, int is_float, int n) {
+    if (n <= 0) return -1;
+    double* aug = (double*)malloc((size_t)n * n * 2 * sizeof(double));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) aug[(size_t)i * n * 2 + j] = pb_mat_read(src, es, is_float, (long long)i * n + j);
+        for (int j = 0; j < n; j++) aug[(size_t)i * n * 2 + n + j] = (i == j) ? 1.0 : 0.0;
+    }
+    int singular = 0;
+    for (int col = 0; col < n && !singular; col++) {
+        int pivot = col;
+        for (int r = col + 1; r < n; r++)
+            if (fabs(aug[(size_t)r * n * 2 + col]) > fabs(aug[(size_t)pivot * n * 2 + col])) pivot = r;
+        if (fabs(aug[(size_t)pivot * n * 2 + col]) < 1e-12) { singular = 1; break; }
+        if (pivot != col) {
+            for (int j = 0; j < n * 2; j++) {
+                double t = aug[(size_t)col * n * 2 + j];
+                aug[(size_t)col * n * 2 + j] = aug[(size_t)pivot * n * 2 + j];
+                aug[(size_t)pivot * n * 2 + j] = t;
+            }
+        }
+        double d = aug[(size_t)col * n * 2 + col];
+        for (int j = 0; j < n * 2; j++) aug[(size_t)col * n * 2 + j] /= d;
+        for (int r = 0; r < n; r++) {
+            if (r == col) continue;
+            double f = aug[(size_t)r * n * 2 + col];
+            for (int j = 0; j < n * 2; j++) aug[(size_t)r * n * 2 + j] -= f * aug[(size_t)col * n * 2 + j];
+        }
+    }
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            pb_mat_write(dst, es, is_float, (long long)i * n + j, aug[(size_t)i * n * 2 + n + j]);
+    free(aug);
+    return singular ? -1 : 0;
+}
+
 /* x$ = expr for FIELD dyn$-bound strings — copy into a fresh mutable buffer
    (string constants live in read-only memory and must never be written through) */
 void pb_str_assign_copy(char** slot, const char* src, unsigned len) {

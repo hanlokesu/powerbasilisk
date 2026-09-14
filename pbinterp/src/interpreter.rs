@@ -417,6 +417,10 @@ impl Interpreter {
                 // FIELD bindings are no-ops in the interpreter (codegen-only)
                 Ok(Flow::Normal)
             }
+            Statement::Mat(_) => {
+                // MAT is codegen-only in the interpreter
+                Ok(Flow::Normal)
+            }
             Statement::Close(c) => {
                 self.exec_close(c)?;
                 Ok(Flow::Normal)

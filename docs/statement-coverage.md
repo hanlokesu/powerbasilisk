@@ -123,6 +123,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MKCUX$ | STATEMENT | `pb_mkquad` (8-byte little-endian, extended currency) |
 | MKD$ | STATEMENT | `pb_mkdouble` (8-byte IEEE-754) |
 | MKDWD$ | STATEMENT | `pb_mklong` (4-byte little-endian, double-word) |
+| `MAT` | Statement | matrix algebra (CON / CON(expr) / IDN / ZER / + / - / * / scalar / TRN / INV) |
 | MKI$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
 | MKL$ | STATEMENT | `pb_mklong` (4-byte little-endian) |
 | MKQ$ | STATEMENT | `pb_mkquad` (8-byte little-endian) |
@@ -454,7 +455,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
 
-| MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
 | MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |

@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (194 implemented / 107 not implemented / 202 tier-3 DDT).
+> table below (195 implemented / 106 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **194** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **107** documented upstream with no codegen evidence yet.
+> Summary: **195** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **106** documented upstream with no codegen evidence yet.
+> (2026-09-15: +1 official keyword from batch 32 — MAT matrix algebra (CON / CON(expr) / IDN / ZER / elementwise + - assignment / scalar (expr)*a / 2-D TRN / * matrix multiply / INV Gauss-Jordan inverse; runtime pb_mat_* family with is_float element decoding).
 > (2026-09-15: +1 official keyword from batch 31 — FIELD (field variables bound to RANDOM record buffers or to dynamic-string payload slots by reference: FIELD #f, n AS var / FIELD dyn$, n AS var / FIELD STRING / FIELD RESET, OPEN ... FOR RANDOM AS #f LEN=reclen, numbered PUT #f,rec / GET #f,rec record I/O, blank padding).
 > (2026-09-14: +1 official keyword from batch 30 — ASMDATA/END ASMDATA
 > read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ`
@@ -296,7 +297,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PLAY SOUND freq, dur` | ✅ | 3 (v0.1.03) | `Beep(freq, dur)` (kernel32) |
 | `CHDRIVE "C:"` | ✅ | 1 (v0.1.03) | `_chdrive` — PB-compatible `ERR` (68) on failure |
 | `DIR$` / `DIR` function + statement family | ✅ | 24 (v0.1.18) | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
-| `LET t2 = t1` (whole TYPE) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `LET t2 = t1` (whole TYPE) |
+| `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -394,6 +396,15 @@ arrays, and core string/numeric built-ins — **✅**
 > with its exact source line, so nothing is silently dropped.
 
 ---
+
+## Changelog
+
+### v0.1.26 (2026-09-15) — Batch 32: MAT matrix algebra
+One more *Not implemented* item moved to *Implemented* (coverage: **195 implemented / 106 not implemented / 202 tier-3 DDT**):
+- **MAT a() = RHS** — matrix algebra statement: `CON` (all ones), `CON(expr)`, `ZER`, whole-array assignment, elementwise `+` and `-`, scalar `(expr) * a()`, 2-D `IDN` (square identity), `TRN` (transpose, dst dims swapped), `*` (l×m × m×n multiply), `INV` (square inverse via Gauss-Jordan on the augmented [A|I]).
+- Runtime `pb_mat_*` family (fill / copy / add / scale / identity / trn / mul / inv) with `is_float` element decoding (SINGLE/DOUBLE IEEE vs sign-extended integers; es 1/2/4/8). No bounds checking, per PB semantics.
+- Parser: `parse_mat_statement` (bare or `()` array names; parenthesized scalar RHS forms).
+- Tests: examples/batch32_test.bas (12/12), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ## Changelog
 

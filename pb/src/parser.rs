@@ -1912,6 +1912,13 @@ impl Parser {
                     return Ok(Statement::Kill(filename));
                 }
 
+                // MAT a() = CON | CON(expr) | IDN | ZER | src() | src()+src() |
+                //      src()-src() | src()*src() | (expr)*src() | INV(src()) | TRN(src())
+                if name_upper == "MAT" {
+                    self.advance(); // consume MAT
+                    return self.parse_mat_statement(line);
+                }
+
                 // FIELD #n, size AS var [, size2 AS var2 ...]
                 // FIELD dyn$, size AS var [, ...]
                 // FIELD RESET var [, ...]  /  FIELD STRING var [, ...]
@@ -4426,6 +4433,152 @@ impl Parser {
     /// FIELD #n, size AS var [, size2 AS var2 ...]
     /// FIELD dyn$, size AS var [, FROM nStart TO nEnd AS var ...]
     /// FIELD RESET var [, ...]  /  FIELD STRING var [, ...]
+    /// MAT a() = RHS — matrix algebra (batch 32).
+    /// RHS: CON | CON(expr) | IDN | ZER | src() | src()+src() | src()-src() |
+    ///      src()*src() | (expr)*src() | INV(src()) | TRN(src())
+    fn parse_mat_statement(&mut self, line: usize) -> PbResult<Statement> {
+        // Destination array: identifier with optional ()
+        let dst = match self.peek().clone() {
+            Token::Identifier(v) => {
+                self.advance();
+                v
+            }
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop("MAT".to_string(), line));
+            }
+        };
+        // optional ()
+        if self.peek() == &Token::LParen {
+            self.advance();
+            if self.peek() == &Token::RParen {
+                self.advance();
+            } else {
+                // DIM-style bounds inside — skip to closing paren
+                while !matches!(self.peek(), Token::RParen | Token::Eol | Token::Eof) {
+                    self.advance();
+                }
+                if self.peek() == &Token::RParen {
+                    self.advance();
+                }
+            }
+        }
+        self.expect(&Token::Eq)?;
+
+        // RHS
+        let mut op;
+        let mut src1: Option<String> = None;
+        let mut src2: Option<String> = None;
+        let mut scalar: Option<Expr> = None;
+
+        match self.peek().clone() {
+            Token::Identifier(w) => {
+                let up = w.to_uppercase();
+                self.advance();
+                match up.as_str() {
+                    "CON" | "IDN" | "ZER" => {
+                        // optional (expr) for CON
+                        if self.peek() == &Token::LParen {
+                            self.advance();
+                            scalar = Some(self.parse_expression()?);
+                            self.expect(&Token::RParen)?;
+                            op = MatOp::ConScalar;
+                        } else if up == "CON" {
+                            op = MatOp::Con;
+                        } else if up == "IDN" {
+                            op = MatOp::Idn;
+                        } else {
+                            op = MatOp::Zer;
+                        }
+                    }
+                    "INV" | "TRN" => {
+                        self.expect(&Token::LParen)?;
+                        if let Token::Identifier(sv) = self.peek().clone() {
+                            self.advance();
+                            src1 = Some(sv);
+                        }
+                        // optional ()
+                        if self.peek() == &Token::LParen {
+                            self.advance();
+                            if self.peek() == &Token::RParen {
+                                self.advance();
+                            }
+                        }
+                        self.expect(&Token::RParen)?;
+                        op = if up == "INV" { MatOp::Inv } else { MatOp::Trn };
+                    }
+                    _ => {
+                        // bare array or a() op b()
+                        src1 = Some(w);
+                        op = MatOp::Assign;
+                        // optional ()
+                        if self.peek() == &Token::LParen {
+                            self.advance();
+                            if self.peek() == &Token::RParen {
+                                self.advance();
+                            }
+                        }
+                        // operator?
+                        if let Token::Plus = self.peek() {
+                            self.advance();
+                            op = MatOp::Add;
+                            src2 = self.parse_mat_array_name()?;
+                        } else if let Token::Minus = self.peek() {
+                            self.advance();
+                            op = MatOp::Sub;
+                            src2 = self.parse_mat_array_name()?;
+                        } else if let Token::Star = self.peek() {
+                            self.advance();
+                            op = MatOp::Mul;
+                            src2 = self.parse_mat_array_name()?;
+                        }
+                    }
+                }
+            }
+            Token::LParen => {
+                // (expr) * array
+                self.advance();
+                scalar = Some(self.parse_expression()?);
+                self.expect(&Token::RParen)?;
+                self.expect(&Token::Star)?;
+                src1 = self.parse_mat_array_name()?;
+                op = MatOp::Scale;
+            }
+            _ => {
+                self.consume_to_eol();
+                return Ok(Statement::Noop("MAT".to_string(), line));
+            }
+        }
+
+        self.consume_to_eol();
+        Ok(Statement::Mat(MatStmt {
+            dst,
+            op,
+            src1,
+            src2,
+            scalar,
+            line,
+        }))
+    }
+
+    /// Parse an array name with optional () after a MAT operator.
+    fn parse_mat_array_name(&mut self) -> PbResult<Option<String>> {
+        let name = match self.peek().clone() {
+            Token::Identifier(v) => {
+                self.advance();
+                v
+            }
+            _ => return Ok(None),
+        };
+        if self.peek() == &Token::LParen {
+            self.advance();
+            if self.peek() == &Token::RParen {
+                self.advance();
+            }
+        }
+        Ok(Some(name))
+    }
+
     fn parse_field_statement(&mut self, line: usize) -> PbResult<Statement> {
         // FIELD RESET / FIELD STRING
         if let Token::Identifier(w) = self.peek() {
