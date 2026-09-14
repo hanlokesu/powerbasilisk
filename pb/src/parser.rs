@@ -1934,6 +1934,101 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "CIRCLE" {
+                        // GRAPHIC CIRCLE (x,y), r [, color&]
+                        self.advance();
+                        let mut args = Vec::new();
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_CIRCLE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "POLYGON" {
+                        // GRAPHIC POLYGON (x1,y1)-(x2,y2)-... [, color&]
+                        self.advance();
+                        let mut args = Vec::new();
+                        loop {
+                            self.expect(&Token::LParen)?;
+                            args.push(self.parse_expression()?);
+                            self.expect(&Token::Comma)?;
+                            args.push(self.parse_expression()?);
+                            self.expect(&Token::RParen)?;
+                            if self.peek() == &Token::Minus {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_POLYGON".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "GET" {
+                        // GRAPHIC GET CLIENT TO w&, h& / GET LOC TO x&, y&
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "CLIENT" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_CLIENT".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        } else if sub == "LOC" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_LOC".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        } else {
+                            // GRAPHIC GET PIXEL (x,y) TO var&
+                            self.expect(&Token::Identifier("PIXEL".to_string()))?;
+                            self.expect(&Token::LParen)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_PIXEL".to_string(),
+                                args: vec![x, y, dst],
+                                line,
+                            }));
+                        }
+                    }
                     if gop == "COLOR" {
                         self.advance();
                         let mut args = vec![self.parse_expression()?];
@@ -1945,24 +2040,6 @@ impl Parser {
                         return Ok(Statement::Call(CallStmt {
                             name: "GRAPHIC_COLOR".to_string(),
                             args,
-                            line,
-                        }));
-                    }
-                    if gop == "GET" {
-                        // GRAPHIC GET PIXEL (x,y) TO var&
-                        self.advance();
-                        self.expect(&Token::Identifier("PIXEL".to_string()))?;
-                        self.expect(&Token::LParen)?;
-                        let x = self.parse_expression()?;
-                        self.expect(&Token::Comma)?;
-                        let y = self.parse_expression()?;
-                        self.expect(&Token::RParen)?;
-                        self.expect(&Token::To)?;
-                        let dst = self.parse_expression()?;
-                        self.consume_to_eol();
-                        return Ok(Statement::Call(CallStmt {
-                            name: "GRAPHIC_GET_PIXEL".to_string(),
-                            args: vec![x, y, dst],
                             line,
                         }));
                     }

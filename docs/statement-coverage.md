@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (224)
+## ✅ Implemented (227)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -249,6 +249,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC COLOR` | Statement | pb_graphic_color (fore/back color state) |
 | `GRAPHIC GET PIXEL` | Statement | pb_graphic_get_pixel (GetPixel) |
 | `GRAPHIC COPY` | Statement | pb_graphic_copy (BitBlt SRCCOPY) |
+| `GRAPHIC POLYGON` | Statement | pb_graphic_polygon (Polygon) |
+| `GRAPHIC GET CLIENT` | Statement | pb_graphic_get_client (bitmap dimensions) |
+| `GRAPHIC GET LOC` | Statement | pb_graphic_get_loc (0,0 for bitmaps) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

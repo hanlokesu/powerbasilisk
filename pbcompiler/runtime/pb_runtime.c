@@ -76,6 +76,8 @@ __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int 
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) unsigned long __stdcall GetPixel(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, int w, int h, void* hdcSrc, int xSrc, int ySrc, unsigned long rop);
+__declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int count);
+typedef struct { int x; int y; } pb_pt;
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
 
@@ -3853,6 +3855,40 @@ int pb_graphic_save(char* fname) {
     fwrite(bits, 1, size, f);
     fclose(f);
     free(bits);
+    return 1;
+}
+
+/* GRAPHIC CIRCLE / POLYGON / GET CLIENT / GET LOC (batch 56) */
+int pb_graphic_circle(int x, int y, int r, unsigned long col) {
+    if (!g_gr_dc) return 0;
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)col);
+    SelectObject(g_gr_dc, pen);
+    int rc = Ellipse(g_gr_dc, x - r, y - r, x + r, y + r);
+    SelectObject(g_gr_dc, GetStockObject(0)); /* NULL_PEN */
+    DeleteObject(pen);
+    return rc;
+}
+int pb_graphic_polygon(long* pts, int count, unsigned long col) {
+    if (!g_gr_dc || count < 3) return 0;
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)col);
+    SelectObject(g_gr_dc, pen);
+    int rc = Polygon(g_gr_dc, (const long*)pts, count);
+    SelectObject(g_gr_dc, GetStockObject(0));
+    DeleteObject(pen);
+    return rc;
+}
+int pb_graphic_get_client(long* w, long* h) {
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    unsigned char bm[40];
+    for (int i = 0; i < 40; i++) bm[i] = 0;
+    if (!GetObjectA(g_gr_bmp, 40, (void*)bm)) return 0;
+    *w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | (bm[7] << 24);
+    *h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | (bm[11] << 24);
+    return 1;
+}
+int pb_graphic_get_loc(long* x, long* y) {
+    *x = 0;
+    *y = 0;
     return 1;
 }
 

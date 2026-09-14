@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +4 official statement keywords from batch 56 — GRAPHIC CIRCLE (Ellipse inscribed circle; not in the official CSV index, documented here), GRAPHIC POLYGON (Polygon from coordinate pairs), GRAPHIC GET CLIENT (bitmap dimensions), GRAPHIC GET LOC (0,0). Coverage now 227 implemented / 175 tier-3 / 101 not implemented.)
 > (2026-09-15: +3 official statement keywords from batch 55 — GRAPHIC COLOR (fore/back color state), GRAPHIC GET PIXEL (GetPixel into a LONG), GRAPHIC COPY (BitBlt SRCCOPY block copy; verified pixel-wise on the attached bitmap). Coverage now 224 implemented / 178 tier-3 / 101 not implemented.)
 > (2026-09-15: +3 official statement keywords from batch 54 — GRAPHIC WIDTH (pen width for the attached target), GRAPHIC STYLE (pen style), GRAPHIC SAVE (writes the attached bitmap to a BMP file via GetObjectA + GetDIBits; verified by ISFILE). Coverage now 221 implemented / 181 tier-3 / 101 not implemented.)
 > (2026-09-15: +3 official statement keywords from batch 53 — GRAPHIC LINE / BOX / ELLIPSE (MoveToEx+LineTo, Rectangle, Ellipse on the attached bitmap target, optional fill brush). Coverage now 218 implemented / 184 tier-3 / 101 not implemented.)
@@ -240,7 +241,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **224** statement-class keywords implemented · **178** DDT/GUI-class
+> Summary: **227** statement-class keywords implemented · **175** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -332,7 +333,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 56 (v0.1.50) | pb_graphic_circle / pb_graphic_polygon / pb_graphic_get_client / pb_graphic_get_loc — circle, polygon, bitmap size/location |
+| 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
 | 54 (v0.1.48) | pb_graphic_width / pb_graphic_style / pb_graphic_save — pen width + pen style + save attached bitmap to BMP |
 | 53 (v0.1.47) | pb_graphic_line / pb_graphic_box / pb_graphic_ellipse — MoveToEx+LineTo / Rectangle / Ellipse with optional fill |
 | 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
@@ -486,6 +488,14 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.50 (2026-09-15) — Batch 56: GRAPHIC CIRCLE / POLYGON / GET CLIENT / GET LOC
+
+- **GRAPHIC CIRCLE (x&, y&), radius& [, color&]** — draws a circle (Ellipse inscribed in the bounding box) on the attached target (pb_graphic_circle).
+- **GRAPHIC POLYGON (x1,y1)-(x2,y2)-... [, color&]** — draws a filled/outlined polygon from coordinate pairs via the GDI Polygon API (pb_graphic_polygon; stack-allocated i32 point array in codegen).
+- **GRAPHIC GET CLIENT TO w&, h&** — returns the attached bitmap dimensions (pb_graphic_get_client, GetObjectA).
+- **GRAPHIC GET LOC TO x&, y&** — returns (0,0) for memory bitmaps (pb_graphic_get_loc).
+- Tests: examples/batch56_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.49 (2026-09-15) — Batch 55: GRAPHIC COLOR / GET PIXEL / COPY
 

@@ -1876,6 +1876,30 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_graphic_circle",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_polygon",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_client",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_loc",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4615,6 +4639,61 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_CIRCLE" => {
+                // args: x, y, r [, color&]
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                let r = self.compile_expr(fb, &call.args[2])?;
+                let rv = self.convert_value(fb, &r, &IrType::I32, &PbType::Long);
+                let col = if let Some(a3) = call.args.get(3) {
+                    let e = self.compile_expr(fb, a3)?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void("pb_graphic_circle", &[xv, yv, rv, col]);
+            }
+            "GRAPHIC_POLYGON" => {
+                // args: x1,y1,x2,y2,... [, color&]  (even count = coords)
+                let ncoords = call.args.len() - if call.args.len() % 2 == 1 { 1 } else { 0 };
+                let npts = ncoords / 2;
+                if npts >= 3 {
+                    // build i32 array on stack via llvm alloca of [npts*2 x i32]
+                    let arrty = IrType::Array(npts * 2, Box::new(IrType::I32));
+                    let ptr = fb.alloca(&arrty);
+                    for i in 0..ncoords {
+                        let v = self.compile_expr(fb, &call.args[i])?;
+                        let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                        let elem = fb.gep_byte(&ptr, &fb.const_i32((i as i32) * 4));
+                        fb.store(&iv, &elem);
+                    }
+                    let col = if call.args.len() % 2 == 1 {
+                        let e = self.compile_expr(fb, call.args.last().unwrap())?;
+                        self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call_void("pb_graphic_polygon", &[ptr, fb.const_i32(npts as i32), col]);
+                }
+            }
+            "GRAPHIC_GET_CLIENT" | "GRAPHIC_GET_LOC" => {
+                let f = if call.name == "GRAPHIC_GET_CLIENT" {
+                    "pb_graphic_get_client"
+                } else {
+                    "pb_graphic_get_loc"
+                };
+                let mut ptrs = Vec::new();
+                for a0 in call.args.iter() {
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, a0) {
+                        ptrs.push(ptr);
+                    }
+                }
+                if ptrs.len() == 2 {
+                    fb.call_void(f, &[ptrs[0].clone(), ptrs[1].clone()]);
+                }
             }
             "GRAPHIC_COLOR" => {
                 // args: fore& [, back&]
