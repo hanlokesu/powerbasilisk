@@ -15,6 +15,7 @@ pub enum PbType {
     Word,
     UserDefined(String), // TYPE name
     Variant,             // untyped / default
+    Field,               // FIELD variable (16-byte: {ptr, len, pad})
 }
 
 impl PbType {
@@ -182,6 +183,7 @@ pub enum Statement {
     Print(PrintStmt),
     PrintFile(PrintFileStmt),
     Open(OpenStmt),
+    Field(FieldStmt),
     Close(CloseStmt),
     Dim(DimStatement),
     Redim(DimStatement),
@@ -361,6 +363,7 @@ pub struct OpenStmt {
     pub filename: Expr,
     pub mode: OpenMode,
     pub file_num: Expr,
+    pub reclen: Option<Expr>, // LEN=n (RANDOM mode record length)
     pub line: usize,
 }
 
@@ -370,6 +373,31 @@ pub enum OpenMode {
     Append,
     Input,
     Binary,
+    Random,
+}
+
+#[derive(Debug, Clone)]
+pub struct FieldStmt {
+    pub kind: FieldKind,
+    pub filenum: Option<Expr>,  // File mode: FIELD #n, ...
+    pub dyn_expr: Option<Expr>, // Str mode: FIELD dyn$, ...
+    pub specs: Vec<FieldSpec>,  // (size, field var name)
+    pub line: usize,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum FieldKind {
+    File,  // FIELD #n, size AS var
+    Str,   // FIELD dyn$, size AS var
+    Reset, // FIELD RESET var
+    ToStr, // FIELD STRING var
+}
+
+#[derive(Debug, Clone)]
+pub struct FieldSpec {
+    pub size: i64,
+    pub name: String,
+    pub offset: i64, // -1 = auto (cumulative); >= 0 = explicit FROM nStart-1
 }
 
 #[derive(Debug, Clone)]

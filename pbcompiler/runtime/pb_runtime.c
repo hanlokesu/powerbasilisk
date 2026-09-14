@@ -679,7 +679,11 @@ char* pb_remove(const char* str, const char* chars) {
 
 #define MAX_FILE_HANDLES 256
 static FILE* file_handles[MAX_FILE_HANDLES] = {0};
-static int file_modes[MAX_FILE_HANDLES] = {0}; /* 0=INPUT 1=OUTPUT 2=APPEND 3=BINARY */
+static int file_modes[MAX_FILE_HANDLES] = {0}; /* 0=INPUT 1=OUTPUT 2=APPEND 3=BINARY 4=RANDOM */
+/* RANDOM-mode record state: record length, record buffer, current record (0-based) */
+static unsigned rec_len[MAX_FILE_HANDLES] = {0};
+static char* rec_buf[MAX_FILE_HANDLES] = {0};
+static long long rec_pos[MAX_FILE_HANDLES] = {0};
 
 int pb_freefile(void) {
     for (int i = 1; i < MAX_FILE_HANDLES; i++) {
@@ -716,6 +720,12 @@ void pb_close(int filenum) {
         fclose(file_handles[filenum]);
         file_handles[filenum] = NULL;
         file_modes[filenum] = 0;
+        if (rec_buf[filenum]) {
+            free(rec_buf[filenum]);
+            rec_buf[filenum] = NULL;
+        }
+        rec_len[filenum] = 0;
+        rec_pos[filenum] = 0;
     }
 }
 
@@ -1187,9 +1197,156 @@ void pb_array_reverse(void* base, int elem_size, int total) {
     }
 }
 
+/* ============ FIELD variables + RANDOM record buffer ============ */
+/* PB field variable storage: 24 bytes =
+   { char* data; unsigned offset; unsigned len; unsigned kind; }
+   kind 0 = direct buffer (RANDOM record buffer / private copy)
+   kind 1 = string variable slot (char**): resolve *data + offset at use time */
+typedef struct { char* data; unsigned offset; unsigned len; unsigned kind; } pb_field_t;
+
+/* OPEN ... FOR RANDOM AS #n LEN=reclen — open r+b (keep existing) else w+b, alloc record buffer */
+int pb_open_random(const char* path, int filenum, unsigned reclen) {
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES) return -1;
+    if (reclen == 0) reclen = 128;
+    FILE* f = fopen(path, "r+b");
+    if (!f) f = fopen(path, "w+b");
+    if (!f) return -1;
+    file_handles[filenum] = f;
+    file_modes[filenum] = 4;
+    if (rec_buf[filenum]) free(rec_buf[filenum]);
+    rec_buf[filenum] = (char*)calloc(reclen, 1);
+    rec_len[filenum] = reclen;
+    rec_pos[filenum] = 0;
+    return 0;
+}
+
+/* PUT #f [,recnum] — write current record buffer at current record position */
+void pb_put_record(int filenum) {
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES || !file_handles[filenum]) return;
+    FILE* f = file_handles[filenum];
+    long long pos = rec_pos[filenum] * (long long)rec_len[filenum];
+    _fseeki64(f, pos, SEEK_SET);
+    fwrite(rec_buf[filenum], 1, rec_len[filenum], f);
+    fflush(f);
+}
+
+/* GET #f [,recnum] — read record into buffer (short read zero-fills) */
+void pb_get_record(int filenum) {
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES || !file_handles[filenum]) return;
+    FILE* f = file_handles[filenum];
+    long long pos = rec_pos[filenum] * (long long)rec_len[filenum];
+    _fseeki64(f, pos, SEEK_SET);
+    size_t got = fread(rec_buf[filenum], 1, rec_len[filenum], f);
+    if (got < rec_len[filenum]) memset(rec_buf[filenum] + got, 0, rec_len[filenum] - got);
+}
+
+/* FIELD #n, FROM off TO ... — set current record position (1-based recnum) */
+void pb_seek_record(int filenum, long long recnum) {
+    if (filenum >= 1 && filenum < MAX_FILE_HANDLES) {
+        rec_pos[filenum] = recnum > 0 ? recnum - 1 : 0;
+    }
+}
+
+/* FIELD #n, size AS var — bind field var to file record buffer sub-section */
+int pb_field_bind_file(int filenum, long long offset, unsigned len, pb_field_t* fv) {
+    if (!fv) return -1;
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES || !rec_buf[filenum]) {
+        fv->data = NULL; fv->offset = 0; fv->len = 0; fv->kind = 0;
+        return -1;
+    }
+    if (offset + (long long)len > (long long)rec_len[filenum]) {
+        len = (unsigned)((long long)rec_len[filenum] - offset > 0 ? (long long)rec_len[filenum] - offset : 0);
+    }
+    fv->data = rec_buf[filenum];
+    fv->offset = (unsigned)(offset > 0 ? offset : 0);
+    fv->len = len;
+    fv->kind = 0;
+    return 0;
+}
+
+/* FIELD dyn$, size AS var — bind field var BY REFERENCE to a string variable
+   slot (char**). The payload is resolved at every get/set, so reassigning the
+   string variable follows automatically. */
+int pb_field_bind_str(char** slot, long long offset, unsigned len, pb_field_t* fv) {
+    if (!fv) return -1;
+    fv->data = (char*)slot;
+    fv->offset = (unsigned)(offset > 0 ? offset : 0);
+    fv->len = len;
+    fv->kind = 1;
+    return 0;
+}
+
+/* Resolve the base payload pointer of a field variable (file buffer / slot / private) */
+static char* pb_field_base(pb_field_t* fv) {
+    if (!fv || !fv->data) return NULL;
+    if (fv->kind == 1) return *(char**)fv->data;
+    return fv->data;
+}
+
+/* fieldvar = expr — copy into bound sub-section, pad blanks (file semantics) */
+void pb_field_set(pb_field_t* fv, const char* s, unsigned slen) {
+    char* base = pb_field_base(fv);
+    if (!fv || !base || fv->len == 0) return;
+    char* dst = base + fv->offset;
+    if (slen >= fv->len) {
+        memcpy(dst, s, fv->len);
+    } else {
+        memcpy(dst, s, slen);
+        memset(dst + slen, ' ', fv->len - slen);
+    }
+}
+
+/* expr = fieldvar / PRINT fieldvar — return a fresh NUL-terminated copy of the
+   sub-section (payload pointer, no BSTR prefix — the compiler's string convention) */
+char* pb_field_get(pb_field_t* fv) {
+    char* base = pb_field_base(fv);
+    if (!fv || !base || fv->len == 0) {
+        char* e = (char*)malloc(1);
+        e[0] = 0;
+        return e;
+    }
+    unsigned len = fv->len;
+    char* out = (char*)malloc(len + 1);
+    memcpy(out, base + fv->offset, len);
+    out[len] = 0;
+    return out;
+}
+
+/* x$ = expr for FIELD dyn$-bound strings — copy into a fresh mutable buffer
+   (string constants live in read-only memory and must never be written through) */
+void pb_str_assign_copy(char** slot, const char* src, unsigned len) {
+    if (!slot) return;
+    char* buf = (char*)malloc(len + 1);
+    if (src && len) memcpy(buf, src, len);
+    buf[len] = 0;
+    *slot = buf;
+}
+
+/* FIELD RESET var — unbind, becomes empty */
+void pb_field_reset(pb_field_t* fv) {
+    if (!fv) return;
+    fv->data = NULL;
+    fv->offset = 0;
+    fv->len = 0;
+    fv->kind = 0;
+}
+
+/* FIELD STRING var — copy current sub-section into a private buffer, unbind */
+void pb_field_tostr(pb_field_t* fv) {
+    char* base = pb_field_base(fv);
+    if (!fv) return;
+    unsigned len = fv->len;
+    if (len == 0 || !base) { pb_field_reset(fv); return; }
+    char* copy = (char*)malloc(len);
+    memcpy(copy, base + fv->offset, len);
+    fv->data = copy;
+    fv->offset = 0;
+    fv->len = len;
+    fv->kind = 0; /* private buffer */
+}
+
 /* PUT$ #f, str$ — write ANSI string at current file position */
-int pb_put_string(int f, const char* s) {
-    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+int pb_put_string(int f, const char* s) {    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
     if (!s) return -1;
     size_t n = strlen(s);
     if (n == 0) return 0;

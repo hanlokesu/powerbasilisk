@@ -6,20 +6,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-14 (batch 27: ON CALL / GET$$+PUT$$ / MACROCH / FINALLY / EXIT TRY) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 193 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 194 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 108 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 107 | Documented upstream, no codegen evidence yet |
 
 ## ✅ Implemented (193)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
+| `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
 | `ASM` | STATEMENT | LLVM inline assembly: `!` shortcut or `ASM` keyword; Intel dialect, PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`), mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block so register state is preserved; x87 / MMX / SSE / SIMD instructions pass through verbatim (verified FLD1/FSTP, PXOR, EMMS, XORPS on x64; 32-bit build verified via exit-code test) |
 | `ASMDATA / END ASMDATA` | BLOCK | read-only data blocks (outside any Sub/Function): `ASMDATA Name` + DB/DW/DD/DQ lines (ANSI strings in DB, WIDE/UTF-16LE strings in DW) + `END ASMDATA`; packed, never aligned; addressable via `CODEPTR(Name)`; byte blob emitted as `@__asmdata_<NAME>` constant |
 | `TCP OPEN` | STATEMENT | winsock socket/connect/listen/bind; SO_RCVTIMEO |
@@ -445,7 +446,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DISPLAY SAVEFILE | STATEMENT | PB/Win only | Established |
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
-| FIELD | STATEMENT | PB/Win + PB/CC | Established |
 | HEADER | STATEMENT | PB/Win only | Established |
 
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |

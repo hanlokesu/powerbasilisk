@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (193 implemented / 108 not implemented / 202 tier-3 DDT).
+> table below (194 implemented / 107 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **193** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **108** documented upstream with no codegen evidence yet.
+> Summary: **194** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **107** documented upstream with no codegen evidence yet.
+> (2026-09-15: +1 official keyword from batch 31 — FIELD (field variables bound to RANDOM record buffers or to dynamic-string payload slots by reference: FIELD #f, n AS var / FIELD dyn$, n AS var / FIELD STRING / FIELD RESET, OPEN ... FOR RANDOM AS #f LEN=reclen, numbered PUT #f,rec / GET #f,rec record I/O, blank padding).
 > (2026-09-14: +1 official keyword from batch 30 — ASMDATA/END ASMDATA
 > read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ`
 > lines + `END ASMDATA`, packed contiguously and never aligned, ANSI strings in DB,
@@ -261,6 +262,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
 | `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
 | `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
+| `FIELD` (`#f`/`dyn$` bind, STRING, RESET, RANDOM) | ✅ | 31 (v0.1.25) | `pb_open_random` + `pb_field_bind_file/str` + `pb_field_set/get/tostr/reset` + `pb_put/get_record` + `pb_seek_record` (RANDOM record I/O) |
 | `ASMDATA / END ASMDATA` | ✅ | 30 (v0.1.24) | read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ` lines + `END ASMDATA`; packed, never aligned; ANSI strings in DB, WIDE UTF-16LE strings in DW; emitted as `@__asmdata_<NAME>` constant; address via `CODEPTR(Name)` |
 | `ASM` (`!` shortcut or `ASM` keyword) | ✅ | 29 (v0.1.23) | LLVM inline assembly — Intel dialect; PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`); mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block (register state preserved); x87 / MMX / SSE / SIMD pass through verbatim; works on both x86-64 and i686 targets |
 | `THREADED` | ✅ | 28 (v0.1.22) | LLVM `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
@@ -394,6 +396,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.25 (2026-09-15) — Batch 31: FIELD / RANDOM record I/O
+
+One more *Not implemented* item moved to *Implemented* (coverage: **194 implemented / 107 not implemented / 202 tier-3 DDT**):
+
+- **FIELD** — the official FIELD statement family for random-file and dynamic-string field binding:
+  - `FIELD #f, nSize AS fieldvar [, FROM nStart TO nEnd AS fieldvar ...]` binds a field variable to a sub-section of a RANDOM file's record buffer.
+  - `FIELD dyn$, nSize AS fieldvar` binds **by reference** to a string variable's payload slot — reassigning the string follows automatically; assignments to a FIELD-bound string copy into a fresh mutable buffer (a plain pointer store would land in a read-only string constant and crash on write).
+  - `FIELD STRING var` copies the current sub-section into a private buffer; `FIELD RESET var` unbinds (field reads as empty).
+  - `OPEN "file" FOR RANDOM AS #n LEN=reclen` opens/creates a fixed-record-length file; `PUT #n` / `GET #n` (current record) and `PUT #n, rec` / `GET #n, rec` (numbered records) move the record pointer; short assignments pad with blanks per PB semantics.
+  - Field variables must be declared (`LOCAL f AS FIELD`, 24-byte internal storage). RANDOM record buffers live only while the file is open — `FIELD STRING` must happen before `CLOSE`.
+- Tests: examples/batch31_test.bas (7/7), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.24 (2026-09-14) — Batch 30: ASMDATA / END ASMDATA
 

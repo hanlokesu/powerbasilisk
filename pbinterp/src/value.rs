@@ -31,6 +31,7 @@ impl Value {
             PbType::Byte => Value::Long(0),
             PbType::Word => Value::Long(0),
             PbType::Variant => Value::Long(0),
+            PbType::Field => Value::Str(String::new()),
             PbType::UserDefined(_) => Value::Long(0), // TODO: struct support
         }
     }

@@ -413,6 +413,10 @@ impl Interpreter {
                 self.exec_open(o)?;
                 Ok(Flow::Normal)
             }
+            Statement::Field(_) => {
+                // FIELD bindings are no-ops in the interpreter (codegen-only)
+                Ok(Flow::Normal)
+            }
             Statement::Close(c) => {
                 self.exec_close(c)?;
                 Ok(Flow::Normal)

@@ -844,6 +844,11 @@ struct Compiler {
 
     // Unimplemented-statement warnings collected during codegen (name / line)
     warnings: Vec<String>,
+
+    // String variables bound via FIELD dyn$ — their assignments must copy
+    // into a fresh mutable buffer (a plain store would point at a read-only
+    // string constant and pb_field_set would crash writing through it).
+    field_bound_strings: std::collections::HashSet<String>,
 }
 
 /// Tracks a global variable or array that will become a session struct field.
@@ -983,6 +988,7 @@ impl Compiler {
             debug_mode: false,
             pp_constants: HashMap::new(),
             warnings: Vec::new(),
+            field_bound_strings: std::collections::HashSet::new(),
         }
     }
 
@@ -997,6 +1003,7 @@ impl Compiler {
             PbType::Double | PbType::Ext | PbType::Cur => IrType::Double,
             PbType::Single => IrType::Float,
             PbType::String | PbType::FixedString(_) => IrType::Ptr,
+            PbType::Field => IrType::Struct("pb.field".to_string()),
             PbType::UserDefined(name) => IrType::Struct(normalize_name(name)),
             PbType::Variant => IrType::I32, // default to LONG
         }
@@ -1040,6 +1047,58 @@ impl Compiler {
     // ========== Top-level compilation ==========
 
     fn compile_program(&mut self, program: &Program) -> PbResult<()> {
+        // %pb.field = type { ptr, i32, i32 } — FIELD variable (16 bytes)
+        self.module.define_struct_type(
+            "pb.field",
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+        );
+        self.module.declare_function(
+            "pb_open_random",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_put_record", &IrType::Void, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_get_record", &IrType::Void, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_seek_record",
+            &IrType::Void,
+            &[IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_field_bind_file",
+            &IrType::I32,
+            &[IrType::I32, IrType::I64, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_field_bind_str",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I64, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_field_set",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_str_assign_copy",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_field_get", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_field_reset", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_field_tostr", &IrType::Void, &[IrType::Ptr], false);
+
         // Declare printf
         self.module
             .declare_function("printf", &IrType::I32, &[IrType::Ptr], true);
@@ -2908,6 +2967,7 @@ impl Compiler {
                 Ok(())
             }
             Statement::Open(o) => self.compile_open(fb, o),
+            Statement::Field(f) => self.compile_field(fb, f),
             Statement::Close(c) => self.compile_close(fb, c),
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
@@ -3202,6 +3262,22 @@ impl Compiler {
                         let term_idx = fb.const_i32((*n as i32) - 1);
                         let term_ptr = fb.gep_byte(&buf_ptr, &term_idx);
                         fb.store(&Val::new("0".to_string(), IrType::I8), &term_ptr);
+                    } else if self.field_bound_strings.contains(&name) {
+                        // FIELD dyn$-bound string: copy into a fresh mutable
+                        // buffer. A plain pointer store would make the variable
+                        // point at a read-only string constant and pb_field_set
+                        // would crash writing through it.
+                        let src = self.compile_expr(fb, &assign.value)?;
+                        let slot = Val::new(ptr_name.clone(), IrType::Ptr);
+                        let slen = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&src));
+                        fb.call_void("pb_str_assign_copy", &[slot, src, slen]);
+                    } else if let PbType::Field = &target_pb {
+                        // FIELD variable: write into the bound sub-section (pb_field_set).
+                        // The value must be a string; pad with blanks to full length.
+                        let fv_ptr = Val::new(ptr_name.clone(), IrType::Ptr);
+                        let src = self.compile_expr(fb, &assign.value)?;
+                        let slen = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&src));
+                        fb.call_void("pb_field_set", &[fv_ptr, src, slen]);
                     } else {
                         let converted = self.convert_value(fb, &value, &target_ir, &target_pb);
                         let ptr = Val::new(ptr_name, IrType::Ptr);
@@ -4100,6 +4176,40 @@ impl Compiler {
                 return Ok(());
             }
             "GET" | "PUT" => {
+                // RANDOM-mode record access:
+                //   GET #f          → read current record into field buffer
+                //   PUT #f          → write field buffer as current record
+                //   GET #f, n / PUT #f, n  → same at record number n (1-based)
+                if call.args.len() == 1 {
+                    let f0 = self.compile_expr(fb, &call.args[0])?;
+                    let filenum = self.to_i32(fb, &f0);
+                    fb.call_void(
+                        if call.name == "GET" {
+                            "pb_get_record"
+                        } else {
+                            "pb_put_record"
+                        },
+                        &[filenum],
+                    );
+                    return Ok(());
+                }
+                if call.args.len() == 2 {
+                    if let Expr::IntegerLit(n) = call.args[1] {
+                        let f0 = self.compile_expr(fb, &call.args[0])?;
+                        let filenum = self.to_i32(fb, &f0);
+                        let rec = fb.const_i64(n);
+                        fb.call_void("pb_seek_record", &[filenum.clone(), rec]);
+                        fb.call_void(
+                            if call.name == "GET" {
+                                "pb_get_record"
+                            } else {
+                                "pb_put_record"
+                            },
+                            &[filenum],
+                        );
+                        return Ok(());
+                    }
+                }
                 // GET #f [, pos], var  /  PUT #f [, pos], var
                 // args = [filenum, (pos), var]
                 if call.args.len() >= 2 {
@@ -6035,11 +6145,26 @@ impl Compiler {
 
     fn compile_open(&mut self, fb: &mut FunctionBuilder, open: &OpenStmt) -> PbResult<()> {
         let filename = self.compile_expr(fb, &open.filename)?;
+        // RANDOM mode: OPEN "f" FOR RANDOM AS #n LEN=reclen → pb_open_random
+        if matches!(open.mode, OpenMode::Random) {
+            let filenum = self.compile_expr(fb, &open.file_num)?;
+            let filenum_i32 = self.to_i32(fb, &filenum);
+            let reclen = match &open.reclen {
+                Some(e) => {
+                    let r = self.compile_expr(fb, e)?;
+                    self.to_i32(fb, &r)
+                }
+                None => fb.const_i32(128),
+            };
+            fb.call_void("pb_open_random", &[filename, filenum_i32, reclen]);
+            return Ok(());
+        }
         let mode = match open.mode {
             OpenMode::Input => fb.const_i32(0),
             OpenMode::Output => fb.const_i32(1),
             OpenMode::Append => fb.const_i32(2),
             OpenMode::Binary => fb.const_i32(3),
+            OpenMode::Random => unreachable!(),
         };
         let filenum = self.compile_expr(fb, &open.file_num)?;
         let filenum_i32 = self.to_i32(fb, &filenum);
@@ -6051,6 +6176,73 @@ impl Compiler {
         let filenum = self.compile_expr(fb, &close.file_num)?;
         let filenum_i32 = self.to_i32(fb, &filenum);
         fb.call_void("pb_close", &[filenum_i32]);
+        Ok(())
+    }
+
+    /// FIELD #n, size AS var[, ...] / FIELD dyn$, size AS var[, ...]
+    /// FIELD RESET var[, ...] / FIELD STRING var[, ...]
+    fn compile_field(&mut self, fb: &mut FunctionBuilder, f: &FieldStmt) -> PbResult<()> {
+        match f.kind {
+            FieldKind::File => {
+                let filenum = self.compile_expr(fb, f.filenum.as_ref().unwrap())?;
+                let filenum_i32 = self.to_i32(fb, &filenum);
+                let mut offset: i64 = 0;
+                for spec in &f.specs {
+                    if let Some(info) = self.symbols.lookup(&normalize_name(&spec.name)) {
+                        if spec.offset >= 0 {
+                            offset = spec.offset;
+                        }
+                        let fv_ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                        let off = fb.const_i64(offset);
+                        let len = fb.const_i32(spec.size as i32);
+                        fb.call_void(
+                            "pb_field_bind_file",
+                            &[filenum_i32.clone(), off, len, fv_ptr],
+                        );
+                    }
+                    offset += spec.size;
+                }
+            }
+            FieldKind::Str => {
+                // Bind BY REFERENCE to the string variable's payload slot so
+                // reassigning the string follows automatically. Mark the
+                // variable: its later assignments must copy to a fresh
+                // mutable buffer instead of pointing at a read-only constant.
+                if let Expr::Variable(nm) = f.dyn_expr.as_ref().unwrap() {
+                    self.field_bound_strings.insert(normalize_name(nm));
+                }
+                let (slot, _) = self.compile_lvalue_ptr(fb, f.dyn_expr.as_ref().unwrap())?;
+                let mut offset: i64 = 0;
+                for spec in &f.specs {
+                    if let Some(info) = self.symbols.lookup(&normalize_name(&spec.name)) {
+                        if spec.offset >= 0 {
+                            offset = spec.offset;
+                        }
+                        let fv_ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                        let off = fb.const_i64(offset);
+                        let len = fb.const_i32(spec.size as i32);
+                        fb.call_void("pb_field_bind_str", &[slot.clone(), off, len, fv_ptr]);
+                    }
+                    offset += spec.size;
+                }
+            }
+            FieldKind::Reset | FieldKind::ToStr => {
+                let is_reset = f.kind == FieldKind::Reset;
+                for spec in &f.specs {
+                    if let Some(info) = self.symbols.lookup(&normalize_name(&spec.name)) {
+                        let fv_ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                        fb.call_void(
+                            if is_reset {
+                                "pb_field_reset"
+                            } else {
+                                "pb_field_tostr"
+                            },
+                            &[fv_ptr],
+                        );
+                    }
+                }
+            }
+        }
         Ok(())
     }
 
@@ -6702,6 +6894,11 @@ impl Compiler {
                     let buf_ptr = Val::new(ptr_name, IrType::Ptr);
                     let len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf_ptr));
                     return Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf_ptr, len]));
+                }
+                // FIELD variable: fresh BSTR copy of the bound sub-section
+                if matches!(info.pb_type, PbType::Field) {
+                    let fv_ptr = Val::new(ptr_name, IrType::Ptr);
+                    return Ok(fb.call(&IrType::Ptr, "pb_field_get", &[fv_ptr]));
                 }
                 let ptr = Val::new(ptr_name, IrType::Ptr);
                 let ir_type = info.ir_type.clone();

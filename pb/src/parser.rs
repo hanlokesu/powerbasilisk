@@ -711,6 +711,10 @@ impl Parser {
                         }
                         Ok(PbType::FixedString(260)) // default ASCIIZ size
                     }
+                    "FIELD" => {
+                        self.advance();
+                        Ok(PbType::Field)
+                    }
                     _ => {
                         let name = s.clone();
                         self.advance();
@@ -1906,6 +1910,14 @@ impl Parser {
                     let filename = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Kill(filename));
+                }
+
+                // FIELD #n, size AS var [, size2 AS var2 ...]
+                // FIELD dyn$, size AS var [, ...]
+                // FIELD RESET var [, ...]  /  FIELD STRING var [, ...]
+                if name_upper == "FIELD" {
+                    self.advance(); // consume FIELD
+                    return self.parse_field_statement(line);
                 }
 
                 // ASM opcode ... — inline assembly (keyword form). Rebuild the
@@ -4353,6 +4365,10 @@ impl Parser {
                 self.advance();
                 OpenMode::Binary
             }
+            Token::Identifier(w) if w.to_uppercase() == "RANDOM" => {
+                self.advance();
+                OpenMode::Random
+            }
             _ => {
                 self.consume_to_eol();
                 return Ok(Statement::Noop("OPEN (unknown mode)".to_string(), line));
@@ -4366,11 +4382,26 @@ impl Parser {
         }
         let file_num = self.parse_expression()?;
 
+        // Optional LEN=nnn for RANDOM mode (record length)
+        let mut reclen: Option<Expr> = None;
+        if let Token::Identifier(w) = self.peek() {
+            if w.eq_ignore_ascii_case("LEN") {
+                self.advance();
+                // '=' may be Eq token or part of identifier context; consume any '='
+                // '=' is Token::Eq
+                if self.peek() == &Token::Eq {
+                    self.advance();
+                }
+                reclen = Some(self.parse_expression()?);
+            }
+        }
+
         self.consume_to_eol();
         Ok(Statement::Open(OpenStmt {
             filename,
             mode,
             file_num,
+            reclen,
             line,
         }))
     }
@@ -4390,6 +4421,144 @@ impl Parser {
         let file_num = self.parse_expression()?;
         self.consume_to_eol();
         Ok(Statement::Close(CloseStmt { file_num, line }))
+    }
+
+    /// FIELD #n, size AS var [, size2 AS var2 ...]
+    /// FIELD dyn$, size AS var [, FROM nStart TO nEnd AS var ...]
+    /// FIELD RESET var [, ...]  /  FIELD STRING var [, ...]
+    fn parse_field_statement(&mut self, line: usize) -> PbResult<Statement> {
+        // FIELD RESET / FIELD STRING
+        if let Token::Identifier(w) = self.peek() {
+            let up = w.to_uppercase();
+            if up == "RESET" || up == "STRING" {
+                self.advance();
+                let kind = if up == "RESET" {
+                    FieldKind::Reset
+                } else {
+                    FieldKind::ToStr
+                };
+                let mut specs = Vec::new();
+                loop {
+                    if matches!(self.peek(), Token::Eol | Token::Eof | Token::Colon) {
+                        break;
+                    }
+                    if let Token::Identifier(v) = self.peek().clone() {
+                        self.advance();
+                        specs.push(FieldSpec {
+                            size: 0,
+                            name: v,
+                            offset: -1,
+                        });
+                    } else {
+                        break;
+                    }
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    } else {
+                        break;
+                    }
+                }
+                self.consume_to_eol();
+                return Ok(Statement::Field(FieldStmt {
+                    kind,
+                    filenum: None,
+                    dyn_expr: None,
+                    specs,
+                    line,
+                }));
+            }
+        }
+
+        // First token after FIELD: #filenum  or  dynamic-string expr
+        let mut filenum: Option<Expr> = None;
+        let mut dyn_expr: Option<Expr> = None;
+        if self.peek() == &Token::Hash {
+            self.advance();
+            filenum = Some(self.parse_expression()?);
+        } else {
+            dyn_expr = Some(self.parse_expression()?);
+        }
+
+        self.expect(&Token::Comma)?;
+
+        let mut specs = Vec::new();
+        loop {
+            // Optional FROM nStart TO nEnd
+            if let Token::Identifier(w) = self.peek() {
+                if w.eq_ignore_ascii_case("FROM") {
+                    self.advance();
+                    if let Token::IntegerLiteral(n) = self.peek().clone() {
+                        self.advance();
+                        // optional TO nEnd
+                        if let Token::Identifier(w2) = self.peek() {
+                            if w2.eq_ignore_ascii_case("TO") {
+                                self.advance();
+                                if let Token::IntegerLiteral(e) = self.peek().clone() {
+                                    self.advance();
+                                    specs.push(FieldSpec {
+                                        size: e - n + 1,
+                                        name: String::new(), // filled below
+                                        offset: n - 1,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    // FROM form still requires "AS var" next
+                }
+            }
+            // nSize
+            let size = match self.peek().clone() {
+                Token::IntegerLiteral(n) => {
+                    self.advance();
+                    n
+                }
+                _ => 0,
+            };
+            self.expect(&Token::As)?;
+            let name = match self.peek().clone() {
+                Token::Identifier(v) => {
+                    self.advance();
+                    v
+                }
+                _ => String::new(),
+            };
+            // Merge with pending FROM-spec (if any)
+            if let Some(last) = specs.last_mut() {
+                if last.name.is_empty() && last.size > 0 {
+                    last.name = name;
+                } else {
+                    specs.push(FieldSpec {
+                        size,
+                        name,
+                        offset: -1,
+                    });
+                }
+            } else {
+                specs.push(FieldSpec {
+                    size,
+                    name,
+                    offset: -1,
+                });
+            }
+            if self.peek() == &Token::Comma {
+                self.advance();
+            } else {
+                break;
+            }
+        }
+        self.consume_to_eol();
+        Ok(Statement::Field(FieldStmt {
+            kind: if filenum.is_some() {
+                FieldKind::File
+            } else {
+                FieldKind::Str
+            },
+            filenum,
+            dyn_expr,
+            specs,
+            line,
+        }))
     }
 
     // ===== Expression parsing with precedence climbing =====
