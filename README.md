@@ -395,22 +395,6 @@ arrays, and core string/numeric built-ins — **✅**
 
 ---
 
-
-### v0.1.08 (2026-09-12) — batch 15: CSET, GET$, DESKTOP GET SIZE (+ MKBYT$ confirmed)
-
-- **CSET** `result_var = expr`: center-justifies a string in a fixed-length buffer
-  (`pb_cset` / `pb_cset_buf`, pad left `(len-src)/2` spaces). ABS/USING not yet.
-- **GET$** `[#]filenum&, Count&, StrgVar`: reads `Count` bytes from a BINARY file
-  into a string variable (`pb_get_string`).
-- **DESKTOP GET SIZE TO w&, h&**: screen size via `GetSystemMetrics` (SM_CXSCREEN /
-  SM_CYSCREEN).
-- **MKBYT$** confirmed implemented (runtime + codegen existed; coverage CSV/MD rows
-  were malformed and are now fixed and marked implemented).
-- Runtime note: string-writing helpers no longer `SysFreeString` the previous
-  variable value — PB vars are often initialized to codegen string constants
-  (not BSTRs) and freeing them crashed (0xC0000005). Old BSTRs leak instead.
-- Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
-  fmt + clippy clean.
 ## Changelog
 ### v0.1.21 (2026-09-14) — Batch 27: ON CALL / GET$$+PUT$$ / MACRO (4 statements)
 
@@ -750,6 +734,22 @@ from the unimplemented list.
   `LEN(MKQ$(1000))` = 8, etc. Fixed-length (`STRING * N`) buffers keep strlen
   semantics.
 - Tests: `examples/batch16_test.bas` (11/11), official regression **15/15 ALL PASS**,
+  fmt + clippy clean.
+
+### v0.1.08 (2026-09-12) — batch 15: CSET, GET$, DESKTOP GET SIZE (+ MKBYT$ confirmed)
+
+- **CSET** `result_var = expr`: center-justifies a string in a fixed-length buffer
+  (`pb_cset` / `pb_cset_buf`, pad left `(len-src)/2` spaces). ABS/USING not yet.
+- **GET$** `[#]filenum&, Count&, StrgVar`: reads `Count` bytes from a BINARY file
+  into a string variable (`pb_get_string`).
+- **DESKTOP GET SIZE TO w&, h&**: screen size via `GetSystemMetrics` (SM_CXSCREEN /
+  SM_CYSCREEN).
+- **MKBYT$** confirmed implemented (runtime + codegen existed; coverage CSV/MD rows
+  were malformed and are now fixed and marked implemented).
+- Runtime note: string-writing helpers no longer `SysFreeString` the previous
+  variable value — PB vars are often initialized to codegen string constants
+  (not BSTRs) and freeing them crashed (0xC0000005). Old BSTRs leak instead.
+- Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 
 ### v0.1.07 (2026-09-12) — Batch 14: ARRAY COPY / SWAP / UNIQUE + HOST ADDR / HOST NAME
