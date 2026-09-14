@@ -1620,6 +1620,24 @@ impl Compiler {
             .declare_function("pb_log2", &IrType::Double, &[IrType::Double], false);
         self.module
             .declare_function("pb_log10", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_bin", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_oct", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_dec", &IrType::Ptr, &[IrType::I64], false);
+        self.module.declare_function(
+            "pb_verify",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module
+            .declare_function("pb_getattr", &IrType::I64, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_diskfree", &IrType::I64, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_disksize", &IrType::I64, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_desktop_get_client",
             &IrType::Void,
@@ -7962,6 +7980,14 @@ impl Compiler {
             "EXP2" | "EXP10" | "LOG2" | "LOG10" => Some(self.builtin_math1(fb, args, name)),
             "IIF" => Some(self.builtin_iif(fb, args)),
             "CHOOSE" => Some(self.builtin_choose(fb, args)),
+            "BIN" => Some(self.builtin_radix(fb, args, "BIN")),
+            "OCT" => Some(self.builtin_radix(fb, args, "OCT")),
+            "DEC" => Some(self.builtin_radix(fb, args, "DEC")),
+            "VERIFY" => Some(self.builtin_verify(fb, args)),
+            "MOD" => Some(self.builtin_mod(fb, args)),
+            "GETATTR" => Some(self.builtin_getattr(fb, args)),
+            "DISKFREE" => Some(self.builtin_disk(fb, args, "pb_diskfree")),
+            "DISKSIZE" => Some(self.builtin_disk(fb, args, "pb_disksize")),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8781,6 +8807,80 @@ impl Compiler {
             };
         }
         Ok(r)
+    }
+
+    // Batch 39: radix strings, VERIFY, MOD, file-system
+    fn builtin_radix(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        which: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("radix function requires 1 argument"));
+        }
+        let v = self.compile_expr(fb, &args[0])?;
+        let vi = self.to_i64(fb, &v);
+        let fname = match which {
+            "BIN" => "pb_bin",
+            "OCT" => "pb_oct",
+            _ => "pb_dec",
+        };
+        Ok(fb.call(&IrType::Ptr, fname, std::slice::from_ref(&vi)))
+    }
+    fn builtin_verify(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        // VERIFY([start&,] MainString, MatchString)
+        let (start, s, m) = if args.len() >= 3 {
+            let st = self.compile_expr(fb, &args[0])?;
+            let s1 = self.compile_expr(fb, &args[1])?;
+            let m1 = self.compile_expr(fb, &args[2])?;
+            (Some(st), s1, m1)
+        } else if args.len() == 2 {
+            (
+                None,
+                self.compile_expr(fb, &args[0])?,
+                self.compile_expr(fb, &args[1])?,
+            )
+        } else {
+            return Err(PbError::runtime("VERIFY requires 2 or 3 arguments"));
+        };
+        let one = fb.const_i64(1);
+        let start_v = match start {
+            Some(st) => self.to_i64(fb, &st),
+            None => one.clone(),
+        };
+        Ok(fb.call(&IrType::I64, "pb_verify", &[s, m, start_v]))
+    }
+    fn builtin_mod(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("MOD requires 2 arguments"));
+        }
+        let a = self.compile_expr(fb, &args[0])?;
+        let b = self.compile_expr(fb, &args[1])?;
+        let ai = self.to_i64(fb, &a);
+        let bi = self.to_i64(fb, &b);
+        Ok(fb.srem(&ai, &bi))
+    }
+    fn builtin_getattr(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("GETATTR requires 1 argument"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        Ok(fb.call(&IrType::I64, "pb_getattr", std::slice::from_ref(&s)))
+    }
+    fn builtin_disk(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+    ) -> PbResult<Val> {
+        let s = if args.is_empty() {
+            let empty = self.empty_string_name.clone();
+            Val::new(empty, IrType::Ptr)
+        } else {
+            self.compile_expr(fb, &args[0])?
+        };
+        Ok(fb.call(&IrType::I64, fname, std::slice::from_ref(&s)))
     }
 
     fn builtin_to_f64(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

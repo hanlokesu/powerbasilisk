@@ -227,6 +227,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
 > Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
+> (2026-09-15: +8 official function keywords from batch 39 — BIN$/OCT$/DEC$ radix strings, VERIFY (first non-matching char), MOD (register srem), GETATTR (GetFileAttributesA), DISKFREE/DISKSIZE (GetDiskFreeSpaceExA, bytes). Coverage count unchanged (function-class).
 > (2026-09-15: +12 official function keywords from batch 38 — TALLY, STRREVERSE$, STRINSERT$, STRDELETE$, REPEAT$, FRAC, ISFOLDER, EXP2/EXP10/LOG2/LOG10 (runtime helpers), IIF/CHOOSE (register-level select). Coverage count unchanged (function-class keywords are not in the statement CSV).
 > (2026-09-15: +10 official function keywords from batch 37 — CVx binary-string conversion family CVBYT / CVW / CVL / CVDWD / CVQ / CVS / CVD / CVE / CVCUR / CVCUX (read little-endian bytes at a 1-based offset); this also fixed CVD and CVS, which previously behaved like VAL (text-to-number) instead of reading binary bytes — they now match the documented semantics.
 > (2026-09-15: +1 official keyword from batch 36 — MKE$ (8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler rather than the official 10-byte 80-bit format, so MKE$ and MKD$ yield the same bytes — documented difference).
@@ -310,6 +311,14 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
 | `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
 | `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
+| BIN$(n) | ✅ | 39 (v0.1.33) | pb_bin — unsigned 64-bit binary string (significant bits) |
+| OCT$(n) | ✅ | 39 (v0.1.33) | pb_oct — unsigned 64-bit octal string |
+| DEC$(n) | ✅ | 39 (v0.1.33) | pb_dec — signed decimal string |
+| VERIFY([start&,] s$, m$) | ✅ | 39 (v0.1.33) | pb_verify — first char of s$ not in m$ (1-based), 0 = all match |
+| MOD(p, q) | ✅ | 39 (v0.1.33) | register-level srem — truncated remainder |
+| GETATTR(path$) | ✅ | 39 (v0.1.33) | pb_getattr — GetFileAttributesA attribute bits, -1 on failure |
+| DISKFREE(drive$) | ✅ | 39 (v0.1.33) | pb_diskfree — GetDiskFreeSpaceExA free bytes (QUAD), empty = default drive |
+| DISKSIZE(drive$) | ✅ | 39 (v0.1.33) | pb_disksize — GetDiskFreeSpaceExA total bytes (QUAD) |
 | TALLY(s1$, s2$) | ✅ | 38 (v0.1.32) | pb_tally — count of non-overlapping occurrences |
 | STRREVERSE$(s$) | ✅ | 38 (v0.1.32) | pb_strreverse — reversed string |
 | STRINSERT$(s$, n$, pos&) | ✅ | 38 (v0.1.32) | pb_strinsert — 1-based insert, past-end appends |
@@ -421,6 +430,17 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.33 (2026-09-15) — Batch 39: 8 file-system / radix / math functions
+- **BIN$(n)** — unsigned 64-bit binary string (significant bits, e.g. BIN$(5)="101").
+- **OCT$(n)** — unsigned 64-bit octal string.
+- **DEC$(n)** — signed decimal string.
+- **VERIFY([start&,] s$, m$)** — position of the first character of s$ not present in m$ (1-based; 0 = all present).
+- **MOD(p, q)** — truncated remainder, same semantics as C srem (10 MOD 3 = 1, -7 MOD 3 = -1).
+- **GETATTR(path$)** — file-system attribute bits via GetFileAttributesA; -1 on failure.
+- **DISKFREE(drive$) / DISKSIZE(drive$)** — free / total bytes on a drive (GetDiskFreeSpaceExA, QUAD result); empty string = default drive.
+- Note: function-class keywords, not added to the statement CSV — coverage stays **200 implemented / 101 not implemented / 202 tier-3 DDT**.
+- Tests: examples/batch39_test.bas (18/18), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.32 (2026-09-15) — Batch 38: 12 string / math functions
 - **TALLY(s1$, s2$)** — count of non-overlapping occurrences (pb_tally).

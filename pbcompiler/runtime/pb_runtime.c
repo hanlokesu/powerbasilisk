@@ -24,6 +24,8 @@
 /* Declare only what we need from oleaut32 — avoids pulling in all of windows.h */
 __declspec(dllimport) char* __stdcall SysAllocStringByteLen(const char* psz, unsigned int len);
 __declspec(dllimport) void __stdcall SysFreeString(char* bstrString);
+__declspec(dllimport) unsigned long __stdcall GetFileAttributesA(const char* lpFileName);
+__declspec(dllimport) int __stdcall GetDiskFreeSpaceExA(char* lpDir, unsigned long long* lpFreeAvail, unsigned long long* lpTotalBytes, unsigned long long* lpTotalFree);
 /* Win32 API for crash handling */
 __declspec(dllimport) void* __stdcall AddVectoredExceptionHandler(unsigned long First, void* Handler);
 __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
@@ -271,6 +273,79 @@ char* pb_mkquad(long long v) {
 char* pb_mksingle(float v) {
     return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
 }
+/* Batch 39: BIN$/OCT$/DEC$ (radix strings), VERIFY, GETATTR, DISKFREE/DISKSIZE.
+   String args are payload pointers; string results are BSTRs. */
+char* pb_bin(long long v) {
+    unsigned long long u = (unsigned long long)v;
+    char buf[66], tmp[66];
+    int i = 0, t = 0;
+    if (u == 0) { buf[i++] = '0'; }
+    else {
+        while (u) { tmp[t++] = (char)('0' + (int)(u & 1)); u >>= 1; }
+        while (t) buf[i++] = tmp[--t];
+    }
+    buf[i] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)i);
+}
+char* pb_oct(long long v) {
+    unsigned long long u = (unsigned long long)v;
+    char buf[24], tmp[24];
+    int i = 0, t = 0;
+    if (u == 0) { buf[i++] = '0'; }
+    else {
+        while (u) { tmp[t++] = (char)('0' + (int)(u & 7)); u >>= 3; }
+        while (t) buf[i++] = tmp[--t];
+    }
+    buf[i] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)i);
+}
+char* pb_dec(long long v) {
+    char buf[24];
+    int n = snprintf(buf, sizeof(buf), "%lld", v);
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
+long long pb_verify(char* s, char* m, long long start) {
+    long long sl = (long long)strlen(s);
+    long long i;
+    if (start < 1) start = 1;
+    for (i = start; i <= sl; i++) {
+        if (!strchr(m, s[i - 1])) return i;
+    }
+    return 0;
+}
+long long pb_getattr(char* path) {
+    unsigned long attrs = GetFileAttributesA(path);
+    if (attrs == 0xFFFFFFFFUL) return -1;
+    return (long long)attrs;
+}
+static void pb_root_of(char* root, char* path) {
+    if (path && path[0]) {
+        /* drive:\  or  \server\share\  (UNC share root) */
+        int i = 0;
+        while (path[i] && path[i] != '\\') i++;
+        if (i >= 2 && path[1] == ':') {
+            root[0] = path[0]; root[1] = ':'; root[2] = '\\'; root[3] = 0;
+            return;
+        }
+    }
+    root[0] = (char)('A' + _getdrive() - 1);
+    root[1] = ':'; root[2] = '\\'; root[3] = 0;
+}
+long long pb_diskfree(char* path) {
+    char root[5];
+    unsigned long long freeb = 0, total = 0, totfree = 0;
+    pb_root_of(root, path);
+    if (!GetDiskFreeSpaceExA(root, &freeb, &total, &totfree)) return -1;
+    return (long long)freeb;
+}
+long long pb_disksize(char* path) {
+    char root[5];
+    unsigned long long freeb = 0, total = 0, totfree = 0;
+    pb_root_of(root, path);
+    if (!GetDiskFreeSpaceExA(root, &freeb, &total, &totfree)) return -1;
+    return (long long)total;
+}
+
 /* Batch 38: string / math helpers for TALLY, STRREVERSE$, STRINSERT$, STRDELETE$,
    REPEAT$, FRAC, ISFOLDER, EXP2/EXP10/LOG2/LOG10. String args are payload pointers;
    string results are BSTRs (pb_bstr_alloc), matching the existing builtin pattern. */
