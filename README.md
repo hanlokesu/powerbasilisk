@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (190 implemented / 111 not implemented / 202 tier-3 DDT).
+> table below (191 implemented / 110 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **190** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **111** documented upstream with no codegen evidence yet.
+> Summary: **191** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **110** documented upstream with no codegen evidence yet.
+> (2026-09-14: +1 official keyword from batch 28 — THREADED thread-local
+> storage declaration, LLVM `thread_local` globals with per-thread copies.
+> Batch 27 added ON CALL, GET$$/PUT$$, MACRO; batch 26 PREFIX, TRY.)
 > (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
 > procedure dispatch, GET$$/PUT$$ wide UTF-16LE string I/O, MACRO/END MACRO
 > compile-time text substitution. +2 from batch 26 — PREFIX/END PREFIX
@@ -251,6 +254,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
 | `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
 | `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
+| `THREADED` | ✅ | 28 (v0.1.22) | LLVM `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
 | `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
 | `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | v0.1.0 | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
 | `REPLACE old$ WITH new$ IN target$` | ✅ | v0.1.0 | `pb_replace` |
@@ -381,6 +385,25 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+### v0.1.22 (2026-09-14) — Batch 28: THREADED (thread-local storage)
+
+One more *Not implemented* item moved to *Implemented*
+(coverage: **191 implemented / 110 not implemented / 202 tier-3 DDT**):
+
+- **THREADED** — `THREADED var [()] [AS type] [, ...]` declares variables
+  that are global to every Sub/Function but **not shared across threads**:
+  each thread gets its own independent copy. Implemented as LLVM
+  `thread_local` globals (`@__threaded_<NAME>`), with a dedup set so repeated
+  declarations in several procedures emit one symbol. Scalars are supported
+  (LONG / STRING / numeric); THREADED arrays (`THREADED arr()` + `DIM`) are
+  not implemented yet and stay documented as pending.
+  Verified: main sets tcount=1/tmsg="main", a `THREAD CREATE`d child writes
+  its own tcount=2/tmsg="worker" (surfaced through plain globals), main still
+  reads 1/"main" — per-thread isolation confirmed. Note: the test waits with
+  `SLEEP` rather than a busy loop, because an optimizer may hoist an
+  invariant global load out of a spin loop.
+- Tests: examples/batch28_test.bas (1/1), official regression 15/15 ALL PASS,
+  fmt + clippy clean.
 ### v0.1.21 (2026-09-14) — Batch 27: ON CALL / GET$$+PUT$$ / MACRO (4 statements)
 
 Four more *Not implemented* items moved to *Implemented*

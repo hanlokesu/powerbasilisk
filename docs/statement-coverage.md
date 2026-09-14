@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 111 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (190)
+## ✅ Implemented (191)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -185,6 +185,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `COMM TIMEOUT` | STATEMENT | PB/Win + PB/CC | SetCommTimeouts read/write constants (batch 21) |
 | `THREAD CLOSE` | STATEMENT | PB/Win + PB/CC | TerminateThread + CloseHandle (batch 21) |
 | `THREAD CREATE` | STATEMENT | PB/Win + PB/CC | CreateThread (x64); PB slot id 0..255 (batch 21) |
+| `THREADED` | STATEMENT | module-level `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
 | `THREAD GET PRIORITY` | STATEMENT | PB/Win + PB/CC | GetThreadPriority (batch 21) |
 | `THREAD RESUME` | STATEMENT | PB/Win + PB/CC | ResumeThread (batch 21) |
 | `THREAD SET PRIORITY` | STATEMENT | PB/Win + PB/CC | SetThreadPriority (batch 21) |
@@ -422,7 +423,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (111, alphabetical)
+## ⬜ Not implemented (110, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -464,7 +465,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| THREADED | STATEMENT | PB/Win + PB/CC | Established |
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |

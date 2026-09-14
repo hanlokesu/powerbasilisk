@@ -1375,6 +1375,16 @@ impl Parser {
                     ))
                 }
             }
+            Token::Threaded => {
+                let dims = self.parse_dim_statement(DimScope::Threaded)?;
+                if dims.len() == 1 {
+                    Ok(Statement::Dim(dims.into_iter().next().unwrap()))
+                } else {
+                    Ok(Statement::Block(
+                        dims.into_iter().map(Statement::Dim).collect(),
+                    ))
+                }
+            }
             Token::Type => {
                 // TYPE SET dest = src : copy bytes into a TYPE variable
                 if matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SET")

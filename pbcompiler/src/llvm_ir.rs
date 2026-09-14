@@ -231,6 +231,16 @@ impl ModuleBuilder {
         writeln!(self.globals, "@{} = global {} {}", name, ty, init).unwrap();
     }
 
+    /// Add a thread-local global variable (THREADED TLS storage).
+    pub fn add_global_thread_local(&mut self, name: &str, ty: &IrType, init: &str) {
+        writeln!(
+            self.globals,
+            "@{} = thread_local global {} {}",
+            name, ty, init
+        )
+        .unwrap();
+    }
+
     /// Add a global variable with dllexport attribute.
     pub fn add_global_exported(&mut self, name: &str, ty: &IrType, init: &str) {
         writeln!(self.globals, "@{} = dllexport global {} {}", name, ty, init).unwrap();

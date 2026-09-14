@@ -180,7 +180,7 @@ impl Interpreter {
                     self.env
                         .declare_local(&dim.name, Value::default_for_type(&dim.pb_type));
                 }
-                DimScope::Global | DimScope::Dim => {
+                DimScope::Global | DimScope::Dim | DimScope::Threaded => {
                     self.env.declare_global(&dim.name, &dim.pb_type);
                 }
                 DimScope::Static => {

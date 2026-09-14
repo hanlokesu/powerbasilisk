@@ -76,7 +76,8 @@ pub enum DimScope {
     Local,
     Global,
     Static,
-    Dim, // plain DIM inside a sub/function
+    Threaded, // THREADED: thread-local storage variable
+    Dim,      // plain DIM inside a sub/function
 }
 
 #[derive(Debug, Clone)]

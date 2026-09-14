@@ -806,6 +806,11 @@ struct Compiler {
     // GLOBAL arr() AS TYPE awaiting DIM with bounds
     pending_global_arrays: HashMap<String, PbType>,
 
+    // THREADED vars already declared (global to every Sub/Function, so a
+    // repeated THREADED declaration in another proc must not re-emit the
+    // module global -- LLVM would reject the duplicate symbol).
+    threaded_declared: std::collections::HashSet<String>,
+
     // Name of the global empty string constant (e.g., "@.str.empty")
     empty_string_name: String,
 
@@ -961,6 +966,7 @@ impl Compiler {
             current_fn_retval_ptr: None,
             loop_stack: Vec::new(),
             pending_global_arrays: HashMap::new(),
+            threaded_declared: std::collections::HashSet::new(),
             empty_string_name: String::new(),
             type_layouts: HashMap::new(),
             gosub_context: None,
@@ -2357,6 +2363,36 @@ impl Compiler {
         }
     }
 
+    /// Declare a THREADED (thread-local storage) scalar variable.
+    /// Threaded variables are global to every Sub/Function, but each thread
+    /// has its own independent copy. Emitted as a module-level `thread_local`
+    /// global so loads/stores resolve per-thread automatically.
+    fn declare_threaded_global(&mut self, vd: &VarDecl) {
+        let name = normalize_name(&vd.name);
+        if self.threaded_declared.contains(&name) {
+            // Already emitted in this module: THREADED vars are global to
+            // every Sub/Function, so repeated declarations are legal and
+            // must not re-emit the module global (duplicate symbol).
+            return;
+        }
+        self.threaded_declared.insert(name.clone());
+        let ir_type = Self::ir_type_for(&vd.pb_type);
+        let tname = format!("__threaded_{}", name);
+        if Self::is_string_pb(&vd.pb_type) {
+            self.module
+                .add_global_thread_local(&tname, &ir_type, &self.empty_string_name.clone());
+        } else {
+            self.module
+                .add_global_thread_local(&tname, &ir_type, &ir_type.zero_literal());
+        }
+        self.symbols.insert_global_with_ptr(
+            name,
+            format!("@{}", tname),
+            ir_type,
+            vd.pb_type.clone(),
+        );
+    }
+
     // ========== Function/Sub compilation ==========
 
     /// Returns true if the function/sub should be nooped (compiled as an empty stub).
@@ -3038,6 +3074,18 @@ impl Compiler {
                 line: dim.line,
             };
             self.declare_global(&vd);
+        } else if dim.scope == DimScope::Threaded {
+            // THREADED: thread-local storage variable, global to every
+            // Sub/Function but with one independent copy per thread.
+            // Scalars only for now; THREADED arr() arrays are not yet
+            // supported (they need the pending-array path + TLS arrays).
+            let vd = VarDecl {
+                name: dim.name.clone(),
+                pb_type: dim.pb_type.clone(),
+                is_array: false,
+                line: dim.line,
+            };
+            self.declare_threaded_global(&vd);
         }
     }
 
@@ -3256,6 +3304,20 @@ impl Compiler {
                 ir_type,
                 dim.pb_type.clone(),
             );
+            return Ok(());
+        }
+        if dim.scope == DimScope::Threaded {
+            // THREADED: thread-local storage variable, global to every
+            // Sub/Function but with one independent copy per thread.
+            // Scalars only for now; THREADED arr() arrays are not yet
+            // supported (they need the pending-array path + TLS arrays).
+            let vd = VarDecl {
+                name: dim.name.clone(),
+                pb_type: dim.pb_type.clone(),
+                is_array: false,
+                line: dim.line,
+            };
+            self.declare_threaded_global(&vd);
             return Ok(());
         }
         // FixedString(N) / ASCIIZ*N: allocate [N x i8] buffer on stack
