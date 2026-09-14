@@ -1899,6 +1899,14 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        self.module
+            .declare_function("pb_graphic_get_canvas", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_graphic_get_dc", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_graphic_set_mix", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_graphic_get_mix", &IrType::I32, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_graphic_bitmap_load",
             &IrType::I64,
@@ -4663,6 +4671,28 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_GET_CANVAS" | "GRAPHIC_GET_DC" => {
+                let f = if call.name == "GRAPHIC_GET_CANVAS" {
+                    "pb_graphic_get_canvas"
+                } else {
+                    "pb_graphic_get_dc"
+                };
+                let v = fb.call(&IrType::I64, f, &[]);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    let rv = self.convert_value(fb, &v, &IrType::I64, &PbType::Long);
+                    fb.store(&rv, &ptr);
+                }
+            }
+            "GRAPHIC_GET_MIX" => {
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_mix", &[ptr]);
+                }
+            }
+            "GRAPHIC_SET_MIX" => {
+                let m = self.compile_expr(fb, &call.args[0])?;
+                let mv = self.convert_value(fb, &m, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_set_mix", &[mv]);
             }
             "GRAPHIC_BITMAP_LOAD" => {
                 // args: fname$, hbmp (out, QUAD)

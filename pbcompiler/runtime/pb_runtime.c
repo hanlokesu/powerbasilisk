@@ -3860,6 +3860,23 @@ int pb_graphic_save(char* fname) {
     return 1;
 }
 
+/* GRAPHIC GET CANVAS / GET DC / GET MIX / SET MIX (batch 58) */
+static long g_gr_mix = 13; /* R2_COPYPEN default */
+void* pb_graphic_get_canvas(void) {
+    return g_gr_bmp;
+}
+void* pb_graphic_get_dc(void) {
+    return g_gr_dc;
+}
+int pb_graphic_set_mix(long mix) {
+    g_gr_mix = mix;
+    return 1;
+}
+int pb_graphic_get_mix(long* mix) {
+    *mix = g_gr_mix;
+    return 1;
+}
+
 /* GRAPHIC BITMAP LOAD / CHR SIZE / CELL / CELL SIZE (batch 57) */
 void* pb_graphic_bitmap_load(char* fname) {
     if (!fname) return 0;

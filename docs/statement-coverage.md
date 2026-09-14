@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (231)
+## ✅ Implemented (235)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -256,6 +256,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC CELL` | Statement | pb_graphic_cell (character-cell origin) |
 | `GRAPHIC CELL SIZE` | Statement | pb_graphic_cell_size (cell metrics) |
 | `GRAPHIC CHR SIZE` | Statement | pb_graphic_chr_size (GetTextExtentPoint32A) |
+| `GRAPHIC GET CANVAS` | Statement | pb_graphic_get_canvas (current bitmap handle) |
+| `GRAPHIC GET DC` | Statement | pb_graphic_get_dc (current device context) |
+| `GRAPHIC GET MIX` | Statement | pb_graphic_get_mix (ROP mode state) |
+| `GRAPHIC SET MIX` | Statement | pb_graphic_set_mix (ROP mode state) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |

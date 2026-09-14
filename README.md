@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +4 official statement keywords from batch 58 — GRAPHIC GET CANVAS (current bitmap handle), GRAPHIC GET DC (device context), GRAPHIC SET MIX / GRAPHIC GET MIX (ROP mode state, default R2_COPYPEN). Coverage now 235 implemented / 167 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official statement keywords from batch 57 — GRAPHIC BITMAP LOAD (LoadImageA from BMP file), GRAPHIC CHR SIZE (GetTextExtentPoint32A), GRAPHIC CELL / GRAPHIC CELL SIZE (character-cell metrics). Coverage now 231 implemented / 171 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official statement keywords from batch 56 — GRAPHIC CIRCLE (Ellipse inscribed circle; not in the official CSV index, documented here), GRAPHIC POLYGON (Polygon from coordinate pairs), GRAPHIC GET CLIENT (bitmap dimensions), GRAPHIC GET LOC (0,0). Coverage now 227 implemented / 175 tier-3 / 101 not implemented.)
 > (2026-09-15: +3 official statement keywords from batch 55 — GRAPHIC COLOR (fore/back color state), GRAPHIC GET PIXEL (GetPixel into a LONG), GRAPHIC COPY (BitBlt SRCCOPY block copy; verified pixel-wise on the attached bitmap). Coverage now 224 implemented / 178 tier-3 / 101 not implemented.)
@@ -242,7 +243,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **231** statement-class keywords implemented · **171** DDT/GUI-class
+> Summary: **235** statement-class keywords implemented · **167** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -334,7 +335,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 57 (v0.1.51) | pb_graphic_bitmap_load / pb_graphic_chr_size / pb_graphic_cell / pb_graphic_cell_size — bitmap load, text extents, cell metrics |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 58 (v0.1.52) | pb_graphic_get_canvas / pb_graphic_get_dc / pb_graphic_set_mix / pb_graphic_get_mix — canvas/DC handles, ROP mix state |
+| 57 (v0.1.51) | pb_graphic_bitmap_load / pb_graphic_chr_size / pb_graphic_cell / pb_graphic_cell_size — bitmap load, text extents, cell metrics |
 | 56 (v0.1.50) | pb_graphic_circle / pb_graphic_polygon / pb_graphic_get_client / pb_graphic_get_loc — circle, polygon, bitmap size/location |
 | 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
 | 54 (v0.1.48) | pb_graphic_width / pb_graphic_style / pb_graphic_save — pen width + pen style + save attached bitmap to BMP |
@@ -490,6 +492,14 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.52 (2026-09-15) — Batch 58: GRAPHIC GET CANVAS / GET DC / GET MIX / SET MIX
+
+- **GRAPHIC GET CANVAS TO hBmp** — returns the current bitmap handle (pb_graphic_get_canvas; verified equal to the attached bitmap).
+- **GRAPHIC GET DC TO hDC** — returns the current device context (pb_graphic_get_dc).
+- **GRAPHIC SET MIX (mix&)** — records the ROP mix mode (pb_graphic_set_mix, default R2_COPYPEN = 13).
+- **GRAPHIC GET MIX TO mix&** — reads the current mix mode (pb_graphic_get_mix; verified set/get round-trip).
+- Tests: examples/batch58_test.bas (5/5), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.51 (2026-09-15) — Batch 57: GRAPHIC BITMAP LOAD / CHR SIZE / CELL / CELL SIZE
 

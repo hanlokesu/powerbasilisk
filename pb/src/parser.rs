@@ -1934,6 +1934,48 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "GET" {
+                        // GRAPHIC GET CANVAS TO hbmp | GRAPHIC GET DC TO hdc | GRAPHIC GET MIX TO mix&
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "CANVAS" || sub == "DC" || sub == "MIX" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            let name = match sub.as_str() {
+                                "CANVAS" => "GRAPHIC_GET_CANVAS",
+                                "DC" => "GRAPHIC_GET_DC",
+                                _ => "GRAPHIC_GET_MIX",
+                            };
+                            return Ok(Statement::Call(CallStmt {
+                                name: name.to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
+                    }
+                    if gop == "SET" {
+                        // GRAPHIC SET MIX (mix&)
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "MIX" {
+                            self.advance();
+                            if matches!(self.peek(), Token::LParen) {
+                                self.advance();
+                            }
+                            let mix = self.parse_expression()?;
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_MIX".to_string(),
+                                args: vec![mix],
+                                line,
+                            }));
+                        }
+                    }
                     if gop == "CHR" {
                         // GRAPHIC CHR SIZE (text$) TO w&, h&
                         self.advance();
