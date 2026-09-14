@@ -48,6 +48,12 @@ __declspec(dllimport) int __stdcall SystemParametersInfoA(unsigned int uiAction,
 __declspec(dllimport) void* __stdcall GetDC(void* hWnd);
 __declspec(dllimport) int __stdcall GetDeviceCaps(void* hdc, int nIndex);
 __declspec(dllimport) int __stdcall ReleaseDC(void* hWnd, void* hDC);
+__declspec(dllimport) int __stdcall MulDiv(int nNumber, int nNumerator, int nDenominator);
+__declspec(dllimport) void* __stdcall CreateFontA(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight, unsigned char bItalic, unsigned char bUnderline, unsigned char bStrikeOut, unsigned char iCharSet, unsigned char iOutPrecision, unsigned char iClipPrecision, unsigned char iQuality, unsigned char iPitchAndFamily, const char* pszFaceName);
+__declspec(dllimport) int __stdcall DeleteObject(void* hObject);
+#define PB_FW_NORMAL 400
+#define PB_FW_BOLD 700
+
 __declspec(dllimport) void* __stdcall GlobalFree(void* hMem);
 __declspec(dllimport) unsigned long long __stdcall GlobalSize(void* hMem);
 __declspec(dllimport) void* __stdcall LoadCursorA(void* hInstance, const char* lpCursorName);
@@ -3758,6 +3764,30 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
         p = semi + 1;
     }
     return pb_bstr_alloc("", 0);
+}
+
+
+/* FONT NEW / FONT END — GDI logical font objects (batch 47) */
+int pb_font_new(const char* name, float points, int style, int charset, int pitch, int escapement) {
+    void* hdc = GetDC(NULL);
+    int height = 0;
+    if (hdc) {
+        height = -MulDiv((int)(points + 0.5f), GetDeviceCaps(hdc, 90), 72);
+        ReleaseDC(NULL, hdc);
+    }
+    int weight = PB_FW_NORMAL;
+    unsigned char italic = 0, underline = 0, strikeout = 0;
+    if (style & 1) weight = PB_FW_BOLD;
+    if (style & 2) italic = 1;
+    if (style & 4) underline = 1;
+    if (style & 8) strikeout = 1;
+    void* hf = CreateFontA(height, 0, 0, 0, weight, italic, underline, strikeout,
+                           (unsigned char)charset, 0, 0,
+                           0, 0, name);
+    return (int)(intptr_t)hf;
+}
+int pb_font_end(int h) {
+    return DeleteObject((void*)(intptr_t)h) ? 1 : 0;
 }
 
 /* MEMORY COPY src, dst, count — byte block copy (memmove, overlap-safe). */

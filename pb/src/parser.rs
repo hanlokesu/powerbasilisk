@@ -1962,6 +1962,43 @@ impl Parser {
                     }
                 }
 
+                // FONT NEW fontname$ [, points! , style& , charset& , pitch& , escapement& ] TO fhndl
+                // FONT END fhndl
+                if name_upper == "FONT" {
+                    self.advance(); // consume FONT
+                    let op = self.peek_plain_upper();
+                    if op == "NEW" {
+                        self.advance(); // consume NEW
+                        let mut args = vec![self.parse_expression()?]; // fontname$
+                                                                       // optional comma-separated args (points, style, charset, pitch, escapement)
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        // TO fhndl (TO is a reserved-word token, not an Identifier)
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "FONT_NEW".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if op == "END" {
+                        self.advance(); // consume END
+                        let args = vec![self.parse_expression()?];
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "FONT_END".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                }
+
                 // MAT a() = CON | CON(expr) | IDN | ZER | src() | src()+src() |
                 //      src()-src() | src()*src() | (expr)*src() | INV(src()) | TRN(src())
                 if name_upper == "MAT" {

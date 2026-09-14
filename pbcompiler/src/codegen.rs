@@ -1734,6 +1734,22 @@ impl Compiler {
             &[IrType::I64, IrType::I64, IrType::Ptr],
             false,
         );
+
+        self.module.declare_function(
+            "pb_font_new",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::Float,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module
+            .declare_function("pb_font_end", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
@@ -4257,6 +4273,47 @@ impl Compiler {
                     fb.call_void("pb_mem_fill_str", &[d2, c2, v2]);
                 }
                 return Ok(());
+            }
+            "FONT_NEW" => {
+                // args: fontname, [points, style, charset, pitch, escapement], to_var
+                let name_v = self.compile_expr(fb, &call.args[0])?;
+                let mut points = fb.const_f32(12.0);
+                let mut style = fb.const_i32(0);
+                let mut charset = fb.const_i32(0);
+                let mut pitch = fb.const_i32(0);
+                let mut escapement = fb.const_i32(0);
+                let mut to_var: Option<String> = None;
+                let mut i = 1;
+                while i < call.args.len() {
+                    match i {
+                        1 => points = self.compile_expr(fb, &call.args[i])?,
+                        2 => style = self.compile_expr(fb, &call.args[i])?,
+                        3 => charset = self.compile_expr(fb, &call.args[i])?,
+                        4 => pitch = self.compile_expr(fb, &call.args[i])?,
+                        5 => escapement = self.compile_expr(fb, &call.args[i])?,
+                        _ => {}
+                    }
+                    i += 1;
+                }
+                if let Some(Expr::Variable(tv)) = call.args.last() {
+                    to_var = Some(tv.clone());
+                }
+                let h = fb.call(
+                    &IrType::I32,
+                    "pb_font_new",
+                    &[name_v, points, style, charset, pitch, escapement],
+                );
+                if let Some(tv) = to_var {
+                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv))?;
+                    let converted = self.convert_value(fb, &h, &target.0.ty, &target.1);
+                    fb.store(&converted, &target.0);
+                }
+            }
+            "FONT_END" => {
+                if let Some(h) = call.args.first() {
+                    let hv = self.compile_expr(fb, h)?;
+                    fb.call_void("pb_font_end", &[hv]);
+                }
             }
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)

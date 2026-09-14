@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (201)
+## ✅ Implemented (203)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -225,6 +225,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `ON CALL` | STATEMENT | dispatch table to SUB/FUNCTION (batch 27) |
 | `PUT$$` | STATEMENT | pb_put_wstring (WIDE write, UTF-16LE) |
 | MEMORY | STATEMENT | PB/Win + PB/CC | Established |
+| FONT END | STATEMENT | PB/Win + PB/CC | Established |
+| FONT NEW | STATEMENT | PB/Win + PB/CC | Established |
 | MKE$ | STATEMENT | PB/Win + PB/CC | 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
@@ -322,8 +324,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DIALOG TRAXOMATIC | STATEMENT |
 | DIALOG UNITS | STATEMENT |
 | DIALOG XLAT | STATEMENT |
-| FONT END | STATEMENT |
-| FONT NEW | STATEMENT |
 | GRAPHIC ARC | STATEMENT |
 | GRAPHIC ATTACH | STATEMENT |
 | GRAPHIC BITMAP CAPTURE | STATEMENT |
