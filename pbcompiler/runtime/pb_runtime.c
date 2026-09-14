@@ -18,6 +18,7 @@
 #include <conio.h>  /* _getch for WAITKEY$ */
 #include <direct.h>  /* _chdrive for CHDRIVE */
 #include <sys/locking.h>  /* _LK_LOCK / _LK_UNLCK */
+#include <sys/stat.h>  /* _stat / _S_IFDIR for ISFOLDER */
 
 #ifdef _WIN32
 /* Declare only what we need from oleaut32 — avoids pulling in all of windows.h */
@@ -270,6 +271,77 @@ char* pb_mkquad(long long v) {
 char* pb_mksingle(float v) {
     return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
 }
+/* Batch 38: string / math helpers for TALLY, STRREVERSE$, STRINSERT$, STRDELETE$,
+   REPEAT$, FRAC, ISFOLDER, EXP2/EXP10/LOG2/LOG10. String args are payload pointers;
+   string results are BSTRs (pb_bstr_alloc), matching the existing builtin pattern. */
+long long pb_tally(char* s, char* m) {
+    size_t n = strlen(m);
+    if (n == 0) return 0;
+    long long c = 0;
+    char* p = s;
+    while ((p = strstr(p, m)) != NULL) { c++; p += n; }
+    return c;
+}
+char* pb_strreverse(char* s) {
+    size_t n = strlen(s);
+    char* buf = (char*)malloc(n + 1);
+    size_t i;
+    for (i = 0; i < n; i++) buf[i] = s[n - 1 - i];
+    buf[n] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
+char* pb_strinsert(char* s, char* n, long long pos) {
+    size_t sl = strlen(s), nl = strlen(n);
+    if (pos < 1) pos = 1;
+    if ((size_t)pos > sl + 1) pos = (long long)sl + 1;
+    size_t b = (size_t)pos - 1;
+    size_t total = sl + nl;
+    char* buf = (char*)malloc(total + 1);
+    memcpy(buf, s, b);
+    memcpy(buf + b, n, nl);
+    memcpy(buf + b + nl, s + b, sl - b);
+    buf[total] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)total);
+}
+char* pb_strdelete(char* s, long long start, long long count) {
+    size_t sl = strlen(s);
+    if (start < 1) start = 1;
+    if (count < 0) count = 0;
+    size_t b = (size_t)start - 1;
+    if (b > sl) b = sl;
+    size_t del = (size_t)count;
+    if (del > sl - b) del = sl - b;
+    size_t total = sl - del;
+    char* buf = (char*)malloc(total + 1);
+    memcpy(buf, s, b);
+    memcpy(buf + b, s + b + del, sl - b - del);
+    buf[total] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)total);
+}
+char* pb_repeat(long long n, char* s) {
+    size_t sl = strlen(s);
+    if (n < 0) n = 0;
+    size_t total = (size_t)n * sl;
+    char* buf = (char*)malloc(total + 1);
+    long long i;
+    for (i = 0; i < n; i++) memcpy(buf + i * sl, s, sl);
+    buf[total] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)total);
+}
+double pb_frac(double x) {
+    double i;
+    return modf(x, &i);
+}
+long long pb_isfolder(char* name) {
+    struct _stat st;
+    if (_stat(name, &st) == 0 && (st.st_mode & _S_IFDIR)) return -1;
+    return 0;
+}
+double pb_exp2(double x) { return exp2(x); }
+double pb_exp10(double x) { return pow(10.0, x); }
+double pb_log2(double x) { return log2(x); }
+double pb_log10(double x) { return log10(x); }
+
 /* Batch 37: CVx family — read little-endian binary strings (PB payload pointer).
    off is 1-based character position, default 1.
    mode 0 = zero-extend (BYTE/WORD/DWORD), 1 = sign-extend (LONG/QUAD). */

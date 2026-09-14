@@ -1586,6 +1586,40 @@ impl Compiler {
             &[IrType::Ptr, IrType::I64, IrType::I64],
             false,
         );
+        self.module
+            .declare_function("pb_tally", &IrType::I64, &[IrType::Ptr, IrType::Ptr], false);
+        self.module
+            .declare_function("pb_strreverse", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_strinsert",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_strdelete",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_repeat",
+            &IrType::Ptr,
+            &[IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_frac", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_isfolder", &IrType::I64, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_exp2", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_exp10", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_log2", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("pb_log10", &IrType::Double, &[IrType::Double], false);
         self.module.declare_function(
             "pb_desktop_get_client",
             &IrType::Void,
@@ -7918,6 +7952,16 @@ impl Compiler {
             "CVBYT" | "CVW" | "CVL" | "CVDWD" | "CVQ" => Some(self.builtin_cv_int(fb, args, name)),
             "CSNG" => Some(self.builtin_to_f32(fb, args)),
             "CVS" | "CVD" | "CVE" | "CVCUR" | "CVCUX" => Some(self.builtin_cv_dbl(fb, args, name)),
+            "TALLY" => Some(self.builtin_tally(fb, args)),
+            "STRREVERSE" => Some(self.builtin_strreverse(fb, args)),
+            "STRINSERT" => Some(self.builtin_strinsert(fb, args)),
+            "STRDELETE" => Some(self.builtin_strdelete(fb, args)),
+            "REPEAT" => Some(self.builtin_repeat(fb, args)),
+            "FRAC" => Some(self.builtin_frac(fb, args)),
+            "ISFOLDER" => Some(self.builtin_isfolder(fb, args)),
+            "EXP2" | "EXP10" | "LOG2" | "LOG10" => Some(self.builtin_math1(fb, args, name)),
+            "IIF" => Some(self.builtin_iif(fb, args)),
+            "CHOOSE" => Some(self.builtin_choose(fb, args)),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8603,6 +8647,140 @@ impl Compiler {
             fb.const_i32(1)
         };
         Ok(fb.call(&IrType::Double, "pb_cv_dbl", &[sval, off, fb.const_i32(n)]))
+    }
+
+    // Batch 38: string / math builtins
+    fn builtin_tally(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("TALLY requires 2 arguments"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let m = self.compile_expr(fb, &args[1])?;
+        Ok(fb.call(&IrType::I64, "pb_tally", &[s, m]))
+    }
+    fn builtin_strreverse(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("STRREVERSE$ requires 1 argument"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        Ok(fb.call(&IrType::Ptr, "pb_strreverse", std::slice::from_ref(&s)))
+    }
+    fn builtin_strinsert(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 3 {
+            return Err(PbError::runtime("STRINSERT$ requires 3 arguments"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let n = self.compile_expr(fb, &args[1])?;
+        let pos = self.compile_expr(fb, &args[2])?;
+        let pos_i = self.to_i64(fb, &pos);
+        Ok(fb.call(&IrType::Ptr, "pb_strinsert", &[s, n, pos_i]))
+    }
+    fn builtin_strdelete(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 3 {
+            return Err(PbError::runtime("STRDELETE$ requires 3 arguments"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let st = self.compile_expr(fb, &args[1])?;
+        let ct = self.compile_expr(fb, &args[2])?;
+        let st_i = self.to_i64(fb, &st);
+        let ct_i = self.to_i64(fb, &ct);
+        Ok(fb.call(&IrType::Ptr, "pb_strdelete", &[s, st_i, ct_i]))
+    }
+    fn builtin_repeat(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("REPEAT$ requires 2 arguments"));
+        }
+        let n = self.compile_expr(fb, &args[0])?;
+        let s = self.compile_expr(fb, &args[1])?;
+        let n_i = self.to_i64(fb, &n);
+        Ok(fb.call(&IrType::Ptr, "pb_repeat", &[n_i, s]))
+    }
+    fn builtin_frac(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("FRAC requires 1 argument"));
+        }
+        let v = self.compile_expr(fb, &args[0])?;
+        let d = self.to_f64(fb, &v);
+        Ok(fb.call(&IrType::Double, "pb_frac", std::slice::from_ref(&d)))
+    }
+    fn builtin_isfolder(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("ISFOLDER requires 1 argument"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        Ok(fb.call(&IrType::I64, "pb_isfolder", std::slice::from_ref(&s)))
+    }
+    fn builtin_math1(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        name: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("math function requires 1 argument"));
+        }
+        let v = self.compile_expr(fb, &args[0])?;
+        let d = self.to_f64(fb, &v);
+        let fname = match name {
+            "EXP2" => "pb_exp2",
+            "EXP10" => "pb_exp10",
+            "LOG2" => "pb_log2",
+            _ => "pb_log10",
+        };
+        Ok(fb.call(&IrType::Double, fname, std::slice::from_ref(&d)))
+    }
+    fn builtin_iif(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 3 {
+            return Err(PbError::runtime("IIF requires 3 arguments"));
+        }
+        let cond = self.compile_expr(fb, &args[0])?;
+        let cond_i = self.to_i64(fb, &cond);
+        let zero = fb.const_i64(0);
+        let is_true = fb.icmp("ne", &cond_i, &zero);
+        let t = self.compile_expr(fb, &args[1])?;
+        let f = self.compile_expr(fb, &args[2])?;
+        match t.ty {
+            IrType::Ptr => Ok(fb.select(&is_true, &t, &f)),
+            IrType::Double | IrType::Float => {
+                let td = self.to_f64(fb, &t);
+                let fd = self.to_f64(fb, &f);
+                Ok(fb.select(&is_true, &td, &fd))
+            }
+            _ => {
+                let ti = self.to_i64(fb, &t);
+                let fi = self.to_i64(fb, &f);
+                Ok(fb.select(&is_true, &ti, &fi))
+            }
+        }
+    }
+    fn builtin_choose(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime(
+                "CHOOSE requires an index and at least 1 choice",
+            ));
+        }
+        let idx = self.compile_expr(fb, &args[0])?;
+        let idx_i = self.to_i64(fb, &idx);
+        let mut r = self.compile_expr(fb, &args[1])?;
+        for (i, c) in args[2..].iter().enumerate() {
+            let cv = self.compile_expr(fb, c)?;
+            let n_i = fb.const_i64(i as i64 + 2);
+            let eq = fb.icmp("eq", &idx_i, &n_i);
+            r = match r.ty {
+                IrType::Ptr => fb.select(&eq, &cv, &r),
+                IrType::Double | IrType::Float => {
+                    let rd = self.to_f64(fb, &r);
+                    let cd = self.to_f64(fb, &cv);
+                    fb.select(&eq, &cd, &rd)
+                }
+                _ => {
+                    let ri = self.to_i64(fb, &r);
+                    let ci = self.to_i64(fb, &cv);
+                    fb.select(&eq, &ci, &ri)
+                }
+            };
+        }
+        Ok(r)
     }
 
     fn builtin_to_f64(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
