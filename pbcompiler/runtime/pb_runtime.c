@@ -3760,6 +3760,40 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+/* MEMORY COPY src, dst, count — byte block copy (memmove, overlap-safe). */
+void pb_mem_copy(long long src, long long dst, long long count) {
+    if (count > 0) memmove((void*)(intptr_t)dst, (void*)(intptr_t)src, (size_t)count);
+}
+
+/* MEMORY SWAP src, dst, count — byte-by-byte exchange of two blocks. */
+void pb_mem_swap(long long src, long long dst, long long count) {
+    unsigned char* a = (unsigned char*)(intptr_t)src;
+    unsigned char* b = (unsigned char*)(intptr_t)dst;
+    for (long long i = 0; i < count; i++) {
+        unsigned char t = a[i];
+        a[i] = b[i];
+        b[i] = t;
+    }
+}
+
+/* MEMORY FILL dst, count, BYTE|WORD|DWORD val — fill count elements of width bytes. */
+void pb_mem_fill(long long dst, long long count, long long val, long long width) {
+    unsigned char* p = (unsigned char*)(intptr_t)dst;
+    for (long long i = 0; i < count; i++) {
+        for (long long w = 0; w < width; w++) {
+            p[i * width + w] = (unsigned char)((val >> (8 * w)) & 0xFF);
+        }
+    }
+}
+
+/* MEMORY FILL dst, count, str$ — repeat the string pattern over count bytes. */
+void pb_mem_fill_str(long long dst, long long count, const char* s) {
+    unsigned char* p = (unsigned char*)(intptr_t)dst;
+    size_t slen = s ? strlen(s) : 0;
+    if (slen == 0) return;
+    for (long long i = 0; i < count; i++) p[i] = (unsigned char)s[i % slen];
+}
+
 /* ERL$ — most recent error checkpoint id, as a string (numeric approximation of
    the official label/line-name semantics; limited to the checkpoint id stored by
    the ON ERROR trapping machinery). */

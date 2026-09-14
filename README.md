@@ -225,12 +225,13 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +1 official statement keyword from batch 46 — MEMORY COPY/SWAP/FILL: byte-block memmove copy (overlap-safe), byte-wise block swap, typed fill BYTE|WORD|DWORD with element counts, and string-pattern fill. Statement-class, coverage moved to 201 implemented / 201 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official function keywords from batch 45 — ERL$ error checkpoint name, EXTRACT$ substring-to-match (with optional start and ANY), RGB/BGR color packing (3-arg compose and 1-arg byte swap). Function-class, coverage counts unchanged.)
 > (2026-09-15: +7 official function keywords from batch 44 — SWITCH/SWITCH$ first-true select chain, HI/LO bit extraction (BYTE/WORD/LONG), FILEATTR file attribute queries (mode/open/OS handle/enumerate), FILENAME$ open-file name, PATHSCAN$ disk-scanned path parts (FULL/PATH/NAME/EXTN/NAMEX). Function-class, coverage counts unchanged.)
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
+> Summary: **201** statement-class keywords implemented · **201** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -322,6 +323,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
+| `MEMORY COPY src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_copy — memmove byte copy (overlap-safe) |
+| `MEMORY SWAP src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_swap — byte-wise block exchange |
+| `MEMORY FILL dst&, count&, BYTE\|WORD\|DWORD v` | ✅ | 46 (v0.1.40) | pb_mem_fill — fill count elements of width 1/2/4 bytes |
+| `MEMORY FILL dst&, count&, str$` | ✅ | 46 (v0.1.40) | pb_mem_fill_str — repeat string pattern over count bytes |
 | `ERL$` | ✅ | 45 (v0.1.39) | pb_erl_str — last ON ERROR checkpoint id as a string (numeric approximation of the official label/line-name) |
 | `EXTRACT$([start,] MainStr, [ANY] MatchStr)` | ✅ | 45 (v0.1.39) | pb_extract — substring up to first match (or any match char), start and ANY forms |
 | `RGB(r, g, b)` / `RGB(bgr)` | ✅ | 45 (v0.1.39) | pb_rgb3 pack `R | G<<8 | B<<16`; pb_rgb_swap single-arg byte swap |
@@ -462,6 +467,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.40 (2026-09-15) — Batch 46: MEMORY COPY / SWAP / FILL
+- **MEMORY COPY src&, dst&, count&**: byte-block copy via memmove (overlap-safe), addresses are 64-bit (use QUAD variables with VARPTR for addresses above 4 GB).
+- **MEMORY SWAP src&, dst&, count&**: byte-by-byte exchange of two blocks of count bytes.
+- **MEMORY FILL dst&, count&, BYTE\|WORD\|DWORD v**: fills count elements, each width bytes wide (1/2/4), little-endian from the value.
+- **MEMORY FILL dst&, count&, str$**: repeats the string pattern over count bytes.
+- **Bug fix**: BYTE values were sign-extended in comparisons/arithmetic (0xAB compared as -85). PB BYTE is unsigned — I8 now widens with zext in promote_ints and convert_value. This fixes every BYTE array/variable comparison.
+- Tests: examples/batch46_test.bas (7/7), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+
 
 ### v0.1.39 (2026-09-15) — Batch 45: ERL$ / EXTRACT$ / RGB / BGR
 - **ERL$**: last ON ERROR checkpoint id as a string (numeric approximation of the official label/line-name semantics, limited to the checkpoint id stored by the trapping machinery).

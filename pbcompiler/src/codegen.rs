@@ -1711,6 +1711,30 @@ impl Compiler {
         self.module
             .declare_function("pb_rgb_swap", &IrType::I64, &[IrType::I64], false);
         self.module.declare_function(
+            "pb_mem_copy",
+            &IrType::Void,
+            &[IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mem_swap",
+            &IrType::Void,
+            &[IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mem_fill",
+            &IrType::Void,
+            &[IrType::I64, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_mem_fill_str",
+            &IrType::Void,
+            &[IrType::I64, IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4197,6 +4221,40 @@ impl Compiler {
                 if let Some(arg) = call.args.first() {
                     let s = self.compile_expr(fb, arg)?;
                     fb.call_void("pb_environ_set", &[s]);
+                }
+                return Ok(());
+            }
+            "MEMORY_COPY" | "MEMORY_SWAP" | "MEMORY_FILL" => {
+                // MEMORY COPY/SWAP src&, dst&, count& | MEMORY FILL dst&, count&, BYTE|WORD|DWORD v
+                let fname = if name == "MEMORY_COPY" {
+                    "pb_mem_copy"
+                } else if name == "MEMORY_SWAP" {
+                    "pb_mem_swap"
+                } else {
+                    "pb_mem_fill"
+                };
+                if call.args.len() >= 3 {
+                    let mut a = Vec::new();
+                    for (i, e) in call.args.iter().enumerate() {
+                        let v = self.compile_expr(fb, e)?;
+                        let vi = self.convert_value(fb, &v, &IrType::I64, &PbType::Long);
+                        let _ = i;
+                        a.push(vi);
+                    }
+                    fb.call_void(fname, &a);
+                }
+                return Ok(());
+            }
+            "MEMORY_FILLS" => {
+                // MEMORY FILL dst&, count&, str$
+                if call.args.len() >= 3 {
+                    let d = self.compile_expr(fb, &call.args[0])?;
+                    let d2 = self.convert_value(fb, &d, &IrType::I64, &PbType::Long);
+                    let c = self.compile_expr(fb, &call.args[1])?;
+                    let c2 = self.convert_value(fb, &c, &IrType::I64, &PbType::Long);
+                    let v = self.compile_expr(fb, &call.args[2])?;
+                    let v2 = self.convert_value(fb, &v, &IrType::Ptr, &PbType::String);
+                    fb.call_void("pb_mem_fill_str", &[d2, c2, v2]);
                 }
                 return Ok(());
             }
@@ -7983,13 +8041,21 @@ impl Compiler {
     fn promote_ints(&self, fb: &mut FunctionBuilder, a: &Val, b: &Val) -> (Val, Val) {
         let aw = a.ty.bit_width();
         let bw = b.ty.bit_width();
+        let ext = |fb: &mut FunctionBuilder, v: &Val, ty: &IrType| -> Val {
+            // PB BYTE (I8) is unsigned — widen with zext, everything else sext
+            if v.ty == IrType::I8 {
+                fb.zext(v, ty)
+            } else {
+                fb.sext(v, ty)
+            }
+        };
         if aw == bw {
             (a.clone(), b.clone())
         } else if aw > bw {
-            let b_ext = fb.sext(b, &a.ty);
+            let b_ext = ext(fb, b, &a.ty);
             (a.clone(), b_ext)
         } else {
-            let a_ext = fb.sext(a, &b.ty);
+            let a_ext = ext(fb, a, &b.ty);
             (a_ext, b.clone())
         }
     }
@@ -8021,7 +8087,12 @@ impl Compiler {
         } else if target_ir.is_int() {
             if val.ty.is_int() {
                 if val.ty.bit_width() < target_ir.bit_width() {
-                    fb.sext(val, target_ir)
+                    // PB BYTE (I8) is unsigned; widen with zext, everything else sext
+                    if val.ty == IrType::I8 {
+                        fb.zext(val, target_ir)
+                    } else {
+                        fb.sext(val, target_ir)
+                    }
                 } else {
                     fb.trunc(val, target_ir)
                 }

@@ -1912,6 +1912,56 @@ impl Parser {
                     return Ok(Statement::Kill(filename));
                 }
 
+                // MEMORY COPY src&, dst&, count& | MEMORY SWAP src&, dst&, count&
+                // MEMORY FILL dst&, count&, BYTE|WORD|DWORD expr | MEMORY FILL dst&, count&, str$
+                if name_upper == "MEMORY" {
+                    self.advance(); // consume MEMORY
+                    let op = self.peek_plain_upper();
+                    if op == "COPY" || op == "SWAP" {
+                        self.advance(); // consume COPY / SWAP
+                        let src = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let dst = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let cnt = self.parse_expression()?;
+                        return Ok(Statement::Call(CallStmt {
+                            name: format!("MEMORY_{}", op),
+                            args: vec![src, dst, cnt],
+                            line,
+                        }));
+                    } else if op == "FILL" {
+                        self.advance(); // consume FILL
+                        let dst = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let cnt = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        // optional BYTE|WORD|DWORD width prefix before the value
+                        let w = self.peek_plain_upper();
+                        if w == "BYTE" || w == "WORD" || w == "DWORD" {
+                            self.advance(); // consume width keyword
+                            let v = self.parse_expression()?;
+                            let width = if w == "BYTE" {
+                                1
+                            } else if w == "WORD" {
+                                2
+                            } else {
+                                4
+                            };
+                            return Ok(Statement::Call(CallStmt {
+                                name: "MEMORY_FILL".to_string(),
+                                args: vec![dst, cnt, v, Expr::IntegerLit(width as i64)],
+                                line,
+                            }));
+                        }
+                        let v = self.parse_expression()?;
+                        return Ok(Statement::Call(CallStmt {
+                            name: "MEMORY_FILLS".to_string(),
+                            args: vec![dst, cnt, v],
+                            line,
+                        }));
+                    }
+                }
+
                 // MAT a() = CON | CON(expr) | IDN | ZER | src() | src()+src() |
                 //      src()-src() | src()*src() | (expr)*src() | INV(src()) | TRN(src())
                 if name_upper == "MAT" {
@@ -3836,6 +3886,7 @@ impl Parser {
             Token::Print => "PRINT".to_string(),
             Token::Open => "OPEN".to_string(),
             Token::On => "ON".to_string(),
+            Token::Dword => "DWORD".to_string(),
             _ => String::new(),
         }
     }
