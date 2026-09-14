@@ -225,6 +225,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
+> (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
 > Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
@@ -313,6 +315,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
 | `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
 | `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
+| DAYNAME$(n&) | ✅ | 42 (v0.1.36) | pb_dayname — 0=Sunday..6=Saturday, runtime name table |
+| MONTHNAME$(n&) | ✅ | 42 (v0.1.36) | pb_monthname — 1=January..12=December, runtime name table |
+| DATACOUNT | ✅ | 42 (v0.1.36) | pb_data_count — current procedure DATA pool size |
+| THREADCOUNT | ✅ | 42 (v0.1.36) | pb_thread_count — active PB threads + primary (>=1) |
 | BUILD$(a$, b$, ...) | ✅ | 41 (v0.1.35) | pb_build — variadic high-efficiency concat |
 | CLIP$(LEFT/RIGHT/MID ...) | ✅ | 41 (v0.1.35) | pb_clip — delete chars from left/right/middle |
 | WRAP$(s$, l$, r$) | ✅ | 41 (v0.1.35) | pb_wrap — prepend l$ + append r$ |
@@ -442,6 +448,13 @@ arrays, and core string/numeric built-ins — **✅**
 
 ## Changelog
 
+### v0.1.36 (2026-09-15) — Batch 42: 4 date/time & runtime-count functions
+- **DAYNAME$(n&)** — converts day-of-week number (0=Sunday .. 6=Saturday) to the associated name (pb_dayname, static name table, out-of-range clamps to 0).
+- **MONTHNAME$(n&)** — converts month number (1=January .. 12=December) to the associated name (pb_monthname, static name table, out-of-range clamps to 1).
+- **DATACOUNT** — returns the number of DATA items in the current procedure (pb_data_count reads the runtime DATA pool counter).
+- **THREADCOUNT** — returns the number of PowerBASIC-created active threads in the module; at least 1 (primary thread) (pb_thread_count scans the pb_thr[] slot table).
+- Parser: DATACOUNT/THREADCOUNT are no-argument functions written without parentheses — parse_primary now maps them to FunctionCall nodes.
+- Tests: examples/batch42_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 ### v0.1.35 (2026-09-15) — Batch 41: 5 string utility functions
 - **BUILD$(a$, b$, c$, ...)** — variadic high-efficiency string concatenation.
 - **CLIP$(LEFT s$, n) / CLIP$(RIGHT s$, n) / CLIP$(MID s$, start&, n)** — delete n characters from the left/right/middle of a string. The LEFT/RIGHT/MID mode keywords are parsed specially (parser maps them to string modes).

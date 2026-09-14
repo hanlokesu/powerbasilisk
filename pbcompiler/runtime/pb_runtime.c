@@ -3616,3 +3616,26 @@ void pb_dir_close(void) {
         g_dir_handle = PB_INVALID_HANDLE;
     }
 }
+
+/* Batch 42: DAYNAME$ / MONTHNAME$ / DATACOUNT / THREADCOUNT (definitions at file end:
+   they reference data_count and pb_thr[] declared earlier). */
+char* pb_dayname(long long n) {
+    static const char* names[7] = {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+    if (n < 0 || n > 6) n = 0;
+    return pb_bstr_alloc((char*)names[n], (unsigned int)strlen(names[n]));
+}
+char* pb_monthname(long long n) {
+    static const char* names[12] = {"January","February","March","April","May","June","July","August","September","October","November","December"};
+    if (n < 1 || n > 12) n = 1;
+    return pb_bstr_alloc((char*)names[n-1], (unsigned int)strlen(names[n-1]));
+}
+long long pb_data_count(void) {
+    return data_count;
+}
+long long pb_thread_count(void) {
+    long long n = 1; /* primary thread */
+    for (int i = 0; i < 256; i++) {
+        if (pb_thr[i].state) n++;
+    }
+    return n;
+}

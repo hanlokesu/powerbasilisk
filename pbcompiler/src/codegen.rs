@@ -1665,6 +1665,14 @@ impl Compiler {
         self.module
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
+            .declare_function("pb_dayname", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_monthname", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_data_count", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_thread_count", &IrType::I64, &[], false);
+        self.module
             .declare_function("pb_chr_to_oem", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_oem_to_chr", &IrType::Ptr, &[IrType::Ptr], false);
@@ -8031,6 +8039,10 @@ impl Compiler {
             "UNWRAP" => Some(self.builtin_conv3(fb, args, "pb_unwrap")),
             "SHRINK" => Some(self.builtin_shrink(fb, args)),
             "BUILD" => Some(self.builtin_build(fb, args)),
+            "DAYNAME" => Some(self.builtin_name1(fb, args, "pb_dayname")),
+            "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
+            "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
+            "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8993,6 +9005,23 @@ impl Compiler {
         }
         let nv = fb.const_i64(n as i64);
         Ok(fb.call(&IrType::Ptr, "pb_build", &[arr, nv]))
+    }
+
+    fn builtin_name1(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+    ) -> PbResult<Val> {
+        if args.len() != 1 {
+            return Err(PbError::runtime(format!("{fname} requires 1 argument")));
+        }
+        let n = self.compile_expr(fb, &args[0])?;
+        Ok(fb.call(&IrType::Ptr, fname, std::slice::from_ref(&n)))
+    }
+
+    fn builtin_count0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
+        Ok(fb.call(&IrType::I64, fname, &[]))
     }
 
     fn builtin_conv1(

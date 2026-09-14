@@ -5110,6 +5110,11 @@ impl Parser {
                     // Determine if this is a function call or array access
                     // We can't tell at parse time — interpreter will resolve
                     Expr::FunctionCall(name, args)
+                } else if name.eq_ignore_ascii_case("DATACOUNT")
+                    || name.eq_ignore_ascii_case("THREADCOUNT")
+                {
+                    // No-argument functions without parentheses (PB syntax: n = DATACOUNT)
+                    Expr::FunctionCall(name.to_uppercase(), Vec::new())
                 } else {
                     Expr::Variable(name)
                 };
