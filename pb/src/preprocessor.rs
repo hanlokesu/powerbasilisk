@@ -11,6 +11,14 @@ pub struct SourceLine {
     pub line_num: usize,
 }
 
+/// A MACRO definition (batch 27). Single-line macros have a 1-line body and
+/// expand anywhere in a line; multi-line macros expand at statement position.
+#[derive(Debug, Clone)]
+struct MacroDef {
+    params: Vec<String>,
+    body: Vec<String>,
+}
+
 /// Strip trailing comment from a line, respecting string literals.
 /// Returns the code portion (everything before the comment marker).
 /// e.g. `IF X=1 _ ' old code` → `IF X=1 _`
@@ -28,10 +36,11 @@ fn strip_trailing_comment(line: &str) -> &str {
     line
 }
 
-/// Preprocessor: resolves #INCLUDE, %CONSTANTS, and strips directives.
+/// Preprocessor: resolves #INCLUDE, %CONSTANTS, MACRO blocks, and strips directives.
 pub struct Preprocessor {
     constants: HashMap<String, i64>,
     included: HashSet<PathBuf>,
+    macros: HashMap<String, MacroDef>,
 }
 
 impl Default for Preprocessor {
@@ -45,6 +54,7 @@ impl Preprocessor {
         Preprocessor {
             constants: HashMap::new(),
             included: HashSet::new(),
+            macros: HashMap::new(),
         }
     }
 
@@ -184,6 +194,17 @@ impl Preprocessor {
 
             let upper_full = trimmed_full.to_uppercase();
 
+            // MACRO / END MACRO (batch 27): collect definitions, skip their lines
+            if upper_full.starts_with("MACRO") {
+                i = self.collect_macro(&raw_lines, i, trimmed_full);
+                continue;
+            }
+            if upper_full.starts_with("END MACRO") {
+                // stray END MACRO — skip
+                i += 1;
+                continue;
+            }
+
             // PREFIX / END PREFIX (batch 26): prepend "source code" to every
             // following line until END PREFIX. Text-level transform only.
             if upper_full == "END PREFIX" {
@@ -263,20 +284,120 @@ impl Preprocessor {
             }
 
             // Regular line — emit it (prepend active PREFIX source code, batch 26)
-            let mut emitted_text = full_line.clone();
+            let expanded = self.expand_macros(trimmed_full, &full_line);
+            let mut emitted_text = expanded;
             if let Some(p) = &prefix {
                 emitted_text = format!("{}{}", p, emitted_text);
             }
-            lines.push(SourceLine {
-                text: emitted_text,
-                file: file.to_path_buf(),
-                line_num,
-            });
+            for piece in emitted_text.split('\n') {
+                lines.push(SourceLine {
+                    text: piece.to_string(),
+                    file: file.to_path_buf(),
+                    line_num,
+                });
+            }
 
             i += 1;
         }
 
         Ok(lines)
+    }
+
+    /// Collect a MACRO definition starting at raw_lines[start_i] (whose trimmed
+    /// text is `first_line`). Returns the index of the next unprocessed line.
+    /// Single-line: `MACRO name(params) = text`; multi-line: `MACRO name(params)`
+    /// ... `END MACRO`. MACROTEMP / EXIT MACRO / macro functions are not
+    /// expanded in this batch; their definition lines are skipped.
+    fn collect_macro(&mut self, raw_lines: &[&str], start_i: usize, first_line: &str) -> usize {
+        let rest = first_line[5..].trim();
+        let upper_rest = rest.to_uppercase();
+        // MACRO FUNCTION name ... END MACRO = expr — macro function, not
+        // supported this batch: consume the whole block.
+        if upper_rest.starts_with("FUNCTION") {
+            let mut j = start_i + 1;
+            while j < raw_lines.len() {
+                if raw_lines[j].trim().to_uppercase().starts_with("END MACRO") {
+                    return j + 1;
+                }
+                j += 1;
+            }
+            return j;
+        }
+        let (name, params) = parse_macro_proto(rest);
+        let eq_pos = find_eq_outside_parens(rest);
+        if let Some(eqpos) = eq_pos {
+            // Single-line macro: body is everything after '='
+            let body_text = rest[eqpos + 1..].trim().to_string();
+            if !name.is_empty() {
+                self.macros.insert(
+                    name,
+                    MacroDef {
+                        params,
+                        body: vec![body_text],
+                    },
+                );
+            }
+            return start_i + 1;
+        }
+        // Multi-line macro: collect until END MACRO
+        let mut body: Vec<String> = Vec::new();
+        let mut j = start_i + 1;
+        while j < raw_lines.len() {
+            let t = raw_lines[j].trim();
+            let u = t.to_uppercase();
+            if u.starts_with("END MACRO") {
+                break;
+            }
+            if u.starts_with("MACROTEMP") {
+                // MACROTEMP unique-identifier renaming not supported this
+                // batch; skip the declaration line.
+                j += 1;
+                continue;
+            }
+            body.push(t.to_string());
+            j += 1;
+        }
+        if !name.is_empty() {
+            self.macros.insert(name, MacroDef { params, body });
+        }
+        j + 1
+    }
+
+    /// Expand macros in a line. Multi-line macros expand at statement position
+    /// (line start); single-line macros expand anywhere in the line. Returns
+    /// the expanded text, possibly containing embedded newlines.
+    fn expand_macros(&self, trimmed: &str, full: &str) -> String {
+        // Multi-line macros: statement position (line start).
+        let trimmed_upper = trimmed.to_uppercase();
+        for (name, def) in &self.macros {
+            if def.body.len() > 1 {
+                if let Some(rest) = trimmed_upper.strip_prefix(&name.to_uppercase()) {
+                    let ok = rest.is_empty()
+                        || rest.starts_with('(')
+                        || rest
+                            .chars()
+                            .next()
+                            .map(|c| c.is_whitespace())
+                            .unwrap_or(false);
+                    if ok {
+                        let args = extract_paren_args(trimmed, name.len());
+                        let mut out: Vec<String> = Vec::new();
+                        for bl in &def.body {
+                            out.push(substitute_params(bl, &def.params, &args));
+                        }
+                        return out.join("\n");
+                    }
+                }
+            }
+        }
+        // Single-line macros: anywhere in the line.
+        let mut result = full.to_string();
+        for (name, def) in &self.macros {
+            if def.body.len() == 1 {
+                result = replace_macro_refs(&result, name, def);
+            }
+        }
+        result
     }
 
     fn evaluate_if_condition(&self, condition: &str) -> bool {
@@ -347,6 +468,201 @@ fn extract_string(s: &str) -> Option<String> {
         }
     }
     None
+}
+
+/// Parse `name(params)` or `name` from the text after the MACRO keyword.
+fn parse_macro_proto(rest: &str) -> (String, Vec<String>) {
+    let rest = rest.trim();
+    if rest.is_empty() {
+        return (String::new(), Vec::new());
+    }
+    let name_end = rest
+        .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+        .unwrap_or(rest.len());
+    let name = rest[..name_end].to_uppercase();
+    let tail = rest[name_end..].trim();
+    if tail.starts_with('(') {
+        if let Some(close) = find_matching_paren(tail) {
+            let inner = &tail[1..close];
+            let params: Vec<String> = split_args(inner)
+                .into_iter()
+                .map(|p| p.trim().to_uppercase())
+                .filter(|p| !p.is_empty())
+                .collect();
+            return (name, params);
+        }
+    }
+    (name, Vec::new())
+}
+
+/// Find the position of '=' outside any parentheses in `s`.
+fn find_eq_outside_parens(s: &str) -> Option<usize> {
+    let mut depth = 0i32;
+    let mut in_string = false;
+    for (i, ch) in s.char_indices() {
+        match ch {
+            '"' => in_string = !in_string,
+            '(' if !in_string => depth += 1,
+            ')' if !in_string => depth -= 1,
+            '=' if !in_string && depth == 0 => return Some(i),
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Given `s` starting with '(', return the index of the matching ')'.
+fn find_matching_paren(s: &str) -> Option<usize> {
+    let mut depth = 0i32;
+    let mut in_string = false;
+    for (i, ch) in s.char_indices() {
+        match ch {
+            '"' => in_string = !in_string,
+            '(' if !in_string => depth += 1,
+            ')' if !in_string => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(i);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Split a comma-separated argument list (depth 0 commas only).
+fn split_args(inner: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut depth = 0i32;
+    let mut in_string = false;
+    let mut cur = String::new();
+    for ch in inner.chars() {
+        match ch {
+            '"' => {
+                in_string = !in_string;
+                cur.push(ch);
+            }
+            '(' if !in_string => {
+                depth += 1;
+                cur.push(ch);
+            }
+            ')' if !in_string => {
+                depth -= 1;
+                cur.push(ch);
+            }
+            ',' if !in_string && depth == 0 => {
+                out.push(cur.trim().to_string());
+                cur = String::new();
+            }
+            _ => cur.push(ch),
+        }
+    }
+    if !cur.trim().is_empty() {
+        out.push(cur.trim().to_string());
+    }
+    out
+}
+
+/// Extract the parenthesised argument list text after `name` in `s`.
+/// Returns the args split at depth-0 commas.
+fn extract_paren_args(s: &str, name_len: usize) -> Vec<String> {
+    let tail = &s[name_len..];
+    let tail = tail.trim_start();
+    if tail.starts_with('(') {
+        if let Some(close) = find_matching_paren(tail) {
+            return split_args(&tail[1..close]);
+        }
+    }
+    Vec::new()
+}
+
+/// Replace occurrences of parameter `param` (word-boundary) with `arg`.
+fn replace_word(body: &str, param: &str, arg: &str) -> String {
+    let mut out = String::new();
+    let bytes = body.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i] as char;
+        if c.is_ascii_alphanumeric() || c == '_' {
+            let start = i;
+            while i < bytes.len()
+                && ((bytes[i] as char).is_ascii_alphanumeric()
+                    || bytes[i] == b'_'
+                    || bytes[i] == b'$')
+            {
+                i += 1;
+            }
+            let word = &body[start..i];
+            if word.to_uppercase() == param {
+                out.push_str(arg);
+            } else {
+                out.push_str(word);
+            }
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    out
+}
+
+/// Substitute macro parameters into a body line.
+fn substitute_params(body: &str, params: &[String], args: &[String]) -> String {
+    if params.is_empty() {
+        return body.to_string();
+    }
+    let mut result = body.to_string();
+    for (idx, p) in params.iter().enumerate() {
+        let arg = args.get(idx).map(|s| s.as_str()).unwrap_or("");
+        result = replace_word(&result, p, arg);
+    }
+    result
+}
+
+/// Replace single-line macro references (NAME or NAME(args)) in `line`.
+fn replace_macro_refs(line: &str, name: &str, def: &MacroDef) -> String {
+    let name_upper = name.to_uppercase();
+    let body = def.body.first().cloned().unwrap_or_default();
+    let mut out = String::new();
+    let bytes = line.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        let c = bytes[i] as char;
+        if c.is_ascii_alphabetic() || c == '_' {
+            let start = i;
+            while i < bytes.len()
+                && ((bytes[i] as char).is_ascii_alphanumeric()
+                    || bytes[i] == b'_'
+                    || bytes[i] == b'$')
+            {
+                i += 1;
+            }
+            let word = &line[start..i];
+            if word.to_uppercase() == name_upper {
+                let mut j = i;
+                while j < bytes.len() && (bytes[j] as char).is_ascii_whitespace() {
+                    j += 1;
+                }
+                if j < bytes.len() && bytes[j] == b'(' {
+                    if let Some(close_rel) = find_matching_paren(&line[j..]) {
+                        let close = j + close_rel;
+                        let args = split_args(&line[j + 1..close]);
+                        out.push_str(&substitute_params(&body, &def.params, &args));
+                        i = close + 1;
+                        continue;
+                    }
+                }
+                out.push_str(&substitute_params(&body, &def.params, &[]));
+                continue;
+            }
+            out.push_str(word);
+        } else {
+            out.push(c);
+            i += 1;
+        }
+    }
+    out
 }
 
 fn resolve_include_path(current_file: &Path, include_path: &str) -> PathBuf {

@@ -614,7 +614,12 @@ impl Lexer {
             }
             Some('$') => {
                 self.advance();
-                "$"
+                if self.peek() == Some('$') {
+                    self.advance();
+                    "$$"
+                } else {
+                    "$"
+                }
             }
             _ => "",
         };

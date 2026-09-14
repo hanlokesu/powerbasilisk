@@ -1430,6 +1430,18 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_put_wstring",
+            &IrType::I32,
+            &[IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_get_wstring",
+            &IrType::I32,
+            &[IrType::I32, IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_cset",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
@@ -2757,6 +2769,7 @@ impl Compiler {
             Statement::GoTo(label) => self.compile_goto(fb, label),
             Statement::OnGoTo { expr, labels } => self.compile_on_goto(fb, expr, labels),
             Statement::OnGoSub { expr, labels } => self.compile_on_gosub(fb, expr, labels),
+            Statement::OnCall { expr, targets } => self.compile_on_call(fb, expr, targets),
             Statement::ClipboardSetText { text, result } => {
                 self.compile_clipboard_set(fb, text, result.as_ref())
             }
@@ -4090,6 +4103,28 @@ impl Compiler {
                     let count = self.to_i64(fb, &cv);
                     let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
                     fb.call_void("pb_get_string", &[f, count, ptr]);
+                }
+                return Ok(());
+            }
+            "PUT_WSTR" => {
+                // PUT$$ [#] filenum&, StrgExpr — write WIDE (UTF-16LE) string
+                if call.args.len() >= 2 {
+                    let sv = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &sv);
+                    let str_val = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_put_wstring", &[f, str_val]);
+                }
+                return Ok(());
+            }
+            "GET_WSTR" => {
+                // GET$$ [#] filenum&, Count&, StrgVar — read Count WIDE chars
+                if call.args.len() >= 3 {
+                    let fv = self.compile_expr(fb, &call.args[0])?;
+                    let f = self.to_i32(fb, &fv);
+                    let cv = self.compile_expr(fb, &call.args[1])?;
+                    let count = self.to_i64(fb, &cv);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
+                    fb.call_void("pb_get_wstring", &[f, count, ptr]);
                 }
                 return Ok(());
             }
@@ -6053,6 +6088,68 @@ impl Compiler {
                 fb.label(&after);
             }
         }
+        Ok(())
+    }
+
+    fn compile_on_call(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        expr: &Expr,
+        targets: &[OnCallTarget],
+    ) -> PbResult<()> {
+        // ON n CALL proc1(args), func2(args) TO var, ... — n is 1-based;
+        // out-of-range falls through to the next statement.
+        let n = self.compile_expr(fb, expr)?;
+        let ni = self.to_i32(fb, &n);
+        let after = fb.next_label("oncall.after");
+        for (i, t) in targets.iter().enumerate() {
+            let idx = fb.const_i32((i + 1) as i32);
+            let cond = fb.icmp("eq", &ni, &idx);
+            let then_b = fb.next_label(&format!("oncall.t{}", i));
+            let next_test = if i + 1 < targets.len() {
+                Some(fb.next_label(&format!("oncall.x{}", i + 1)))
+            } else {
+                None
+            };
+            match &next_test {
+                Some(nt) => fb.condbr(&cond, &then_b, nt),
+                None => fb.condbr(&cond, &then_b, &after),
+            }
+            fb.label(&then_b);
+            let cname = normalize_name(&t.name);
+            if let Some(info) = self.functions.get(&cname).cloned() {
+                let args = self.compile_call_args(fb, &t.args, &info)?;
+                let ret = if info.is_stdcall {
+                    fb.call_stdcall(&info.ret_type, &info.ir_name, &args)
+                } else {
+                    fb.call(&info.ret_type, &info.ir_name, &args)
+                };
+                if let Some(rv) = &t.ret_var {
+                    if let Some((ptr, ty, pbty)) = self.lvalue_ptr(fb, &Expr::Variable(rv.clone()))
+                    {
+                        let cv = self.convert_value(fb, &ret, &ty, &pbty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+            } else if let Some(info) = self.subs.get(&cname).cloned() {
+                let args = self.compile_call_args(fb, &t.args, &info)?;
+                if info.is_stdcall {
+                    fb.call_void_stdcall(&info.ir_name, &args);
+                } else {
+                    fb.call_void(&info.ir_name, &args);
+                }
+            } else {
+                self.warnings.push(format!(
+                    "ON CALL target `{}` is not a declared SUB/FUNCTION - skipped",
+                    t.name
+                ));
+            }
+            fb.br(&after);
+            if let Some(nt) = next_test {
+                fb.label(&nt);
+            }
+        }
+        fb.label(&after);
         Ok(())
     }
 

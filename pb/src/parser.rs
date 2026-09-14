@@ -1444,8 +1444,49 @@ impl Parser {
                         return Ok(Statement::OnErrorGotoZero);
                     }
                 }
-                // ON expr GOTO label1, label2, ... / ON expr GOSUB ...
+                // ON expr GOTO label1, label2, ... / ON expr GOSUB ... / ON expr CALL proc() ...
                 let expr = self.parse_expression()?;
+                if self.peek() == &Token::Call {
+                    // ON expr CALL Procedure() [, Function() TO RetVar] ...
+                    self.advance(); // consume CALL
+                    let mut targets: Vec<OnCallTarget> = Vec::new();
+                    loop {
+                        let name = self.consume_identifier()?;
+                        let args = if self.peek() == &Token::LParen {
+                            self.advance();
+                            let a = self.parse_arg_list()?;
+                            self.expect(&Token::RParen)?;
+                            a
+                        } else {
+                            Vec::new()
+                        };
+                        let mut ret_var = None;
+                        if self.peek() == &Token::To
+                            || matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("TO"))
+                        {
+                            self.advance();
+                            ret_var = Some(self.consume_identifier()?);
+                        }
+                        targets.push(OnCallTarget {
+                            name,
+                            args,
+                            ret_var,
+                        });
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        } else {
+                            break;
+                        }
+                    }
+                    self.consume_to_eol();
+                    if targets.is_empty() {
+                        return Ok(Statement::Noop("ON CALL".to_string(), line));
+                    }
+                    return Ok(Statement::OnCall {
+                        expr: Box::new(expr),
+                        targets,
+                    });
+                }
                 let is_gosub = match self.peek() {
                     Token::GoTo => {
                         self.advance();
@@ -2401,6 +2442,24 @@ impl Parser {
                         line,
                     }));
                 }
+                // PUT$$ [#] filenum&, StrgExpr — write WIDE (UTF-16LE) string at file position
+                if name_upper == "PUT$$" {
+                    self.advance(); // consume PUT$$
+                    if self.peek() == &Token::Hash {
+                        self.advance(); // consume optional #
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "PUT_WSTR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // GET$ [#] filenum&, Count&, StrgVar — read Count bytes into a string var
                 if name_upper == "GET$" {
                     self.advance(); // consume GET$
@@ -2415,6 +2474,24 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "GET_STR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // GET$$ [#] filenum&, Count&, StrgVar — read Count WIDE chars into a string var
+                if name_upper == "GET$$" {
+                    self.advance(); // consume GET$$
+                    if self.peek() == &Token::Hash {
+                        self.advance(); // consume optional #
+                    }
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "GET_WSTR".to_string(),
                         args,
                         line,
                     }));

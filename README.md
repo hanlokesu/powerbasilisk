@@ -380,6 +380,41 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.21 (2026-09-14) — Batch 27: ON CALL / GET$$+PUT$$ / MACRO (4 statements)
+
+Four more *Not implemented* items moved to *Implemented*
+(coverage: **190 implemented / 111 not implemented / 202 tier-3 DDT**):
+
+- **ON CALL** — `ON expr CALL proc1(args), func2(args) TO var, ...` dispatches
+  to one of several procedures based on the value of an integral expression
+  (1-based; out-of-range values fall through with no call). SUB and FUNCTION
+  targets may be mixed; FUNCTION results land in the TO variable. Implemented
+  as an if-chain dispatch table like ON GOTO / ON GOSUB. Verified: three SUBs
+  selected by n=1..3, FUNCTION TO with STATIC counter, out-of-range no-op.
+- **GET$$ / PUT$$** — wide-character (UTF-16LE) string I/O on binary files:
+  - `PUT$$ #f, expr$` converts the ANSI string to UTF-16LE and writes it.
+  - `GET$$ #f, count, var$` reads count WIDE characters (count*2 bytes),
+    converts back to ANSI, and assigns the string variable.
+  - Runtime helpers `pb_put_wstring` / `pb_get_wstring` use hand-rolled
+    kernel32 dllimports of MultiByteToWideChar / WideCharToMultiByte.
+  - Verified: PUT$$ "AB"+"CD" then SEEK 1 + GET$$ 2 twice reads back AB, CD.
+- **MACRO / END MACRO** — compile-time text substitution in the preprocessor:
+  - Single-line macros `MACRO name(p1, p2) = replacement` expand anywhere in
+    a line (expression position), with parameter substitution; no-argument
+    macros (`MACRO AppTitle = "..."`) expand as plain tokens.
+  - Multi-line macros `MACRO name(...) ... END MACRO` expand at statement
+    position (line start) into their replacement lines, with parameter
+    substitution.
+  - Macro functions (`MACRO FUNCTION` / `END MACRO = expr`), MACROTEMP
+    unique-renaming and EXIT MACRO are not expanded yet (definitions are
+    consumed and skipped).
+  - Verified: expression macro `muldivide(3,3,2)+10` -> 14, no-arg constant,
+    and a Swap2(a,b) multi-line macro (STATIC-style local DIM inside).
+- Fixed the lexer: `$` identifier suffix now consumes `$$` too, so `GET$$` /
+  `PUT$$` lex as a single identifier (previously the second `$` was dropped).
+- Verified in examples/batch27_test.bas (7 scenarios). Official regression
+  **14/14 ALL PASS**, fmt + clippy clean.
+
 ### v0.1.20 (2026-09-14) — Batch 26: PREFIX / TRY (2 statements)
 
 Two more *Not implemented* items moved to *Implemented*

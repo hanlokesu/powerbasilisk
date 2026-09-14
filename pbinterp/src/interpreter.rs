@@ -499,6 +499,7 @@ impl Interpreter {
                 };
                 Ok(Flow::GoSub(labels[idx].clone()))
             }
+            Statement::OnCall { .. } => Ok(Flow::Normal), // interp: approximate no-op
             Statement::Return => Ok(Flow::GoSubReturn),
             Statement::ClipboardSetText { .. }
             | Statement::ClipboardGetText { .. }

@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-14 (batch 26: PREFIX / TRY / CATCH / FINALLY / EXIT TRY) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-14 (batch 27: ON CALL / GET$$+PUT$$ / MACROCH / FINALLY / EXIT TRY) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 186 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 190 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 115 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 111 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (186)
+## ✅ Implemented (190)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -211,6 +211,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
 
 
+| `GET$$` | STATEMENT | pb_get_wstring/pb_put_wstring (UTF-16LE round-trip) |
+| `MACRO/END MACRO` | BLOCK | preprocessor text expansion (single-line + multi-line) |
+| `ON CALL` | STATEMENT | dispatch table to SUB/FUNCTION (batch 27) |
+| `PUT$$` | STATEMENT | pb_put_wstring (WIDE write, UTF-16LE) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -418,7 +422,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (115, alphabetical)
+## ⬜ Not implemented (111, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -441,7 +445,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 | FIELD | STATEMENT | PB/Win + PB/CC | Established |
-| GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | HEADER | STATEMENT | PB/Win only | Established |
 
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
@@ -450,15 +453,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
 
-| MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
 | MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
-| ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
-| PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
 | REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |

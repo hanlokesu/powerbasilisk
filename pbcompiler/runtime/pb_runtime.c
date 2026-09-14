@@ -32,6 +32,10 @@ __declspec(dllimport) unsigned long __stdcall GetLastError(void);
 __declspec(dllimport) int __stdcall SetFileAttributesA(const char* lpFileName, unsigned long dwFileAttributes);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) unsigned long __stdcall GetPriorityClass(void* hProcess);
+/* UTF-16 conversion for GET$$/PUT$$ (kernel32) */
+__declspec(dllimport) int __stdcall MultiByteToWideChar(unsigned int CodePage, unsigned long dwFlags, const char* lpMultiByteStr, int cbMultiByte, short* lpWideCharStr, int cchWideChar);
+__declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int CodePage, unsigned long dwFlags, const short* lpWideCharStr, int cchWideChar, char* lpMultiByteStr, int cbMultiByte, const char* lpDefaultChar, int* lpUsedDefaultChar);
+#define PB_CP_ACP 0
 __declspec(dllimport) int __stdcall SetPriorityClass(void* hProcess, unsigned long dwPriorityClass);
 /* Win32 clipboard (user32) */
 __declspec(dllimport) int __stdcall SystemParametersInfoA(unsigned int uiAction, unsigned int uiParam, void* pvParam, unsigned int fWinIni);
@@ -1205,6 +1209,48 @@ int pb_get_string(int f, long long count, char** dest) {
        initialized to a codegen string constant (not a BSTR), and freeing it
        crashes. Old BSTRs leak instead; acceptable for a compiler runtime. */
     return (got == (size_t)count) ? 0 : -1;
+}
+
+/* PUT$$ #f, StrgExpr: write a WIDE (UTF-16LE) string at the file position */
+int pb_put_wstring(int f, const char* s) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+    if (!s) return -1;
+    size_t n = strlen(s);
+    if (n == 0) return 0;
+    int wlen = MultiByteToWideChar(PB_CP_ACP, 0, s, (int)n, NULL, 0);
+    if (wlen <= 0) return -1;
+    short* wbuf = (short*)malloc((size_t)wlen * 2);
+    if (!wbuf) return -1;
+    MultiByteToWideChar(PB_CP_ACP, 0, s, (int)n, wbuf, wlen);
+    size_t written = fwrite(wbuf, 2, (size_t)wlen, file_handles[f]);
+    free(wbuf);
+    return written == (size_t)wlen ? 0 : -1;
+}
+
+/* GET\$\$ #f, Count&, StrgVar: read Count WIDE chars (Count*2 bytes), convert to ANSI */
+int pb_get_wstring(int f, long long count, char** dest) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+    if (count < 0 || count > 0x3FFFFFFFLL) return -1;
+    size_t bytes = (size_t)count * 2;
+    char* buf = (char*)malloc(bytes + 2);
+    if (!buf) return -1;
+    size_t got = fread(buf, 1, bytes, file_handles[f]);
+    size_t wchars = got / 2;
+    int ansi_len = WideCharToMultiByte(PB_CP_ACP, 0, (const short*)buf, (int)wchars,
+                                       NULL, 0, NULL, NULL);
+    if (ansi_len < 0) ansi_len = 0;
+    char* out = (char*)malloc((size_t)ansi_len + 1);
+    if (!out) { free(buf); return -1; }
+    if (ansi_len > 0) {
+        WideCharToMultiByte(PB_CP_ACP, 0, (const short*)buf, (int)wchars,
+                            out, ansi_len, NULL, NULL);
+    }
+    out[ansi_len] = '\\0';
+    *dest = pb_bstr_alloc(out, (unsigned int)ansi_len);
+    free(out);
+    free(buf);
+    /* same NB as pb_get_string: do not free the previous *dest */
+    return (got == bytes) ? 0 : -1;
 }
 
 /* SHIFT LEFT — logical left shift on 64-bit */

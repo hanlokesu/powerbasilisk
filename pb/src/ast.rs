@@ -182,6 +182,10 @@ pub enum Statement {
         expr: Box<Expr>,
         labels: Vec<String>,
     },
+    OnCall {
+        expr: Box<Expr>,
+        targets: Vec<OnCallTarget>,
+    },
     ClipboardSetText {
         text: Expr,
         result: Option<Expr>,
@@ -375,6 +379,13 @@ pub struct IncrDecrStmt {
 pub struct FunctionReturnStmt {
     pub value: Expr,
     pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct OnCallTarget {
+    pub name: String,
+    pub args: Vec<Expr>,
+    pub ret_var: Option<String>,
 }
 
 // Expressions
