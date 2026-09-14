@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +5 official statement keywords from batch 50 — MENU NEW BAR / MENU NEW POPUP (CreateMenu/CreatePopupMenu), MENU ADD STRING / MENU ADD POPUP (AppendMenuA MF_STRING/MF_POPUP), MENU DELETE (DeleteMenu). Menu handles are 64-bit pointers — QUAD variables. Coverage now 210 implemented / 192 tier-3 / 101 not implemented.)
 > (2026-09-15: +1 official statement keyword from batch 49 — COLOR fore& [, back&], PB/CC console text color via SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no arguments restores default. Coverage now 205 implemented / 197 tier-3 / 101 not implemented.)
 > (2026-09-15: +1 official statement keyword from batch 48 — IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL, comctl32 ImageList_Create/GetImageCount/Destroy; 64-bit handles require QUAD variables (a LONG truncates the pointer and the next call crashes 0xC0000005). Coverage now 204 implemented / 198 tier-3 / 101 not implemented.)
 > (2026-09-15: +2 official statement keywords from batch 47 — FONT NEW (GDI CreateFontA logical font, point-size height via MulDiv/GetDeviceCaps, style bits bold/italic/underline/strikeout, TO handle) and FONT END (DeleteObject). Tier-3 DDT items promoted; coverage now 203 implemented / 199 tier-3 / 101 not implemented.)
@@ -234,7 +235,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **205** statement-class keywords implemented · **197** DDT/GUI-class
+> Summary: **210** statement-class keywords implemented · **192** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -326,7 +327,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 50 (v0.1.44) | pb_menu_new_bar / pb_menu_new_popup — CreateMenu/CreatePopupMenu; pb_menu_add_string / pb_menu_add_popup — AppendMenuA; pb_menu_delete — DeleteMenu |
+| 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
 | 48 (v0.1.42) | pb_imagelist_new — ImageList_Create (comctl32); pb_imagelist_count — ImageList_GetImageCount; pb_imagelist_kill — ImageList_Destroy; 64-bit handles (QUAD) |
 | 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
 | `FONT END fhndl` | ✅ | 47 (v0.1.41) | pb_font_end — DeleteObject |
@@ -475,6 +477,14 @@ arrays, and core string/numeric built-ins — **✅**
 
 ## Changelog
 
+### v0.1.44 (2026-09-15) — Batch 50: MENU NEW BAR / NEW POPUP / ADD STRING / ADD POPUP / DELETE
+
+- **MENU NEW BAR TO hMenu** / **MENU NEW POPUP TO hPop** — CreateMenu / CreatePopupMenu; menu handles are 64-bit pointers, store in QUAD variables.
+- **MENU ADD STRING, hMenu, txt$, id&, state&** — AppendMenuA with MF_STRING; state bits pass through (checked/enabled).
+- **MENU ADD POPUP, hMenu, hSub, id&** — AppendMenuA with MF_POPUP.
+- **MENU DELETE hMenu, pos&** — DeleteMenu with MF_BYPOSITION.
+- **Parser note**: `MENU ADD STRING/POPUP` uses a comma after the keyword (official syntax); STRING is a reserved-word token (`Token::String_`), POPUP is an identifier — both handled.
+- Tests: examples/batch50_test.bas (4/4), official regression 14/14 ALL PASS, fmt + clippy clean.
 ### v0.1.43 (2026-09-15) — Batch 49: COLOR
 
 - **COLOR fore& [, back&]** — PB/CC console text color: pb_color → SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE)). Fore/back values 0-15 (standard console palette); no arguments restores the default attribute (7 = light gray on black).

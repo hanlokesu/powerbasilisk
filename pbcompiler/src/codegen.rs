@@ -1766,6 +1766,30 @@ impl Compiler {
             &[IrType::I32, IrType::I32],
             false,
         );
+        self.module
+            .declare_function("pb_menu_new_bar", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_menu_new_popup", &IrType::I64, &[], false);
+        self.module.declare_function(
+            "pb_menu_add_string",
+            &IrType::I32,
+            &[IrType::I64, IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_menu_add_popup",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_menu_delete",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_menu_destroy", &IrType::I32, &[IrType::I64], false);
         self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
@@ -4397,6 +4421,49 @@ impl Compiler {
                 let f2 = self.convert_value(fb, &fore, &IrType::I32, &PbType::Long);
                 let b2 = self.convert_value(fb, &back, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_color", &[f2, b2]);
+            }
+
+            "MENU_NEW_BAR" | "MENU_NEW_POPUP" => {
+                let f = if call.name == "MENU_NEW_POPUP" {
+                    "pb_menu_new_popup"
+                } else {
+                    "pb_menu_new_bar"
+                };
+                let h = fb.call(&IrType::I64, f, &[]);
+                if let Some(Expr::Variable(tv)) = call.args.first() {
+                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv.clone()))?;
+                    let converted = self.convert_value(fb, &h, &target.0.ty, &target.1);
+                    fb.store(&converted, &target.0);
+                }
+            }
+            "MENU_ADD_STRING" => {
+                // args: hMenu, txt$, id&, state&
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                let txt = self.compile_expr(fb, &call.args[1])?;
+                let id = self.compile_expr(fb, &call.args[2])?;
+                let id2 = self.convert_value(fb, &id, &IrType::I32, &PbType::Long);
+                let state = self.compile_expr(fb, &call.args[3])?;
+                let s2 = self.convert_value(fb, &state, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_menu_add_string", &[h2, txt, id2, s2]);
+            }
+            "MENU_ADD_POPUP" => {
+                // args: hMenu, hSub, id&
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                let hs = self.compile_expr(fb, &call.args[1])?;
+                let hs2 = self.convert_value(fb, &hs, &IrType::I64, &PbType::Quad);
+                let id = self.compile_expr(fb, &call.args[2])?;
+                let id2 = self.convert_value(fb, &id, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_menu_add_popup", &[h2, hs2, id2]);
+            }
+            "MENU_DELETE" => {
+                // args: hMenu, pos&
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                let pos = self.compile_expr(fb, &call.args[1])?;
+                let p2 = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_menu_delete", &[h2, p2]);
             }
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)

@@ -1912,6 +1912,79 @@ impl Parser {
                     return Ok(Statement::Kill(filename));
                 }
 
+                // MENU NEW BAR TO hMenu | MENU NEW POPUP TO hPop
+                // MENU ADD STRING, hMenu, txt$, id&, state& | MENU ADD POPUP, hMenu, hSub, id&
+                // MENU DELETE hMenu, pos& (batch 50)
+                if name_upper == "MENU" {
+                    self.advance(); // consume MENU
+                    let op = self.peek_plain_upper();
+                    if op == "NEW" {
+                        self.advance();
+                        let kind = self.peek_plain_upper();
+                        if kind == "BAR" || kind == "POPUP" {
+                            self.advance();
+                        }
+                        let mut args = Vec::new();
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if kind == "POPUP" {
+                                "MENU_NEW_POPUP".to_string()
+                            } else {
+                                "MENU_NEW_BAR".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if op == "ADD" {
+                        self.advance();
+                        let mut kind = String::new();
+                        if matches!(self.peek(), Token::String_) {
+                            self.advance();
+                            kind = "STRING".to_string();
+                        } else {
+                            let k2 = self.peek_plain_upper();
+                            if k2 == "POPUP" {
+                                self.advance();
+                                kind = "POPUP".to_string();
+                            }
+                        }
+                        let mut args = Vec::new();
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if kind == "POPUP" {
+                                "MENU_ADD_POPUP".to_string()
+                            } else {
+                                "MENU_ADD_STRING".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if op == "DELETE" {
+                        self.advance();
+                        let mut args = vec![self.parse_expression()?];
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "MENU_DELETE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                }
+
                 // COLOR fore& [, back&] — console text attribute (PB/CC, batch 49)
                 if name_upper == "COLOR" {
                     self.advance(); // consume COLOR

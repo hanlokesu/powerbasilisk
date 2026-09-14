@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (205)
+## ✅ Implemented (210)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -230,6 +230,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MKE$ | STATEMENT | PB/Win + PB/CC | 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
 | IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL) | ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers — use QUAD variables (batch 48) |
 | COLOR | STATEMENT (PB/CC console text color) | pb_color — SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no args restores default (batch 49) |
+| MENU NEW BAR | STATEMENT (menu bar handle) | pb_menu_new_bar — CreateMenu; handle is 64-bit (QUAD) (batch 50) |
+| MENU NEW POPUP | STATEMENT (popup menu handle) | pb_menu_new_popup — CreatePopupMenu; handle is 64-bit (QUAD) (batch 50) |
+| MENU ADD STRING | STATEMENT (menu item) | pb_menu_add_string — AppendMenuA MF_STRING (batch 50) |
+| MENU ADD POPUP | STATEMENT (submenu) | pb_menu_add_popup — AppendMenuA MF_POPUP (batch 50) |
+| MENU DELETE | STATEMENT (remove item) | pb_menu_delete — DeleteMenu MF_BYPOSITION (batch 50) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -414,16 +419,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC WINDOW STABILIZE | STATEMENT |
 | LISTBOX | STATEMENT |
 | LISTVIEW | STATEMENT |
-| MENU ADD POPUP | STATEMENT |
-| MENU ADD STRING | STATEMENT |
 | MENU ATTACH | STATEMENT |
 | MENU CONTEXT | STATEMENT |
-| MENU DELETE | STATEMENT |
 | MENU DRAW BAR | STATEMENT |
 | MENU GET STATE | STATEMENT |
 | MENU GET TEXT | STATEMENT |
-| MENU NEW BAR | STATEMENT |
-| MENU NEW POPUP | STATEMENT |
 | MENU SET STATE | STATEMENT |
 | MENU SET TEXT | STATEMENT |
 | SCROLLBAR | STATEMENT |

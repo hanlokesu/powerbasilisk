@@ -56,6 +56,12 @@ __declspec(dllimport) int __stdcall ImageList_GetImageCount(void* himl);
 __declspec(dllimport) int __stdcall ImageList_Destroy(void* himl);
 __declspec(dllimport) void* __stdcall GetStdHandle(unsigned int nStdHandle);
 __declspec(dllimport) int __stdcall SetConsoleTextAttribute(void* hConsoleOutput, unsigned short wAttributes);
+__declspec(dllimport) void* __stdcall CreateMenu(void);
+__declspec(dllimport) void* __stdcall CreatePopupMenu(void);
+__declspec(dllimport) int __stdcall AppendMenuA(void* hMenu, unsigned int uFlags, unsigned long long uIDNewItem, const char* lpNewItem);
+__declspec(dllimport) int __stdcall DeleteMenu(void* hMenu, unsigned int uPosition, unsigned int uFlags);
+__declspec(dllimport) int __stdcall DestroyMenu(void* hMenu);
+
 
 
 #define PB_FW_NORMAL 400
@@ -3773,6 +3779,28 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+
+/* MENU — user32 menu objects (batch 50) */
+long long pb_menu_new_bar(void) {
+    return (long long)(intptr_t)CreateMenu();
+}
+long long pb_menu_new_popup(void) {
+    return (long long)(intptr_t)CreatePopupMenu();
+}
+int pb_menu_add_string(long long h, char* txt, int id, int state) {
+    unsigned int flags = 0x0000; /* MF_STRING */
+    flags |= (unsigned int)state;
+    return AppendMenuA((void*)(intptr_t)h, flags, (unsigned long long)id, txt) ? 1 : 0;
+}
+int pb_menu_add_popup(long long h, long long hSub, int id) {
+    return AppendMenuA((void*)(intptr_t)h, 0x0010, (unsigned long long)(intptr_t)hSub, 0) ? 1 : 0; /* MF_POPUP */
+}
+int pb_menu_delete(long long h, int pos) {
+    return DeleteMenu((void*)(intptr_t)h, (unsigned int)pos, 0x0400) ? 1 : 0; /* MF_BYPOSITION */
+}
+int pb_menu_destroy(long long h) {
+    return DestroyMenu((void*)(intptr_t)h) ? 1 : 0;
+}
 
 /* COLOR — console text attribute (PB/CC, batch 49) */
 void pb_color(int fore, int back) {
