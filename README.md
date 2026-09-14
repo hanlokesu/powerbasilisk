@@ -265,10 +265,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 ### Newly implemented by this branch
 | PB statement / function | Status | Batch | Maps to |
 | --- | --- | --- | --- |
-| `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
-| `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
-| `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
-| `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
+| `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
+| `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
+| `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
+| `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
 | `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | v0.1.0 | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
 | `REPLACE old$ WITH new$ IN target$` | ✅ | v0.1.0 | `pb_replace` |
 | `ERASE array` | ✅ | v0.1.0 | `pb_erase_array` |
@@ -279,9 +279,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `RESET` / `FLUSH #f` | ✅ | v0.1.0 | `pb_reset` / `pb_flush` |
 | `NAME old$ AS new$` | ✅ | v0.1.0 | `pb_name` |
 | `BEEP` | ✅ | early | `Beep(800, 300)` (kernel32) |
-| `SWAP a, b` | ✅ | 2 | register-level load/store exchange |
+| `SWAP a, b` | ✅ | 2 (v0.1.03) | register-level load/store exchange |
 | `MKDIR` / `RMDIR` / `CHDIR` / `KILL` + `ERR` / `ERRCLEAR` | ✅ | early | `_mkdir` / `_rmdir` / `_chdir` / `pb_kill` + `@pb_err` global — PB-compatible error codes (75/76/53) on failure |
-| Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | 17 | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
+| Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | 17 (v0.1.10) | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
 | `CHR$(a, b, c)` multi-argument | ✅ | early | one byte per argument, concatenated (`CHR$(13,10)` = CR+LF) |
 | `RND` bare form (no parens) | ✅ | early | same as `RND()` — random double in [0,1) |
 | `INPUT #f, s$` reading `WRITE #` output | ✅ | v0.1.0 | CSV double-quotes stripped per PB semantics |
@@ -291,73 +291,73 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `ENVIRON "VAR=value"` | ✅ | early | `pb_environ_set` → `_putenv`; bare `ENVIRON "VAR"` removes the variable |
 | `FILECOPY src$, dst$` | ✅ | early | `pb_filecopy` → `CopyFileA`, PB-compatible `ERR` on failure (53/70/76) |
 | `SETATTR "path", attr&` | ✅ | early | `pb_setattr` → `SetFileAttributesA`, PB-compatible `ERR` on failure |
-| `TIX` | ✅ | 1 | `pb_tix` → 64-bit millisecond tick counter |
-| `MKBYT$(n)` | ✅ | 1 | `pb_mkbyt` → one-byte string |
-| `ISINFINITE(x)` / `ISNORMAL(x)` | ✅ | 1 | `pb_isinfinite` / `pb_isnormal` — IEEE-754 checks (-1/0) |
-| `PLAY WAVE "file.wav"` | ✅ | 1 | `PlaySoundA` (async) |
-| `PLAY SOUND freq, dur` | ✅ | 3 | `Beep(freq, dur)` (kernel32) |
-| `CHDRIVE "C:"` | ✅ | 1 | `_chdrive` — PB-compatible `ERR` (68) on failure |
-| `DIR$` / `DIR` function + statement family | ✅ | 24 | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
-| `LET t2 = t1` (whole TYPE) | ✅ | 24 | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
-| `SETEOF #f` | ✅ | 1 | `pb_seteof` → truncates file at current position |
-| `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
-| `ROTATE LEFT/RIGHT var, n` | ✅ | 2 | `pb_rotate_left/right` (wrapping) |
-| `ARRAY REVERSE arr` | ✅ | 2 | `pb_array_reverse` — in-place element reversal |
-| `ARRAY SHUFFLE arr` | ✅ | 3 | `pb_array_shuffle` — in-place Fisher-Yates |
-| `PUT$ = ...` | ✅ | 2 | `pb_put_string` — string to file (binary) |
-| `GET$ #f, count, var$` | ✅ | 15 | `pb_get_string` — read count bytes from a binary file into a string |
-| `SPLIT [WORD] src$, a TO b, c` | ✅ | 3 | `pb_split` — returns pieces via `PARSE$`-compatible out-params |
-| `DATA ...` / `READ var, ...` / `RESTORE` | ✅ | 4 | `pb_data_append` / `pb_read_data_str/num` / `pb_data_reset` — DATA pool with cursor + RESTORE rewind |
-| `PEEK(datatype, addr)` / `POKE datatype, addr, v, ...` | ✅ | 5 | `pb_peek8/16/32/64/f/d` / `pb_poke8/16/32/64/f/d` — BYTE/WORD/DWORD/INTEGER/LONG/QUAD/SINGLE/DOUBLE; addresses are 64-bit (use `QUAD` vars for `VARPTR`) |
-| `BIT` function / `BIT SET/RESET/TOGGLE var, n` / `BIT CALC var, n, expr` | ✅ | 6 | register-level bit ops (in-place, any integral var) |
-| `PROCESS GET PRIORITY TO var` / `PROCESS SET PRIORITY pri` | ✅ | 6 | `GetPriorityClass` / `SetPriorityClass` |
-| `LOF(f)` / `LOC(f)` / `SEEK(f)` | ✅ | 7 | `pb_lof` / `pb_loc` — file length / current position (QUAD) |
-| `ARRAY DELETE arr(i) [FOR count]` | ✅ | 8 | `pb_array_delete` — element(s) removed, tail zeroed |
-| `ARRAY INSERT arr(i), value` | ✅ | 9 | `pb_array_insert_num/str` — element inserted, last shifts out (fixed arrays) |
-| `ARRAY SCAN arr(), OP expr, TO var` | ✅ | 10 | `pb_array_scan_num/str` — first matching relative index, 0 = none (`= <> < > <= >=`) |
-| `MKI$` / `MKWRD$` | ✅ | 16 | `pb_mkint` (2-byte little-endian) |
-| `MKL$` / `MKDWD$` | ✅ | 16 | `pb_mklong` (4-byte little-endian) |
-| `MKQ$` / `MKCUR$` / `MKCUX$` | ✅ | 16 | `pb_mkquad` (8-byte little-endian) |
-| `MKS$` | ✅ | 16 | `pb_mksingle` (4-byte IEEE-754) |
-| `MKD$` | ✅ | 16 | `pb_mkdouble` (8-byte IEEE-754) |
-| `DESKTOP GET CLIENT TO w&, h&` | ✅ | 16 | work-area size (`SystemParametersInfoA` SPI_GETWORKAREA) |
-| `DESKTOP GET LOC TO x&, y&` | ✅ | 16 | work-area origin (same call) |
-| `DESKTOP GET PPI TO x&, y&` | ✅ | 16 | `GetDeviceCaps` LOGPIXELSX/Y |
-| `DESKTOP GET SIZE TO w&, h&` | ✅ | 15 | screen size in pixels (`GetSystemMetrics` SM_CXSCREEN/SM_CYSCREEN) |
-| `LEN(str)` fix | ✅ | 16 | BSTR byte-length prefix (`pb_str_len`) — correct length for strings containing NUL bytes |
-| `ON ERROR GOTO / GOTO 0 / RESUME NEXT` | ✅ | 25 | per-function run-time error trap + disarm |
-| `RESUME / RESUME NEXT / RESUME FLUSH / RESUME label` | ✅ | 25 | four continuation forms after error handler |
-| `REGISTER` | ✅ | 25 | optimization hint, accepted as LOCAL |
-| `PREFIX "..." / END PREFIX` | ✅ | 26 | preprocessor text transform — prepends source to every line between |
-| `TRY / CATCH / FINALLY / EXIT TRY` | ✅ | 26 | structured run-time error trapping reusing the ON ERROR machinery |
-| `ON CALL` | ✅ | 27 | `ON expr CALL proc(args), fn(args) TO var` — 1-based dispatch to SUB/FUNCTION targets, out-of-range falls through |
-| `GET$$ #f, count, var$` / `PUT$$ #f, expr$` | ✅ | 27 | WIDE (UTF-16LE) string I/O — `pb_get_wstring` / `pb_put_wstring` via MultiByteToWideChar / WideCharToMultiByte |
-| `MACRO / END MACRO` | ✅ | 27 | preprocessor text substitution — single-line expression macros + multi-line statement macros |
-| `STATIC` (real semantics) | ✅ | 23 | module-global slot keeps value across calls |
-| `ARRAY ASSIGN dst() = src()` | ✅ | 23 | `pb_array_copy` — whole-array copy |
-| `TYPE SET t2 = t1` | ✅ | 23 | `pb_type_set` — same machinery as `LET` with TYPEs |
-| `WINDOW SET TEXT s$` / `WINDOW GET TEXT TO s$` | ✅ | 23 | `SetConsoleTitleA` / `GetConsoleTitleA` console-title bridge |
-| `LPRINT` / `LPRINT ATTACH/CLOSE/FLUSH/FORMFEED` | ✅ | 22 | `pb_lprint_*` — printer device output |
-| `TRACE` / `TRACE PRINT` | ✅ | 22 | `pb_trace_new` — trace buffer flushed to file |
-| `IMPORT ADDR func$ TO addr&` / `IMPORT CLOSE` | ✅ | 22 | `pb_import_addr` — runtime GetProcAddress |
-| `CALL DWORD target` | ✅ | 22 | indirect call through an imported / QUAD address |
-| `FILESCAN #f, RECORDS TO n, WIDTH TO w` | ✅ | 20 | `pb_filescan` — record count / max record width |
-| `ARRAY ARRAYIX arr(), i` | ✅ | 20 | element = index |
-| `DECLARE` / `TYPE/END TYPE` | ✅ | 20 | external declarations + user-defined types |
-| `ON GOTO n, ...` / `ON GOSUB n, ...` | ✅ | 12 | dispatch to line labels by expression value (1-based, out-of-range continues) |
+| `TIX` | ✅ | 1 (v0.1.03) | `pb_tix` → 64-bit millisecond tick counter |
+| `MKBYT$(n)` | ✅ | 1 (v0.1.03) | `pb_mkbyt` → one-byte string |
+| `ISINFINITE(x)` / `ISNORMAL(x)` | ✅ | 1 (v0.1.03) | `pb_isinfinite` / `pb_isnormal` — IEEE-754 checks (-1/0) |
+| `PLAY WAVE "file.wav"` | ✅ | 1 (v0.1.03) | `PlaySoundA` (async) |
+| `PLAY SOUND freq, dur` | ✅ | 3 (v0.1.03) | `Beep(freq, dur)` (kernel32) |
+| `CHDRIVE "C:"` | ✅ | 1 (v0.1.03) | `_chdrive` — PB-compatible `ERR` (68) on failure |
+| `DIR$` / `DIR` function + statement family | ✅ | 24 (v0.1.18) | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
+| `LET t2 = t1` (whole TYPE) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
+| `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
+| `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
+| `ARRAY REVERSE arr` | ✅ | 2 (v0.1.03) | `pb_array_reverse` — in-place element reversal |
+| `ARRAY SHUFFLE arr` | ✅ | 3 (v0.1.03) | `pb_array_shuffle` — in-place Fisher-Yates |
+| `PUT$ = ...` | ✅ | 2 (v0.1.03) | `pb_put_string` — string to file (binary) |
+| `GET$ #f, count, var$` | ✅ | 15 (v0.1.08) | `pb_get_string` — read count bytes from a binary file into a string |
+| `SPLIT [WORD] src$, a TO b, c` | ✅ | 3 (v0.1.03) | `pb_split` — returns pieces via `PARSE$`-compatible out-params |
+| `DATA ...` / `READ var, ...` / `RESTORE` | ✅ | 4 (v0.1.03) | `pb_data_append` / `pb_read_data_str/num` / `pb_data_reset` — DATA pool with cursor + RESTORE rewind |
+| `PEEK(datatype, addr)` / `POKE datatype, addr, v, ...` | ✅ | 5 (v0.1.03) | `pb_peek8/16/32/64/f/d` / `pb_poke8/16/32/64/f/d` — BYTE/WORD/DWORD/INTEGER/LONG/QUAD/SINGLE/DOUBLE; addresses are 64-bit (use `QUAD` vars for `VARPTR`) |
+| `BIT` function / `BIT SET/RESET/TOGGLE var, n` / `BIT CALC var, n, expr` | ✅ | 6 (v0.1.04) | register-level bit ops (in-place, any integral var) |
+| `PROCESS GET PRIORITY TO var` / `PROCESS SET PRIORITY pri` | ✅ | 6 (v0.1.04) | `GetPriorityClass` / `SetPriorityClass` |
+| `LOF(f)` / `LOC(f)` / `SEEK(f)` | ✅ | 7 (v0.1.04) | `pb_lof` / `pb_loc` — file length / current position (QUAD) |
+| `ARRAY DELETE arr(i) [FOR count]` | ✅ | 8 (v0.1.04) | `pb_array_delete` — element(s) removed, tail zeroed |
+| `ARRAY INSERT arr(i), value` | ✅ | 9 (v0.1.04) | `pb_array_insert_num/str` — element inserted, last shifts out (fixed arrays) |
+| `ARRAY SCAN arr(), OP expr, TO var` | ✅ | 10 (v0.1.04) | `pb_array_scan_num/str` — first matching relative index, 0 = none (`= <> < > <= >=`) |
+| `MKI$` / `MKWRD$` | ✅ | 16 (v0.1.09) | `pb_mkint` (2-byte little-endian) |
+| `MKL$` / `MKDWD$` | ✅ | 16 (v0.1.09) | `pb_mklong` (4-byte little-endian) |
+| `MKQ$` / `MKCUR$` / `MKCUX$` | ✅ | 16 (v0.1.09) | `pb_mkquad` (8-byte little-endian) |
+| `MKS$` | ✅ | 16 (v0.1.09) | `pb_mksingle` (4-byte IEEE-754) |
+| `MKD$` | ✅ | 16 (v0.1.09) | `pb_mkdouble` (8-byte IEEE-754) |
+| `DESKTOP GET CLIENT TO w&, h&` | ✅ | 16 (v0.1.09) | work-area size (`SystemParametersInfoA` SPI_GETWORKAREA) |
+| `DESKTOP GET LOC TO x&, y&` | ✅ | 16 (v0.1.09) | work-area origin (same call) |
+| `DESKTOP GET PPI TO x&, y&` | ✅ | 16 (v0.1.09) | `GetDeviceCaps` LOGPIXELSX/Y |
+| `DESKTOP GET SIZE TO w&, h&` | ✅ | 15 (v0.1.08) | screen size in pixels (`GetSystemMetrics` SM_CXSCREEN/SM_CYSCREEN) |
+| `LEN(str)` fix | ✅ | 16 (v0.1.09) | BSTR byte-length prefix (`pb_str_len`) — correct length for strings containing NUL bytes |
+| `ON ERROR GOTO / GOTO 0 / RESUME NEXT` | ✅ | 25 (v0.1.19) | per-function run-time error trap + disarm |
+| `RESUME / RESUME NEXT / RESUME FLUSH / RESUME label` | ✅ | 25 (v0.1.19) | four continuation forms after error handler |
+| `REGISTER` | ✅ | 25 (v0.1.19) | optimization hint, accepted as LOCAL |
+| `PREFIX "..." / END PREFIX` | ✅ | 26 (v0.1.20) | preprocessor text transform — prepends source to every line between |
+| `TRY / CATCH / FINALLY / EXIT TRY` | ✅ | 26 (v0.1.20) | structured run-time error trapping reusing the ON ERROR machinery |
+| `ON CALL` | ✅ | 27 (v0.1.21) | `ON expr CALL proc(args), fn(args) TO var` — 1-based dispatch to SUB/FUNCTION targets, out-of-range falls through |
+| `GET$$ #f, count, var$` / `PUT$$ #f, expr$` | ✅ | 27 (v0.1.21) | WIDE (UTF-16LE) string I/O — `pb_get_wstring` / `pb_put_wstring` via MultiByteToWideChar / WideCharToMultiByte |
+| `MACRO / END MACRO` | ✅ | 27 (v0.1.21) | preprocessor text substitution — single-line expression macros + multi-line statement macros |
+| `STATIC` (real semantics) | ✅ | 23 (v0.1.17) | module-global slot keeps value across calls |
+| `ARRAY ASSIGN dst() = src()` | ✅ | 23 (v0.1.17) | `pb_array_copy` — whole-array copy |
+| `TYPE SET t2 = t1` | ✅ | 23 (v0.1.17) | `pb_type_set` — same machinery as `LET` with TYPEs |
+| `WINDOW SET TEXT s$` / `WINDOW GET TEXT TO s$` | ✅ | 23 (v0.1.17) | `SetConsoleTitleA` / `GetConsoleTitleA` console-title bridge |
+| `LPRINT` / `LPRINT ATTACH/CLOSE/FLUSH/FORMFEED` | ✅ | 22 (v0.1.16) | `pb_lprint_*` — printer device output |
+| `TRACE` / `TRACE PRINT` | ✅ | 22 (v0.1.16) | `pb_trace_new` — trace buffer flushed to file |
+| `IMPORT ADDR func$ TO addr&` / `IMPORT CLOSE` | ✅ | 22 (v0.1.16) | `pb_import_addr` — runtime GetProcAddress |
+| `CALL DWORD target` | ✅ | 22 (v0.1.16) | indirect call through an imported / QUAD address |
+| `FILESCAN #f, RECORDS TO n, WIDTH TO w` | ✅ | 20 (v0.1.13) | `pb_filescan` — record count / max record width |
+| `ARRAY ARRAYIX arr(), i` | ✅ | 20 (v0.1.13) | element = index |
+| `DECLARE` / `TYPE/END TYPE` | ✅ | 20 (v0.1.13) | external declarations + user-defined types |
+| `ON GOTO n, ...` / `ON GOSUB n, ...` | ✅ | 12 (v0.1.05) | dispatch to line labels by expression value (1-based, out-of-range continues) |
 | `OPEN file FOR BINARY AS #f` + `GET #f, pos, var` / `PUT #f, pos, var` | ✅ | early | random-access binary I/O — `pb_open` r+b mode (no truncate) + `pb_get` / `pb_put` |
-| `CLIPBOARD SET TEXT s$` / `GET TEXT TO s$` / `RESET` | ✅ | 13 | `pb_clipboard_set_text/get_text/reset` — GlobalAlloc + Set/GetClipboardData |
-| `GLOBALMEM ALLOC/FREE/LOCK/SIZE/UNLOCK` | ✅ | 17 | `pb_globalmem_*` — Win32 global-memory heap |
-| `MOUSEPTR` | ✅ | 17 | `pb_mouseptr` — LoadCursorA cursor style |
-| `UCODEPAGE` | ✅ | 17 | `pb_ucodepage` — console output code page |
-| `HOST ADDR "name" TO a&` / `HOST NAME TO a&` | ✅ | 14 | `pb_host_addr` (gethostbyname) / `pb_host_name` (gethostname) |
-| `INPUT FLUSH` | ✅ | 13 | `pb_input_flush` — clears the keyboard type-ahead buffer |
-| `OPTION EXPLICIT` / `REM` | ✅ | 13 | strict declaration checking / comment statement |
-| `CSET var$ = expr` | ✅ | 15 | `pb_cset(_buf)` — assign into fixed-string buffer |
+| `CLIPBOARD SET TEXT s$` / `GET TEXT TO s$` / `RESET` | ✅ | 13 (v0.1.06) | `pb_clipboard_set_text/get_text/reset` — GlobalAlloc + Set/GetClipboardData |
+| `GLOBALMEM ALLOC/FREE/LOCK/SIZE/UNLOCK` | ✅ | 17 (v0.1.10) | `pb_globalmem_*` — Win32 global-memory heap |
+| `MOUSEPTR` | ✅ | 17 (v0.1.10) | `pb_mouseptr` — LoadCursorA cursor style |
+| `UCODEPAGE` | ✅ | 17 (v0.1.10) | `pb_ucodepage` — console output code page |
+| `HOST ADDR "name" TO a&` / `HOST NAME TO a&` | ✅ | 14 (v0.1.07) | `pb_host_addr` (gethostbyname) / `pb_host_name` (gethostname) |
+| `INPUT FLUSH` | ✅ | 13 (v0.1.06) | `pb_input_flush` — clears the keyboard type-ahead buffer |
+| `OPTION EXPLICIT` / `REM` | ✅ | 13 (v0.1.06) | strict declaration checking / comment statement |
+| `CSET var$ = expr` | ✅ | 15 (v0.1.08) | `pb_cset(_buf)` — assign into fixed-string buffer |
 | `HEX$` | ✅ | v0.1.0 | 64-bit integer → hex string |
 | `WAITKEY$` | ✅ | v0.1.14 | `pb_waitkey` — console `_getch`, redirected `getchar` dual mode (v0.1.14) |
 | `ARRAY SORT arr()` | ✅ | early | `pb_array_sort` — in-place sort |
-| `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
+| `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
