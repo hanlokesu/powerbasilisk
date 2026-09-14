@@ -1934,6 +1934,52 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "CHR" {
+                        // GRAPHIC CHR SIZE (text$) TO w&, h&
+                        self.advance();
+                        self.expect(&Token::Identifier("SIZE".to_string()))?;
+                        self.expect(&Token::LParen)?;
+                        let txt = self.parse_expression()?;
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::To)?;
+                        let w = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let h = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_CHR_SIZE".to_string(),
+                            args: vec![txt, w, h],
+                            line,
+                        }));
+                    }
+                    if gop == "CELL" {
+                        // GRAPHIC CELL SIZE (rows,cols) TO w,h  |  GRAPHIC CELL (row,col) TO x,y
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "SIZE" {
+                            self.advance();
+                        }
+                        self.expect(&Token::LParen)?;
+                        let a0 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let a1 = self.parse_expression()?;
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::To)?;
+                        let o0 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let o1 = self.parse_expression()?;
+                        self.consume_to_eol();
+                        let name = if sub == "SIZE" {
+                            "GRAPHIC_CELL_SIZE".to_string()
+                        } else {
+                            "GRAPHIC_CELL".to_string()
+                        };
+                        return Ok(Statement::Call(CallStmt {
+                            name,
+                            args: vec![a0, a1, o0, o1],
+                            line,
+                        }));
+                    }
                     if gop == "CIRCLE" {
                         // GRAPHIC CIRCLE (x,y), r [, color&]
                         self.advance();
@@ -2165,6 +2211,21 @@ impl Parser {
                     if self.peek_plain_upper() == "BITMAP" {
                         self.advance();
                         let op = self.peek_plain_upper();
+                        if op == "LOAD" {
+                            // GRAPHIC BITMAP LOAD "file.bmp" TO hbmp
+                            self.advance();
+                            let fname = self.parse_expression()?;
+                            if matches!(self.peek(), Token::To) {
+                                self.advance();
+                            }
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_BITMAP_LOAD".to_string(),
+                                args: vec![fname, dst],
+                                line,
+                            }));
+                        }
                         if op == "NEW" {
                             self.advance();
                             let mut args = vec![self.parse_expression()?];

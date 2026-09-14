@@ -1900,6 +1900,30 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_graphic_bitmap_load",
+            &IrType::I64,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_chr_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_cell_size",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_cell",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4639,6 +4663,39 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_BITMAP_LOAD" => {
+                // args: fname$, hbmp (out, QUAD)
+                let fname = self.compile_expr(fb, &call.args[0])?;
+                let h = fb.call(&IrType::I64, "pb_graphic_bitmap_load", &[fname]);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    fb.store(&h, &ptr);
+                }
+            }
+            "GRAPHIC_CHR_SIZE" => {
+                // args: text$, w&, h& (out)
+                let txt = self.compile_expr(fb, &call.args[0])?;
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.call_void("pb_graphic_chr_size", &[txt, wp, hp]);
+                    }
+                }
+            }
+            "GRAPHIC_CELL_SIZE" | "GRAPHIC_CELL" => {
+                let f = if call.name == "GRAPHIC_CELL_SIZE" {
+                    "pb_graphic_cell_size"
+                } else {
+                    "pb_graphic_cell"
+                };
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let a0v = self.convert_value(fb, &a0, &IrType::I32, &PbType::Long);
+                let a1 = self.compile_expr(fb, &call.args[1])?;
+                let a1v = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
+                if let Some((o0p, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                    if let Some((o1p, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        fb.call_void(f, &[a0v, a1v, o0p, o1p]);
+                    }
+                }
             }
             "GRAPHIC_CIRCLE" => {
                 // args: x, y, r [, color&]

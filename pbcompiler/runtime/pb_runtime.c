@@ -77,6 +77,8 @@ __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int ri
 __declspec(dllimport) unsigned long __stdcall GetPixel(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, int w, int h, void* hdcSrc, int xSrc, int ySrc, unsigned long rop);
 __declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int count);
+__declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name, unsigned int type, int cx, int cy, unsigned int fuLoad);
+__declspec(dllimport) int __stdcall GetTextExtentPoint32A(void* hdc, const char* str, int count, void* size);
 typedef struct { int x; int y; } pb_pt;
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
@@ -3855,6 +3857,57 @@ int pb_graphic_save(char* fname) {
     fwrite(bits, 1, size, f);
     fclose(f);
     free(bits);
+    return 1;
+}
+
+/* GRAPHIC BITMAP LOAD / CHR SIZE / CELL / CELL SIZE (batch 57) */
+void* pb_graphic_bitmap_load(char* fname) {
+    if (!fname) return 0;
+    return LoadImageA(0, fname, 0, 0, 0, 0x10); /* IMAGE_BITMAP, LR_LOADFROMFILE */
+}
+static int gr_char_w(void) {
+    unsigned char sz[8];
+    for (int i = 0; i < 8; i++) sz[i] = 0;
+    void* old = SelectObject(g_gr_dc, GetStockObject(17)); /* DEFAULT_GUI_FONT */
+    GetTextExtentPoint32A(g_gr_dc, "W", 1, (void*)sz);
+    SelectObject(g_gr_dc, old);
+    int w = sz[0] | (sz[1] << 8) | (sz[2] << 16) | (sz[3] << 24);
+    return w > 0 ? w : 8;
+}
+static int gr_char_h(void) {
+    unsigned char sz[8];
+    for (int i = 0; i < 8; i++) sz[i] = 0;
+    void* old = SelectObject(g_gr_dc, GetStockObject(17));
+    GetTextExtentPoint32A(g_gr_dc, "W", 1, (void*)sz);
+    SelectObject(g_gr_dc, old);
+    int h = sz[4] | (sz[5] << 8) | (sz[6] << 16) | (sz[7] << 24);
+    return h > 0 ? h : 16;
+}
+int pb_graphic_chr_size(char* text, long* w, long* h) {
+    if (!text) text = "";
+    int len = 0;
+    while (text[len]) len++;
+    unsigned char sz[8];
+    for (int i = 0; i < 8; i++) sz[i] = 0;
+    void* old = SelectObject(g_gr_dc, GetStockObject(17));
+    GetTextExtentPoint32A(g_gr_dc, text, len, (void*)sz);
+    SelectObject(g_gr_dc, old);
+    *w = sz[0] | (sz[1] << 8) | (sz[2] << 16) | (sz[3] << 24);
+    *h = sz[4] | (sz[5] << 8) | (sz[6] << 16) | (sz[7] << 24);
+    return 1;
+}
+int pb_graphic_cell_size(long rows, long cols, long* w, long* h) {
+    int cw = gr_char_w();
+    int ch = gr_char_h();
+    *w = cw * cols;
+    *h = ch * rows;
+    return 1;
+}
+int pb_graphic_cell(long row, long col, long* x, long* y) {
+    int cw = gr_char_w();
+    int ch = gr_char_h();
+    *x = cw * col;
+    *y = ch * row;
     return 1;
 }
 
