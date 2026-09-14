@@ -105,6 +105,7 @@ impl Interpreter {
                 }
                 TopLevel::DeclareStmt(_) => {} // skip DECLARE
                 TopLevel::Statement(_) => {}   // will execute below
+                TopLevel::AsmData(_) => {}     // data blob, no runtime effect in interp
             }
         }
 

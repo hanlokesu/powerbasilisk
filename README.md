@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (192 implemented / 109 not implemented / 202 tier-3 DDT).
+> table below (193 implemented / 108 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **192** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **109** documented upstream with no codegen evidence yet.
+> Summary: **193** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **108** documented upstream with no codegen evidence yet.
 > (2026-09-14: +1 official keyword from batch 28 — THREADED thread-local
 > storage declaration, LLVM `thread_local` globals with per-thread copies.
 > Batch 27 added ON CALL, GET$$/PUT$$, MACRO; batch 26 PREFIX, TRY.)
@@ -254,6 +254,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
 | `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
 | `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
+| `ASMDATA / END ASMDATA` | ✅ | 30 (v0.1.24) | read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ` lines + `END ASMDATA`; packed, never aligned; ANSI strings in DB, WIDE UTF-16LE strings in DW; emitted as `@__asmdata_<NAME>` constant; address via `CODEPTR(Name)` |
 | `ASM` (`!` shortcut or `ASM` keyword) | ✅ | 29 (v0.1.23) | LLVM inline assembly — Intel dialect; PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`); mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block (register state preserved); x87 / MMX / SSE / SIMD pass through verbatim; works on both x86-64 and i686 targets |
 | `THREADED` | ✅ | 28 (v0.1.22) | LLVM `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
 | `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
@@ -387,6 +388,24 @@ arrays, and core string/numeric built-ins — **✅**
 
 ## Changelog
 
+### v0.1.24 (2026-09-14) — Batch 30: ASMDATA / END ASMDATA
+
+One more *Not implemented* item moved to *Implemented* (coverage: **193 implemented / 108 not implemented / 202 tier-3 DDT**):
+
+- **ASMDATA / END ASMDATA** — read-only data blocks defined outside any Sub/Function:
+  `ASMDATA BlockName` followed by `DB` / `DW` / `DD` / `DQ` lines and terminated by `END ASMDATA`.
+  Data is packed contiguously and **never aligned** (per the PB manual), so every item's byte offset is
+  exact. ANSI string literals go in `DB`, WIDE (UTF-16LE) string literals go in `DW`; decimal and `&H`
+  hex literals are supported in all four widths. The block is emitted as a `@__asmdata_<NAME>` private
+  constant byte blob and its address is obtained with `CODEPTR(BlockName)` — the PB-documented access
+  path (the ASM-side `LEA`/`MOV ..., Offset Name` form is left to a future batch). Read-back verified
+  byte-for-byte with `PEEK` (BYTE / WORD / DWORD / QUAD).
+- Bug fixed on the way: `PEEK(DWORD, addr)` was mapped to the 2-byte `pb_peek16` helper (batch-5 era), so
+  it returned only the low 16 bits; it now calls `pb_peek32` (4 bytes) like `PEEK(LONG)` already did.
+
+Verified: `examples/batch30_test.bas` (14/14 PASS — byte layout of DB/DW/DD/DQ, ANSI + WIDE strings,
+CODEPTR address), official regression 15/15 ALL PASS, fmt + clippy clean.
+
 ### v0.1.23 (2026-09-14) — Batch 29: Inline ASM (`!` and `ASM` statements)
 
 One more *Not implemented* item moved to *Implemented* (coverage: **192 implemented / 109 not implemented / 202 tier-3 DDT**):
@@ -403,7 +422,7 @@ One more *Not implemented* item moved to *Implemented* (coverage: **192 implemen
   MMX (`PXOR`/`EMMS`) and SSE (`XORPS`) were all compile- and run-verified.
 - Honest limits (documented): one run of consecutive ASM lines preserves registers, but there is no
   label/jump support across statements; callee-saved registers are assumed preserved by the user;
-  `ASMDATA/END ASMDATA` data blocks remain Not implemented (next candidate).
+  `ASMDATA/END ASMDATA` data blocks were shipped in v0.1.24 (next batch).
 
 Verified: `examples/batch29_test.bas` (11/11 PASS on x86-64, incl. x87/MMX/SSE), `examples/batch29_x86_test.bas`
 (32-bit, exit code 0 — avoids the 32-bit `_printf` symbol gap in PRINT, which is a separate upstream issue),

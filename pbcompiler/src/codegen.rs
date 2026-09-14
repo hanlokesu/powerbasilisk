@@ -811,6 +811,10 @@ struct Compiler {
     // module global -- LLVM would reject the duplicate symbol).
     threaded_declared: std::collections::HashSet<String>,
 
+    // ASMDATA blocks: canonical uppercase name -> IR global symbol name.
+    // CODEPTR(BlockName) and ASM Offset/name references resolve through this.
+    asmdata_blocks: std::collections::HashMap<String, String>,
+
     // Name of the global empty string constant (e.g., "@.str.empty")
     empty_string_name: String,
 
@@ -967,6 +971,7 @@ impl Compiler {
             loop_stack: Vec::new(),
             pending_global_arrays: HashMap::new(),
             threaded_declared: std::collections::HashSet::new(),
+            asmdata_blocks: std::collections::HashMap::new(),
             empty_string_name: String::new(),
             type_layouts: HashMap::new(),
             gosub_context: None,
@@ -2043,6 +2048,9 @@ impl Compiler {
                     for dim in dims {
                         self.compile_top_level_dim(dim);
                     }
+                }
+                TopLevel::AsmData(ad) => {
+                    self.compile_asmdata(ad);
                 }
                 _ => {}
             }
@@ -3308,6 +3316,66 @@ impl Compiler {
             }
             _ => Err(PbError::runtime("Not an lvalue".to_string())),
         }
+    }
+
+    /// ASMDATA ... END ASMDATA: pack items into a read-only byte blob global
+    /// (`@__asmdata_<NAME>`), register it so CODEPTR(NAME) resolves to its
+    /// address. Bytes are packed contiguously and never aligned, per PB docs.
+    fn compile_asmdata(&mut self, ad: &AsmDataDecl) {
+        let mut bytes: Vec<u8> = Vec::new();
+        for item in &ad.items {
+            match item {
+                AsmDataItem::Db(vals) => {
+                    for v in vals {
+                        match v {
+                            AsmDataValue::Num(n) => bytes.push(*n as u8),
+                            AsmDataValue::Str(s) => bytes.extend_from_slice(s.as_bytes()),
+                        }
+                    }
+                }
+                AsmDataItem::Dw(vals) => {
+                    for v in vals {
+                        match v {
+                            AsmDataValue::Num(n) => {
+                                let n = *n as u16;
+                                bytes.extend_from_slice(&n.to_le_bytes());
+                            }
+                            AsmDataValue::Str(s) => {
+                                for ch in s.encode_utf16() {
+                                    bytes.extend_from_slice(&ch.to_le_bytes());
+                                }
+                            }
+                        }
+                    }
+                }
+                AsmDataItem::Dd(vals) => {
+                    for v in vals {
+                        match v {
+                            AsmDataValue::Num(n) => {
+                                let n = *n as u32;
+                                bytes.extend_from_slice(&n.to_le_bytes());
+                            }
+                            AsmDataValue::Str(_) => {
+                                // PB does not allow string literals in DD; keep as zeros to stay deterministic
+                                bytes.extend_from_slice(&0u32.to_le_bytes());
+                            }
+                        }
+                    }
+                }
+                AsmDataItem::Dq(vals) => {
+                    for v in vals {
+                        match v {
+                            AsmDataValue::Num(n) => bytes.extend_from_slice(&n.to_le_bytes()),
+                            AsmDataValue::Str(_) => bytes.extend_from_slice(&0u64.to_le_bytes()),
+                        }
+                    }
+                }
+            }
+        }
+        let sym = format!("@__asmdata_{}", ad.name);
+        self.module
+            .add_byte_array_global(sym.trim_start_matches('@'), &bytes);
+        self.asmdata_blocks.insert(ad.name.clone(), sym);
     }
 
     fn compile_top_level_dim(&mut self, dim: &DimStatement) {
@@ -7591,14 +7659,26 @@ impl Compiler {
                     let addr = fb.inttoptr(&av64);
                     match dt.as_str() {
                         "BYTE" | "INTEGER" => fb.call(&IrType::I32, "pb_peek8", &[addr]),
-                        "WORD" | "DWORD" => fb.call(&IrType::I32, "pb_peek16", &[addr]),
-                        "LONG" => fb.call(&IrType::I32, "pb_peek32", &[addr]),
+                        "WORD" => fb.call(&IrType::I32, "pb_peek16", &[addr]),
+                        "DWORD" | "LONG" => fb.call(&IrType::I32, "pb_peek32", &[addr]),
                         "QUAD" => fb.call(&IrType::I64, "pb_peek64", &[addr]),
                         "SINGLE" => fb.call(&IrType::Float, "pb_peekf", &[addr]),
                         "DOUBLE" => fb.call(&IrType::Double, "pb_peekd", &[addr]),
                         _ => fb.call(&IrType::I32, "pb_peek8", &[addr]),
                     }
                 }))
+            }
+            "CODEPTR" => {
+                // CODEPTR(BlockName) — address of an ASMDATA read-only block
+                if let Some(Expr::Variable(n)) = args.first() {
+                    let up = normalize_name(n);
+                    if let Some(sym) = self.asmdata_blocks.get(&up) {
+                        let gv = Val::new(sym.clone(), IrType::Ptr);
+                        return Some(Ok(fb.ptrtoint64(&gv)));
+                    }
+                }
+                // Fall through: CODEPTR of anything else is unsupported
+                None
             }
             "ISINFINITE" | "ISNORMAL" => {
                 // ISINFINITE (x) / ISNORMAL (x) — IEEE-754 checks, -1/0

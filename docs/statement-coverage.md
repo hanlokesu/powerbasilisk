@@ -12,15 +12,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 192 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 193 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 109 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 108 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (192)
+## ✅ Implemented (193)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `ASM` | STATEMENT | LLVM inline assembly: `!` shortcut or `ASM` keyword; Intel dialect, PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`), mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block so register state is preserved; x87 / MMX / SSE / SIMD instructions pass through verbatim (verified FLD1/FSTP, PXOR, EMMS, XORPS on x64; 32-bit build verified via exit-code test) |
+| `ASMDATA / END ASMDATA` | BLOCK | read-only data blocks (outside any Sub/Function): `ASMDATA Name` + DB/DW/DD/DQ lines (ANSI strings in DB, WIDE/UTF-16LE strings in DW) + `END ASMDATA`; packed, never aligned; addressable via `CODEPTR(Name)`; byte blob emitted as `@__asmdata_<NAME>` constant |
 | `TCP OPEN` | STATEMENT | winsock socket/connect/listen/bind; SO_RCVTIMEO |
 | `TCP ACCEPT` | STATEMENT | winsock accept; new file number |
 | `TCP SEND` | STATEMENT | winsock send |
@@ -424,7 +425,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (109, alphabetical)
+## ⬜ Not implemented (108, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -434,7 +435,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
 
 | CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |

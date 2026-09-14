@@ -231,6 +231,24 @@ impl ModuleBuilder {
         writeln!(self.globals, "@{} = global {} {}", name, ty, init).unwrap();
     }
 
+    /// Add a read-only byte-array constant (ASMDATA block).
+    /// Emits `@name = private constant [N x i8] c"\xx\xx..."` — a packed,
+    /// unaligned, never-terminated byte blob usable via CODEPTR(name).
+    pub fn add_byte_array_global(&mut self, name: &str, bytes: &[u8]) {
+        let mut esc = String::new();
+        for &b in bytes {
+            esc.push_str(&format!("\\{:02X}", b));
+        }
+        writeln!(
+            self.globals,
+            "@{} = private constant [{} x i8] c\"{}\"",
+            name,
+            bytes.len(),
+            esc
+        )
+        .unwrap();
+    }
+
     /// Add a thread-local global variable (THREADED TLS storage).
     pub fn add_global_thread_local(&mut self, name: &str, ty: &IrType, init: &str) {
         writeln!(

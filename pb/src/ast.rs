@@ -51,6 +51,28 @@ pub enum TopLevel {
     FunctionDecl(FunctionDecl),
     DeclareStmt(DeclareStmt), // DECLARE SUB/FUNCTION — skip at runtime
     Statement(Statement),     // top-level statements (before PBMAIN)
+    AsmData(AsmDataDecl),     // ASMDATA ... END ASMDATA read-only data block
+}
+
+#[derive(Debug, Clone)]
+pub struct AsmDataDecl {
+    pub name: String, // canonical uppercase block name
+    pub items: Vec<AsmDataItem>,
+    pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub enum AsmDataItem {
+    Db(Vec<AsmDataValue>),
+    Dw(Vec<AsmDataValue>),
+    Dd(Vec<AsmDataValue>),
+    Dq(Vec<AsmDataValue>),
+}
+
+#[derive(Debug, Clone)]
+pub enum AsmDataValue {
+    Num(i64),    // decimal or &H hex literal
+    Str(String), // ANSI literal (DB) or WIDE literal (DW, UTF-16LE)
 }
 
 #[derive(Debug, Clone)]

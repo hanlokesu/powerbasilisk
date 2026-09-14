@@ -237,6 +237,10 @@ impl Parser {
                     }
                 }
             }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("ASMDATA") => {
+                let ad = self.parse_asmdata_decl(line)?;
+                Ok(Some(TopLevel::AsmData(ad)))
+            }
             Token::HashIf => {
                 // Should have been handled by preprocessor, but skip if present
                 self.skip_conditional_block();
@@ -248,6 +252,107 @@ impl Parser {
                 Ok(None)
             }
         }
+    }
+
+    /// ASMDATA BlockName / DB|DW|DD|DQ values... / END ASMDATA
+    fn parse_asmdata_decl(&mut self, line: usize) -> PbResult<AsmDataDecl> {
+        self.advance(); // consume ASMDATA
+        let name = match self.peek().clone() {
+            Token::Identifier(w) => w.to_uppercase(),
+            other => {
+                return Err(PbError::parser(
+                    format!(
+                        "ASMDATA: expected block name after ASMDATA, found {:?}",
+                        other
+                    ),
+                    None,
+                    line,
+                ))
+            }
+        };
+        self.advance();
+        let mut items: Vec<AsmDataItem> = Vec::new();
+        loop {
+            self.skip_eol();
+            if self.at_end() {
+                break;
+            }
+            let tok = self.peek().clone();
+            match tok {
+                Token::Identifier(w) if w.eq_ignore_ascii_case("DB") => {
+                    self.advance();
+                    items.push(AsmDataItem::Db(self.parse_asmdata_values(line)?));
+                }
+                Token::Identifier(w) if w.eq_ignore_ascii_case("DW") => {
+                    self.advance();
+                    items.push(AsmDataItem::Dw(self.parse_asmdata_values(line)?));
+                }
+                Token::Identifier(w) if w.eq_ignore_ascii_case("DD") => {
+                    self.advance();
+                    items.push(AsmDataItem::Dd(self.parse_asmdata_values(line)?));
+                }
+                Token::Identifier(w) if w.eq_ignore_ascii_case("DQ") => {
+                    self.advance();
+                    items.push(AsmDataItem::Dq(self.parse_asmdata_values(line)?));
+                }
+                Token::End => {
+                    self.advance();
+                    // expect ASMDATA after END
+                    if let Token::Identifier(w2) = self.peek().clone() {
+                        if w2.eq_ignore_ascii_case("ASMDATA") {
+                            self.advance();
+                            self.consume_to_eol();
+                            break;
+                        }
+                    }
+                    break;
+                }
+                _ => {
+                    // tolerate unknown lines inside the block (skip)
+                    self.consume_to_eol();
+                }
+            }
+        }
+        Ok(AsmDataDecl { name, items, line })
+    }
+
+    fn parse_asmdata_values(&mut self, line: usize) -> PbResult<Vec<AsmDataValue>> {
+        let mut values: Vec<AsmDataValue> = Vec::new();
+        loop {
+            let tok = self.peek().clone();
+            match tok {
+                Token::IntegerLiteral(n) => {
+                    self.advance();
+                    values.push(AsmDataValue::Num(n));
+                }
+                Token::StringLiteral(s) => {
+                    self.advance();
+                    values.push(AsmDataValue::Str(s));
+                }
+                Token::Minus => {
+                    self.advance();
+                    match self.peek().clone() {
+                        Token::IntegerLiteral(n) => {
+                            self.advance();
+                            values.push(AsmDataValue::Num(-n));
+                        }
+                        _ => break,
+                    }
+                }
+                Token::Comma => {
+                    self.advance();
+                }
+                _ => break,
+            }
+        }
+        if values.is_empty() {
+            return Err(PbError::parser(
+                "ASMDATA: DB/DW/DD/DQ line needs at least one value",
+                None,
+                line,
+            ));
+        }
+        Ok(values)
     }
 
     fn skip_conditional_block(&mut self) {
