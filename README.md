@@ -35,6 +35,12 @@ silently dropped during code generation.
   found, a warning is printed and linking will fail with a clear message.
 
 ### New Built-ins (previously silently discarded)
+> **Early snapshot** — the first implementations from the initial releases of
+> this fork (derived from [benstopics/powerbasilisk](https://github.com/benstopics/powerbasilisk)).
+> Later batches (1-27) were added after this table was written; the complete,
+> current list of every statement/function this branch implements is in the
+> [Newly implemented by this branch](#newly-implemented-by-this-branch)
+> table below (190 implemented / 111 not implemented / 202 tier-3 DDT).
 | PB statement / function | Maps to | Notes |
 | --- | --- | --- |
 | `MSGBOX text$ [, style& [, title$]]` | `MessageBoxA` (user32) | modal message box |
