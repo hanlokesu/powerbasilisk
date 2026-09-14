@@ -492,7 +492,7 @@ Two more *Not implemented* items moved to *Implemented*
   EXIT TRY, nested TRY). Official regression **14/14 ALL PASS**,
   fmt + clippy clean.
 
-### v0.1.19 (2026-09-12) — Batch 25: ON ERROR / RESUME / REGISTER (3 statements)
+### v0.1.19 (2026-09-14) — Batch 25: ON ERROR / RESUME / REGISTER (3 statements)
 
 Three more *Not implemented* items moved to *Implemented*
 (coverage: **184 implemented / 117 not implemented / 202 tier-3 DDT**):
@@ -727,7 +727,7 @@ from the unimplemented list.
 - Tests: `examples/meta_test.bas` (compiles clean, runs, no unimplemented report),
   official regression **15/15 ALL PASS**, fmt + clippy clean.
 
-### v0.1.10 (2026-09-12) — Batch 17: GLOBALMEM, MOUSEPTR, UCODEPAGE
+### v0.1.10 (2026-09-13) — Batch 17: GLOBALMEM, MOUSEPTR, UCODEPAGE
 
 - **GLOBALMEM ALLOC count TO h&** — allocate movable global memory
   (`GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT)`). The 64-bit handle is stored in a
