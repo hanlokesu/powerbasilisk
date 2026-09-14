@@ -260,6 +260,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET DC` | Statement | pb_graphic_get_dc (current device context) |
 | `GRAPHIC GET MIX` | Statement | pb_graphic_get_mix (ROP mode state) |
 | `GRAPHIC SET MIX` | Statement | pb_graphic_set_mix (ROP mode state) |
+| `GRAPHIC SET PIXEL` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
+| `GRAPHIC GET SIZE` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
+| `GRAPHIC SET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
+| `GRAPHIC GET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -378,9 +382,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET PPI | STATEMENT |
 | GRAPHIC GET SCALE | STATEMENT |
 | GRAPHIC GET SCROLLTEXT | STATEMENT |
-| GRAPHIC GET SIZE | STATEMENT |
 | GRAPHIC GET STRETCHMODE | STATEMENT |
-| GRAPHIC GET TEXTALIGN | STATEMENT |
 | GRAPHIC GET VIEW | STATEMENT |
 | GRAPHIC GET WORDWRAP | STATEMENT |
 | GRAPHIC GET WRAP | STATEMENT |
@@ -410,12 +412,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SET LOC | STATEMENT |
 | GRAPHIC SET MIX | STATEMENT |
 | GRAPHIC SET OVERLAP | STATEMENT |
-| GRAPHIC SET PIXEL | STATEMENT |
 | GRAPHIC SET POS | STATEMENT |
 | GRAPHIC SET SCROLLTEXT | STATEMENT |
 | GRAPHIC SET SIZE | STATEMENT |
 | GRAPHIC SET STRETCHMODE | STATEMENT |
-| GRAPHIC SET TEXTALIGN | STATEMENT |
 | GRAPHIC SET VIEW | STATEMENT |
 | GRAPHIC SET VIRTUAL | STATEMENT |
 | GRAPHIC SET WORDWRAP | STATEMENT |

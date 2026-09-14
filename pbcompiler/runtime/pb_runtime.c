@@ -79,9 +79,11 @@ __declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, 
 __declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int count);
 __declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name, unsigned int type, int cx, int cy, unsigned int fuLoad);
 __declspec(dllimport) int __stdcall GetTextExtentPoint32A(void* hdc, const char* str, int count, void* size);
+__declspec(dllimport) unsigned int __stdcall SetPixel(void* hdc, int x, int y, unsigned int color);
 typedef struct { int x; int y; } pb_pt;
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
+__declspec(dllimport) int __stdcall SetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, const void* lpvBits, const void* lpbmi, unsigned int usage);
 
 
 
@@ -3860,6 +3862,73 @@ int pb_graphic_save(char* fname) {
     return 1;
 }
 
+static int gr_bmp_dim(void* bmp, int* w, int* h) {
+    unsigned char bm[32];
+    for (int i = 0; i < 32; i++) bm[i] = 0;
+    if (!GetObjectA(bmp, 32, (void*)bm)) return 0;
+    *w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | ((int)bm[7] << 24);
+    *h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | ((int)bm[11] << 24);
+    if (*h < 0) *h = -*h;
+    return 1;
+}
+static unsigned char* gr_read_bits(void* dc, void* bmp, int w, int h, void* bi) {
+    int stride = ((w * 32 + 31) / 32) * 4;
+    unsigned char* buf = (unsigned char*)malloc(stride * h);
+    if (!buf) return 0;
+    int ok = GetDIBits(dc, bmp, 0, (unsigned int)h, buf, bi, 0);
+    if (!ok) { free(buf); return 0; }
+    return buf;
+}
+static void gr_write_bits(void* dc, void* bmp, int w, int h, void* bi, unsigned char* buf) {
+    SetDIBits(dc, bmp, 0, (unsigned int)h, buf, bi, 0);
+}
+
+/* GRAPHIC SET PIXEL / GET SIZE / SET+GET TEXTALIGN (batch 59) */
+static long g_gr_textalign = 0;
+int pb_graphic_set_pixel(long x, long y, long color) {
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    int w = 0, h = 0;
+    if (!gr_bmp_dim(g_gr_bmp, &w, &h)) return 0;
+    if (x < 0 || y < 0 || x >= w || y >= h) return 0;
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    bi[0] = 40;
+    bi[4] = (unsigned char)(w & 255); bi[5] = (unsigned char)((w >> 8) & 255);
+    bi[6] = (unsigned char)((w >> 16) & 255); bi[7] = (unsigned char)((w >> 24) & 255);
+    int nh = -h;
+    bi[8] = (unsigned char)(nh & 255); bi[9] = (unsigned char)((nh >> 8) & 255);
+    bi[10] = (unsigned char)((nh >> 16) & 255); bi[11] = (unsigned char)((nh >> 24) & 255);
+    bi[12] = 1; bi[14] = 32;
+    int stride = ((w * 32 + 31) / 32) * 4;
+    unsigned char* buf = gr_read_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi);
+    if (!buf) return 0;
+    unsigned char* px = buf + (unsigned long)y * stride + (unsigned long)x * 4;
+    px[0] = (unsigned char)(color & 255);
+    px[1] = (unsigned char)((color >> 8) & 255);
+    px[2] = (unsigned char)((color >> 16) & 255);
+    px[3] = 0;
+    gr_write_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi, buf);
+    free(buf);
+    return 1;
+}
+int pb_graphic_get_size(long* w, long* h) {
+    if (!g_gr_bmp) return 0;
+    unsigned char bm[32];
+    for (int i = 0; i < 32; i++) bm[i] = 0;
+    GetObjectA(g_gr_bmp, 32, (void*)bm);
+    *w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | ((long)bm[7] << 24);
+    *h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | ((long)bm[11] << 24);
+    return 1;
+}
+int pb_graphic_set_textalign(long align) {
+    g_gr_textalign = align;
+    return 1;
+}
+int pb_graphic_get_textalign(long* align) {
+    *align = g_gr_textalign;
+    return 1;
+}
+
 /* GRAPHIC GET CANVAS / GET DC / GET MIX / SET MIX (batch 58) */
 static long g_gr_mix = 13; /* R2_COPYPEN default */
 void* pb_graphic_get_canvas(void) {
@@ -3971,8 +4040,25 @@ int pb_graphic_color(unsigned long fore, unsigned long back) {
     return 1;
 }
 int pb_graphic_get_pixel(int x, int y, unsigned long* out) {
-    if (!g_gr_dc) return 0;
-    *out = GetPixel(g_gr_dc, x, y);
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    int w = 0, h = 0;
+    if (!gr_bmp_dim(g_gr_bmp, &w, &h)) return 0;
+    if (x < 0 || y < 0 || x >= w || y >= h) return 0;
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    bi[0] = 40;
+    bi[4] = (unsigned char)(w & 255); bi[5] = (unsigned char)((w >> 8) & 255);
+    bi[6] = (unsigned char)((w >> 16) & 255); bi[7] = (unsigned char)((w >> 24) & 255);
+    int nh = -h;
+    bi[8] = (unsigned char)(nh & 255); bi[9] = (unsigned char)((nh >> 8) & 255);
+    bi[10] = (unsigned char)((nh >> 16) & 255); bi[11] = (unsigned char)((nh >> 24) & 255);
+    bi[12] = 1; bi[14] = 32;
+    int stride = ((w * 32 + 31) / 32) * 4;
+    unsigned char* buf = gr_read_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi);
+    if (!buf) return 0;
+    unsigned char* px = buf + (unsigned long)y * stride + (unsigned long)x * 4;
+    *out = ((unsigned long)px[2] << 16) | ((unsigned long)px[1] << 8) | px[0];
+    free(buf);
     return 1;
 }
 int pb_graphic_copy(int x1, int y1, int x2, int y2, int x3, int y3) {

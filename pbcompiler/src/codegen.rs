@@ -1899,6 +1899,30 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        self.module.declare_function(
+            "pb_graphic_set_pixel",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_textalign",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_textalign",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_get_canvas", &IrType::I64, &[], false);
         self.module
@@ -4671,6 +4695,32 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_SET_PIXEL" => {
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                let c = self.compile_expr(fb, &call.args[2])?;
+                let cv = self.convert_value(fb, &c, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_set_pixel", &[xv, yv, cv]);
+            }
+            "GRAPHIC_GET_SIZE" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_graphic_get_size", &[wp, hp]);
+                    }
+                }
+            }
+            "GRAPHIC_SET_TEXTALIGN" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let av = self.convert_value(fb, &a0, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_set_textalign", &[av]);
+            }
+            "GRAPHIC_GET_TEXTALIGN" => {
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_textalign", &[ptr]);
+                }
             }
             "GRAPHIC_GET_CANVAS" | "GRAPHIC_GET_DC" => {
                 let f = if call.name == "GRAPHIC_GET_CANVAS" {

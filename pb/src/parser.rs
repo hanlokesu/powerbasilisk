@@ -1936,8 +1936,50 @@ impl Parser {
                     }
                     if gop == "GET" {
                         // GRAPHIC GET CANVAS TO hbmp | GRAPHIC GET DC TO hdc | GRAPHIC GET MIX TO mix&
+                        // GRAPHIC GET SIZE TO w,h | GRAPHIC GET TEXTALIGN TO align&
                         self.advance();
                         let sub = self.peek_plain_upper();
+                        if sub == "SIZE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_SIZE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "TEXTALIGN" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_TEXTALIGN".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
+                        if sub == "PIXEL" {
+                            // GRAPHIC GET PIXEL (x,y) TO dst&
+                            self.advance();
+                            self.expect(&Token::LParen)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_PIXEL".to_string(),
+                                args: vec![x, y, dst],
+                                line,
+                            }));
+                        }
                         if sub == "CANVAS" || sub == "DC" || sub == "MIX" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -1956,9 +1998,41 @@ impl Parser {
                         }
                     }
                     if gop == "SET" {
-                        // GRAPHIC SET MIX (mix&)
+                        // GRAPHIC SET MIX (mix&) | GRAPHIC SET PIXEL (x,y),color | GRAPHIC SET TEXTALIGN (align&)
                         self.advance();
                         let sub = self.peek_plain_upper();
+                        if sub == "PIXEL" {
+                            self.advance();
+                            self.expect(&Token::LParen)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            self.expect(&Token::Comma)?;
+                            let color = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_PIXEL".to_string(),
+                                args: vec![x, y, color],
+                                line,
+                            }));
+                        }
+                        if sub == "TEXTALIGN" {
+                            self.advance();
+                            if matches!(self.peek(), Token::LParen) {
+                                self.advance();
+                            }
+                            let align = self.parse_expression()?;
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_TEXTALIGN".to_string(),
+                                args: vec![align],
+                                line,
+                            }));
+                        }
                         if sub == "MIX" {
                             self.advance();
                             if matches!(self.peek(), Token::LParen) {
