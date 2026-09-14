@@ -227,6 +227,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
 > Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
+> (2026-09-15: +10 official function keywords from batch 37 — CVx binary-string conversion family CVBYT / CVW / CVL / CVDWD / CVQ / CVS / CVD / CVE / CVCUR / CVCUX (read little-endian bytes at a 1-based offset); this also fixed CVD and CVS, which previously behaved like VAL (text-to-number) instead of reading binary bytes — they now match the documented semantics.
 > (2026-09-15: +1 official keyword from batch 36 — MKE$ (8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler rather than the official 10-byte 80-bit format, so MKE$ and MKD$ yield the same bytes — documented difference).
 > (2026-09-15: +2 official keywords from batch 35 — REGEXPR / REGREPL (documented regex subset: literals, ., *, +, ?, ^, $, |, [class], \ escapes incl. \b word boundary and \c case toggle, () groups; leftmost-longest, case-insensitive default; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&] and REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$ with \00 = whole match; Tags \01-\99 and shortest-match \s not implemented, documented as subset).
 > (2026-09-15: +1 official keyword from batch 34 — PROFILE (per-procedure call counts and elapsed ms collected by the call-stack instrumentation; PROFILE filename$ writes "<Name>, <Call Count>, <Time mSec>" per line, PB-compatible).
@@ -307,7 +308,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) |
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
 | `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
-| `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
+| `CVBYT` / `CVW` / `CVL` / `CVDWD` / `CVQ` | ✅ | 37 (v0.1.31) | `pb_cv_int` — read 1/2/4/4/8 little-endian bytes into BYTE/WORD/LONG/DWORD/QUAD, 1-based optional offset (batch 37) |
+| `CVS` / `CVD` / `CVE` / `CVCUR` / `CVCUX` | ✅ | 37 (v0.1.31) | `pb_cv_dbl` — read 4/8-byte little-endian into SINGLE/DOUBLE/EXT (CUR/CUX map to DOUBLE here), 1-based optional offset (batch 37) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -407,6 +410,12 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.31 (2026-09-15) — Batch 37: CVx binary-string conversion family
+- **CVBYT / CVW / CVL / CVDWD / CVQ / CVS / CVD / CVE / CVCUR / CVCUX** — ten documented conversion functions that read little-endian binary strings (1-based optional offset, default 1): CVBYT → BYTE, CVW → WORD, CVL → LONG (signed), CVDWD → DWORD (unsigned), CVQ → QUAD, CVS → SINGLE (4 bytes), CVD → DOUBLE (8 bytes), CVE → EXT (8-byte double here), CVCUR / CVCUX → DOUBLE.
+- **Bug fix:** CVD and CVS previously went through the generic text-to-number path (like VAL); they now read the documented binary bytes. Round-trips verified against the MKx family: MKL$(123456) → CVL() = 123456, MKS$(1.5) → CVS() = 1.5, etc.
+- Coverage unchanged: **200 implemented / 101 not implemented / 202 tier-3 DDT** (CVx entries are function-class keywords outside the statement CSV).
+- Tests: examples/batch37_test.bas (12/12), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.30 (2026-09-15) — Batch 36: MKE$ (EXT = 8-byte double)
 - **MKE$** — one more *Not implemented* item moved to *Implemented* (coverage: **200 implemented / 101 not implemented / 202 tier-3 DDT**).

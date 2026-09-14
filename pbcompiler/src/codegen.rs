@@ -1575,6 +1575,18 @@ impl Compiler {
         self.module
             .declare_function("pb_mkdouble", &IrType::Ptr, &[IrType::Double], false);
         self.module.declare_function(
+            "pb_cv_int",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_cv_dbl",
+            &IrType::Double,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
             "pb_desktop_get_client",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr],
@@ -7902,8 +7914,10 @@ impl Compiler {
             "TAN" => Some(self.builtin_unary_math(fb, args, "tan")),
             "ATN" => Some(self.builtin_unary_math(fb, args, "atan")),
             "CINT" | "CLNG" | "CDWD" => Some(self.builtin_to_i32(fb, args)),
-            "CDBL" | "CVD" => Some(self.builtin_to_f64(fb, args)),
-            "CSNG" | "CVS" => Some(self.builtin_to_f32(fb, args)),
+            "CDBL" => Some(self.builtin_to_f64(fb, args)),
+            "CVBYT" | "CVW" | "CVL" | "CVDWD" | "CVQ" => Some(self.builtin_cv_int(fb, args, name)),
+            "CSNG" => Some(self.builtin_to_f32(fb, args)),
+            "CVS" | "CVD" | "CVE" | "CVCUR" | "CVCUX" => Some(self.builtin_cv_dbl(fb, args, name)),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8539,6 +8553,56 @@ impl Compiler {
     fn builtin_to_i32(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
         let val = self.compile_expr(fb, &args[0])?;
         Ok(self.to_i32(fb, &val))
+    }
+
+    // Batch 37: CVx — read little-endian binary strings. off is 1-based, default 1.
+    fn builtin_cv_int(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        name: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("CVx$ requires 1 argument"));
+        }
+        let (n, mode) = match name {
+            "CVBYT" => (1, 0),
+            "CVW" => (2, 0),
+            "CVDWD" => (4, 0),
+            "CVL" => (4, 1),
+            _ => (8, 1), // CVQ
+        };
+        let sval = self.compile_expr(fb, &args[0])?;
+        let off = if args.len() >= 2 {
+            let o = self.compile_expr(fb, &args[1])?;
+            self.to_i64(fb, &o)
+        } else {
+            fb.const_i32(1)
+        };
+        Ok(fb.call(
+            &IrType::I64,
+            "pb_cv_int",
+            &[sval, off, fb.const_i32(n), fb.const_i32(mode)],
+        ))
+    }
+    fn builtin_cv_dbl(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        name: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("CVx$ requires 1 argument"));
+        }
+        let n = if name == "CVS" { 4 } else { 8 };
+        let sval = self.compile_expr(fb, &args[0])?;
+        let off = if args.len() >= 2 {
+            let o = self.compile_expr(fb, &args[1])?;
+            self.to_i64(fb, &o)
+        } else {
+            fb.const_i32(1)
+        };
+        Ok(fb.call(&IrType::Double, "pb_cv_dbl", &[sval, off, fb.const_i32(n)]))
     }
 
     fn builtin_to_f64(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

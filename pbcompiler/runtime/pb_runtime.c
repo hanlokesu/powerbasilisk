@@ -270,6 +270,37 @@ char* pb_mkquad(long long v) {
 char* pb_mksingle(float v) {
     return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
 }
+/* Batch 37: CVx family — read little-endian binary strings (PB payload pointer).
+   off is 1-based character position, default 1.
+   mode 0 = zero-extend (BYTE/WORD/DWORD), 1 = sign-extend (LONG/QUAD). */
+long long pb_cv_int(char* s, long long off, long long n, long long mode) {
+    unsigned char* p = (unsigned char*)s;
+    unsigned long long v = 0;
+    long long i;
+    if (off < 1) off = 1;
+    for (i = 0; i < n; i++) v |= ((unsigned long long)p[off - 1 + i]) << (8 * i);
+    if (mode == 1) {
+        if (n == 4) return (long long)(long)(int)v;
+        return (long long)v;
+    }
+    if (n == 1) return (long long)(v & 0xFFu);
+    if (n == 2) return (long long)(v & 0xFFFFu);
+    if (n == 4) return (long long)(v & 0xFFFFFFFFu);
+    return (long long)v;
+}
+double pb_cv_dbl(char* s, long long off, long long n) {
+    unsigned char* p = (unsigned char*)s;
+    if (off < 1) off = 1;
+    if (n == 4) {
+        float f;
+        memcpy(&f, p + off - 1, 4);
+        return (double)f;
+    }
+    double d;
+    memcpy(&d, p + off - 1, 8);
+    return d;
+}
+
 char* pb_mkdouble(double v) {
     return pb_bstr_alloc((const char*)&v, 8);      /* MKD$ */
 }
