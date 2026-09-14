@@ -1846,6 +1846,54 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_graphic_width", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_graphic_arc",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_pie",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_polyline",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_paint",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_style", &IrType::I32, &[IrType::I32], false);
         self.module
@@ -4815,6 +4863,81 @@ impl Compiler {
                     };
                     fb.call_void("pb_graphic_polygon", &[ptr, fb.const_i32(npts as i32), col]);
                 }
+            }
+            "GRAPHIC_POLYLINE" => {
+                // args: x1,y1,x2,y2,... [, color&]
+                let ncoords = call.args.len() - if call.args.len() % 2 == 1 { 1 } else { 0 };
+                let npts = ncoords / 2;
+                if npts >= 2 {
+                    let arrty = IrType::Array(npts * 2, Box::new(IrType::I32));
+                    let ptr = fb.alloca(&arrty);
+                    for i in 0..ncoords {
+                        let v = self.compile_expr(fb, &call.args[i])?;
+                        let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                        let elem = fb.gep_byte(&ptr, &fb.const_i32((i as i32) * 4));
+                        fb.store(&iv, &elem);
+                    }
+                    let col = if call.args.len() % 2 == 1 {
+                        let e = self.compile_expr(fb, call.args.last().unwrap())?;
+                        self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call_void(
+                        "pb_graphic_polyline",
+                        &[ptr, fb.const_i32(npts as i32), col],
+                    );
+                }
+            }
+            "GRAPHIC_ARC" => {
+                // args: x1,y1,x2,y2,start,end[,color]
+                let mut a = Vec::new();
+                for i in 0..6.min(call.args.len()) {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    a.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                let col = if call.args.len() > 6 {
+                    let e = self.compile_expr(fb, &call.args[6])?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                a.push(col);
+                fb.call_void("pb_graphic_arc", &a);
+            }
+            "GRAPHIC_PIE" => {
+                // args: x1,y1,x2,y2,start,end[,color[,fillcolor[,fillstyle]]]
+                let mut a = Vec::new();
+                for i in 0..6.min(call.args.len()) {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    a.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                for i in 6..9 {
+                    if i < call.args.len() {
+                        let e = self.compile_expr(fb, &call.args[i])?;
+                        a.push(self.convert_value(fb, &e, &IrType::I32, &PbType::Long));
+                    } else {
+                        a.push(fb.const_i32(0));
+                    }
+                }
+                fb.call_void("pb_graphic_pie", &a);
+            }
+            "GRAPHIC_PAINT" => {
+                // args: x,y[,fill[,border[,style]]]
+                let mut a = Vec::new();
+                for i in 0..2.min(call.args.len()) {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    a.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                for i in 2..5 {
+                    if i < call.args.len() {
+                        let e = self.compile_expr(fb, &call.args[i])?;
+                        a.push(self.convert_value(fb, &e, &IrType::I32, &PbType::Long));
+                    } else {
+                        a.push(fb.const_i32(0));
+                    }
+                }
+                fb.call_void("pb_graphic_paint", &a);
             }
             "GRAPHIC_GET_CLIENT" | "GRAPHIC_GET_LOC" => {
                 let f = if call.name == "GRAPHIC_GET_CLIENT" {

@@ -264,6 +264,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET SIZE` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
 | `GRAPHIC SET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
 | `GRAPHIC GET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
+| `GRAPHIC ARC` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
+| `GRAPHIC PIE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
+| `GRAPHIC POLYLINE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
+| `GRAPHIC PAINT` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -359,7 +363,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DIALOG TRAXOMATIC | STATEMENT |
 | DIALOG UNITS | STATEMENT |
 | DIALOG XLAT | STATEMENT |
-| GRAPHIC ARC | STATEMENT |
 | GRAPHIC BITMAP CAPTURE | STATEMENT |
 | GRAPHIC BITMAP LOAD | STATEMENT |
 | GRAPHIC CELL | STATEMENT |
@@ -392,10 +395,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC INPUT FLUSH | STATEMENT |
 | GRAPHIC INSTAT | STATEMENT |
 | GRAPHIC LINE INPUT | STATEMENT |
-| GRAPHIC PAINT | STATEMENT |
-| GRAPHIC PIE | STATEMENT |
 | GRAPHIC POLYGON | STATEMENT |
-| GRAPHIC POLYLINE | STATEMENT |
 | GRAPHIC PRINT | STATEMENT |
 | GRAPHIC REDRAW | STATEMENT |
 | GRAPHIC RENDER | STATEMENT |

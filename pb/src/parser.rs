@@ -2265,6 +2265,97 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "ARC" || gop == "PIE" {
+                        // GRAPHIC ARC (x1,y1)-(x2,y2), start, end [, color& [, ...]]
+                        self.advance();
+                        let mut args = Vec::new();
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::Minus)?;
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if gop == "ARC" {
+                                "GRAPHIC_ARC".to_string()
+                            } else {
+                                "GRAPHIC_PIE".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "POLYLINE" {
+                        // GRAPHIC POLYLINE (x1,y1)-(x2,y2)-... [, color&]
+                        self.advance();
+                        let mut args = Vec::new();
+                        while matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                            if matches!(self.peek(), Token::Minus) {
+                                self.advance();
+                            }
+                        }
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_POLYLINE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "PAINT" {
+                        // GRAPHIC PAINT [BORDER|REPLACE] [STEP] (x,y) [, fill& [, border& [, style&]]]
+                        self.advance();
+                        let mut args = Vec::new();
+                        loop {
+                            let u = self.peek_plain_upper();
+                            if u == "BORDER" || u == "REPLACE" || u == "STEP" {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_PAINT".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if gop == "LINE" || gop == "BOX" || gop == "ELLIPSE" {
                         self.advance();
                         let mut args = Vec::new();

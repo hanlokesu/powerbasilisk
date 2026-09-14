@@ -74,6 +74,10 @@ __declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt
 __declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
+__declspec(dllimport) int __stdcall Arc(void* hdc, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
+__declspec(dllimport) int __stdcall Pie(void* hdc, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4);
+__declspec(dllimport) int __stdcall Polyline(void* hdc, const void* apt, int cpt);
+__declspec(dllimport) int __stdcall FloodFill(void* hdc, int x, int y, unsigned long color);
 __declspec(dllimport) unsigned long __stdcall GetPixel(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, int w, int h, void* hdcSrc, int xSrc, int ySrc, unsigned long rop);
 __declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int count);
@@ -3903,9 +3907,9 @@ int pb_graphic_set_pixel(long x, long y, long color) {
     unsigned char* buf = gr_read_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi);
     if (!buf) return 0;
     unsigned char* px = buf + (unsigned long)y * stride + (unsigned long)x * 4;
-    px[0] = (unsigned char)(color & 255);
+    px[0] = (unsigned char)((color >> 16) & 255);
     px[1] = (unsigned char)((color >> 8) & 255);
-    px[2] = (unsigned char)((color >> 16) & 255);
+    px[2] = (unsigned char)(color & 255);
     px[3] = 0;
     gr_write_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi, buf);
     free(buf);
@@ -4057,7 +4061,7 @@ int pb_graphic_get_pixel(int x, int y, unsigned long* out) {
     unsigned char* buf = gr_read_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi);
     if (!buf) return 0;
     unsigned char* px = buf + (unsigned long)y * stride + (unsigned long)x * 4;
-    *out = ((unsigned long)px[2] << 16) | ((unsigned long)px[1] << 8) | px[0];
+    *out = ((unsigned long)px[0] << 16) | ((unsigned long)px[1] << 8) | px[2];
     free(buf);
     return 1;
 }
@@ -4104,6 +4108,61 @@ int pb_graphic_ellipse(int x1, int y1, int x2, int y2, int color, int fillcolor,
     SelectObject(g_gr_dc, oldb);
     if (pen) DeleteObject(pen);
     if (fillstyle && br) DeleteObject(br);
+    return ok ? 1 : 0;
+}
+
+/* GRAPHIC ARC / PIE / POLYLINE / PAINT (batch 60) */
+static void pb_angle_point(int cx, int cy, int rx, int ry, int deg, int* px, int* py) {
+    double rad = (double)deg * 3.141592653589793 / 180.0;
+    *px = (int)(cx + (double)rx * cos(rad));
+    *py = (int)(cy - (double)ry * sin(rad));
+}
+int pb_graphic_arc(int x1, int y1, int x2, int y2, int start, int end, int color) {
+    if (!g_gr_dc) return 0;
+    int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, rx = (x2 - x1) / 2, ry = (y2 - y1) / 2;
+    int sx = 0, sy = 0, ex = 0, ey = 0;
+    pb_angle_point(cx, cy, rx, ry, start, &sx, &sy);
+    pb_angle_point(cx, cy, rx, ry, end, &ex, &ey);
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
+    void* old = SelectObject(g_gr_dc, pen);
+    int ok = Arc(g_gr_dc, x1, y1, x2, y2, sx, sy, ex, ey);
+    SelectObject(g_gr_dc, old);
+    if (pen) DeleteObject(pen);
+    return ok ? 1 : 0;
+}
+int pb_graphic_pie(int x1, int y1, int x2, int y2, int start, int end, int color, int fillcolor, int fillstyle) {
+    if (!g_gr_dc) return 0;
+    int cx = (x1 + x2) / 2, cy = (y1 + y2) / 2, rx = (x2 - x1) / 2, ry = (y2 - y1) / 2;
+    int sx = 0, sy = 0, ex = 0, ey = 0;
+    pb_angle_point(cx, cy, rx, ry, start, &sx, &sy);
+    pb_angle_point(cx, cy, rx, ry, end, &ex, &ey);
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
+    void* oldp = SelectObject(g_gr_dc, pen);
+    void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5);
+    void* oldb = SelectObject(g_gr_dc, br);
+    int ok = Pie(g_gr_dc, x1, y1, x2, y2, sx, sy, ex, ey);
+    SelectObject(g_gr_dc, oldp);
+    SelectObject(g_gr_dc, oldb);
+    if (pen) DeleteObject(pen);
+    if (fillstyle && br) DeleteObject(br);
+    return ok ? 1 : 0;
+}
+int pb_graphic_polyline(long* pts, int npts, int color) {
+    if (!g_gr_dc || npts < 2) return 0;
+    void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
+    void* old = SelectObject(g_gr_dc, pen);
+    int ok = Polyline(g_gr_dc, (const void*)pts, npts);
+    SelectObject(g_gr_dc, old);
+    if (pen) DeleteObject(pen);
+    return ok ? 1 : 0;
+}
+int pb_graphic_paint(int x, int y, int fillcolor, int border, int fillstyle) {
+    if (!g_gr_dc) return 0;
+    void* br = CreateSolidBrush((unsigned long)(unsigned int)fillcolor);
+    void* oldb = SelectObject(g_gr_dc, br);
+    int ok = FloodFill(g_gr_dc, x, y, (unsigned long)(unsigned int)border);
+    SelectObject(g_gr_dc, oldb);
+    if (br) DeleteObject(br);
     return ok ? 1 : 0;
 }
 
