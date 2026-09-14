@@ -1312,6 +1312,47 @@ char* pb_field_get(pb_field_t* fv) {
     return out;
 }
 
+/* ===== Batch 33: CALLSTK call-stack tracing =====
+   codegen pushes the procedure name at every function entry and pops at every
+   exit. CALLSTKCOUNT = current depth (1 = PBMAIN); CALLSTK$(n) is 1-based
+   (1 = innermost). Parameter VALUES are not captured (names only). */
+#define PB_CALLSTK_MAX 256
+static const char* pb_callstk_names[PB_CALLSTK_MAX];
+static int pb_callstk_depth = 0;
+
+void pb_callstk_push(const char* name) {
+    if (pb_callstk_depth < PB_CALLSTK_MAX) pb_callstk_names[pb_callstk_depth++] = name;
+}
+
+void pb_callstk_pop(void) {
+    if (pb_callstk_depth > 0) pb_callstk_depth--;
+}
+
+long long pb_callstk_count(void) {
+    return (long long)pb_callstk_depth;
+}
+
+/* CALLSTK$(n): 1-based from the innermost frame; empty string when out of range */
+char* pb_callstk_get(long long n) {
+    if (n < 1 || n > pb_callstk_depth) return pb_bstr_alloc("", 0);
+    const char* nm = pb_callstk_names[pb_callstk_depth - (int)n];
+    if (!nm) nm = "?";
+    return pb_bstr_alloc(nm, (int)strlen(nm));
+}
+
+/* CALLSTK filename$: write every frame, innermost first, one per line */
+void pb_callstk_dump(const char* filename) {
+    if (!filename || !filename[0]) return;
+    FILE* f = fopen(filename, "w");
+    if (!f) return;
+    for (int i = pb_callstk_depth - 1; i >= 0; i--) {
+        const char* nm = pb_callstk_names[i];
+        if (!nm) nm = "?";
+        fprintf(f, "%s\n", nm);
+    }
+    fclose(f);
+}
+
 /* ===== Batch 32: MAT matrix algebra =====
    Arrays are flat element buffers; elem_size is 1/2/4/8; is_float selects
    SINGLE/DOUBLE element decoding (ints are sign-extended, floats IEEE).

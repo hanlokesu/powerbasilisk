@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-15 (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 194 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 196 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 107 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 105 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (193)
+## ✅ Implemented (196)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -203,6 +203,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `TRACE` | STATEMENT | PB/Win + PB/CC | TRACE NEW/ON/OFF/PRINT/CLOSE explicit log file (batch 22) |
 | `IMPORT` | STATEMENT | PB/Win + PB/CC | IMPORT ADDR LoadLibraryA+GetProcAddress into QUAD vars (batch 22) |
 | `CALL DWORD` | STATEMENT | PB/Win + PB/CC | indirect call via inttoptr; USING args + TO result (batch 22) |
+| CALLSTK | STATEMENT | PB/Win + PB/CC | CALLSTKCOUNT depth / CALLSTK$(n) frame names / CALLSTK filename$ file dump (batch 33) |
 | `WINDOW SET` | STATEMENT | PB/Win only | SetConsoleTitleA console title; hwnd ignored (batch 23) |
 | `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
 | `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
@@ -427,7 +428,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (108, alphabetical)
+## ⬜ Not implemented (105, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -438,7 +439,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
 
-| CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
 | DISPLAY COLOR | STATEMENT | PB/Win only | Established |

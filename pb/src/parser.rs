@@ -1919,6 +1919,14 @@ impl Parser {
                     return self.parse_mat_statement(line);
                 }
 
+                // CALLSTK filename$ — dump call stack to a sequential file
+                if name_upper == "CALLSTK" {
+                    self.advance(); // consume CALLSTK
+                    let filename = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::CallStk(filename));
+                }
+
                 // FIELD #n, size AS var [, size2 AS var2 ...]
                 // FIELD dyn$, size AS var [, ...]
                 // FIELD RESET var [, ...]  /  FIELD STRING var [, ...]

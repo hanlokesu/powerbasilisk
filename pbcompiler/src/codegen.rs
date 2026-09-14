@@ -1190,6 +1190,16 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_callstk_push", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_callstk_pop", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_callstk_count", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_callstk_get", &IrType::Ptr, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_callstk_dump", &IrType::Void, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_field_get", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_field_reset", &IrType::Void, &[IrType::Ptr], false);
@@ -2583,8 +2593,13 @@ impl Compiler {
         );
 
         // Debug: record current function name
-        let (fn_name_str, _) = self.module.add_string_constant(&name);
-        fb.call_void("pb_debug_enter", &[Val::new(fn_name_str, IrType::Ptr)]);
+        let (fn_name_str, _) = self.module.add_string_constant(&fd.name);
+        fb.call_void(
+            "pb_debug_enter",
+            &[Val::new(fn_name_str.clone(), IrType::Ptr)],
+        );
+        // CALLSTK tracing (batch 33): push this procedure's name
+        fb.call_void("pb_callstk_push", &[Val::new(fn_name_str, IrType::Ptr)]);
 
         // Noop EZLIB/EZGUI functions → old Win32 UI, replaced by Electron
         if Self::should_noop_function(&name) {
@@ -2635,6 +2650,7 @@ impl Compiler {
 
         // Return
         if !fb.is_terminated() {
+            fb.call_void("pb_callstk_pop", &[]);
             let retval_ptr = self.current_fn_retval_ptr.clone().unwrap();
             let ret_val = fb.load(&ret_ir, &retval_ptr);
             fb.ret(&ret_val);
@@ -2670,8 +2686,13 @@ impl Compiler {
         );
 
         // Debug: record current function name
-        let (fn_name_str, _) = self.module.add_string_constant(&name);
-        fb.call_void("pb_debug_enter", &[Val::new(fn_name_str, IrType::Ptr)]);
+        let (fn_name_str, _) = self.module.add_string_constant(&sd.name);
+        fb.call_void(
+            "pb_debug_enter",
+            &[Val::new(fn_name_str.clone(), IrType::Ptr)],
+        );
+        // CALLSTK tracing (batch 33): push this procedure's name
+        fb.call_void("pb_callstk_push", &[Val::new(fn_name_str, IrType::Ptr)]);
 
         // Noop EZLIB/EZGUI subs → old Win32 UI, replaced by Electron
         if Self::should_noop_function(&name) {
@@ -2699,6 +2720,7 @@ impl Compiler {
 
         // Return void
         if !fb.is_terminated() {
+            fb.call_void("pb_callstk_pop", &[]);
             fb.ret_void();
         }
 
@@ -2942,6 +2964,7 @@ impl Compiler {
                 if let Some((_, ref ret_ir)) = self.current_fn_return_type {
                     let ret_ir = ret_ir.clone();
                     let retval_ptr = self.current_fn_retval_ptr.clone().unwrap();
+                    fb.call_void("pb_callstk_pop", &[]);
                     let val = fb.load(&ret_ir, &retval_ptr);
                     fb.ret(&val);
                 } else {
@@ -2953,6 +2976,7 @@ impl Compiler {
                 if let Some((_, ref ret_ir)) = self.current_fn_return_type {
                     let ret_ir = ret_ir.clone();
                     let retval_ptr = self.current_fn_retval_ptr.clone().unwrap();
+                    fb.call_void("pb_callstk_pop", &[]);
                     let val = fb.load(&ret_ir, &retval_ptr);
                     fb.ret(&val);
                 }
@@ -3070,6 +3094,11 @@ impl Compiler {
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
             Statement::LineInputFile(li) => self.compile_line_input_file(fb, li),
+            Statement::CallStk(filename) => {
+                let f = self.compile_expr(fb, filename)?;
+                fb.call_void("pb_callstk_dump", &[f]);
+                Ok(())
+            }
             Statement::Kill(expr) => {
                 // KILL filespec — on failure set ERR: ENOENT -> 53, EACCES -> 70, other -> 75
                 let path = self.compile_expr(fb, expr)?;
@@ -7199,6 +7228,9 @@ impl Compiler {
                     "WAITKEY" if orig_name.ends_with('$') => {
                         return Ok(fb.call(&IrType::Ptr, "pb_waitkey", &[]));
                     }
+                    "CALLSTKCOUNT" => {
+                        return Ok(fb.call(&IrType::I64, "pb_callstk_count", &[]));
+                    }
                     "CURDIR" if orig_name.ends_with('$') => {
                         let buf = fb.alloca(&IrType::Array(1024, Box::new(IrType::I8)));
                         let len_const = fb.const_i32(1024);
@@ -7898,6 +7930,19 @@ impl Compiler {
                 }
                 let str_len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
                 Some(Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf, str_len])))
+            }
+            "CALLSTKCOUNT" => Some(Ok(fb.call(&IrType::I64, "pb_callstk_count", &[]))),
+            "CALLSTK" => {
+                let n = if args.is_empty() {
+                    Val::new("1", IrType::I32)
+                } else {
+                    match self.compile_expr(fb, &args[0]) {
+                        Ok(v) => v,
+                        Err(e) => return Some(Err(e)),
+                    }
+                };
+                let n_i64 = self.to_i64(fb, &n);
+                Some(Ok(fb.call(&IrType::Ptr, "pb_callstk_get", &[n_i64])))
             }
             "SIZEOF" => {
                 // SIZEOF(var) → return size in bytes

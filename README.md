@@ -40,7 +40,7 @@ silently dropped during code generation.
 > Later batches (1-27) were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (195 implemented / 106 not implemented / 202 tier-3 DDT).
+> table below (196 implemented / 105 not implemented / 202 tier-3 DDT).
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **195** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **106** documented upstream with no codegen evidence yet.
+> Summary: **196** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **105** documented upstream with no codegen evidence yet.
+> (2026-09-15: +1 official keyword from batch 33 — CALLSTK call-stack tracing (CALLSTKCOUNT current depth, CALLSTK$(n) frame names 1-based innermost-first, CALLSTK filename$ writes the stack to a sequential file; pb_callstk_push/pop/count/get/dump).
 > (2026-09-15: +1 official keyword from batch 32 — MAT matrix algebra (CON / CON(expr) / IDN / ZER / elementwise + - assignment / scalar (expr)*a / 2-D TRN / * matrix multiply / INV Gauss-Jordan inverse; runtime pb_mat_* family with is_float element decoding).
 > (2026-09-15: +1 official keyword from batch 31 — FIELD (field variables bound to RANDOM record buffers or to dynamic-string payload slots by reference: FIELD #f, n AS var / FIELD dyn$, n AS var / FIELD STRING / FIELD RESET, OPEN ... FOR RANDOM AS #f LEN=reclen, numbered PUT #f,rec / GET #f,rec record I/O, blank padding).
 > (2026-09-14: +1 official keyword from batch 30 — ASMDATA/END ASMDATA
@@ -298,7 +299,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `CHDRIVE "C:"` | ✅ | 1 (v0.1.03) | `_chdrive` — PB-compatible `ERR` (68) on failure |
 | `DIR$` / `DIR` function + statement family | ✅ | 24 (v0.1.18) | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
 | `LET t2 = t1` (whole TYPE) |
-| `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) |
+| `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -398,6 +400,14 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.27 (2026-09-15) — Batch 33: CALLSTK call-stack tracing
+One more *Not implemented* item moved to *Implemented* (coverage: **196 implemented / 105 not implemented / 202 tier-3 DDT**):
+- **CALLSTKCOUNT** — returns the current call-stack depth as a LONG (1 = PBMAIN; 2 = PBMAIN + one called procedure, ...).
+- **CALLSTK$(n)** — returns the procedure name of the n-th frame (1-based, innermost first); out-of-range returns an empty string. Names are the source identifiers as parsed (case-insensitive, stored uppercase).
+- **CALLSTK filename$** — writes every active frame to the sequential file, innermost first, one per line (e.g. TestB / TestA / PBMAIN).
+- Codegen pushes the procedure name at every function/sub entry and pops on every exit path (tail return, EXIT SUB, EXIT FUNCTION). Runtime: `pb_callstk_push/pop/count/get/dump` (max 256 frames). Parameter VALUES are not captured yet — names only, per the official docs' value display (documented limitation).
+- Tests: examples/batch33_test.bas (7/7), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.26 (2026-09-15) — Batch 32: MAT matrix algebra
 One more *Not implemented* item moved to *Implemented* (coverage: **195 implemented / 106 not implemented / 202 tier-3 DDT**):
