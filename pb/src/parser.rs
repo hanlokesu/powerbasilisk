@@ -1934,6 +1934,39 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "LINE" || gop == "BOX" || gop == "ELLIPSE" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        // [STEP] (x1,y1) - [STEP] (x2,y2) [, color& [, ...]]
+                        while matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                            if matches!(self.peek(), Token::Minus) {
+                                self.advance();
+                            }
+                        }
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: match gop.as_str() {
+                                "BOX" => "GRAPHIC_BOX".to_string(),
+                                "ELLIPSE" => "GRAPHIC_ELLIPSE".to_string(),
+                                _ => "GRAPHIC_LINE".to_string(),
+                            },
+                            args,
+                            line,
+                        }));
+                    }
                     if gop == "DETACH" {
                         self.advance();
                         self.consume_to_eol();

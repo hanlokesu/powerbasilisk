@@ -1805,6 +1805,46 @@ impl Compiler {
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
+            "pb_graphic_line",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_box",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_ellipse",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4520,6 +4560,73 @@ impl Compiler {
                 };
                 let c2 = self.convert_value(fb, &c, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_graphic_clear", &[c2]);
+            }
+            "GRAPHIC_LINE" => {
+                // args: x1,y1,x2,y2 [,color]
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                let col = if let Some(a4) = call.args.get(4) {
+                    let v = self.compile_expr(fb, a4)?;
+                    self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void(
+                    "pb_graphic_line",
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        col,
+                    ],
+                );
+            }
+            "GRAPHIC_BOX" | "GRAPHIC_ELLIPSE" => {
+                // args: x1,y1,x2,y2 [,corner[,color[,fillcolor[,fillstyle]]]]
+                let f = if call.name == "GRAPHIC_BOX" {
+                    "pb_graphic_box"
+                } else {
+                    "pb_graphic_ellipse"
+                };
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                let color = if let Some(a4) = call.args.get(4) {
+                    let v = self.compile_expr(fb, a4)?;
+                    self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                let fc = if let Some(a5) = call.args.get(5) {
+                    let v = self.compile_expr(fb, a5)?;
+                    self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                let fs = if let Some(a6) = call.args.get(6) {
+                    let v = self.compile_expr(fb, a6)?;
+                    self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void(
+                    f,
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        color,
+                        fc,
+                        fs,
+                    ],
+                );
             }
 
             "FILECOPY" => {

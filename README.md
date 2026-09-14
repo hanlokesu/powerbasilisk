@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +3 official statement keywords from batch 53 — GRAPHIC LINE / BOX / ELLIPSE (MoveToEx+LineTo, Rectangle, Ellipse on the attached bitmap target, optional fill brush). Coverage now 218 implemented / 184 tier-3 / 101 not implemented.)
 > (2026-09-15: +3 official statement keywords from batch 52 — GRAPHIC ATTACH (selects a memory bitmap as the graphic target), GRAPHIC DETACH, GRAPHIC CLEAR (FillRect). Coverage now 215 implemented / 187 tier-3 / 101 not implemented.)
 > (2026-09-15: +2 official statement keywords from batch 51 — GRAPHIC BITMAP NEW (CreateDIBSection memory bitmap, top-down 32bpp, not visible) and GRAPHIC BITMAP END (DeleteObject; no-arg form destroys the last created bitmap). Coverage now 212 implemented / 190 tier-3 / 101 not implemented.)
 > (2026-09-15: +5 official statement keywords from batch 50 — MENU NEW BAR / MENU NEW POPUP (CreateMenu/CreatePopupMenu), MENU ADD STRING / MENU ADD POPUP (AppendMenuA MF_STRING/MF_POPUP), MENU DELETE (DeleteMenu). Menu handles are 64-bit pointers — QUAD variables. Coverage now 210 implemented / 192 tier-3 / 101 not implemented.)
@@ -237,7 +238,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **215** statement-class keywords implemented · **187** DDT/GUI-class
+> Summary: **218** statement-class keywords implemented · **184** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -329,7 +330,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 53 (v0.1.47) | pb_graphic_line / pb_graphic_box / pb_graphic_ellipse — MoveToEx+LineTo / Rectangle / Ellipse with optional fill |
+| 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
 | 51 (v0.1.45) | pb_gdi_bitmap_new — CreateDIBSection (memory DIB, top-down 32bpp); pb_gdi_bitmap_end — DeleteObject (no-arg destroys last) |
 | 50 (v0.1.44) | pb_menu_new_bar / pb_menu_new_popup — CreateMenu/CreatePopupMenu; pb_menu_add_string / pb_menu_add_popup — AppendMenuA; pb_menu_delete — DeleteMenu |
 | 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
@@ -481,6 +483,14 @@ arrays, and core string/numeric built-ins — **✅**
 
 ## Changelog
 
+### v0.1.47 (2026-09-15) — Batch 53: GRAPHIC LINE / BOX / ELLIPSE
+
+- **GRAPHIC LINE [(x1,y1)]-(x2,y2) [, rgbColor&]** — MoveToEx + LineTo on the attached graphic target.
+- **GRAPHIC BOX (x1,y1)-(x2,y2) [, corner& [, rgbColor& [, fillcolor& [, fillstyle&]]]]** — Rectangle; optional solid fill.
+- **GRAPHIC ELLIPSE (x1,y1)-(x2,y2) [, rgbColor& [, fillcolor& [, fillstyle&]]]** — Ellipse; optional solid fill.
+- Parser: coordinate pairs `(x1,y1)-(x2,y2)` are parsed inline (LParen expr Comma expr RParen, Minus separator); STEP relative form accepted as no-op for now.
+- Runtime: pens/brushes created per call and restored; NULL_BRUSH stock object used when fillstyle=0.
+- Tests: examples/batch53_test.bas (5/5), official regression 14/14 ALL PASS, fmt + clippy clean.
 ### v0.1.46 (2026-09-15) — Batch 52: GRAPHIC ATTACH / DETACH / CLEAR
 
 - **GRAPHIC ATTACH hTarget** — selects a graphic target; works with memory bitmaps (from GRAPHIC BITMAP NEW), enabling off-screen drawing from console programs.

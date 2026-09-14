@@ -68,6 +68,13 @@ __declspec(dllimport) int __stdcall DeleteDC(void* hdc);
 __declspec(dllimport) void* __stdcall SelectObject(void* hdc, void* hObject);
 __declspec(dllimport) void* __stdcall CreateSolidBrush(unsigned long color);
 __declspec(dllimport) int __stdcall FillRect(void* hdc, const void* lprc, void* hbr);
+__declspec(dllimport) void* __stdcall CreatePen(int style, int width, unsigned long color);
+__declspec(dllimport) void* __stdcall GetStockObject(int fnObject);
+__declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt);
+__declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
+__declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
+__declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
+
 
 
 
@@ -3789,9 +3796,47 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
 }
 
 
-/* GRAPHIC ATTACH/DETACH/CLEAR — bitmap graphic target (batch 52) */
 static void* g_gr_dc = 0;
 static void* g_gr_bmp = 0;
+/* GRAPHIC LINE/BOX/ELLIPSE — drawing on attached target (batch 53) */
+int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
+    if (!g_gr_dc) return 0;
+    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* old = SelectObject(g_gr_dc, pen);
+    MoveToEx(g_gr_dc, x1, y1, 0);
+    int ok = LineTo(g_gr_dc, x2, y2);
+    SelectObject(g_gr_dc, old);
+    if (pen) DeleteObject(pen);
+    return ok ? 1 : 0;
+}
+int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
+    if (!g_gr_dc) return 0;
+    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* oldp = SelectObject(g_gr_dc, pen);
+    void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5); /* NULL_BRUSH */
+    void* oldb = SelectObject(g_gr_dc, br);
+    int ok = Rectangle(g_gr_dc, x1, y1, x2, y2);
+    SelectObject(g_gr_dc, oldp);
+    SelectObject(g_gr_dc, oldb);
+    if (pen) DeleteObject(pen);
+    if (fillstyle && br) DeleteObject(br);
+    return ok ? 1 : 0;
+}
+int pb_graphic_ellipse(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
+    if (!g_gr_dc) return 0;
+    void* pen = CreatePen(0, 1, (unsigned long)(unsigned int)color);
+    void* oldp = SelectObject(g_gr_dc, pen);
+    void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5);
+    void* oldb = SelectObject(g_gr_dc, br);
+    int ok = Ellipse(g_gr_dc, x1, y1, x2, y2);
+    SelectObject(g_gr_dc, oldp);
+    SelectObject(g_gr_dc, oldb);
+    if (pen) DeleteObject(pen);
+    if (fillstyle && br) DeleteObject(br);
+    return ok ? 1 : 0;
+}
+
+/* GRAPHIC ATTACH/DETACH/CLEAR — bitmap graphic target (batch 52) */
 int pb_graphic_attach(long long h) {
     g_gr_bmp = (void*)(intptr_t)h;
     if (g_gr_dc) { DeleteDC(g_gr_dc); g_gr_dc = 0; }

@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (215)
+## ✅ Implemented (218)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -240,6 +240,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC ATTACH | STATEMENT (graphic target) | pb_graphic_attach — selects a memory bitmap as the graphic target (batch 52) |
 | GRAPHIC DETACH | STATEMENT (detach target) | pb_graphic_detach — releases the graphic DC (batch 52) |
 | GRAPHIC CLEAR | STATEMENT (clear target) | pb_graphic_clear — FillRect with solid brush (batch 52) |
+| GRAPHIC LINE | STATEMENT (draw line) | pb_graphic_line — MoveToEx + LineTo on attached target (batch 53) |
+| GRAPHIC BOX | STATEMENT (draw rectangle) | pb_graphic_box — Rectangle with optional fill (batch 53) |
+| GRAPHIC ELLIPSE | STATEMENT (draw ellipse) | pb_graphic_ellipse — Ellipse with optional fill (batch 53) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -338,13 +341,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC ARC | STATEMENT |
 | GRAPHIC BITMAP CAPTURE | STATEMENT |
 | GRAPHIC BITMAP LOAD | STATEMENT |
-| GRAPHIC BOX | STATEMENT |
 | GRAPHIC CELL | STATEMENT |
 | GRAPHIC CELL SIZE | STATEMENT |
 | GRAPHIC CHR SIZE | STATEMENT |
 | GRAPHIC COLOR | STATEMENT |
 | GRAPHIC COPY | STATEMENT |
-| GRAPHIC ELLIPSE | STATEMENT |
 | GRAPHIC GET BITS | STATEMENT |
 | GRAPHIC GET CANVAS | STATEMENT |
 | GRAPHIC GET CAPTION | STATEMENT |
@@ -371,7 +372,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC INPUT | STATEMENT |
 | GRAPHIC INPUT FLUSH | STATEMENT |
 | GRAPHIC INSTAT | STATEMENT |
-| GRAPHIC LINE | STATEMENT |
 | GRAPHIC LINE INPUT | STATEMENT |
 | GRAPHIC PAINT | STATEMENT |
 | GRAPHIC PIE | STATEMENT |
