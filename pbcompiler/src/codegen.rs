@@ -1200,6 +1200,10 @@ impl Compiler {
         self.module
             .declare_function("pb_callstk_dump", &IrType::Void, &[IrType::Ptr], false);
         self.module
+            .declare_function("pb_profile_enable", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_profile_dump", &IrType::Void, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_field_get", &IrType::Ptr, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_field_reset", &IrType::Void, &[IrType::Ptr], false);
@@ -2295,6 +2299,7 @@ impl Compiler {
                 .module
                 .create_function_builder("main", &IrType::I32, &[]);
             fb.call_void("pb_install_crash_handler", &[]);
+            fb.call_void("pb_profile_enable", &[]);
             if self.debug_mode {
                 let (cat, _) = self.module.add_string_constant("BUILD");
                 let (msg, _) = self
@@ -3094,6 +3099,11 @@ impl Compiler {
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
             Statement::LineInputFile(li) => self.compile_line_input_file(fb, li),
+            Statement::Profile(filename) => {
+                let f = self.compile_expr(fb, filename)?;
+                fb.call_void("pb_profile_dump", &[f]);
+                Ok(())
+            }
             Statement::CallStk(filename) => {
                 let f = self.compile_expr(fb, filename)?;
                 fb.call_void("pb_callstk_dump", &[f]);

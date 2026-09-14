@@ -433,6 +433,10 @@ impl Interpreter {
                 // TODO: implement LINE INPUT# in interpreter
                 Ok(Flow::Normal)
             }
+            Statement::Profile(_) => {
+                // PROFILE is codegen-only in the interpreter
+                Ok(Flow::Normal)
+            }
             Statement::CallStk(_) => {
                 // CALLSTK is codegen-only in the interpreter
                 Ok(Flow::Normal)

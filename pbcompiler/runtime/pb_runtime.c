@@ -29,6 +29,7 @@ __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
 __declspec(dllimport) int __stdcall MessageBoxA(void* hWnd, const char* lpText, const char* lpCaption, unsigned int uType);
 __declspec(dllimport) int __stdcall CopyFileA(const char* lpExistingFileName, const char* lpNewFileName, int bFailIfExists);
 __declspec(dllimport) unsigned long __stdcall GetLastError(void);
+__declspec(dllimport) unsigned long long __stdcall GetTickCount64(void);
 __declspec(dllimport) int __stdcall SetFileAttributesA(const char* lpFileName, unsigned long dwFileAttributes);
 __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 __declspec(dllimport) unsigned long __stdcall GetPriorityClass(void* hProcess);
@@ -1312,20 +1313,77 @@ char* pb_field_get(pb_field_t* fv) {
     return out;
 }
 
-/* ===== Batch 33: CALLSTK call-stack tracing =====
+/* ===== Batch 33+34: CALLSTK call-stack tracing + PROFILE =====
    codegen pushes the procedure name at every function entry and pops at every
    exit. CALLSTKCOUNT = current depth (1 = PBMAIN); CALLSTK$(n) is 1-based
-   (1 = innermost). Parameter VALUES are not captured (names only). */
+   (1 = innermost). Parameter VALUES are not captured (names only).
+   PROFILE: when enabled, the same stack records call counts and elapsed
+   milliseconds per procedure; PROFILE filename$ dumps
+   "<Name>, <Call Count>, <Time mSec>" lines (PB-compatible format). */
 #define PB_CALLSTK_MAX 256
-static const char* pb_callstk_names[PB_CALLSTK_MAX];
+typedef struct {
+    const char* name;
+    long long enter_tick; /* 0 when profiling is off */
+} pb_callstk_frame_t;
+static pb_callstk_frame_t pb_callstk_frames[PB_CALLSTK_MAX];
 static int pb_callstk_depth = 0;
+static int pb_profile_enabled = 0;
+#define PB_PROFILE_MAX 256
+static const char* pb_profile_names[PB_PROFILE_MAX];
+static long long pb_profile_calls[PB_PROFILE_MAX];
+static long long pb_profile_total_ms[PB_PROFILE_MAX];
+static int pb_profile_count = 0;
+
+static long long pb_now_ms(void) {
+#ifdef _WIN64
+    return (long long)GetTickCount64();
+#else
+    return (long long)GetTickCount();
+#endif
+}
+
+/* 0 = new entry added at pb_profile_count-1; -1 = table full (not tracked) */
+static int pb_profile_find_or_add(const char* name) {
+    for (int i = 0; i < pb_profile_count; i++) {
+        if (pb_profile_names[i] == name) return i;
+    }
+    if (pb_profile_count < PB_PROFILE_MAX) {
+        int idx = pb_profile_count++;
+        pb_profile_names[idx] = name;
+        pb_profile_calls[idx] = 0;
+        pb_profile_total_ms[idx] = 0;
+        return idx;
+    }
+    return -1;
+}
+
+void pb_profile_enable(void) {
+    pb_profile_enabled = 1;
+}
 
 void pb_callstk_push(const char* name) {
-    if (pb_callstk_depth < PB_CALLSTK_MAX) pb_callstk_names[pb_callstk_depth++] = name;
+    if (pb_callstk_depth < PB_CALLSTK_MAX) {
+        pb_callstk_frames[pb_callstk_depth].name = name;
+        if (pb_profile_enabled) {
+            int idx = pb_profile_find_or_add(name);
+            pb_callstk_frames[pb_callstk_depth].enter_tick = pb_now_ms();
+            if (idx >= 0) pb_profile_calls[idx]++;
+        } else {
+            pb_callstk_frames[pb_callstk_depth].enter_tick = 0;
+        }
+        pb_callstk_depth++;
+    }
 }
 
 void pb_callstk_pop(void) {
-    if (pb_callstk_depth > 0) pb_callstk_depth--;
+    if (pb_callstk_depth > 0) {
+        pb_callstk_depth--;
+        if (pb_profile_enabled && pb_callstk_frames[pb_callstk_depth].enter_tick != 0) {
+            long long el = pb_now_ms() - pb_callstk_frames[pb_callstk_depth].enter_tick;
+            int idx = pb_profile_find_or_add(pb_callstk_frames[pb_callstk_depth].name);
+            if (idx >= 0) pb_profile_total_ms[idx] += el;
+        }
+    }
 }
 
 long long pb_callstk_count(void) {
@@ -1335,7 +1393,7 @@ long long pb_callstk_count(void) {
 /* CALLSTK$(n): 1-based from the innermost frame; empty string when out of range */
 char* pb_callstk_get(long long n) {
     if (n < 1 || n > pb_callstk_depth) return pb_bstr_alloc("", 0);
-    const char* nm = pb_callstk_names[pb_callstk_depth - (int)n];
+    const char* nm = pb_callstk_frames[pb_callstk_depth - (int)n].name;
     if (!nm) nm = "?";
     return pb_bstr_alloc(nm, (int)strlen(nm));
 }
@@ -1346,9 +1404,22 @@ void pb_callstk_dump(const char* filename) {
     FILE* f = fopen(filename, "w");
     if (!f) return;
     for (int i = pb_callstk_depth - 1; i >= 0; i--) {
-        const char* nm = pb_callstk_names[i];
+        const char* nm = pb_callstk_frames[i].name;
         if (!nm) nm = "?";
         fprintf(f, "%s\n", nm);
+    }
+    fclose(f);
+}
+
+/* PROFILE filename$: "<Name>, <Call Count>, <Time mSec>" per line */
+void pb_profile_dump(const char* filename) {
+    if (!filename || !filename[0]) return;
+    FILE* f = fopen(filename, "w");
+    if (!f) return;
+    for (int i = 0; i < pb_profile_count; i++) {
+        const char* nm = pb_profile_names[i];
+        if (!nm) nm = "?";
+        fprintf(f, "%s, %lld, %lld\n", nm, pb_profile_calls[i], pb_profile_total_ms[i]);
     }
     fclose(f);
 }

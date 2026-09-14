@@ -225,8 +225,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **196** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **105** documented upstream with no codegen evidence yet.
+> Summary: **197** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **104** documented upstream with no codegen evidence yet.
+> (2026-09-15: +1 official keyword from batch 34 — PROFILE (per-procedure call counts and elapsed ms collected by the call-stack instrumentation; PROFILE filename$ writes "<Name>, <Call Count>, <Time mSec>" per line, PB-compatible).
 > (2026-09-15: +1 official keyword from batch 33 — CALLSTK call-stack tracing (CALLSTKCOUNT current depth, CALLSTK$(n) frame names 1-based innermost-first, CALLSTK filename$ writes the stack to a sequential file; pb_callstk_push/pop/count/get/dump).
 > (2026-09-15: +1 official keyword from batch 32 — MAT matrix algebra (CON / CON(expr) / IDN / ZER / elementwise + - assignment / scalar (expr)*a / 2-D TRN / * matrix multiply / INV Gauss-Jordan inverse; runtime pb_mat_* family with is_float element decoding).
 > (2026-09-15: +1 official keyword from batch 31 — FIELD (field variables bound to RANDOM record buffers or to dynamic-string payload slots by reference: FIELD #f, n AS var / FIELD dyn$, n AS var / FIELD STRING / FIELD RESET, OPEN ... FOR RANDOM AS #f LEN=reclen, numbered PUT #f,rec / GET #f,rec record I/O, blank padding).
@@ -300,7 +301,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `DIR$` / `DIR` function + statement family | ✅ | 24 (v0.1.18) | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
 | `LET t2 = t1` (whole TYPE) |
 | `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) |
-| `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
+| `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) |
+| `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
 | `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
 | `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
 | `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
@@ -400,6 +402,13 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.28 (2026-09-15) — Batch 34: PROFILE per-procedure profiling
+One more *Not implemented* item moved to *Implemented* (coverage: **197 implemented / 104 not implemented / 202 tier-3 DDT**):
+- **PROFILE filename$** — per-procedure execution report: every procedure's call count and total elapsed time in milliseconds, written as `<Name>, <Call Count>, <Time mSec>` per line (PB-compatible format).
+- The existing CALLSTK call-stack frames now also record a high-resolution entry tick when profiling is enabled (codegen enables it at the `main` entry, so PROFILE placed last in PBMAIN sees the full picture). Pop accumulates elapsed ms on the frame that owns the tick, so nested calls are attributed to the correct procedure.
+- Runtime: `pb_profile_enable` + `pb_profile_dump` (GetTickCount64). No profiling overhead when no PROFILE statement exists (single flag branch in push/pop).
+- Tests: examples/batch34_test.bas (2/2 — WORK called 3 times ≈ 60+ ms in profile.log), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.27 (2026-09-15) — Batch 33: CALLSTK call-stack tracing
 One more *Not implemented* item moved to *Implemented* (coverage: **196 implemented / 105 not implemented / 202 tier-3 DDT**):

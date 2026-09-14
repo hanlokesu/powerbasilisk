@@ -1919,6 +1919,14 @@ impl Parser {
                     return self.parse_mat_statement(line);
                 }
 
+                // PROFILE filename$ — dump per-procedure call counts + ms
+                if name_upper == "PROFILE" {
+                    self.advance(); // consume PROFILE
+                    let filename = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Profile(filename));
+                }
+
                 // CALLSTK filename$ — dump call stack to a sequential file
                 if name_upper == "CALLSTK" {
                     self.advance(); // consume CALLSTK

@@ -237,6 +237,7 @@ pub enum Statement {
     LineInputFile(LineInputFileStmt),
     Kill(Expr),
     CallStk(Expr), // CALLSTK filename$ — dump the call stack to a file (batch 33)
+    Profile(Expr), // PROFILE filename$ — dump per-procedure call counts + ms (batch 34)
     Block(Vec<Statement>), // multiple statements from one parse (e.g. LOCAL a, b)
     Data(Vec<String>), // DATA item1, item2, ... (string constants)
     Restore,       // RESTORE — reset DATA read cursor
