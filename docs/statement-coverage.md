@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (212)
+## ✅ Implemented (215)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -237,6 +237,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MENU DELETE | STATEMENT (remove item) | pb_menu_delete — DeleteMenu MF_BYPOSITION (batch 50) |
 | GRAPHIC BITMAP NEW | STATEMENT (memory DIB) | pb_gdi_bitmap_new — CreateDIBSection (top-down 32bpp); not visible (batch 51) |
 | GRAPHIC BITMAP END | STATEMENT (destroy bitmap) | pb_gdi_bitmap_end — DeleteObject; no-arg form destroys last created (batch 51) |
+| GRAPHIC ATTACH | STATEMENT (graphic target) | pb_graphic_attach — selects a memory bitmap as the graphic target (batch 52) |
+| GRAPHIC DETACH | STATEMENT (detach target) | pb_graphic_detach — releases the graphic DC (batch 52) |
+| GRAPHIC CLEAR | STATEMENT (clear target) | pb_graphic_clear — FillRect with solid brush (batch 52) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -333,17 +336,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DIALOG UNITS | STATEMENT |
 | DIALOG XLAT | STATEMENT |
 | GRAPHIC ARC | STATEMENT |
-| GRAPHIC ATTACH | STATEMENT |
 | GRAPHIC BITMAP CAPTURE | STATEMENT |
 | GRAPHIC BITMAP LOAD | STATEMENT |
 | GRAPHIC BOX | STATEMENT |
 | GRAPHIC CELL | STATEMENT |
 | GRAPHIC CELL SIZE | STATEMENT |
 | GRAPHIC CHR SIZE | STATEMENT |
-| GRAPHIC CLEAR | STATEMENT |
 | GRAPHIC COLOR | STATEMENT |
 | GRAPHIC COPY | STATEMENT |
-| GRAPHIC DETACH | STATEMENT |
 | GRAPHIC ELLIPSE | STATEMENT |
 | GRAPHIC GET BITS | STATEMENT |
 | GRAPHIC GET CANVAS | STATEMENT |

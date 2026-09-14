@@ -1798,6 +1798,12 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_gdi_bitmap_end", &IrType::I32, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_graphic_attach", &IrType::I32, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_graphic_detach", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
@@ -4496,6 +4502,26 @@ impl Compiler {
                 let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
                 fb.call_void("pb_gdi_bitmap_end", &[h2]);
             }
+            "GRAPHIC_ATTACH" => {
+                // args: hTarget [, id] — target may be a memory bitmap handle
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                fb.call_void("pb_graphic_attach", &[h2]);
+            }
+            "GRAPHIC_DETACH" => {
+                fb.call_void("pb_graphic_detach", &[]);
+            }
+            "GRAPHIC_CLEAR" => {
+                // args: [] or [color&] or [color&, fillstyle&]
+                let c = if let Some(a0) = call.args.first() {
+                    self.compile_expr(fb, a0)?
+                } else {
+                    fb.const_i32(0xFFFFFF)
+                };
+                let c2 = self.convert_value(fb, &c, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_clear", &[c2]);
+            }
+
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)
                 if call.args.len() >= 2 {

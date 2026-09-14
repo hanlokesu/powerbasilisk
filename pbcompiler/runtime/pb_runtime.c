@@ -65,6 +65,10 @@ __declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
 __declspec(dllimport) void* __stdcall CreateDIBSection(void* hdc, const void* pbmi, unsigned int usage, void** ppvBits, void* hSection, unsigned long offset);
 __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
 __declspec(dllimport) int __stdcall DeleteDC(void* hdc);
+__declspec(dllimport) void* __stdcall SelectObject(void* hdc, void* hObject);
+__declspec(dllimport) void* __stdcall CreateSolidBrush(unsigned long color);
+__declspec(dllimport) int __stdcall FillRect(void* hdc, const void* lprc, void* hbr);
+
 
 
 
@@ -3784,6 +3788,36 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+
+/* GRAPHIC ATTACH/DETACH/CLEAR — bitmap graphic target (batch 52) */
+static void* g_gr_dc = 0;
+static void* g_gr_bmp = 0;
+int pb_graphic_attach(long long h) {
+    g_gr_bmp = (void*)(intptr_t)h;
+    if (g_gr_dc) { DeleteDC(g_gr_dc); g_gr_dc = 0; }
+    if (!g_gr_bmp) return 0;
+    g_gr_dc = CreateCompatibleDC(0);
+    if (!g_gr_dc) return 0;
+    SelectObject(g_gr_dc, g_gr_bmp);
+    return 1;
+}
+int pb_graphic_detach(void) {
+    if (g_gr_dc) { DeleteDC(g_gr_dc); g_gr_dc = 0; }
+    g_gr_bmp = 0;
+    return 1;
+}
+int pb_graphic_clear(int color) {
+    if (!g_gr_dc) return 0;
+    unsigned char rc[16];
+    for (int i = 0; i < 16; i++) rc[i] = 0;
+    rc[8] = 0xff; rc[9] = 0x4f; rc[10] = 0xff; rc[11] = 0xff; /* right = 0xffff4f00-ish; use 0xffffffff */
+    rc[8] = 0xff; rc[9] = 0xff; rc[10] = 0xff; rc[11] = 0xff; /* right = 0xffffffff */
+    rc[12] = 0xff; rc[13] = 0xff; rc[14] = 0xff; rc[15] = 0xff; /* bottom = 0xffffffff */
+    void* br = CreateSolidBrush((unsigned long)(unsigned int)color);
+    int ok = FillRect(g_gr_dc, (const void*)rc, br);
+    if (br) DeleteObject(br);
+    return ok ? 1 : 0;
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

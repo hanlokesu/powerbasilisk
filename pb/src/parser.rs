@@ -1919,6 +1919,47 @@ impl Parser {
                 // Memory DIB bitmap — not visible, console-testable (batch 51)
                 if name_upper == "GRAPHIC" {
                     self.advance(); // consume GRAPHIC
+                    let gop = self.peek_plain_upper();
+                    if gop == "ATTACH" {
+                        self.advance();
+                        let mut args = vec![self.parse_expression()?];
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_ATTACH".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "DETACH" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_DETACH".to_string(),
+                            args: Vec::new(),
+                            line,
+                        }));
+                    }
+                    if gop == "CLEAR" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                            args.push(self.parse_expression()?);
+                            while self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_CLEAR".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if self.peek_plain_upper() == "BITMAP" {
                         self.advance();
                         let op = self.peek_plain_upper();
