@@ -2712,9 +2712,15 @@ void pb_flush(int filenum) {
     }
 }
 
-/* NAME: rename a file */
+/* NAME: rename a file — PB-compatible ERR on failure (53 = file not found). */
 int pb_name(const char* old_path, const char* new_path) {
-    return rename(old_path, new_path);
+    if (!old_path || !new_path) { pb_err = 76; return -1; }
+    if (rename(old_path, new_path) != 0) {
+        pb_err = 53;
+        return -1;
+    }
+    pb_err = 0;
+    return 0;
 }
 
 /* WRITE # support: per-file "first field" tracking */
@@ -3752,6 +3758,53 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
         p = semi + 1;
     }
     return pb_bstr_alloc("", 0);
+}
+
+/* ERL$ — most recent error checkpoint id, as a string (numeric approximation of
+   the official label/line-name semantics; limited to the checkpoint id stored by
+   the ON ERROR trapping machinery). */
+char* pb_erl_str(void) {
+    char buf[32];
+    sprintf(buf, "%d", pb_err_stmt_id);
+    return pb_bstr_alloc(buf, (int)strlen(buf));
+}
+
+/* EXTRACT$([start,] MainStr, [ANY] MatchStr) — returns MainStr from start up to
+   (not including) the first occurrence of MatchStr; ANY = any single character
+   of MatchStr ends the extraction. start <= 0 or beyond length -> empty string;
+   MatchStr absent -> whole remainder. */
+char* pb_extract(long long start, const char* main_str, const char* match_str, int any_mode) {
+    if (!main_str) main_str = "";
+    long long len = (long long)strlen(main_str);
+    if (start <= 0 || start > len) return pb_bstr_alloc("", 0);
+    long long i = start - 1;
+    long long end = len;
+    if (match_str && match_str[0]) {
+        if (any_mode) {
+            for (long long k = i; k < len; k++) {
+                if (strchr(match_str, main_str[k])) { end = k; break; }
+            }
+        } else {
+            const char* p = strstr(main_str + i, match_str);
+            if (p) end = (long long)(p - main_str);
+        }
+    }
+    return pb_bstr_alloc(main_str + i, (unsigned int)(end - i));
+}
+
+/* RGB(r, g, b) — pack into &H00BBGGRR (byte1 red, byte2 green, byte3 blue). */
+long long pb_rgb3(long long r, long long g, long long b) {
+    return (r & 0xFF) | ((g & 0xFF) << 8) | ((b & 0xFF) << 16);
+}
+
+/* BGR(r, g, b) — pack into &H00RRGGBB (byte1 blue, byte2 green, byte3 red). */
+long long pb_bgr3(long long r, long long g, long long b) {
+    return (b & 0xFF) | ((g & 0xFF) << 8) | ((r & 0xFF) << 16);
+}
+
+/* RGB(bgrval) / BGR(rgbval) — single-argument byte swap (identical op). */
+long long pb_rgb_swap(long long x) {
+    return ((x & 0xFF) << 16) | (x & 0xFF00) | ((x >> 16) & 0xFF);
 }
 
 /* Batch 43: BITS$ / PATHNAME$ / PRINTERCOUNT

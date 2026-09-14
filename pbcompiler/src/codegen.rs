@@ -1688,6 +1688,28 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_filename", &IrType::Ptr, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_erl_str", &IrType::Ptr, &[], false);
+        self.module.declare_function(
+            "pb_extract",
+            &IrType::Ptr,
+            &[IrType::I64, IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_rgb3",
+            &IrType::I64,
+            &[IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_bgr3",
+            &IrType::I64,
+            &[IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module
+            .declare_function("pb_rgb_swap", &IrType::I64, &[IrType::I64], false);
         self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
@@ -8076,6 +8098,9 @@ impl Compiler {
             "FILEATTR" => Some(self.builtin_fileattr(fb, args)),
             "FILENAME" => Some(self.builtin_filename(fb, args)),
             "PATHSCAN" => Some(self.builtin_strn(fb, args, "pb_pathscan", 2)),
+            "ERL" => Some(self.builtin_str0(fb, "pb_erl_str")),
+            "EXTRACT" => Some(self.builtin_extract(fb, args)),
+            "RGB" | "BGR" => Some(self.builtin_rgb(fb, args, name)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
             "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
@@ -8333,27 +8358,6 @@ impl Compiler {
                             Err(e) => Some(Err(e)),
                         }
                     }
-                }
-            }
-            "RGB" => {
-                if args.len() >= 3 {
-                    let r = self.compile_expr(fb, &args[0]);
-                    Some(r.and_then(|r| {
-                        let g = self.compile_expr(fb, &args[1])?;
-                        let b = self.compile_expr(fb, &args[2])?;
-                        let r32 = self.to_i32(fb, &r);
-                        let g32 = self.to_i32(fb, &g);
-                        let b32 = self.to_i32(fb, &b);
-                        // RGB = R | (G << 8) | (B << 16)
-                        let eight = fb.const_i32(8);
-                        let sixteen = fb.const_i32(16);
-                        let g_shifted = fb.shl(&g32, &eight);
-                        let b_shifted = fb.shl(&b32, &sixteen);
-                        let rg = fb.or(&r32, &g_shifted);
-                        Ok(fb.or(&rg, &b_shifted))
-                    }))
-                } else {
-                    Some(Ok(fb.const_i32(0)))
                 }
             }
             "LOBYT" | "LOWRD" => {
@@ -9182,6 +9186,77 @@ impl Compiler {
             a.push(p);
         }
         Ok(fb.call(&IrType::Ptr, fname, &a))
+    }
+
+    fn builtin_str0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
+        Ok(fb.call(&IrType::Ptr, fname, &[]))
+    }
+
+    fn builtin_extract(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 || args.len() > 4 {
+            return Err(PbError::runtime(
+                "EXTRACT$: expected ([start,] MainStr, [ANY] MatchStr)",
+            ));
+        }
+        let mut any = false;
+        let mut start_expr: Option<&Expr> = None;
+        let mut str_args: Vec<&Expr> = Vec::new();
+        for e in args {
+            if let Expr::StringLit(s) = e {
+                if s == "__ANY__" {
+                    any = true;
+                } else {
+                    str_args.push(e);
+                }
+            } else if str_args.is_empty() && start_expr.is_none() {
+                start_expr = Some(e);
+            } else {
+                str_args.push(e);
+            }
+        }
+        if str_args.len() < 2 {
+            return Err(PbError::runtime("EXTRACT$: expected MainStr and MatchStr"));
+        }
+        let start = if let Some(sx) = start_expr {
+            let v = self.compile_expr(fb, sx)?;
+            self.convert_value(fb, &v, &IrType::I64, &PbType::Long)
+        } else {
+            fb.const_i64(1)
+        };
+        let m = self.compile_expr(fb, str_args[0])?;
+        let m2 = self.convert_value(fb, &m, &IrType::Ptr, &PbType::String);
+        let mc = self.compile_expr(fb, str_args[1])?;
+        let mc2 = self.convert_value(fb, &mc, &IrType::Ptr, &PbType::String);
+        let anyv = if any {
+            fb.const_i32(1)
+        } else {
+            fb.const_i32(0)
+        };
+        Ok(fb.call(&IrType::Ptr, "pb_extract", &[start, m2, mc2, anyv]))
+    }
+
+    fn builtin_rgb(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        name: &str,
+    ) -> PbResult<Val> {
+        if args.len() == 1 {
+            let v = self.compile_expr(fb, &args[0])?;
+            let vi = self.convert_value(fb, &v, &IrType::I64, &PbType::Long);
+            Ok(fb.call(&IrType::I64, "pb_rgb_swap", &[vi]))
+        } else if args.len() == 3 {
+            let mut a = Vec::new();
+            for e in args {
+                let v = self.compile_expr(fb, e)?;
+                let vi = self.convert_value(fb, &v, &IrType::I64, &PbType::Long);
+                a.push(vi);
+            }
+            let fname = if name == "BGR" { "pb_bgr3" } else { "pb_rgb3" };
+            Ok(fb.call(&IrType::I64, fname, &a))
+        } else {
+            Err(PbError::runtime("RGB/BGR: expected 1 or 3 arguments"))
+        }
     }
 
     fn builtin_conv1(

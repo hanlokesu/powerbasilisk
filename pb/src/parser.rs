@@ -5102,6 +5102,34 @@ impl Parser {
                 Ok(Expr::FunctionCall("BITS$".to_string(), args))
             }
             Token::Identifier(name)
+                if name.eq_ignore_ascii_case("EXTRACT")
+                    || name.eq_ignore_ascii_case("EXTRACT$") =>
+            {
+                // EXTRACT$([start,] MainStr, [ANY] MatchStr) — ANY is an Identifier
+                // token here; convert it to a sentinel string so codegen can reorder.
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                loop {
+                    if let Token::Identifier(ref w) = self.peek().clone() {
+                        if w.eq_ignore_ascii_case("ANY") {
+                            args.push(Expr::StringLit("__ANY__".to_string()));
+                            self.advance();
+                        } else {
+                            args.push(self.parse_expression()?);
+                        }
+                    } else {
+                        args.push(self.parse_expression()?);
+                    }
+                    if self.peek() != &Token::Comma {
+                        break;
+                    }
+                    self.advance();
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("EXTRACT".to_string(), args))
+            }
+            Token::Identifier(name)
                 if name.eq_ignore_ascii_case("PATHSCAN")
                     || name.eq_ignore_ascii_case("PATHSCAN$") =>
             {
@@ -5239,6 +5267,8 @@ impl Parser {
                 } else if name.eq_ignore_ascii_case("DATACOUNT")
                     || name.eq_ignore_ascii_case("THREADCOUNT")
                     || name.eq_ignore_ascii_case("PRINTERCOUNT")
+                    || name.eq_ignore_ascii_case("ERL")
+                    || name.eq_ignore_ascii_case("ERL$")
                 {
                     // No-argument functions without parentheses (PB syntax: n = DATACOUNT)
                     Expr::FunctionCall(name.to_uppercase(), Vec::new())

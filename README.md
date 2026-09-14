@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +4 official function keywords from batch 45 — ERL$ error checkpoint name, EXTRACT$ substring-to-match (with optional start and ANY), RGB/BGR color packing (3-arg compose and 1-arg byte swap). Function-class, coverage counts unchanged.)
 > (2026-09-15: +7 official function keywords from batch 44 — SWITCH/SWITCH$ first-true select chain, HI/LO bit extraction (BYTE/WORD/LONG), FILEATTR file attribute queries (mode/open/OS handle/enumerate), FILENAME$ open-file name, PATHSCAN$ disk-scanned path parts (FULL/PATH/NAME/EXTN/NAMEX). Function-class, coverage counts unchanged.)
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
@@ -321,6 +322,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
+| `ERL$` | ✅ | 45 (v0.1.39) | pb_erl_str — last ON ERROR checkpoint id as a string (numeric approximation of the official label/line-name) |
+| `EXTRACT$([start,] MainStr, [ANY] MatchStr)` | ✅ | 45 (v0.1.39) | pb_extract — substring up to first match (or any match char), start and ANY forms |
+| `RGB(r, g, b)` / `RGB(bgr)` | ✅ | 45 (v0.1.39) | pb_rgb3 pack `R | G<<8 | B<<16`; pb_rgb_swap single-arg byte swap |
+| `BGR(r, g, b)` / `BGR(rgb)` | ✅ | 45 (v0.1.39) | pb_bgr3 pack `B | G<<8 | R<<16`; pb_rgb_swap single-arg byte swap |
 | `HI(DataType, v)` / `LO(DataType, v)` | ✅ | 44 (v0.1.38) | bit extraction — `lshr` + mask per DataType (BYTE=8/WORD·INTEGER=16/LONG=32 bits) |
 | `FILEATTR([#]f, attr)` | ✅ | 44 (v0.1.38) | pb_fileattr — open state, mode bits (Input 1/Output 2/Random 4/Append 10/Binary 32), OS handle, enumerate |
 | `FILENAME$([#]f)` | ✅ | 44 (v0.1.38) | pb_filename — file-system name of an open file (tracked in pb_open/pb_close) |
@@ -457,6 +462,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.39 (2026-09-15) — Batch 45: ERL$ / EXTRACT$ / RGB / BGR
+- **ERL$**: last ON ERROR checkpoint id as a string (numeric approximation of the official label/line-name semantics, limited to the checkpoint id stored by the trapping machinery).
+- **EXTRACT$([start,] MainStr, [ANY] MatchStr)**: substring of MainStr starting at position 1 (or `start`) up to — but not including — the first occurrence of MatchStr; `ANY` stops at any single character of MatchStr; no match returns the whole remainder; invalid start returns the empty string.
+- **RGB(r, g, b)** / **RGB(bgr)**: 3-arg packs `R | G<<8 | B<<16` (PB &H00BBGGRR); 1-arg performs the byte swap (BGR -> RGB).
+- **BGR(r, g, b)** / **BGR(rgb)**: 3-arg packs `B | G<<8 | R<<16` (PB &H00RRGGBB); 1-arg same byte swap.
+- **Bug fix**: `NAME` now sets PB-compatible ERR (53 = file not found, 76 = bad path) on failure, clearing ERR on success.
+- Tests: examples/batch45_test.bas (12/12), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+
 
 ### v0.1.38 (2026-09-15) — Batch 44: SWITCH/SWITCH$ / HI/LO / FILEATTR / FILENAME$ / PATHSCAN$
 - **SWITCH(expr1, val1, ...)** / **SWITCH$(...)**: returns the value paired with the first true (non-zero) condition; all-false returns 0 / empty string. Implemented as a chain of LLVM `select` instructions — no branches needed.
