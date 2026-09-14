@@ -1934,6 +1934,70 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "COLOR" {
+                        self.advance();
+                        let mut args = vec![self.parse_expression()?];
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_COLOR".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "GET" {
+                        // GRAPHIC GET PIXEL (x,y) TO var&
+                        self.advance();
+                        self.expect(&Token::Identifier("PIXEL".to_string()))?;
+                        self.expect(&Token::LParen)?;
+                        let x = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y = self.parse_expression()?;
+                        self.expect(&Token::RParen)?;
+                        self.expect(&Token::To)?;
+                        let dst = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_GET_PIXEL".to_string(),
+                            args: vec![x, y, dst],
+                            line,
+                        }));
+                    }
+                    if gop == "COPY" {
+                        // GRAPHIC COPY (x1,y1)-(x2,y2), (x3,y3)
+                        self.advance();
+                        let mut args = Vec::new();
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        if self.peek() == &Token::Minus {
+                            self.advance();
+                        }
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        self.expect(&Token::LParen)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::RParen)?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_COPY".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if gop == "WIDTH" || gop == "STYLE" {
                         self.advance();
                         let args = if self.peek() != &Token::Eol && self.peek() != &Token::Eof {

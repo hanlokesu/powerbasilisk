@@ -74,6 +74,8 @@ __declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt
 __declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
+__declspec(dllimport) unsigned long __stdcall GetPixel(void* hdc, int x, int y);
+__declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, int w, int h, void* hdcSrc, int xSrc, int ySrc, unsigned long rop);
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
 
@@ -3852,6 +3854,27 @@ int pb_graphic_save(char* fname) {
     fclose(f);
     free(bits);
     return 1;
+}
+
+/* GRAPHIC COLOR / GET PIXEL / COPY (batch 55) */
+static unsigned long g_gr_fore = 0;
+static unsigned long g_gr_back = 0;
+int pb_graphic_color(unsigned long fore, unsigned long back) {
+    g_gr_fore = fore;
+    g_gr_back = back;
+    return 1;
+}
+int pb_graphic_get_pixel(int x, int y, unsigned long* out) {
+    if (!g_gr_dc) return 0;
+    *out = GetPixel(g_gr_dc, x, y);
+    return 1;
+}
+int pb_graphic_copy(int x1, int y1, int x2, int y2, int x3, int y3) {
+    if (!g_gr_dc) return 0;
+    int w = x2 - x1 + 1;
+    int h = y2 - y1 + 1;
+    if (w <= 0 || h <= 0) return 0;
+    return BitBlt(g_gr_dc, x3, y3, w, h, g_gr_dc, x1, y1, 0x00CC0020); /* SRCCOPY */
 }
 
 /* GRAPHIC LINE/BOX/ELLIPSE — drawing on attached target (batch 53) */

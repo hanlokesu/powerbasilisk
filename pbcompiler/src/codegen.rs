@@ -1851,6 +1851,31 @@ impl Compiler {
         self.module
             .declare_function("pb_graphic_save", &IrType::I32, &[IrType::Ptr], false);
         self.module.declare_function(
+            "pb_graphic_color",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_pixel",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_copy",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4590,6 +4615,37 @@ impl Compiler {
                         col,
                     ],
                 );
+            }
+            "GRAPHIC_COLOR" => {
+                // args: fore& [, back&]
+                let fore = self.compile_expr(fb, &call.args[0])?;
+                let f = self.convert_value(fb, &fore, &IrType::I32, &PbType::Long);
+                let back = if let Some(a1) = call.args.get(1) {
+                    let e = self.compile_expr(fb, a1)?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void("pb_graphic_color", &[f, back]);
+            }
+            "GRAPHIC_GET_PIXEL" => {
+                // args: x&, y&, dst& (out)
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                    fb.call_void("pb_graphic_get_pixel", &[xv, yv, ptr]);
+                }
+            }
+            "GRAPHIC_COPY" => {
+                // args: x1,y1,x2,y2,x3,y3
+                let mut ia = Vec::new();
+                for i in 0..6 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void("pb_graphic_copy", &ia);
             }
             "GRAPHIC_WIDTH" | "GRAPHIC_STYLE" => {
                 // args: [n&]
