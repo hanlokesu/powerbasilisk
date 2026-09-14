@@ -61,6 +61,11 @@ __declspec(dllimport) void* __stdcall CreatePopupMenu(void);
 __declspec(dllimport) int __stdcall AppendMenuA(void* hMenu, unsigned int uFlags, unsigned long long uIDNewItem, const char* lpNewItem);
 __declspec(dllimport) int __stdcall DeleteMenu(void* hMenu, unsigned int uPosition, unsigned int uFlags);
 __declspec(dllimport) int __stdcall DestroyMenu(void* hMenu);
+__declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
+__declspec(dllimport) void* __stdcall CreateDIBSection(void* hdc, const void* pbmi, unsigned int usage, void** ppvBits, void* hSection, unsigned long offset);
+__declspec(dllimport) int __stdcall DeleteObject(void* hObject);
+__declspec(dllimport) int __stdcall DeleteDC(void* hdc);
+
 
 
 
@@ -3779,6 +3784,33 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+
+/* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
+static long long g_last_bmp = 0;
+long long pb_gdi_bitmap_new(int w, int h) {
+    void* hdc = CreateCompatibleDC(0);
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    bi[0] = 40;                   /* biSize */
+    bi[4] = (unsigned char)(w & 255); bi[5] = (unsigned char)((w >> 8) & 255);
+    bi[6] = (unsigned char)((w >> 16) & 255); bi[7] = (unsigned char)((w >> 24) & 255);
+    int hh = -h;                  /* top-down */
+    bi[8] = (unsigned char)(hh & 255); bi[9] = (unsigned char)((hh >> 8) & 255);
+    bi[10] = (unsigned char)((hh >> 16) & 255); bi[11] = (unsigned char)((hh >> 24) & 255);
+    bi[12] = 1;                   /* biPlanes */
+    bi[14] = 32;                  /* biBitCount */
+    void* bits = 0;
+    void* hbm = CreateDIBSection(hdc, (const void*)bi, 0, &bits, 0, 0);
+    DeleteDC(hdc);
+    if (hbm) g_last_bmp = (long long)(intptr_t)hbm;
+    return (long long)(intptr_t)hbm;
+}
+int pb_gdi_bitmap_end(long long h) {
+    void* target = (void*)(intptr_t)(h == -1 ? g_last_bmp : h);
+    int ok = target ? DeleteObject(target) : 0;
+    if (target == (void*)(intptr_t)g_last_bmp) g_last_bmp = 0;
+    return ok ? 1 : 0;
+}
 
 /* MENU — user32 menu objects (batch 50) */
 long long pb_menu_new_bar(void) {

@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (210)
+## ✅ Implemented (212)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -235,6 +235,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MENU ADD STRING | STATEMENT (menu item) | pb_menu_add_string — AppendMenuA MF_STRING (batch 50) |
 | MENU ADD POPUP | STATEMENT (submenu) | pb_menu_add_popup — AppendMenuA MF_POPUP (batch 50) |
 | MENU DELETE | STATEMENT (remove item) | pb_menu_delete — DeleteMenu MF_BYPOSITION (batch 50) |
+| GRAPHIC BITMAP NEW | STATEMENT (memory DIB) | pb_gdi_bitmap_new — CreateDIBSection (top-down 32bpp); not visible (batch 51) |
+| GRAPHIC BITMAP END | STATEMENT (destroy bitmap) | pb_gdi_bitmap_end — DeleteObject; no-arg form destroys last created (batch 51) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -333,9 +335,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC ARC | STATEMENT |
 | GRAPHIC ATTACH | STATEMENT |
 | GRAPHIC BITMAP CAPTURE | STATEMENT |
-| GRAPHIC BITMAP END | STATEMENT |
 | GRAPHIC BITMAP LOAD | STATEMENT |
-| GRAPHIC BITMAP NEW | STATEMENT |
 | GRAPHIC BOX | STATEMENT |
 | GRAPHIC CELL | STATEMENT |
 | GRAPHIC CELL SIZE | STATEMENT |

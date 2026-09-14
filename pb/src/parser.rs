@@ -1915,6 +1915,47 @@ impl Parser {
                 // MENU NEW BAR TO hMenu | MENU NEW POPUP TO hPop
                 // MENU ADD STRING, hMenu, txt$, id&, state& | MENU ADD POPUP, hMenu, hSub, id&
                 // MENU DELETE hMenu, pos& (batch 50)
+                // GRAPHIC BITMAP NEW w&, h& TO hBmp | GRAPHIC BITMAP END [hBmp]
+                // Memory DIB bitmap — not visible, console-testable (batch 51)
+                if name_upper == "GRAPHIC" {
+                    self.advance(); // consume GRAPHIC
+                    if self.peek_plain_upper() == "BITMAP" {
+                        self.advance();
+                        let op = self.peek_plain_upper();
+                        if op == "NEW" {
+                            self.advance();
+                            let mut args = vec![self.parse_expression()?];
+                            while self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::To) {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_BITMAP_NEW".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                        if op == "END" {
+                            self.advance();
+                            let mut args = Vec::new();
+                            if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_BITMAP_END".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                    }
+                }
+
                 if name_upper == "MENU" {
                     self.advance(); // consume MENU
                     let op = self.peek_plain_upper();

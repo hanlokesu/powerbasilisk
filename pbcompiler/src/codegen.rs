@@ -1791,6 +1791,14 @@ impl Compiler {
         self.module
             .declare_function("pb_menu_destroy", &IrType::I32, &[IrType::I64], false);
         self.module.declare_function(
+            "pb_gdi_bitmap_new",
+            &IrType::I64,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_gdi_bitmap_end", &IrType::I32, &[IrType::I64], false);
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4464,6 +4472,29 @@ impl Compiler {
                 let pos = self.compile_expr(fb, &call.args[1])?;
                 let p2 = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_menu_delete", &[h2, p2]);
+            }
+            "GRAPHIC_BITMAP_NEW" => {
+                // args: w&, h& [, hBmp TO target]
+                let w = self.compile_expr(fb, &call.args[0])?;
+                let w2 = self.convert_value(fb, &w, &IrType::I32, &PbType::Long);
+                let h = self.compile_expr(fb, &call.args[1])?;
+                let h2 = self.convert_value(fb, &h, &IrType::I32, &PbType::Long);
+                let hbmp = fb.call(&IrType::I64, "pb_gdi_bitmap_new", &[w2, h2]);
+                if let Some(Expr::Variable(tv)) = call.args.get(2) {
+                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv.clone()))?;
+                    let converted = self.convert_value(fb, &hbmp, &target.0.ty, &target.1);
+                    fb.store(&converted, &target.0);
+                }
+            }
+            "GRAPHIC_BITMAP_END" => {
+                // args: [] or [hBmp]
+                let h = if let Some(a0) = call.args.first() {
+                    self.compile_expr(fb, a0)?
+                } else {
+                    fb.const_i64(-1)
+                };
+                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                fb.call_void("pb_gdi_bitmap_end", &[h2]);
             }
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)
