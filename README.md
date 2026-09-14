@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
 > Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
@@ -315,6 +316,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
 | `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
 | `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
+| `BITS$(director, s$)` | ✅ | 43 (v0.1.37) | pb_bits_str — STRING/WSTRING identity copy (ANSI-only build) |
+| `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
+| `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | DAYNAME$(n&) | ✅ | 42 (v0.1.36) | pb_dayname — 0=Sunday..6=Saturday, runtime name table |
 | MONTHNAME$(n&) | ✅ | 42 (v0.1.36) | pb_monthname — 1=January..12=December, runtime name table |
 | DATACOUNT | ✅ | 42 (v0.1.36) | pb_data_count — current procedure DATA pool size |
@@ -447,6 +451,13 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.37 (2026-09-15) — Batch 43: BITS$ / PATHNAME$ / PRINTERCOUNT
+- **BITS$(director, s$)** — returns a copy of the string argument (STRING/WSTRING accepted; this build is ANSI-only, so the copy is identity). Maps to pb_bits_str.
+- **PATHNAME$(director, spec$)** — pure string path parsing with five directors: FULL (input unchanged), PATH (directory incl. trailing separator), NAME (stem, no extension), EXTN (extension incl. dot), NAMEX (full name incl. extension). Maps to pb_pathname.
+- **PRINTERCOUNT** — returns the number of installed printers. Implemented via the registry (advapi32 RegOpenKeyExA on Print\Printers + RegQueryInfoKeyA): the winspool EnumPrintersW probe crashed inside PB-linked exes for reasons not yet isolated (same call works in a standalone clang exe), so the registry path is used instead and returns 0 when no printers are installed. Maps to pb_printer_count.
+- Parser: BITS$ first argument STRING is a keyword token (Token::String_), not an Identifier; PRINTERCOUNT joins DATACOUNT/THREADCOUNT in the bare no-parentheses function branch.
+- Tests: examples/batch43_test.bas (7/7), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.36 (2026-09-15) — Batch 42: 4 date/time & runtime-count functions
 - **DAYNAME$(n&)** — converts day-of-week number (0=Sunday .. 6=Saturday) to the associated name (pb_dayname, static name table, out-of-range clamps to 0).

@@ -3356,6 +3356,10 @@ typedef void* FARPROC_PB;
 __declspec(dllimport) void* __stdcall LoadLibraryA(const char* lpFileName);
 __declspec(dllimport) void* __stdcall GetProcAddress(void* hModule, const char* lpProcName);
 __declspec(dllimport) int __stdcall FreeLibrary(void* hLibModule);
+typedef void* HKEY_PB;
+__declspec(dllimport) long __stdcall RegOpenKeyExA(HKEY_PB, const char*, unsigned long, unsigned long, HKEY_PB*);
+__declspec(dllimport) long __stdcall RegQueryInfoKeyA(HKEY_PB, char*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, unsigned long*, void*);
+__declspec(dllimport) long __stdcall RegCloseKey(HKEY_PB);;
 __declspec(dllimport) int __stdcall SetConsoleTitleA(const char* lpConsoleTitle);
 __declspec(dllimport) unsigned long __stdcall GetConsoleTitleA(char* lpConsoleTitle, unsigned long nSize);
 #endif
@@ -3494,6 +3498,26 @@ void pb_import_close(void* hndl) {
     if (hndl) FreeLibrary(hndl);
 }
 
+/* Batch 43: PRINTERCOUNT (placed mid-file next to pb_import_addr — file-tail
+   placement of fresh Win32 dllimport calls crashed inside PB-linked exes). */
+#define PB_PRINTER_ENUM_LOCAL 0x00000002
+#define PB_PRINTER_ENUM_CONNECTIONS 0x00000004
+#define PB_PRINTER_INFO_LEVEL2 2
+typedef int (__stdcall* PB_EnumPrintersW_t)(unsigned long, const char*, unsigned long, char*, unsigned long, unsigned long*, unsigned long*);
+__declspec(dllimport) int __stdcall EnumPrintersW(unsigned long Flags, const char* Name, unsigned long Level, char* pPrinterEnum, unsigned long cbBuf, unsigned long* pcbNeeded, unsigned long* pcReturned);
+long long pb_printer_count(void) {
+    /* PRINTERCOUNT: count installed printers via the registry (winspool's
+       EnumPrintersW crashed inside PB-linked exes for reasons not yet found;
+       registry path is stable and PB-exe-safe). */
+    HKEY_PB hk = 0;
+    unsigned long count = 0;
+    if (RegOpenKeyExA((HKEY_PB)0x80000002L, "SYSTEM\\CurrentControlSet\\Control\\Print\\Printers",
+                      0, 0x20019L, &hk)) return 0;
+    RegQueryInfoKeyA(hk, 0, 0, 0, &count, 0, 0, 0, 0, 0, 0, 0);
+    RegCloseKey(hk);
+    return (long long)count;
+}
+
 /* ---- Batch 23: WINDOW SET/GET TEXT (console title) + TYPE SET ---- */
 void pb_console_set_title(const char* s) {
     SetConsoleTitleA(s ? s : "");
@@ -3615,6 +3639,47 @@ void pb_dir_close(void) {
         FindClose(g_dir_handle);
         g_dir_handle = PB_INVALID_HANDLE;
     }
+}
+/* Batch 43: BITS$ / PATHNAME$ / PRINTERCOUNT
+   LoadLibraryA-based EnumPrintersW probe; kept near the other dllimport
+   consumers (pb_import_addr) rather than the file tail. */
+#define PB_PRINTER_ENUM_LOCAL 0x00000002
+#define PB_PRINTER_ENUM_CONNECTIONS 0x00000004
+#define PB_PRINTER_INFO_LEVEL2 2
+__declspec(dllimport) int __stdcall EnumPrintersW(unsigned long Flags, const char* Name, unsigned long Level, char* pPrinterEnum, unsigned long cbBuf, unsigned long* pcbNeeded, unsigned long* pcReturned);
+
+char* pb_bits_str(const char* director, const char* s) {
+    (void)director; /* STRING / WSTRING — this build is ANSI-only */
+    if (!s) return pb_bstr_alloc("", 0);
+    return pb_bstr_alloc(s, (int)strlen(s));
+}
+char* pb_pathname(const char* director, const char* spec) {
+    if (!spec) spec = "";
+    const char* slash = strrchr(spec, '\\');
+    const char* colon = strrchr(spec, ':');
+    const char* last = slash > colon ? slash : colon;
+    const char* dot = strrchr(spec, '.');
+    char buf[1024];
+    int len = 0;
+    if (!director) director = "FULL";
+    if (strcmp(director, "FULL") == 0) {
+        len = (int)strlen(spec);
+        if (len > 1023) len = 1023;
+        memcpy(buf, spec, len);
+    } else if (strcmp(director, "PATH") == 0) {
+        if (last) { len = (int)(last - spec) + 1; if (len > 1023) len = 1023; memcpy(buf, spec, len); }
+    } else if (strcmp(director, "EXTN") == 0) {
+        if (dot) { const char* q = dot; len = (int)strlen(q); if (len > 1023) len = 1023; memcpy(buf, q, len); }
+    } else { /* NAME or NAMEX */
+        const char* start = last ? last + 1 : spec;
+        int slen = (int)strlen(start);
+        if (strcmp(director, "NAME") == 0 && dot && dot > start) slen = (int)(dot - start);
+        len = slen;
+        if (len > 1023) len = 1023;
+        memcpy(buf, start, len);
+    }
+    buf[len] = 0;
+    return pb_bstr_alloc(buf, len);
 }
 
 /* Batch 42: DAYNAME$ / MONTHNAME$ / DATACOUNT / THREADCOUNT (definitions at file end:

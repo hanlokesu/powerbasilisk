@@ -1666,6 +1666,20 @@ impl Compiler {
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
             .declare_function("pb_dayname", &IrType::Ptr, &[IrType::I64], false);
+        self.module.declare_function(
+            "pb_bits_str",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_pathname",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_printer_count", &IrType::I64, &[], false);
         self.module
             .declare_function("pb_monthname", &IrType::Ptr, &[IrType::I64], false);
         self.module
@@ -8040,6 +8054,9 @@ impl Compiler {
             "SHRINK" => Some(self.builtin_shrink(fb, args)),
             "BUILD" => Some(self.builtin_build(fb, args)),
             "DAYNAME" => Some(self.builtin_name1(fb, args, "pb_dayname")),
+            "BITS" => Some(self.builtin_str2(fb, args, "pb_bits_str")),
+            "PATHNAME" => Some(self.builtin_str2(fb, args, "pb_pathname")),
+            "PRINTERCOUNT" => Some(self.builtin_count0(fb, "pb_printer_count")),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
             "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
@@ -9018,6 +9035,21 @@ impl Compiler {
         }
         let n = self.compile_expr(fb, &args[0])?;
         Ok(fb.call(&IrType::Ptr, fname, std::slice::from_ref(&n)))
+    }
+
+    fn builtin_str2(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+    ) -> PbResult<Val> {
+        if args.len() != 2 {
+            return Err(PbError::runtime(format!("{fname} requires 2 arguments")));
+        }
+        let a0 = self.compile_expr(fb, &args[0])?;
+        let a1 = self.compile_expr(fb, &args[1])?;
+        let v = fb.call(&IrType::Ptr, fname, &[a0, a1]);
+        Ok(self.null_guard_string(fb, &v))
     }
 
     fn builtin_count0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {

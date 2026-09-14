@@ -5055,6 +5055,61 @@ impl Parser {
                 Ok(Expr::FunctionCall("DIR$".to_string(), args))
             }
             Token::Identifier(name)
+                if name.eq_ignore_ascii_case("BITS") || name.eq_ignore_ascii_case("BITS$") =>
+            {
+                // BITS$(STRING, s$) / BITS$(WSTRING, s$) — director STRING is the String_ keyword,
+                // WSTRING is an Identifier token; map both to string modes.
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if self.peek() == &Token::String_ {
+                    self.advance();
+                    args.push(Expr::StringLit("STRING".to_string()));
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    args.extend(self.parse_arg_list()?);
+                } else if let Token::Identifier(ref w) = self.peek().clone() {
+                    let u = w.to_uppercase();
+                    if u == "WSTRING" {
+                        self.advance();
+                        args.push(Expr::StringLit(u));
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        args.extend(self.parse_arg_list()?);
+                    } else if self.peek() != &Token::RParen {
+                        args = self.parse_arg_list()?;
+                    }
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("BITS$".to_string(), args))
+            }
+            Token::Identifier(name)
+                if name.eq_ignore_ascii_case("PATHNAME")
+                    || name.eq_ignore_ascii_case("PATHNAME$") =>
+            {
+                // PATHNAME$(FULL|PATH|NAME|EXTN|NAMEX, filespec$) — director words are Identifier tokens
+                self.advance();
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if let Token::Identifier(ref w) = self.peek().clone() {
+                    let u = w.to_uppercase();
+                    if matches!(u.as_str(), "FULL" | "PATH" | "NAME" | "EXTN" | "NAMEX") {
+                        self.advance();
+                        args.push(Expr::StringLit(u));
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        args.extend(self.parse_arg_list()?);
+                    } else if self.peek() != &Token::RParen {
+                        args = self.parse_arg_list()?;
+                    }
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Expr::FunctionCall("PATHNAME$".to_string(), args))
+            }
+            Token::Identifier(name)
                 if name.eq_ignore_ascii_case("CLIP") || name.eq_ignore_ascii_case("CLIP$") =>
             {
                 // CLIP$(LEFT str, n) / CLIP$(RIGHT str, n) / CLIP$(MID str, start, n)
@@ -5112,6 +5167,7 @@ impl Parser {
                     Expr::FunctionCall(name, args)
                 } else if name.eq_ignore_ascii_case("DATACOUNT")
                     || name.eq_ignore_ascii_case("THREADCOUNT")
+                    || name.eq_ignore_ascii_case("PRINTERCOUNT")
                 {
                     // No-argument functions without parentheses (PB syntax: n = DATACOUNT)
                     Expr::FunctionCall(name.to_uppercase(), Vec::new())
