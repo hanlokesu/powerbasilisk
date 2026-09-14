@@ -242,9 +242,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **186** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **115** documented upstream with no codegen evidence yet.
-> (2026-09-14: +2 official keywords from batch 26 — PREFIX/END PREFIX
+> Summary: **190** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **111** documented upstream with no codegen evidence yet.
+> (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
+> procedure dispatch, GET$$/PUT$$ wide UTF-16LE string I/O, MACRO/END MACRO
+> compile-time text substitution. +2 from batch 26 — PREFIX/END PREFIX
 > compile-time text transform, TRY/CATCH/FINALLY/EXIT TRY structured
 > error trapping. Batch 25 added ON ERROR trapping, RESUME, REGISTER.)
 > (Earlier: +5 official keywords from batch 23 — real STATIC semantics,
@@ -434,7 +436,7 @@ Four more *Not implemented* items moved to *Implemented*
 ### v0.1.20 (2026-09-14) — Batch 26: PREFIX / TRY (2 statements)
 
 Two more *Not implemented* items moved to *Implemented*
-(coverage: **186 implemented / 115 not implemented / 202 tier-3 DDT**):
+(coverage: **190 implemented / 111 not implemented / 202 tier-3 DDT**):
 
 - **PREFIX / END PREFIX** — compile-time text transform implemented in the
   preprocessor: every line between `PREFIX "source code"` and `END PREFIX`
