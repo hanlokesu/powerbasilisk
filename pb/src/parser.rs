@@ -1999,6 +1999,63 @@ impl Parser {
                     }
                 }
 
+                // IMAGELIST NEW BITMAP|ICON w&, h&, depth&, initial& TO hLst
+                // IMAGELIST GET COUNT hLst TO dataValue&
+                // IMAGELIST KILL hLst
+                if name_upper == "IMAGELIST" {
+                    self.advance(); // consume IMAGELIST
+                    let op = self.peek_plain_upper();
+                    if op == "NEW" {
+                        self.advance(); // consume NEW
+                        let kind = self.peek_plain_upper();
+                        if kind == "BITMAP" || kind == "ICON" {
+                            self.advance();
+                        }
+                        let mut args = vec![self.parse_expression()?]; // nWidth
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "IMAGELIST_NEW".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if op == "GET" {
+                        self.advance(); // consume GET
+                        if self.peek_plain_upper() == "COUNT" {
+                            self.advance(); // consume COUNT
+                        }
+                        let mut args = vec![self.parse_expression()?]; // hLst
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "IMAGELIST_COUNT".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if op == "KILL" {
+                        self.advance(); // consume KILL
+                        let args = vec![self.parse_expression()?];
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "IMAGELIST_KILL".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                }
+
                 // MAT a() = CON | CON(expr) | IDN | ZER | src() | src()+src() |
                 //      src()-src() | src()*src() | (expr)*src() | INV(src()) | TRN(src())
                 if name_upper == "MAT" {

@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (203)
+## ✅ Implemented (204)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -228,6 +228,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FONT END | STATEMENT | PB/Win + PB/CC | Established |
 | FONT NEW | STATEMENT | PB/Win + PB/CC | Established |
 | MKE$ | STATEMENT | PB/Win + PB/CC | 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
+| IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL) | ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers — use QUAD variables (batch 48) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -411,7 +412,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC WINDOW NONSTABLE | STATEMENT |
 | GRAPHIC WINDOW NORMALIZE | STATEMENT |
 | GRAPHIC WINDOW STABILIZE | STATEMENT |
-| IMAGELIST | STATEMENT |
 | LISTBOX | STATEMENT |
 | LISTVIEW | STATEMENT |
 | MENU ADD POPUP | STATEMENT |

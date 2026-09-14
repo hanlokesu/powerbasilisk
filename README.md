@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +1 official statement keyword from batch 48 — IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL, comctl32 ImageList_Create/GetImageCount/Destroy; 64-bit handles require QUAD variables (a LONG truncates the pointer and the next call crashes 0xC0000005). Coverage now 204 implemented / 198 tier-3 / 101 not implemented.)
 > (2026-09-15: +2 official statement keywords from batch 47 — FONT NEW (GDI CreateFontA logical font, point-size height via MulDiv/GetDeviceCaps, style bits bold/italic/underline/strikeout, TO handle) and FONT END (DeleteObject). Tier-3 DDT items promoted; coverage now 203 implemented / 199 tier-3 / 101 not implemented.)
 > (2026-09-15: +1 official statement keyword from batch 46 — MEMORY COPY/SWAP/FILL: byte-block memmove copy (overlap-safe), byte-wise block swap, typed fill BYTE|WORD|DWORD with element counts, and string-pattern fill. Statement-class, coverage moved to 201 implemented / 201 tier-3 / 101 not implemented.)
 > (2026-09-15: +4 official function keywords from batch 45 — ERL$ error checkpoint name, EXTRACT$ substring-to-match (with optional start and ANY), RGB/BGR color packing (3-arg compose and 1-arg byte swap). Function-class, coverage counts unchanged.)
@@ -232,7 +233,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **203** statement-class keywords implemented · **199** DDT/GUI-class
+> Summary: **204** statement-class keywords implemented · **198** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -324,7 +325,8 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
 | `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 48 (v0.1.42) | pb_imagelist_new — ImageList_Create (comctl32); pb_imagelist_count — ImageList_GetImageCount; pb_imagelist_kill — ImageList_Destroy; 64-bit handles (QUAD) |
+| 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
 | `FONT END fhndl` | ✅ | 47 (v0.1.41) | pb_font_end — DeleteObject |
 | `MEMORY COPY src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_copy — memmove byte copy (overlap-safe) |
 | `MEMORY SWAP src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_swap — byte-wise block exchange |
@@ -471,6 +473,13 @@ arrays, and core string/numeric built-ins — **✅**
 
 ## Changelog
 
+### v0.1.42 (2026-09-15) — Batch 48: IMAGELIST NEW / GET COUNT / KILL
+
+- **IMAGELIST NEW BITMAP|ICON w&, h&, depth&, initial& TO hLst** — comctl32 ImageList_Create (hand-rolled dllimport); depth maps to ILC color flags (0/4/8/16/24/32); initial is the initial capacity, not the image count.
+- **IMAGELIST GET COUNT hLst TO cnt&** — ImageList_GetImageCount (0 for a fresh list).
+- **IMAGELIST KILL hLst** — ImageList_Destroy.
+- **Important**: imagelist handles are 64-bit pointers — store them in **QUAD** variables (a 32-bit LONG truncates the pointer and the next call crashes 0xC0000005). Runtime pb_imagelist_new returns long long.
+- Tests: examples/batch48_test.bas (3/3), official regression 14/14 ALL PASS, fmt + clippy clean.
 ### v0.1.41 (2026-09-15) — Batch 47: FONT NEW / FONT END
 - **FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl**: creates a GDI logical font via CreateFontA. Point size is converted to device pixels with MulDiv/GetDeviceCaps(LOGPIXELSY); style bits 1=Bold, 2=Italic, 4=Underline, 8=Strikeout; the handle is stored into the TO variable (0 on failure).
 - **FONT END fhndl**: destroys the font with DeleteObject.

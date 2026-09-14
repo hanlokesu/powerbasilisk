@@ -1751,6 +1751,16 @@ impl Compiler {
         self.module
             .declare_function("pb_font_end", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
+            "pb_imagelist_new",
+            &IrType::I64,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_imagelist_count", &IrType::I32, &[IrType::I64], false);
+        self.module
+            .declare_function("pb_imagelist_kill", &IrType::I32, &[IrType::I64], false);
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4313,6 +4323,56 @@ impl Compiler {
                 if let Some(h) = call.args.first() {
                     let hv = self.compile_expr(fb, h)?;
                     fb.call_void("pb_font_end", &[hv]);
+                }
+            }
+
+            "IMAGELIST_NEW" => {
+                // args: w, h, depth, initial, to_var
+                let w = self.compile_expr(fb, &call.args[0])?;
+                let w2 = self.convert_value(fb, &w, &IrType::I32, &PbType::Long);
+                let mut h2 = fb.const_i32(0);
+                let mut depth = fb.const_i32(24);
+                let mut initial = fb.const_i32(4);
+                let mut i = 1;
+                while i < call.args.len() {
+                    match i {
+                        1 => h2 = self.compile_expr(fb, &call.args[i])?,
+                        2 => depth = self.compile_expr(fb, &call.args[i])?,
+                        3 => initial = self.compile_expr(fb, &call.args[i])?,
+                        _ => {}
+                    }
+                    i += 1;
+                }
+                let to_var: Option<String> = call.args.last().and_then(|e| match e {
+                    Expr::Variable(v) => Some(v.clone()),
+                    _ => None,
+                });
+                let hh = fb.call(&IrType::I64, "pb_imagelist_new", &[w2, h2, depth, initial]);
+                if let Some(tv) = to_var {
+                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv))?;
+                    let converted = self.convert_value(fb, &hh, &target.0.ty, &target.1);
+                    fb.store(&converted, &target.0);
+                }
+            }
+            "IMAGELIST_COUNT" => {
+                // args: h, to_var
+                let hh = self.compile_expr(fb, &call.args[0])?;
+                let h2 = self.convert_value(fb, &hh, &IrType::I64, &PbType::Quad);
+                let c = fb.call(&IrType::I32, "pb_imagelist_count", &[h2]);
+                if let Some(tv) = call.args.last().and_then(|e| match e {
+                    Expr::Variable(v) => Some(v.clone()),
+                    _ => None,
+                }) {
+                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv))?;
+                    let converted = self.convert_value(fb, &c, &target.0.ty, &target.1);
+                    fb.store(&converted, &target.0);
+                }
+            }
+            "IMAGELIST_KILL" => {
+                if let Some(h) = call.args.first() {
+                    let hv = self.compile_expr(fb, h)?;
+                    let h2 = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_imagelist_kill", &[h2]);
                 }
             }
             "FILECOPY" => {

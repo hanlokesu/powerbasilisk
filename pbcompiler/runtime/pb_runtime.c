@@ -51,6 +51,10 @@ __declspec(dllimport) int __stdcall ReleaseDC(void* hWnd, void* hDC);
 __declspec(dllimport) int __stdcall MulDiv(int nNumber, int nNumerator, int nDenominator);
 __declspec(dllimport) void* __stdcall CreateFontA(int cHeight, int cWidth, int cEscapement, int cOrientation, int cWeight, unsigned char bItalic, unsigned char bUnderline, unsigned char bStrikeOut, unsigned char iCharSet, unsigned char iOutPrecision, unsigned char iClipPrecision, unsigned char iQuality, unsigned char iPitchAndFamily, const char* pszFaceName);
 __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
+__declspec(dllimport) void* __stdcall ImageList_Create(int cx, int cy, unsigned int flags, int cInitial, int cGrow);
+__declspec(dllimport) int __stdcall ImageList_GetImageCount(void* himl);
+__declspec(dllimport) int __stdcall ImageList_Destroy(void* himl);
+
 #define PB_FW_NORMAL 400
 #define PB_FW_BOLD 700
 
@@ -3766,6 +3770,27 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+
+/* IMAGELIST — comctl32 image list objects (batch 48) */
+long long pb_imagelist_new(int width, int height, int depth, int initial) {
+    unsigned int flags = 0;
+    switch (depth) {
+        case 0: flags = 1 | 0; break;          /* ILC_MASK | ILC_COLOR */
+        case 4: flags = 1 | 0x4; break;        /* ILC_COLOR4 */
+        case 8: flags = 1 | 0x8; break;        /* ILC_COLOR8 */
+        case 16: flags = 1 | 0x10; break;      /* ILC_COLOR16 */
+        case 32: flags = 1 | 0x20; break;      /* ILC_COLOR32 */
+        default: flags = 1 | 0x18; break;      /* ILC_COLOR24 */
+    }
+    void* h = ImageList_Create(width, height, flags, initial, 4);
+    return (long long)(intptr_t)h;
+}
+int pb_imagelist_count(long long h) {
+    return ImageList_GetImageCount((void*)(intptr_t)h);
+}
+int pb_imagelist_kill(long long h) {
+    return ImageList_Destroy((void*)(intptr_t)h) ? 1 : 0;
+}
 
 /* FONT NEW / FONT END — GDI logical font objects (batch 47) */
 int pb_font_new(const char* name, float points, int style, int charset, int pitch, int escapement) {
