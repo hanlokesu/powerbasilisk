@@ -41,29 +41,6 @@ silently dropped during code generation.
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
 > table below (190 implemented / 111 not implemented / 202 tier-3 DDT).
-| PB statement / function | Maps to | Notes |
-| --- | --- | --- |
-| `MSGBOX text$ [, style& [, title$]]` | `MessageBoxA` (user32) | modal message box |
-| `SHELL command$ [, mode&]` | `ShellExecuteA` (shell32) | launch a program / document |
-| `CURDIR$` | `GetCurrentDirectoryA` (kernel32) | current working directory (no-parens call supported) |
-| `ISFILE(path$)` | `_access` (C runtime) | returns -1 if the file exists, 0 if not |
-| `REPLACE old$ WITH new$ IN target$` | `pb_replace` (runtime) | replace every occurrence of `old$` in `target$` |
-| `ERASE array` | `pb_erase_array` (runtime) | zero numeric arrays, null string arrays (static arrays) |
-| `LSET var$ = expr` | `pb_lset` / `pb_lset_buf` (runtime) | left-justify into a fixed-length string, pad with spaces |
-| `RSET var$ = expr` | `pb_rset` / `pb_rset_buf` (runtime) | right-justify into a fixed-length string, pad with spaces |
-| `WRITE #f, ...` | `pb_write_file_*` (runtime) | CSV-style record output: strings quoted, numbers raw, CRLF row terminator |
-| `SEEK #f, pos` | `pb_seek` (runtime) | 1-based byte repositioning (`fseek` under the hood) |
-| `LOCK #f [, rec [, len]]` | `pb_lock` (runtime) | byte-range file lock via CRT `_locking` |
-| `UNLOCK #f [, rec [, len]]` | `pb_unlock` (runtime) | release a byte-range file lock |
-| `RESET` | `pb_reset` (runtime) | close every open file handle |
-| `FLUSH #f` | `pb_flush` (runtime) | `fflush` a file buffer to disk |
-| `NAME old$ AS new$` | `pb_name` (runtime) | rename a file (`rename`) |
-| `ON GOTO` | computed `switch`-style branch | jump to one of N labels selected by a 1-based index |
-| `ON GOSUB` | computed `GOSUB` + `RETURN` | call one of N subroutines selected by a 1-based index |
-| `CLIPBOARD SET TEXT / GET TEXT / RESET` | Win32 clipboard | text to/from the system clipboard |
-| `INPUT FLUSH` | `pb_input_flush` (runtime) | discard buffered console input |
-| `OPTION EXPLICIT` / `REM` / `GLOBAL` | accepted | declarations and comments parse cleanly |
-
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
