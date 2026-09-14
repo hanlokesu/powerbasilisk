@@ -1912,6 +1912,25 @@ impl Parser {
                     return Ok(Statement::Kill(filename));
                 }
 
+                // COLOR fore& [, back&] — console text attribute (PB/CC, batch 49)
+                if name_upper == "COLOR" {
+                    self.advance(); // consume COLOR
+                    let mut args = Vec::new();
+                    if self.peek() != &Token::Eol {
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "COLOR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+
                 // MEMORY COPY src&, dst&, count& | MEMORY SWAP src&, dst&, count&
                 // MEMORY FILL dst&, count&, BYTE|WORD|DWORD expr | MEMORY FILL dst&, count&, str$
                 if name_upper == "MEMORY" {

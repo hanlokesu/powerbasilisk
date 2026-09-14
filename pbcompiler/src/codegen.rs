@@ -1761,6 +1761,12 @@ impl Compiler {
         self.module
             .declare_function("pb_imagelist_kill", &IrType::I32, &[IrType::I64], false);
         self.module.declare_function(
+            "pb_color",
+            &IrType::Void,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
             "pb_pathscan",
             &IrType::Ptr,
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
@@ -4374,6 +4380,23 @@ impl Compiler {
                     let h2 = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_imagelist_kill", &[h2]);
                 }
+            }
+
+            "COLOR" => {
+                // args: [fore], [back] — defaults -1 (keep current)
+                let fore = if let Some(a0) = call.args.first() {
+                    self.compile_expr(fb, a0)?
+                } else {
+                    fb.const_i32(-1)
+                };
+                let back = if let Some(a1) = call.args.get(1) {
+                    self.compile_expr(fb, a1)?
+                } else {
+                    fb.const_i32(-1)
+                };
+                let f2 = self.convert_value(fb, &fore, &IrType::I32, &PbType::Long);
+                let b2 = self.convert_value(fb, &back, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_color", &[f2, b2]);
             }
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)

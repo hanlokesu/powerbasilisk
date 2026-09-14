@@ -54,6 +54,9 @@ __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
 __declspec(dllimport) void* __stdcall ImageList_Create(int cx, int cy, unsigned int flags, int cInitial, int cGrow);
 __declspec(dllimport) int __stdcall ImageList_GetImageCount(void* himl);
 __declspec(dllimport) int __stdcall ImageList_Destroy(void* himl);
+__declspec(dllimport) void* __stdcall GetStdHandle(unsigned int nStdHandle);
+__declspec(dllimport) int __stdcall SetConsoleTextAttribute(void* hConsoleOutput, unsigned short wAttributes);
+
 
 #define PB_FW_NORMAL 400
 #define PB_FW_BOLD 700
@@ -3770,6 +3773,16 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
     return pb_bstr_alloc("", 0);
 }
 
+
+/* COLOR — console text attribute (PB/CC, batch 49) */
+void pb_color(int fore, int back) {
+    void* h = GetStdHandle((unsigned int)-11); /* STD_OUTPUT_HANDLE */
+    if (h == 0 || h == (void*)-1) return;
+    unsigned short attr = 7;
+    if (fore >= 0 && fore <= 15) attr = (unsigned short)(fore & 15);
+    if (back >= 0 && back <= 15) attr |= (unsigned short)((back & 15) << 4);
+    SetConsoleTextAttribute(h, attr);
+}
 
 /* IMAGELIST — comctl32 image list objects (batch 48) */
 long long pb_imagelist_new(int width, int height, int depth, int initial) {
