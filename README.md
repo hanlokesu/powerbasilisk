@@ -242,10 +242,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
-> Summary: **184** statement-class keywords implemented · **202** DDT/GUI-class
-> deferred (Tier 3) · **117** documented upstream with no codegen evidence yet.
-> (2026-09-12: +3 official keywords from batch 25 — ON ERROR run-time
-> trapping, RESUME (all four forms), REGISTER-as-LOCAL.)
+> Summary: **186** statement-class keywords implemented · **202** DDT/GUI-class
+> deferred (Tier 3) · **115** documented upstream with no codegen evidence yet.
+> (2026-09-14: +2 official keywords from batch 26 — PREFIX/END PREFIX
+> compile-time text transform, TRY/CATCH/FINALLY/EXIT TRY structured
+> error trapping. Batch 25 added ON ERROR trapping, RESUME, REGISTER.)
 > (Earlier: +5 official keywords from batch 23 — real STATIC semantics,
 > ARRAY ASSIGN, TYPE SET, WINDOW SET/GET TEXT console-title bridge, plus a
 > TYPE fixed-string field assignment bug fix; +16 official keywords from batch 21 — COMM serial port
@@ -379,6 +380,35 @@ arrays, and core string/numeric built-ins — **✅**
 - Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
   fmt + clippy clean.
 ## Changelog
+### v0.1.20 (2026-09-14) — Batch 26: PREFIX / TRY (2 statements)
+
+Two more *Not implemented* items moved to *Implemented*
+(coverage: **186 implemented / 115 not implemented / 202 tier-3 DDT**):
+
+- **PREFIX / END PREFIX** — compile-time text transform implemented in the
+  preprocessor: every line between `PREFIX "source code"` and `END PREFIX`
+  has the given source code prepended (e.g. `PREFIX "PRINT "` turns the
+  next lines into PRINT statements). Reduces repetitive typing for object
+  members, UDT fields and command prefixes. Verified: two prefixed PRINT
+  lines expand and run correctly.
+- **TRY / CATCH / FINALLY / EXIT TRY** — structured run-time error trapping:
+  - Statements in the TRY body run normally; the first statement that sets
+    a run-time error (ERR <> 0) jumps to the CATCH block.
+  - CATCH runs only when an error occurred; trapping is disabled inside it,
+    so you read ERR with a conventional `IF ERR = ...` test.
+  - FINALLY runs unconditionally (error or not), then execution continues
+    after END TRY.
+  - EXIT TRY jumps to the statement following END TRY.
+  - TRY structures nest; each structure clears and restores the error flags
+    (documented approximation: ERR is reset to 0 on exit rather than
+    restored to the pre-TRY value, and EXIT TRY skips FINALLY).
+  - Reuses the batch-25 ON ERROR trap machinery, so MKDIR / RMDIR / KILL
+    and friends trigger CATCH exactly like they trigger ON ERROR handlers.
+- Verified in examples/batch26_test.bas (7 scenarios: PREFIX expansion,
+  TRY/CATCH on ERR=75, no-error CATCH skip, CATCH+FINALLY, FINALLY-only,
+  EXIT TRY, nested TRY). Official regression **14/14 ALL PASS**,
+  fmt + clippy clean.
+
 ### v0.1.19 (2026-09-12) — Batch 25: ON ERROR / RESUME / REGISTER (3 statements)
 
 Three more *Not implemented* items moved to *Implemented*

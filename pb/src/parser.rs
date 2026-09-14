@@ -1309,6 +1309,11 @@ impl Parser {
                         self.advance();
                         Statement::ExitSelect
                     }
+                    // EXIT TRY (batch 26)
+                    Token::Identifier(ref kw) if kw.eq_ignore_ascii_case("TRY") => {
+                        self.advance();
+                        Statement::ExitTry
+                    }
                     _ => Statement::ExitSub,
                 };
                 self.consume_to_eol();
@@ -1793,60 +1798,72 @@ impl Parser {
                     }));
                 }
 
-                // TRY ... CATCH ... END TRY
+                // TRY ... CATCH ... [FINALLY ...] END TRY  (batch 26)
+                // Structured error trap: body until CATCH/FINALLY/END TRY,
+                // catch until FINALLY/END TRY, finally until END TRY.
                 if name_upper == "TRY" {
                     self.advance(); // consume TRY
                     self.skip_eol();
-                    // Parse try body until CATCH or END TRY
+                    let line_start = line;
                     let mut try_body = Vec::new();
+                    let mut catch_body = Vec::new();
+                    let mut finally_body = Vec::new();
+                    let mut in_catch = false;
+                    let mut in_finally = false;
                     loop {
+                        // Block keywords: CATCH / FINALLY / END TRY
                         if let Token::Identifier(ref kw) = self.peek().clone() {
                             let kw_upper = kw.to_uppercase();
-                            if kw_upper == "CATCH" {
-                                self.advance(); // consume CATCH
+                            if kw_upper == "CATCH" && !in_catch && !in_finally {
+                                self.advance();
                                 self.consume_to_eol();
                                 self.skip_eol();
-                                break;
+                                in_catch = true;
+                                continue;
+                            }
+                            if kw_upper == "FINALLY" && !in_finally {
+                                self.advance();
+                                self.consume_to_eol();
+                                self.skip_eol();
+                                in_finally = true;
+                                in_catch = false;
+                                continue;
                             }
                         }
                         if let Token::End = self.peek() {
-                            // Could be END TRY
                             if let Some(Token::Identifier(ref kw)) = self.peek_at(1) {
                                 if kw.eq_ignore_ascii_case("TRY") {
                                     self.advance(); // consume END
                                     self.advance(); // consume TRY
                                     self.skip_eol();
-                                    return Ok(Statement::Block(try_body));
+                                    return Ok(Statement::Try(TryStmt {
+                                        body: try_body,
+                                        catch: catch_body,
+                                        finally: finally_body,
+                                        line: line_start,
+                                    }));
                                 }
                             }
                         }
                         if self.peek() == &Token::Eof {
                             break;
                         }
-                        try_body.push(self.parse_statement()?);
+                        let stmt = self.parse_statement()?;
+                        if in_finally {
+                            finally_body.push(stmt);
+                        } else if in_catch {
+                            catch_body.push(stmt);
+                        } else {
+                            try_body.push(stmt);
+                        }
                         self.skip_eol();
                     }
-                    // Skip catch body until END TRY
-                    loop {
-                        if let Token::End = self.peek() {
-                            if let Some(Token::Identifier(ref kw)) = self.peek_at(1) {
-                                if kw.eq_ignore_ascii_case("TRY") {
-                                    self.advance(); // consume END
-                                    self.advance(); // consume TRY
-                                    self.skip_eol();
-                                    break;
-                                }
-                            }
-                        }
-                        if self.peek() == &Token::Eof {
-                            break;
-                        }
-                        self.advance();
-                        if self.at_eol_or_eof() {
-                            self.skip_eol();
-                        }
-                    }
-                    return Ok(Statement::Block(try_body));
+                    return Ok(Statement::Try(TryStmt {
+                        body: try_body,
+                        catch: catch_body,
+                        finally: finally_body,
+                        line: line_start,
+                    }));
                 }
 
                 // SWAP var1, var2 — exchange two variables

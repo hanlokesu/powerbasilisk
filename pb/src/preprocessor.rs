@@ -76,6 +76,7 @@ impl Preprocessor {
         let raw_lines: Vec<&str> = source.lines().collect();
         let mut i = 0;
         let mut if_stack: Vec<bool> = Vec::new(); // stack of "are we in an active block?"
+        let mut prefix: Option<String> = None; // active PREFIX "source code" (batch 26)
 
         while i < raw_lines.len() {
             let line_num = i + 1;
@@ -183,6 +184,22 @@ impl Preprocessor {
 
             let upper_full = trimmed_full.to_uppercase();
 
+            // PREFIX / END PREFIX (batch 26): prepend "source code" to every
+            // following line until END PREFIX. Text-level transform only.
+            if upper_full == "END PREFIX" {
+                prefix = None;
+                i += 1;
+                continue;
+            }
+            if upper_full.starts_with("PREFIX") {
+                let rest = trimmed_full[6..].trim();
+                if let Some(code) = extract_string(rest) {
+                    prefix = Some(code);
+                }
+                i += 1;
+                continue;
+            }
+
             // #COMPILE / #COMPILER — skip entirely
             if upper_full.starts_with("#COMPILE") || upper_full.starts_with("#COMPILER") {
                 i += 1;
@@ -245,9 +262,13 @@ impl Preprocessor {
                 continue;
             }
 
-            // Regular line — emit it
+            // Regular line — emit it (prepend active PREFIX source code, batch 26)
+            let mut emitted_text = full_line.clone();
+            if let Some(p) = &prefix {
+                emitted_text = format!("{}{}", p, emitted_text);
+            }
             lines.push(SourceLine {
-                text: full_line,
+                text: emitted_text,
                 file: file.to_path_buf(),
                 line_num,
             });

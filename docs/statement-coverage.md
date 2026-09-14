@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-12 (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-14 (batch 26: PREFIX / TRY / CATCH / FINALLY / EXIT TRY) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 184 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 186 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 202 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 117 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 115 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (181)
+## ✅ Implemented (186)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -205,7 +205,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `REGISTER` | STATEMENT | PB/Win + PB/CC | optimization hint, accepted as LOCAL (batch 25) |
 | `RESUME` | STATEMENT | PB/Win + PB/CC | RESUME / RESUME NEXT / RESUME FLUSH / RESUME label (batch 25) |
 | `TYPE SET` | STATEMENT | PB/Win + PB/CC | pb_type_set / pb_type_set_str memcpy fill (batch 23) |
+| `TRY/END TRY` | BLOCK | structured error trap; CATCH/FINALLY/EXIT TRY, reuses ON ERROR machinery |
 | `DIR FUNCTION AND` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+| `PREFIX` | BLOCK | preprocessor text transform; prepends source code to each line until END PREFIX |
 | `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
 
 
@@ -416,7 +418,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (120, alphabetical)
+## ⬜ Not implemented (115, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -454,7 +456,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MKE$ | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
-| PREFIX | BLOCK | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
@@ -465,7 +466,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
 
-| TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |

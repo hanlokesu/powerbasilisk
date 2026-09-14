@@ -517,9 +517,25 @@ impl Interpreter {
                 Ok(Flow::Normal)
             }
             Statement::Resume | Statement::ResumeFlush | Statement::ResumeLabel(_) => {
-                // RESUME / RESUME FLUSH / RESUME <label> — interp continues in place
+                // RESUME / RESUME FLUSH / RESUME <label> - interp continues in place
                 Ok(Flow::Normal)
             }
+            Statement::Try(try_stmt) => {
+                // Interpreter approximation: run TRY body, on error run CATCH.
+                match self.exec_body(&try_stmt.body) {
+                    Ok(_) => {
+                        self.exec_body(&try_stmt.finally)?;
+                        Ok(Flow::Normal)
+                    }
+                    Err(_) => {
+                        self.exec_body(&try_stmt.catch)?;
+                        self.exec_body(&try_stmt.finally)?;
+                        Ok(Flow::Normal)
+                    }
+                }
+            }
+            Statement::ExitTry => Ok(Flow::Normal),
+
             Statement::Block(stmts) => {
                 for s in stmts {
                     match self.exec_statement(s)? {

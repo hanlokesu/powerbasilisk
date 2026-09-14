@@ -200,6 +200,8 @@ pub enum Statement {
     Resume,
     ResumeFlush,
     ResumeLabel(String),
+    Try(TryStmt),
+    ExitTry,
     Iterate(IterateTarget),
     InputFile(InputFileStmt),
     LineInputFile(LineInputFileStmt),
@@ -243,6 +245,17 @@ pub struct IfStmt {
 pub struct ElseIfClause {
     pub condition: Expr,
     pub body: Vec<Statement>,
+}
+
+/// TRY ... CATCH ... [FINALLY ...] END TRY structured error trap (batch 26).
+/// CATCH is mandatory in official PB; finally is optional. We accept
+/// catch-less TRY/END TRY too (treated as no-op catch) for robustness.
+#[derive(Debug, Clone)]
+pub struct TryStmt {
+    pub body: Vec<Statement>,
+    pub catch: Vec<Statement>,
+    pub finally: Vec<Statement>,
+    pub line: usize,
 }
 
 #[derive(Debug, Clone)]

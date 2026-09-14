@@ -820,6 +820,8 @@ struct Compiler {
     onerror_handler: Option<String>,
     // (stmt_start_block, stmt_next_block) per checked call statement
     onerror_checkpoints: Vec<(String, String)>,
+    // TRY/END TRY: stack of END TRY block names for EXIT TRY (batch 26)
+    try_exit_stack: Vec<String>,
 
     // Session struct mode: wrap all globals in a single struct
     session_mode: bool,
@@ -964,6 +966,7 @@ impl Compiler {
             gosub_context: None,
             onerror_handler: None,
             onerror_checkpoints: Vec::new(),
+            try_exit_stack: Vec::new(),
             session_mode: false,
             session_fields: Vec::new(),
             debug_mode: false,
@@ -2431,6 +2434,7 @@ impl Compiler {
         self.gosub_context = None;
         self.onerror_handler = None;
         self.onerror_checkpoints.clear();
+        self.try_exit_stack.clear();
 
         self.module.add_function_body(fb.finish());
         Ok(())
@@ -2490,6 +2494,7 @@ impl Compiler {
         self.gosub_context = None;
         self.onerror_handler = None;
         self.onerror_checkpoints.clear();
+        self.try_exit_stack.clear();
 
         self.module.add_function_body(fb.finish());
         Ok(())
@@ -2575,6 +2580,11 @@ impl Compiler {
                 }
                 Statement::Block(inner) => {
                     Self::collect_labels_recursive(inner, labels, gosub_targets);
+                }
+                Statement::Try(try_stmt) => {
+                    Self::collect_labels_recursive(&try_stmt.body, labels, gosub_targets);
+                    Self::collect_labels_recursive(&try_stmt.catch, labels, gosub_targets);
+                    Self::collect_labels_recursive(&try_stmt.finally, labels, gosub_targets);
                 }
                 _ => {}
             }
@@ -2791,6 +2801,17 @@ impl Compiler {
             Statement::ResumeNext => self.compile_resume(fb, ResumeMode::Next),
             // RESUME FLUSH — continue with the next statement (no jump)
             Statement::ResumeFlush => Ok(()),
+            // TRY ... CATCH ... [FINALLY ...] END TRY (batch 26)
+            Statement::Try(try_stmt) => self.compile_try(fb, try_stmt),
+            // EXIT TRY: jump to the statement following END TRY
+            Statement::ExitTry => {
+                if let Some(end_block) = self.try_exit_stack.last().cloned() {
+                    if !fb.is_terminated() {
+                        fb.br(&end_block);
+                    }
+                }
+                Ok(())
+            }
             // RESUME label — jump to a local label
             Statement::ResumeLabel(label) => {
                 if let Some(block) = self
@@ -5795,6 +5816,73 @@ impl Compiler {
             .collect();
         fb.switch(&id, &default, &cases);
         fb.label(&default);
+        Ok(())
+    }
+
+    // ========== TRY / CATCH / FINALLY (batch 26) ==========
+
+    /// Compile TRY ... CATCH ... [FINALLY ...] END TRY.
+    /// Reuses the ON ERROR trap machinery: inside the TRY body every checked
+    /// call emits an error check that branches to the CATCH block. CATCH and
+    /// FINALLY run with trapping disabled. ERR/active are cleared on entry
+    /// and on exit (documented approximation of official local-ERR semantics).
+    fn compile_try(&mut self, fb: &mut FunctionBuilder, try_stmt: &TryStmt) -> PbResult<()> {
+        if fb.is_terminated() {
+            return Ok(());
+        }
+        let saved_handler = self.onerror_handler.clone();
+        let saved_checkpoints = std::mem::take(&mut self.onerror_checkpoints);
+
+        let catch_label = fb.next_label("try.catch");
+        let finally_label = fb.next_label("try.finally");
+        let end_label = fb.next_label("try.end");
+
+        let err_ptr = Val::new("@pb_err".to_string(), IrType::Ptr);
+        let act_ptr = Val::new("@pb_err_active".to_string(), IrType::Ptr);
+
+        // ERR is local to the TRY structure: clear error + active flags so
+        // the first failing statement inside the body can be trapped.
+        fb.store(&fb.const_i32(0), &err_ptr);
+        fb.store(&fb.const_i32(0), &act_ptr);
+
+        // Route runtime errors inside the TRY body to the CATCH block.
+        self.onerror_handler = Some(catch_label.clone());
+        self.onerror_checkpoints = Vec::new();
+        // Track END TRY block so EXIT TRY can jump out of the structure.
+        self.try_exit_stack.push(end_label.clone());
+
+        // TRY body
+        self.compile_body(fb, &try_stmt.body)?;
+        if !fb.is_terminated() {
+            fb.br(&finally_label);
+        }
+
+        // CATCH block - trapping disabled, CATCH body calls can't re-trigger.
+        fb.label(&catch_label);
+        self.onerror_handler = None;
+        if !try_stmt.catch.is_empty() {
+            self.compile_body(fb, &try_stmt.catch)?;
+        }
+        if !fb.is_terminated() {
+            fb.br(&finally_label);
+        }
+
+        // FINALLY block - unconditional, also trapping disabled.
+        fb.label(&finally_label);
+        if !try_stmt.finally.is_empty() {
+            self.compile_body(fb, &try_stmt.finally)?;
+        }
+        if !fb.is_terminated() {
+            fb.br(&end_label);
+        }
+
+        // END TRY - restore previous trap state and clear error flags.
+        fb.label(&end_label);
+        self.try_exit_stack.pop();
+        self.onerror_handler = saved_handler;
+        self.onerror_checkpoints = saved_checkpoints;
+        fb.store(&fb.const_i32(0), &err_ptr);
+        fb.store(&fb.const_i32(0), &act_ptr);
         Ok(())
     }
 
