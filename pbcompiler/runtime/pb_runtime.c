@@ -25,6 +25,8 @@
 __declspec(dllimport) char* __stdcall SysAllocStringByteLen(const char* psz, unsigned int len);
 __declspec(dllimport) void __stdcall SysFreeString(char* bstrString);
 __declspec(dllimport) unsigned long __stdcall GetFileAttributesA(const char* lpFileName);
+__declspec(dllimport) int __stdcall CharToOemA(const char* lpszSrc, char* lpszDst);
+__declspec(dllimport) int __stdcall OemToCharA(const char* lpszSrc, char* lpszDst);
 __declspec(dllimport) int __stdcall GetDiskFreeSpaceExA(char* lpDir, unsigned long long* lpFreeAvail, unsigned long long* lpTotalBytes, unsigned long long* lpTotalFree);
 /* Win32 API for crash handling */
 __declspec(dllimport) void* __stdcall AddVectoredExceptionHandler(unsigned long First, void* Handler);
@@ -273,6 +275,50 @@ char* pb_mkquad(long long v) {
 char* pb_mksingle(float v) {
     return pb_bstr_alloc((const char*)&v, 4);      /* MKS$ */
 }
+/* Batch 40: OEM / UTF-8 code-page conversion. String args are payload pointers,
+   string results are BSTRs. ACODE$ (wide-input) is not implemented: C-strlen
+   cannot measure wide strings containing NUL bytes — honestly skipped. */
+char* pb_chr_to_oem(char* s) {
+    size_t n = strlen(s);
+    char* buf = (char*)malloc(n + 1);
+    CharToOemA(s, buf);
+    buf[n] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
+char* pb_oem_to_chr(char* s) {
+    size_t n = strlen(s);
+    char* buf = (char*)malloc(n + 1);
+    OemToCharA(s, buf);
+    buf[n] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
+char* pb_chr_to_utf8(char* s) {
+    int n = (int)strlen(s);
+    int w = MultiByteToWideChar(0, 0, s, n, NULL, 0);
+    if (w <= 0) return pb_bstr_alloc("", 0);
+    short* ws = (short*)malloc(w * 2);
+    MultiByteToWideChar(0, 0, s, n, ws, w);
+    int u = WideCharToMultiByte(65001, 0, ws, w, NULL, 0, NULL, NULL);
+    char* buf = (char*)malloc(u + 1);
+    WideCharToMultiByte(65001, 0, ws, w, buf, u, NULL, NULL);
+    buf[u] = 0;
+    free(ws);
+    return pb_bstr_alloc(buf, (unsigned int)u);
+}
+char* pb_utf8_to_chr(char* s) {
+    int n = (int)strlen(s);
+    int w = MultiByteToWideChar(65001, 0, s, n, NULL, 0);
+    if (w <= 0) return pb_bstr_alloc("", 0);
+    short* ws = (short*)malloc(w * 2);
+    MultiByteToWideChar(65001, 0, s, n, ws, w);
+    int a = WideCharToMultiByte(0, 0, ws, w, NULL, 0, NULL, NULL);
+    char* buf = (char*)malloc(a + 1);
+    WideCharToMultiByte(0, 0, ws, w, buf, a, NULL, NULL);
+    buf[a] = 0;
+    free(ws);
+    return pb_bstr_alloc(buf, (unsigned int)a);
+}
+
 /* Batch 39: BIN$/OCT$/DEC$ (radix strings), VERIFY, GETATTR, DISKFREE/DISKSIZE.
    String args are payload pointers; string results are BSTRs. */
 char* pb_bin(long long v) {

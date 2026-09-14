@@ -1638,6 +1638,14 @@ impl Compiler {
             .declare_function("pb_diskfree", &IrType::I64, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_disksize", &IrType::I64, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_chr_to_oem", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_oem_to_chr", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_chr_to_utf8", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_utf8_to_chr", &IrType::Ptr, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_desktop_get_client",
             &IrType::Void,
@@ -7988,6 +7996,10 @@ impl Compiler {
             "GETATTR" => Some(self.builtin_getattr(fb, args)),
             "DISKFREE" => Some(self.builtin_disk(fb, args, "pb_diskfree")),
             "DISKSIZE" => Some(self.builtin_disk(fb, args, "pb_disksize")),
+            "CHRTOOEM" => Some(self.builtin_conv1(fb, args, "pb_chr_to_oem")),
+            "OEMTOCHR" => Some(self.builtin_conv1(fb, args, "pb_oem_to_chr")),
+            "CHRTOUTF8" => Some(self.builtin_conv1(fb, args, "pb_chr_to_utf8")),
+            "UTF8TOCHR" => Some(self.builtin_conv1(fb, args, "pb_utf8_to_chr")),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -8881,6 +8893,19 @@ impl Compiler {
             self.compile_expr(fb, &args[0])?
         };
         Ok(fb.call(&IrType::I64, fname, std::slice::from_ref(&s)))
+    }
+
+    fn builtin_conv1(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        fname: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("conversion function requires 1 argument"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        Ok(fb.call(&IrType::Ptr, fname, std::slice::from_ref(&s)))
     }
 
     fn builtin_to_f64(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

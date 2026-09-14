@@ -227,6 +227,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
 > Summary: **200** statement-class keywords implemented · **202** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
+> (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
 > (2026-09-15: +8 official function keywords from batch 39 — BIN$/OCT$/DEC$ radix strings, VERIFY (first non-matching char), MOD (register srem), GETATTR (GetFileAttributesA), DISKFREE/DISKSIZE (GetDiskFreeSpaceExA, bytes). Coverage count unchanged (function-class).
 > (2026-09-15: +12 official function keywords from batch 38 — TALLY, STRREVERSE$, STRINSERT$, STRDELETE$, REPEAT$, FRAC, ISFOLDER, EXP2/EXP10/LOG2/LOG10 (runtime helpers), IIF/CHOOSE (register-level select). Coverage count unchanged (function-class keywords are not in the statement CSV).
 > (2026-09-15: +10 official function keywords from batch 37 — CVx binary-string conversion family CVBYT / CVW / CVL / CVDWD / CVQ / CVS / CVD / CVE / CVCUR / CVCUX (read little-endian bytes at a 1-based offset); this also fixed CVD and CVS, which previously behaved like VAL (text-to-number) instead of reading binary bytes — they now match the documented semantics.
@@ -311,6 +312,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
 | `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
 | `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
+| ChrToOem$(s$) | ✅ | 40 (v0.1.34) | pb_chr_to_oem — CharToOemA (ANSI→OEM) |
+| OemToChr$(s$) | ✅ | 40 (v0.1.34) | pb_oem_to_chr — OemToCharA (OEM→ANSI) |
+| ChrToUtf8$(s$) | ✅ | 40 (v0.1.34) | pb_chr_to_utf8 — ANSI→UTF-8 via MultiByteToWideChar/WideCharToMultiByte |
+| Utf8ToChr$(s$) | ✅ | 40 (v0.1.34) | pb_utf8_to_chr — UTF-8→ANSI via the same pair |
 | BIN$(n) | ✅ | 39 (v0.1.33) | pb_bin — unsigned 64-bit binary string (significant bits) |
 | OCT$(n) | ✅ | 39 (v0.1.33) | pb_oct — unsigned 64-bit octal string |
 | DEC$(n) | ✅ | 39 (v0.1.33) | pb_dec — signed decimal string |
@@ -430,6 +435,15 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.34 (2026-09-15) — Batch 40: 4 code-page conversion functions
+- **ChrToOem$(s$)** — ANSI → OEM bytes (CharToOemA).
+- **OemToChr$(s$)** — OEM → ANSI (OemToCharA).
+- **ChrToUtf8$(s$)** — ANSI → UTF-8 (MultiByteToWideChar CP_ACP + WideCharToMultiByte CP_UTF8).
+- **Utf8ToChr$(s$)** — UTF-8 → ANSI (reverse path).
+- ACODE$ (Unicode/wide input) is not implemented — honestly skipped: C-strlen cannot measure a wide string containing NUL bytes, so a correct length would require a new wide-string variable type.
+- Note: function-class keywords, not added to the statement CSV — coverage stays **200 implemented / 101 not implemented / 202 tier-3 DDT**.
+- Tests: examples/batch40_test.bas (4/4, round-trips), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.33 (2026-09-15) — Batch 39: 8 file-system / radix / math functions
 - **BIN$(n)** — unsigned 64-bit binary string (significant bits, e.g. BIN$(5)="101").
