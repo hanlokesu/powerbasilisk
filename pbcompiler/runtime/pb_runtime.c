@@ -81,6 +81,8 @@ __declspec(dllimport) int __stdcall MoveToEx(void* hdc, int x, int y, void* lppt
 __declspec(dllimport) int __stdcall GetCurrentPositionEx(void* hdc, void* lppt);
 __declspec(dllimport) int __stdcall GetStretchBltMode(void* hdc);
 __declspec(dllimport) int __stdcall SetStretchBltMode(void* hdc, int mode);
+__declspec(dllimport) int __stdcall GetROP2(void* hdc);
+__declspec(dllimport) int __stdcall SetROP2(void* hdc, int rop2);
 __declspec(dllimport) int __stdcall LineTo(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall Rectangle(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall Ellipse(void* hdc, int left, int top, int right, int bottom);
@@ -4652,6 +4654,51 @@ int pb_xprint_print_str(char* s) {
     if (GetTextExtentPoint32A(g_xp_dc, s, len, (void*)sz)) {
         g_xp_pos_x += sz[0];
     }
+    return 1;
+}
+/* === Batch 70: XPRINT ARC/ELLIPSE/PIE/SET FONT/MIX/STRETCHMODE === */
+int pb_xprint_arc(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
+    if (!g_xp_dc) return 0;
+    xp_ensure_pen();
+    return Arc(g_xp_dc, x1, y1, x2, y2, x3, y3, x4, y4);
+}
+int pb_xprint_ellipse(int x1, int y1, int x2, int y2) {
+    if (!g_xp_dc) return 0;
+    xp_ensure_pen();
+    SelectObject(g_xp_dc, GetStockObject(5)); /* NULL_BRUSH */
+    return Ellipse(g_xp_dc, x1, y1, x2, y2);
+}
+int pb_xprint_pie(int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
+    if (!g_xp_dc) return 0;
+    xp_ensure_pen();
+    SelectObject(g_xp_dc, GetStockObject(5)); /* NULL_BRUSH */
+    return Pie(g_xp_dc, x1, y1, x2, y2, x3, y3, x4, y4);
+}
+int pb_xprint_set_font(char* name, int size, int bold, int italic) {
+    if (!g_xp_dc) return 0;
+    void* f = CreateFontA(-size, 0, 0, 0, bold ? 700 : 400, italic ? 1 : 0, 0, 0, 0, 0, 0, 0, 0, name ? name : "Arial");
+    if (!f) return 0;
+    if (g_xp_font && g_xp_font != (void*)((uintptr_t)GetStockObject(17))) DeleteObject(g_xp_font);
+    g_xp_font = f;
+    SelectObject(g_xp_dc, f);
+    return 1;
+}
+int pb_xprint_set_mix(int mode) {
+    if (!g_xp_dc) return 0;
+    return SetROP2(g_xp_dc, mode);
+}
+int pb_xprint_get_mix(long* out) {
+    if (!g_xp_dc || !out) return 0;
+    *out = GetROP2(g_xp_dc);
+    return 1;
+}
+int pb_xprint_set_stretchmode(int mode) {
+    if (!g_xp_dc) return 0;
+    return SetStretchBltMode(g_xp_dc, mode);
+}
+int pb_xprint_get_stretchmode(long* out) {
+    if (!g_xp_dc || !out) return 0;
+    *out = GetStretchBltMode(g_xp_dc);
     return 1;
 }
 

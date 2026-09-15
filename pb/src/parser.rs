@@ -2823,6 +2823,54 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "ARC" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..8 {
+                            args.push(self.parse_expression()?);
+                            if i < 7 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_ARC".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "ELLIPSE" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..4 {
+                            args.push(self.parse_expression()?);
+                            if i < 3 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_ELLIPSE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "PIE" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..8 {
+                            args.push(self.parse_expression()?);
+                            if i < 7 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_PIE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if xop == "CANCEL" {
                         self.advance();
                         self.consume_to_eol();
@@ -2962,6 +3010,28 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "MIX" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_MIX".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "STRETCHMODE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_STRETCHMODE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -3011,6 +3081,42 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_SET_POS".to_string(),
                                 args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "FONT" {
+                            self.advance();
+                            let name = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let size = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let bold = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let italic = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_FONT".to_string(),
+                                args: vec![name, size, bold, italic],
+                                line,
+                            }));
+                        }
+                        if sub == "MIX" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_MIX".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "STRETCHMODE" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_STRETCHMODE".to_string(),
+                                args: vec![v],
                                 line,
                             }));
                         }

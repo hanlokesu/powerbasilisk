@@ -1914,6 +1914,64 @@ impl Compiler {
             .declare_function("pb_xprint_get_attach", &IrType::I32, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_xprint_print_str", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_arc",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_ellipse",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_pie",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_set_font",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_mix", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_mix", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_stretchmode",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_stretchmode",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5158,6 +5216,87 @@ impl Compiler {
                 for arg in &call.args {
                     let v = self.compile_expr(fb, arg)?;
                     fb.call_void("pb_xprint_print_str", &[v]);
+                }
+            }
+            "XPRINT_ARC" => {
+                let mut ia = Vec::new();
+                for i in 0..8 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_arc",
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        ia[4].clone(),
+                        ia[5].clone(),
+                        ia[6].clone(),
+                        ia[7].clone(),
+                    ],
+                );
+            }
+            "XPRINT_ELLIPSE" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_ellipse",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "XPRINT_PIE" => {
+                let mut ia = Vec::new();
+                for i in 0..8 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_pie",
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        ia[4].clone(),
+                        ia[5].clone(),
+                        ia[6].clone(),
+                        ia[7].clone(),
+                    ],
+                );
+            }
+            "XPRINT_SET_FONT" => {
+                let name = self.compile_expr(fb, &call.args[0])?;
+                let size = self.compile_expr(fb, &call.args[1])?;
+                let sv = self.convert_value(fb, &size, &IrType::I32, &PbType::Long);
+                let bold = self.compile_expr(fb, &call.args[2])?;
+                let bv = self.convert_value(fb, &bold, &IrType::I32, &PbType::Long);
+                let italic = self.compile_expr(fb, &call.args[3])?;
+                let iv = self.convert_value(fb, &italic, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_font", &[name, sv, bv, iv]);
+            }
+            "XPRINT_SET_MIX" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_mix", &[iv]);
+            }
+            "XPRINT_GET_MIX" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_mix", &[p]);
+                }
+            }
+            "XPRINT_SET_STRETCHMODE" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_stretchmode", &[iv]);
+            }
+            "XPRINT_GET_STRETCHMODE" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_stretchmode", &[p]);
                 }
             }
             "GRAPHIC_GET_BITS" => {

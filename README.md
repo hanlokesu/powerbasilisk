@@ -271,8 +271,10 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +8 from batch 70 — XPRINT ARC/ELLIPSE/PIE/SET FONT/GET+SET MIX/GET+SET STRETCHMODE (GDI shapes + font + ROP2).
 > +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
 > +5 from batch 68 — XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC host-based printer GDI (screen DC fallback).
+| \XPRINT ARC/ELLIPSE/PIE/SET FONT/MIX/STRETCHMODE\ | ✅ | 70 (v0.1.64) | GDI Arc/Ellipse/Pie + CreateFontA + SetROP2/GetROP2 + SetStretchBltMode |
 | \XPRINT LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH\ | ✅ | 69 (v0.1.63) | GDI MoveToEx/LineTo/Rectangle/CreatePen/SetPixel/TextOutA/SetTextAlign on screen DC |
 > +1 from batch 28 — THREADED thread-local storage declaration, LLVM `thread_local`
 > globals with per-thread copies.)
@@ -536,6 +538,17 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.64 (2026-09-15) — Batch 70: XPRINT shapes + font + mix (8 statements)
+
+Eight more Not implemented items moved to Implemented (coverage: **302 implemented / 72 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT ARC** / **ELLIPSE** / **PIE** — GDI Arc/Ellipse/Pie (NULL_BRUSH for filled shapes)
+- **XPRINT SET FONT** — CreateFontA + SelectObject (name, size, bold, italic)
+- **XPRINT SET MIX** / **GET MIX** — SetROP2 / GetROP2
+- **XPRINT SET STRETCHMODE** / **GET STRETCHMODE** — SetStretchBltMode / GetStretchBltMode
+- Runtime: 8 pb_xprint_* functions; SetROP2/GetROP2 dllimports added
+- Tests: examples/batch70_test.bas (ALL PASS — ARC/ELLIPSE/PIE/SET FONT/SET+GET MIX=11/SET+GET STRETCHMODE=3), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.63 (2026-09-15) — Batch 69: XPRINT drawing + text + attributes (15 statements)
 
