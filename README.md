@@ -373,18 +373,18 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
 | `GRAPHIC ARC (x1,y1)-(x2,y2), start, end [, color&]` / `GRAPHIC PIE ...` / `GRAPHIC POLYLINE pts [, color&]` / `GRAPHIC PAINT [STEP] (x,y) [, fill& [, border&]]` | ✅ | 60 (v0.1.54) | pb_graphic_arc / pb_graphic_pie / pb_graphic_polyline / pb_graphic_paint |
 | `GRAPHIC SET PIXEL (x,y), color&` / `GRAPHIC GET SIZE TO w&, h&` / `GRAPHIC SET TEXTALIGN (a&)` / `GRAPHIC GET TEXTALIGN TO a&` | ✅ | 59 (v0.1.53) | pb_graphic_set_pixel / pb_graphic_get_size / pb_graphic_set_textalign / pb_graphic_get_textalign |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 58 (v0.1.52) | pb_graphic_get_canvas / pb_graphic_get_dc / pb_graphic_set_mix / pb_graphic_get_mix — canvas/DC handles, ROP mix state |
-| 57 (v0.1.51) | pb_graphic_bitmap_load / pb_graphic_chr_size / pb_graphic_cell / pb_graphic_cell_size — bitmap load, text extents, cell metrics |
-| 56 (v0.1.50) | pb_graphic_circle / pb_graphic_polygon / pb_graphic_get_client / pb_graphic_get_loc — circle, polygon, bitmap size/location |
-| 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
-| 54 (v0.1.48) | pb_graphic_width / pb_graphic_style / pb_graphic_save — pen width + pen style + save attached bitmap to BMP |
-| 53 (v0.1.47) | pb_graphic_line / pb_graphic_box / pb_graphic_ellipse — MoveToEx+LineTo / Rectangle / Ellipse with optional fill |
-| 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
-| 51 (v0.1.45) | pb_gdi_bitmap_new — CreateDIBSection (memory DIB, top-down 32bpp); pb_gdi_bitmap_end — DeleteObject (no-arg destroys last) |
-| 50 (v0.1.44) | pb_menu_new_bar / pb_menu_new_popup — CreateMenu/CreatePopupMenu; pb_menu_add_string / pb_menu_add_popup — AppendMenuA; pb_menu_delete — DeleteMenu |
-| 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
-| 48 (v0.1.42) | pb_imagelist_new — ImageList_Create (comctl32); pb_imagelist_count — ImageList_GetImageCount; pb_imagelist_kill — ImageList_Destroy; 64-bit handles (QUAD) |
-| 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
+| `GRAPHIC GET CANVAS` / `GRAPHIC GET DC` / `GRAPHIC SET MIX` / `GRAPHIC GET MIX` | ✅ | 58 (v0.1.52) | pb_graphic_get_canvas / pb_graphic_get_dc / pb_graphic_set_mix / pb_graphic_get_mix — canvas/DC handles, ROP mix state |
+| `GRAPHIC BITMAP LOAD` / `GRAPHIC CHR SIZE` / `GRAPHIC CELL` / `GRAPHIC CELL SIZE` | ✅ | 57 (v0.1.51) | pb_graphic_bitmap_load / pb_graphic_chr_size / pb_graphic_cell / pb_graphic_cell_size — bitmap load, text extents, cell metrics |
+| `GRAPHIC CIRCLE` / `GRAPHIC POLYGON` / `GRAPHIC GET CLIENT` / `GRAPHIC GET LOC` | ✅ | 56 (v0.1.50) | pb_graphic_circle / pb_graphic_polygon / pb_graphic_get_client / pb_graphic_get_loc — circle, polygon, bitmap size/location |
+| `GRAPHIC COLOR` / `GRAPHIC GET PIXEL` / `GRAPHIC COPY` | ✅ | 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
+| `GRAPHIC WIDTH` / `GRAPHIC STYLE` / `GRAPHIC SAVE` | ✅ | 54 (v0.1.48) | pb_graphic_width / pb_graphic_style / pb_graphic_save — pen width + pen style + save attached bitmap to BMP |
+| `GRAPHIC LINE` / `GRAPHIC BOX` / `GRAPHIC ELLIPSE` | ✅ | 53 (v0.1.47) | pb_graphic_line / pb_graphic_box / pb_graphic_ellipse — MoveToEx+LineTo / Rectangle / Ellipse with optional fill |
+| `GRAPHIC ATTACH` / `GRAPHIC DETACH` / `GRAPHIC CLEAR` | ✅ | 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
+| `GRAPHIC BITMAP NEW` / `GRAPHIC BITMAP END` | ✅ | 51 (v0.1.45) | pb_gdi_bitmap_new — CreateDIBSection (memory DIB, top-down 32bpp); pb_gdi_bitmap_end — DeleteObject (no-arg destroys last) |
+| `MENU NEW BAR` / `MENU NEW POPUP` / `MENU ADD STRING` / `MENU ADD POPUP` / `MENU DELETE` | ✅ | 50 (v0.1.44) | pb_menu_new_bar / pb_menu_new_popup — CreateMenu/CreatePopupMenu; pb_menu_add_string / pb_menu_add_popup — AppendMenuA; pb_menu_delete — DeleteMenu |
+| `COLOR` (console text) | ✅ | 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
+| `IMAGELIST NEW` / `IMAGELIST COUNT` / `IMAGELIST KILL` | ✅ | 48 (v0.1.42) | pb_imagelist_new — ImageList_Create (comctl32); pb_imagelist_count — ImageList_GetImageCount; pb_imagelist_kill — ImageList_Destroy; 64-bit handles (QUAD) |
+| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
 | `FONT END fhndl` | ✅ | 47 (v0.1.41) | pb_font_end — DeleteObject |
 | `MEMORY COPY src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_copy — memmove byte copy (overlap-safe) |
 | `MEMORY SWAP src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_swap — byte-wise block exchange |
