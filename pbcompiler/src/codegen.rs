@@ -10591,6 +10591,10 @@ impl Compiler {
             "CBYTE" => Some(self.builtin_to_u8(fb, args)),
             "CWORD" => Some(self.builtin_to_u16(fb, args)),
             "CDWORD" => Some(self.builtin_to_i32(fb, args)),
+            "ISTRUE" => Some(self.builtin_istrue(fb, args, false)),
+            "ISFALSE" => Some(self.builtin_istrue(fb, args, true)),
+            "ISEVEN" => Some(self.builtin_parity(fb, args, false)),
+            "ISODD" => Some(self.builtin_parity(fb, args, true)),
             "CVS" | "CVD" | "CVE" | "CVCUR" | "CVCUX" => Some(self.builtin_cv_dbl(fb, args, name)),
             "TALLY" => Some(self.builtin_tally(fb, args)),
             "STRREVERSE" => Some(self.builtin_strreverse(fb, args)),
@@ -11284,6 +11288,50 @@ impl Compiler {
         let val = self.compile_expr(fb, &args[0])?;
         let i32v = self.to_i32(fb, &val);
         Ok(fb.trunc(&i32v, &IrType::I16))
+    }
+
+    // Batch 88: ISTRUE/ISFALSE — PB boolean: TRUE=-1 (all bits 1), FALSE=0.
+    // invert=false: ISTRUE (non-zero -> -1, zero -> 0)
+    // invert=true:  ISFALSE (zero -> -1, non-zero -> 0)
+    fn builtin_istrue(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        invert: bool,
+    ) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let i32v = self.to_i32(fb, &val);
+        let zero = fb.const_i32(0);
+        let cmp = if invert {
+            fb.icmp("eq", &i32v, &zero)
+        } else {
+            fb.icmp("ne", &i32v, &zero)
+        };
+        let zext = fb.zext(&cmp, &IrType::I32); // 0 or 1
+        Ok(fb.neg(&zext)) // 0 or -1 (PB TRUE=-1)
+    }
+
+    // Batch 88: ISEVEN/ISODD — test parity of integer.
+    // odd=false: ISEVEN (even -> -1, odd -> 0)
+    // odd=true:  ISODD (odd -> -1, even -> 0)
+    fn builtin_parity(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        odd: bool,
+    ) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let i32v = self.to_i32(fb, &val);
+        let one = fb.const_i32(1);
+        let lsb = fb.and(&i32v, &one); // 0 if even, 1 if odd
+        let zero = fb.const_i32(0);
+        let cmp = if odd {
+            fb.icmp("eq", &lsb, &one) // odd: lsb==1
+        } else {
+            fb.icmp("eq", &lsb, &zero) // even: lsb==0
+        };
+        let zext = fb.zext(&cmp, &IrType::I32);
+        Ok(fb.neg(&zext)) // 0 or -1
     }
 
     // Batch 37: CVx — read little-endian binary strings. off is 1-based, default 1.

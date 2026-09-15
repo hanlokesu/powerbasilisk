@@ -563,6 +563,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.82 (2026-09-15) — Batch 88: ISTRUE / ISFALSE / ISEVEN / ISODD (4 boolean predicate functions)
+
+- **ISTRUE(expr)** — returns -1 (PB TRUE) if expr is non-zero, 0 (FALSE) if zero.
+- **ISFALSE(expr)** — returns -1 if expr is zero, 0 if non-zero (inverse of ISTRUE).
+- **ISEVEN(expr)** — returns -1 if expr is even (lsb==0), 0 if odd.
+- **ISODD(expr)** — returns -1 if expr is odd (lsb==1), 0 if even.
+- Implementation: icmp comparison -> zext to I32 (0/1) -> neg (0/-1). PB convention: TRUE=-1 (all bits 1), FALSE=0.
+- Tests: examples/batch88_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.81 (2026-09-15) — Batch 87: CSTR / CQUAD / CBYTE / CWORD / CDWORD (5 type-conversion functions)
 
 - **CSTR(expr)** — numeric to string, reuses STR\$ formatting path (no leading space; current STR\$ also has no leading space, so CSTR and STR\$ behave identically).
