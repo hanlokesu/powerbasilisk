@@ -1389,6 +1389,18 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_input_console",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_line_input_console",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
             "pb_input_file_int",
             &IrType::Void,
             &[IrType::I32, IrType::Ptr],
@@ -4185,6 +4197,8 @@ impl Compiler {
             Statement::PrintFile(p) => self.compile_print_file(fb, p),
             Statement::InputFile(inp) => self.compile_input_file(fb, inp),
             Statement::LineInputFile(li) => self.compile_line_input_file(fb, li),
+            Statement::InputConsole(inp) => self.compile_input_console(fb, inp),
+            Statement::LineInputConsole(li) => self.compile_line_input_console(fb, li),
             Statement::Regexpr {
                 mask,
                 target,
@@ -9350,6 +9364,45 @@ impl Compiler {
         let filenum = self.compile_expr(fb, &li.file_num)?;
         let filenum_i32 = self.to_i32(fb, &filenum);
         let result = fb.call(&IrType::Ptr, "pb_line_input", &[filenum_i32]);
+        let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, &li.var)?;
+        fb.store(&result, &ptr);
+        Ok(())
+    }
+
+    fn compile_input_console(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        inp: &InputConsoleStmt,
+    ) -> PbResult<()> {
+        // prompt (optional)
+        let prompt_val = if let Some(ref p) = inp.prompt {
+            self.compile_expr(fb, p)?
+        } else {
+            fb.const_null_ptr()
+        };
+        let has_prompt = fb.const_i32(if inp.prompt.is_some() { 1 } else { 0 });
+        let no_newline = fb.const_i32(if inp.no_newline { 1 } else { 0 });
+        let result = fb.call(&IrType::Ptr, "pb_input_console", &[prompt_val, has_prompt, no_newline]);
+        // assign to first variable (string only for now)
+        if let Some(var_expr) = inp.vars.first() {
+            let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, var_expr)?;
+            fb.store(&result, &ptr);
+        }
+        Ok(())
+    }
+
+    fn compile_line_input_console(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        li: &LineInputConsoleStmt,
+    ) -> PbResult<()> {
+        let prompt_val = if let Some(ref p) = li.prompt {
+            self.compile_expr(fb, p)?
+        } else {
+            fb.const_null_ptr()
+        };
+        let has_prompt = fb.const_i32(if li.prompt.is_some() { 1 } else { 0 });
+        let result = fb.call(&IrType::Ptr, "pb_line_input_console", &[prompt_val, has_prompt]);
         let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, &li.var)?;
         fb.store(&result, &ptr);
         Ok(())

@@ -1432,9 +1432,35 @@ impl Parser {
                         line,
                     }));
                 }
-                // Plain INPUT (console) — not implemented, consume
+                // Plain INPUT (console) — read from stdin
+                let mut prompt = None;
+                let mut no_newline = false;
+                // optional leading ; means no newline
+                if self.peek() == &Token::Semicolon {
+                    no_newline = true;
+                    self.advance();
+                }
+                // optional prompt string
+                if let Token::StringLiteral(_) = self.peek() {
+                    prompt = Some(self.parse_expression()?);
+                    if self.peek() == &Token::Semicolon || self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                }
+                // variable list
+                let mut vars = Vec::new();
+                vars.push(self.parse_expression()?);
+                while self.peek() == &Token::Comma {
+                    self.advance();
+                    vars.push(self.parse_expression()?);
+                }
                 self.consume_to_eol();
-                Ok(Statement::Noop("INPUT".to_string(), line))
+                return Ok(Statement::InputConsole(InputConsoleStmt {
+                    prompt,
+                    no_newline,
+                    vars,
+                    line,
+                }));
             }
             Token::Open => self.parse_open_statement(),
             Token::Close => self.parse_close_statement(),
@@ -1992,9 +2018,24 @@ impl Parser {
                                 line,
                             }));
                         }
-                        // LINE INPUT without # — console, not implemented
+                        // LINE INPUT without # — console, read whole line
+                        let mut prompt = None;
+                        if self.peek() == &Token::Semicolon {
+                            self.advance();
+                        }
+                        if let Token::StringLiteral(_) = self.peek() {
+                            prompt = Some(self.parse_expression()?);
+                            if self.peek() == &Token::Semicolon {
+                                self.advance();
+                            }
+                        }
+                        let var = self.parse_expression()?;
                         self.consume_to_eol();
-                        return Ok(Statement::Noop("LINE INPUT".to_string(), line));
+                        return Ok(Statement::LineInputConsole(LineInputConsoleStmt {
+                            prompt,
+                            var,
+                            line,
+                        }));
                     }
                     // LINE (not INPUT) — DDT drawing or other, consume
                     self.advance();

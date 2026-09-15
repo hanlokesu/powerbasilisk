@@ -2618,6 +2618,38 @@ void pb_input_flush(void) {
     fflush(stdin);
 }
 
+/* ===== Batch 81: INPUT / LINE INPUT (console) ===== */
+
+static char* pb_read_line_console(void) {
+    static char buf[65536];
+    buf[0] = 0;
+    if (fgets(buf, sizeof(buf), stdin)) {
+        size_t n = strlen(buf);
+        while (n > 0 && (buf[n-1] == '\n' || buf[n-1] == '\r')) {
+            buf[--n] = 0;
+        }
+    }
+    return pb_bstr_alloc(buf, strlen(buf));
+}
+
+char* pb_input_console(char* prompt, int has_prompt, int no_newline) {
+    if (has_prompt && prompt) {
+        fputs(prompt, stdout);
+        fputs("? ", stdout);
+        if (!no_newline) fputc('\n', stdout);
+        fflush(stdout);
+    }
+    return pb_read_line_console();
+}
+
+char* pb_line_input_console(char* prompt, int has_prompt) {
+    if (has_prompt && prompt) {
+        fputs(prompt, stdout);
+        fflush(stdout);
+    }
+    return pb_read_line_console();
+}
+
 /* ===== Batch 5: PEEK / POKE ===== */
 
 int pb_peek8(void* a) { return *(unsigned char*)a; }

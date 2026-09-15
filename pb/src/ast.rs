@@ -235,6 +235,8 @@ pub enum Statement {
     Iterate(IterateTarget),
     InputFile(InputFileStmt),
     LineInputFile(LineInputFileStmt),
+    InputConsole(InputConsoleStmt),
+    LineInputConsole(LineInputConsoleStmt),
     Kill(Expr),
     CallStk(Expr), // CALLSTK filename$ — dump the call stack to a file (batch 33)
     Profile(Expr), // PROFILE filename$ — dump per-procedure call counts + ms (batch 34)
@@ -464,6 +466,21 @@ pub struct InputFileStmt {
 pub struct LineInputFileStmt {
     pub file_num: Expr,
     pub var: Expr, // string variable to read into
+    pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct InputConsoleStmt {
+    pub prompt: Option<Expr>, // optional prompt string
+    pub no_newline: bool,     // ; means no newline after prompt
+    pub vars: Vec<Expr>,      // variables to read into (strings first)
+    pub line: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct LineInputConsoleStmt {
+    pub prompt: Option<Expr>, // optional prompt string
+    pub var: Expr,             // string variable to read whole line into
     pub line: usize,
 }
 

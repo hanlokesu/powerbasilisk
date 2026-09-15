@@ -519,6 +519,8 @@ exit code 0:
 | `EVENT SOURCE` | ✅ | 80 (v0.1.74) | parser accepts (noop event source) |
 | `LET *(WITH OBJECTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (pointer copy) |
 | `LET *(WITH VARIANTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (generic value) |
+| `INPUT` (console) | ✅ | 81 (v0.1.75) | pb_input_console — prompt + fgets read into string var |
+| `LINE INPUT` (console) | ✅ | 81 (v0.1.75) | pb_line_input_console — prompt + whole-line read into string var |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -542,12 +544,10 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ### Parsed but produces NO code (reported, not silent)
 | Statement | Notes |
 | --- | --- |
-| `INPUT` (console) | ⚠️ console input not implemented |
 | `REMOVE` | ⚠️ |
 | `#INCLUDE` (inside a SUB) | ⚠️ only top-level include works |
 | `%CONSTANT` | ⚠️ |
 | `END` (mismatched / standalone) | ⚠️ |
-| `LINE INPUT` (console, no `#`) | ⚠️ |
 | `OPEN` (unknown mode) | ⚠️ |
 | `CLOSE` (no file number) | ⚠️ |
 | `DIALOG` / `CONTROL` / `MENU` / `TOOLBAR` / `STATUSBAR` | 🔲 Tier 3 GUI |
@@ -558,6 +558,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+**v0.1.75 (2026-09-15) — Batch 81: INPUT / LINE INPUT (console) — interactive console I/O**
+
+Two console input statements moved from "Parsed but NO code" to fully implemented:
+- **`INPUT` (console)** — `pb_input_console`: optional prompt string (with `? ` suffix), reads a line from stdin via `fgets`, assigns to first string variable. Supports `;` for no-newline mode.
+- **`LINE INPUT` (console)** — `pb_line_input_console`: optional prompt string, reads a **whole line** (including spaces) from stdin via `fgets`, assigns to string variable.
+
+Runtime: 3 new C functions (`pb_read_line_console` shared helper + `pb_input_console` + `pb_line_input_console`).
+Tests: `examples/batch81_test.bas` (3/3 ALL PASS, verified interactively).
+Removed from "Parsed but produces NO code" table: `INPUT` (console), `LINE INPUT` (console, no `#`).
 
 **v0.1.74 (2026-09-15) — Batch 80: OOP remaining 9 items ALL DONE (INTERFACE/EVENTS/RAISEEVENT/INSTANCE/OBJECT/LET)**
 
