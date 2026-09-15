@@ -402,6 +402,36 @@ char* pb_shrink(char* s, char* mask) {
     buf[o] = 0;
     return pb_bstr_alloc(buf, (unsigned int)o);
 }
+char* pb_remove_string(char* main, char* match, int any_flag) {
+    size_t n = strlen(main);
+    size_t mlen = match ? strlen(match) : 0;
+    char* buf = (char*)malloc(n + 1);
+    size_t o = 0;
+    if (mlen == 0) {
+        memcpy(buf, main, n + 1);
+        return pb_bstr_alloc(buf, (unsigned int)n);
+    }
+    if (any_flag) {
+        for (size_t i = 0; i < n; i++) {
+            int found = 0;
+            for (size_t j = 0; j < mlen; j++) {
+                if (main[i] == match[j]) { found = 1; break; }
+            }
+            if (!found) buf[o++] = main[i];
+        }
+    } else {
+        size_t i = 0;
+        while (i < n) {
+            if (i + mlen <= n && memcmp(main + i, match, mlen) == 0) {
+                i += mlen;
+            } else {
+                buf[o++] = main[i++];
+            }
+        }
+    }
+    buf[o] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)o);
+}
 char* pb_build(char** arr, long long n) {
     size_t total = 0;
     for (long long i = 0; i < n; i++) total += strlen(arr[i]);

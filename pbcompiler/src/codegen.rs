@@ -1676,6 +1676,12 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        self.module.declare_function(
+            "pb_remove_string",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
@@ -10597,6 +10603,7 @@ impl Compiler {
             "PATHSCAN" => Some(self.builtin_strn(fb, args, "pb_pathscan", 2)),
             "ERL" => Some(self.builtin_str0(fb, "pb_erl_str")),
             "EXTRACT" => Some(self.builtin_extract(fb, args)),
+            "REMOVE" => Some(self.builtin_remove(fb, args)),
             "RGB" | "BGR" => Some(self.builtin_rgb(fb, args, name)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
@@ -10625,7 +10632,6 @@ impl Compiler {
             "FORMAT" => Some(self.builtin_format(fb, args)),
             "PARSE" => Some(self.builtin_parse(fb, args)),
             "PARSECOUNT" => Some(self.builtin_parsecount(fb, args)),
-            "REMOVE" => Some(self.builtin_remove(fb, args)),
             "USING" => Some(self.builtin_using(fb, args)),
             // File I/O builtins
             "FREEFILE" => Some(Ok(fb.call(&IrType::I32, "pb_freefile", &[]))),
@@ -12446,9 +12452,23 @@ impl Compiler {
     }
 
     fn builtin_remove(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("REMOVE$ requires at least 2 arguments"));
+        }
         let s = self.compile_expr(fb, &args[0])?;
-        let chars = self.compile_expr(fb, &args[1])?;
-        Ok(fb.call(&IrType::Ptr, "pb_remove", &[s, chars]))
+        // Check for ANY keyword: REMOVE$(main, ANY, matchchars)
+        let any_flag = if let Expr::Variable(ref name) = args[1] {
+            name.to_uppercase() == "ANY"
+        } else {
+            false
+        };
+        let match_idx = if any_flag { 2 } else { 1 };
+        if args.len() <= match_idx {
+            return Err(PbError::runtime("REMOVE$ requires a match string"));
+        }
+        let m = self.compile_expr(fb, &args[match_idx])?;
+        let flag = fb.const_i32(if any_flag { 1 } else { 0 });
+        Ok(fb.call(&IrType::Ptr, "pb_remove_string", &[s, m, flag]))
     }
 
     fn builtin_using(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

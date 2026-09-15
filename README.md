@@ -507,6 +507,7 @@ exit code 0:
 | `WAITKEY$` | ✅ | v0.1.14 | `pb_waitkey` — console `_getch`, redirected `getchar` dual mode (v0.1.14) |
 | `ARRAY SORT arr()` | ✅ | early | `pb_array_sort` — in-place sort |
 | `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
+| `REMOVE$(main, match)` / `REMOVE$(main, ANY, chars)` | ✅ | 82 (v0.1.76) | `pb_remove_string` — substring removal + ANY char-set removal |
 | CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
 | ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
@@ -544,7 +545,6 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ### Parsed but produces NO code (reported, not silent)
 | Statement | Notes |
 | --- | --- |
-| `REMOVE` | ⚠️ |
 | `#INCLUDE` (inside a SUB) | ⚠️ only top-level include works |
 | `%CONSTANT` | ⚠️ |
 | `END` (mismatched / standalone) | ⚠️ |
@@ -558,6 +558,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+**v0.1.76 (2026-09-15) — Batch 82: REMOVE$ function — substring + ANY character removal**
+
+The `REMOVE$` string function (previously calling a stub `pb_remove` that did not exist) is now fully implemented:
+- **`REMOVE$(main$, match$)`** — removes all occurrences of `match$` from `main$` (case-sensitive). If `match$` is not found, returns `main$` intact.
+- **`REMOVE$(main$, ANY, chars$)`** — removes any character listed in `chars$` from `main$` (character-set mode).
+
+Runtime: `pb_remove_string(main, match, any_flag)` — O(n*m) scan, returns BSTR. Replaces the old undefined `pb_remove` call.
+Tests: `examples/batch82_test.bas` (4/4 ALL PASS: substring removal, not-found, ANY char removal, overlapping matches).
+- Also fixes batch 81 clippy issues: `needless_return` in parser + missing `pbinterp` match arms for `InputConsole`/`LineInputConsole`.
 
 **v0.1.75 (2026-09-15) — Batch 81: INPUT / LINE INPUT (console) — interactive console I/O**
 
