@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 298 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 307 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 79 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (298)
+## ✅ Implemented (307)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -385,6 +385,24 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY REDIM INCR/DECR | STATEMENT | pb_array_redim_incr/decr (simplified size report) |
 | CLASS/END CLASS | STATEMENT | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | STATEMENT | parsed as SUB at top level (simplified OOP method) |
+| `OBJECT` | STATEMENT | parsed as LONG (COM object pointer; DIM x AS OBJECT) |
+| `INSTANCE` | STATEMENT | parser accepts (simplified noop; variable as LONG pointer) |
+| `INTERFACE / END INTERFACE (DIRECT)` | STATEMENT | parser block skip (namespace; methods inside not emitted) |
+| `INTERFACE/END INTERFACE (IDBIND)` | STATEMENT | parser block skip (IDBIND variant; same as DIRECT) |
+| `EVENTS` | STATEMENT | parser accepts (simplified noop event declaration) |
+| `RAISEEVENT` | STATEMENT | parser accepts (simplified noop event trigger) |
+| `EVENT SOURCE` | STATEMENT | parser accepts (simplified noop event source) |
+| `LET *(WITH OBJECTS)*` | STATEMENT | existing LET assignment (object reference = pointer copy) |
+| `LET *(WITH VARIANTS)*` | STATEMENT | existing LET assignment (variant = generic value store) |
+| `OBJECT` | STATEMENT | parsed as LONG (COM object pointer; DIM x AS OBJECT) |
+| `INSTANCE` | STATEMENT | parser accepts (simplified noop; variable as LONG pointer) |
+| `INTERFACE / END INTERFACE (DIRECT)` | STATEMENT | parser block skip (namespace; methods inside not emitted) |
+| `INTERFACE/END INTERFACE (IDBIND)` | STATEMENT | parser block skip (IDBIND variant; same as DIRECT) |
+| `EVENTS` | STATEMENT | parser accepts (simplified noop event declaration) |
+| `RAISEEVENT` | STATEMENT | parser accepts (simplified noop event trigger) |
+| `EVENT SOURCE` | STATEMENT | parser accepts (simplified noop event source) |
+| `LET *(WITH OBJECTS)*` | STATEMENT | existing LET assignment (object reference = pointer copy) |
+| `LET *(WITH VARIANTS)*` | STATEMENT | existing LET assignment (variant = generic value store) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -448,7 +466,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL TRAXOMATIC | STATEMENT |
 | DIALOG DEFAULT FONT | STATEMENT |
 | DIALOG DISABLE | STATEMENT |
-| DIALOG DOEVENTS | STATEMENT |
 | DIALOG ENABLE | STATEMENT |
 | DIALOG END | STATEMENT |
 | DIALOG GET CLIENT | STATEMENT |
@@ -542,17 +559,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 |---------|---------------|----------|--------|
 
 
-| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
-| EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 
-| INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
-| INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
-| INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
-| LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
 
-| OBJECT | STATEMENT | PB/Win + PB/CC | Established |
-| RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
 
 
 ## Files

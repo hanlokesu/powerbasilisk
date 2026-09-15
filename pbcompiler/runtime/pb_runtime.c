@@ -4902,6 +4902,30 @@ int pb_array_redim_decr(void* arr_ptr, int elem_size, int old_count, int decreme
     int n = old_count - decrement;
     return n < 0 ? 0 : n;
 }
+/* === Batch 80: OOP remaining 9 items (INTERFACE/EVENTS/RAISEEVENT/INSTANCE/OBJECT/LET) === */
+/* INSTANCE var AS ClassName — create an object instance (simplified: allocate stub) */
+void* pb_instance_create(const char* classname) {
+    return pb_class_create(classname);
+}
+/* EVENTS / RAISEEVENT / EVENT SOURCE — simplified noop event model */
+static int g_event_enabled = 1;
+void pb_events_enable(int enable) { g_event_enabled = enable; }
+int pb_raise_event(void* obj, const char* eventname) {
+    if (!g_event_enabled) return 0;
+    return 1; /* noop: event not wired to any handler */
+}
+void pb_event_source_set(void* obj, int source_id) { /* noop */ }
+/* LET with OBJECTS — object reference assignment (simplified: pointer copy) */
+void pb_let_object(void** dst, void* src) { if (dst) *dst = src; }
+/* LET with VARIANTS — variant assignment (simplified: store as pointer+tag) */
+static void* g_variant_last_ptr = 0;
+static int g_variant_last_tag = 0;
+void pb_let_variant(void** dst_ptr, int* dst_tag, void* src_ptr, int src_tag) {
+    if (dst_ptr) *dst_ptr = src_ptr;
+    if (dst_tag) *dst_tag = src_tag;
+    g_variant_last_ptr = src_ptr;
+    g_variant_last_tag = src_tag;
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

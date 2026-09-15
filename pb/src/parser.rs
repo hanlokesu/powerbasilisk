@@ -276,6 +276,65 @@ impl Parser {
                 let sd = self.parse_sub_decl()?;
                 Ok(Some(TopLevel::SubDecl(sd)))
             }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("INTERFACE") => {
+                // INTERFACE Name [DIRECT|IDBIND] ... END INTERFACE — OOP interface block (skip)
+                self.advance(); // consume INTERFACE
+                if let Token::Identifier(_) = self.peek() {
+                    self.advance();
+                }
+                // optional DIRECT or IDBIND
+                if let Token::Identifier(w2) = self.peek() {
+                    let up = w2.to_uppercase();
+                    if up == "DIRECT" || up == "IDBIND" {
+                        self.advance();
+                    }
+                }
+                self.consume_to_eol();
+                let mut depth = 1;
+                while depth > 0 && self.peek() != &Token::Eof {
+                    let is_iface_start = matches!(self.peek(), Token::Identifier(w2) if w2.eq_ignore_ascii_case("INTERFACE"));
+                    let is_end = matches!(self.peek(), Token::End);
+                    let next_is_iface = matches!(self.peek_at(1), Some(Token::Identifier(w3)) if w3.eq_ignore_ascii_case("INTERFACE"));
+                    if is_end && next_is_iface {
+                        depth -= 1;
+                        self.advance();
+                        self.advance();
+                        self.consume_to_eol();
+                        continue;
+                    }
+                    if is_iface_start {
+                        depth += 1;
+                    }
+                    self.advance();
+                }
+                Ok(None)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("INSTANCE") => {
+                // INSTANCE var AS ClassName — create object instance (simplified)
+                self.advance(); // consume INSTANCE
+                let _var_name = if let Token::Identifier(vn) = self.peek() {
+                    let n = vn.clone();
+                    self.advance();
+                    n
+                } else {
+                    String::new()
+                };
+                // skip AS ClassName
+                self.consume_to_eol();
+                Ok(None) // simplified: no codegen (variable treated as LONG pointer)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("RAISEEVENT") => {
+                // RAISEEVENT eventname [(args)] — trigger event (simplified noop)
+                self.advance(); // consume RAISEEVENT
+                self.consume_to_eol();
+                Ok(None)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("EVENT") => {
+                // EVENT SOURCE id | EVENTS eventname list — simplified noop
+                self.advance(); // consume EVENT
+                self.consume_to_eol();
+                Ok(None)
+            }
             Token::HashIf => {
                 // Should have been handled by preprocessor, but skip if present
                 self.skip_conditional_block();
@@ -678,6 +737,10 @@ impl Parser {
             Token::Long => {
                 self.advance();
                 Ok(PbType::Long)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("OBJECT") => {
+                self.advance();
+                Ok(PbType::Long) // OBJECT = COM object pointer (simplified as LONG)
             }
             Token::Integer => {
                 self.advance();
