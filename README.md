@@ -563,6 +563,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.85 (2026-09-15) — Batch 91: CFLT/CLNGINT/CUINT/CULNG type-conversion aliases + CINT rounding fix
+
+- **CFLT(expr)** — convert to Single (alias of CSNG, builtin_to_f32).
+- **CLNGINT(expr)** — convert to Long with rounding (alias of CLNG).
+- **CUINT(expr)** — convert to unsigned Integer with rounding.
+- **CULNG(expr)** — convert to unsigned Long with rounding.
+- **Bug fix**: CINT/CLNG/CLNGINT/CUINT/CULNG now use **round-to-nearest** (llvm.round.f64) instead of truncate-toward-zero (fptosi). Previously CLNGINT(3.7)=3 (wrong, should be 4) and CUINT(5.5)=5 (wrong, should be 6). New `builtin_cint()` method handles rounding; `to_i32()` unchanged (still used by comparisons/array indexing where truncation is correct).
+- Tests: examples/batch91_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.84 (2026-09-15) — Batch 90: CBOOL — convert expression to boolean
 
 - **CBOOL(expr)** — converts any expression to a PB boolean: non-zero -> -1 (TRUE, all bits 1), zero -> 0 (FALSE).

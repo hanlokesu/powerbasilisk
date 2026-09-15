@@ -1,24 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 86 (v0.1.80)** — 2026-09-15. All statements through batch 86 are reflected in this matrix. Function-class additions (REMOVE$/RETAIN$/REMAIN$/FLOOR/TRUNC/INPUT console etc.) are tracked in README "Newly implemented by this branch" table, not in this official statement-keyword index.
+> **Last updated from batch 91 (v0.1.85)** — 2026-09-15. All statements through batch 91 are reflected in this matrix. Function-class additions (REMOVE$/RETAIN$/REMAIN$/FLOOR/TRUNC/INPUT console etc.) are tracked in README "Newly implemented by this branch" table, not in this official statement-keyword index.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 - Official **statement-class** keywords total: **493**
 
-- Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
+- Official function-class: 190 (CURDIR$ / ISFILE among them —both implemented)
 
-- Generated: 2026-09-15 (batch 86: TRUNC) (batch 85: FLOOR) (batch 84: REMAIN$) (batch 83: RETAIN$) (batch 82: REMOVE$) (batch 81: INPUT/LINE INPUT console) (batch 80: OOP completion — 0 NOT_IMPL milestone) (batch 79: OOP foundation) (batch 37-78: see README changelog) (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 86: TRUNC) (batch 85: FLOOR) (batch 84: REMAIN$) (batch 83: RETAIN$) (batch 82: REMOVE$) (batch 81: INPUT/LINE INPUT console) (batch 80: OOP completion —0 NOT_IMPL milestone) (batch 79: OOP foundation) (batch 37-78: see README changelog) (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 375 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
+| —mplemented | 375 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 馃毀 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
+| 猬?Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (375)
+## —mplemented (375)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -89,8 +89,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DATA | STATEMENT | `core` |
 | DECR | STATEMENT | `core` |
 | DESKTOP GET SIZE | STATEMENT | `GetSystemMetrics` (SM_CXSCREEN/SM_CYSCREEN) |
-| DESKTOP GET CLIENT | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA → w,h (work area) |
-| DESKTOP GET LOC | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA → x,y (origin) |
+| DESKTOP GET CLIENT | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA —,h (work area) |
+| DESKTOP GET LOC | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA —,y (origin) |
 | DESKTOP GET PPI | STATEMENT | `GetDeviceCaps` LOGPIXELSX/Y (pixels per inch) |
 | DIM | STATEMENT | `core` |
 | END | STATEMENT | `core` |
@@ -164,67 +164,67 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | UCODEPAGE | STATEMENT | `pb_ucodepage` (records ANSI/OEM/numeric codepage) |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
-| XPRINT ATTACH | STATEMENT | pb_xprint_attach — CreateDC (screen DC fallback for CI; printer support pending) |
-| XPRINT SET CLIP | STATEMENT | `pb_xprint_set_clip` — IntersectClipRect |
-| XPRINT GET CLIP | STATEMENT | `pb_xprint_get_clip` — GetClipBox |
-| XPRINT SCALE | STATEMENT | `pb_xprint_scale` — SetMapMode(MM_ANISOTROPIC) + SetWindowExtEx/SetViewportExtEx |
-| XPRINT GET SCALE | STATEMENT | `pb_xprint_get_scale` — current scale factors |
-| XPRINT GET LINES | STATEMENT | `pb_xprint_get_lines` — client height / cell height |
-| XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` — GetTextExtentPoint32A("W") |
-| XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` — same as CELL SIZE |
-| XPRINT POLYGON | STATEMENT | `pb_xprint_polygon` — Polygon (GDI), variable coord args on stack |
-| XPRINT SET COPIES | STATEMENT | `pb_xprint_set_copies` — global printer property |
-| XPRINT GET COPIES | STATEMENT | `pb_xprint_get_copies` — global printer property |
-| XPRINT SET ORIENTATION | STATEMENT | `pb_xprint_set_orientation` — global printer property |
-| XPRINT GET ORIENTATION | STATEMENT | `pb_xprint_get_orientation` — global printer property |
-| XPRINT SET QUALITY | STATEMENT | `pb_xprint_set_quality` — global printer property |
-| XPRINT GET QUALITY | STATEMENT | `pb_xprint_get_quality` — global printer property |
-| XPRINT SET DUPLEX | STATEMENT | `pb_xprint_set_duplex` — global printer property |
-| XPRINT GET DUPLEX | STATEMENT | `pb_xprint_get_duplex` — global printer property |
-| XPRINT SET COLLATE | STATEMENT | `pb_xprint_set_collate` — global printer property |
-| XPRINT GET COLLATE | STATEMENT | `pb_xprint_get_collate` — global printer property |
-| XPRINT SET COLORMODE | STATEMENT | `pb_xprint_set_colormode` — global printer property |
-| XPRINT GET COLORMODE | STATEMENT | `pb_xprint_get_colormode` — global printer property |
-| XPRINT SET PAGES | STATEMENT | `pb_xprint_set_pages` — global printer property |
-| XPRINT GET PAGES | STATEMENT | `pb_xprint_get_pages` — global printer property |
-| XPRINT POLYLINE | STATEMENT | `pb_xprint_polyline` — Polyline (GDI), variable coord args on stack |
-| XPRINT COPY | STATEMENT | `pb_xprint_copy` — BitBlt (SRCCOPY) |
-| XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` — GetTextExtentPoint32A (returns width+height) |
-| XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` — GetDeviceCaps HORZRES/VERTRES |
-| XPRINT GET CANVAS | STATEMENT | `pb_xprint_get_canvas` — same as GET CLIENT on screen DC |
-| XPRINT SET WRAP | STATEMENT | `pb_xprint_set_wrap` — text wrap mode flag |
-| XPRINT GET WRAP | STATEMENT | `pb_xprint_get_wrap` — current wrap flag |
-| XPRINT SET WORDWRAP | STATEMENT | `pb_xprint_set_wordwrap` — word-wrap flag |
-| XPRINT GET WORDWRAP | STATEMENT | `pb_xprint_get_wordwrap` — current word-wrap flag |
-| XPRINT SET OVERLAP | STATEMENT | `pb_xprint_set_overlap` — line overlap percentage |
-| XPRINT GET OVERLAP | STATEMENT | `pb_xprint_get_overlap` — current overlap value |
-| XPRINT ARC | STATEMENT | `pb_xprint_arc` — GDI Arc (bounding rect + start/end radials) |
-| XPRINT ELLIPSE | STATEMENT | `pb_xprint_ellipse` — GDI Ellipse (NULL_BRUSH) |
-| XPRINT PIE | STATEMENT | `pb_xprint_pie` — GDI Pie (bounding rect + radials, NULL_BRUSH) |
-| XPRINT SET FONT | STATEMENT | `pb_xprint_set_font` — CreateFontA + SelectObject (name/size/bold/italic) |
-| XPRINT SET MIX | STATEMENT | `pb_xprint_set_mix` — SetROP2 |
-| XPRINT GET MIX | STATEMENT | `pb_xprint_get_mix` — GetROP2 |
-| XPRINT SET STRETCHMODE | STATEMENT | `pb_xprint_set_stretchmode` — SetStretchBltMode |
-| XPRINT GET STRETCHMODE | STATEMENT | `pb_xprint_get_stretchmode` — GetStretchBltMode |
-| XPRINT CANCEL | STATEMENT | `pb_xprint_cancel` — AbortDoc (noop on screen DC) |
-| XPRINT FORMFEED | STATEMENT | `pb_xprint_formfeed` — EndPage+StartPage (resets pos on screen DC) |
-| XPRINT LINE | STATEMENT | `pb_xprint_line` — MoveToEx+LineTo |
-| XPRINT BOX | STATEMENT | `pb_xprint_box` — Rectangle (NULL_BRUSH) |
-| XPRINT WIDTH | STATEMENT | `pb_xprint_width` — CreatePen width |
-| XPRINT STYLE | STATEMENT | `pb_xprint_style` — CreatePen style (PS_SOLID etc.) |
-| XPRINT COLOR | STATEMENT | `pb_xprint_set_color` — pen + text color |
-| XPRINT SET POS | STATEMENT | `pb_xprint_set_pos` — text/drawing origin |
-| XPRINT GET POS | STATEMENT | `pb_xprint_get_pos` — current position |
-| XPRINT SET PIXEL | STATEMENT | `pb_xprint_set_pixel` — SetPixel |
-| XPRINT GET PIXEL | STATEMENT | `pb_xprint_get_pixel` — GetPixel |
-| XPRINT SET TEXTALIGN | STATEMENT | `pb_xprint_set_textalign` — SetTextAlign |
-| XPRINT GET TEXTALIGN | STATEMENT | `pb_xprint_get_textalign` — current text align |
-| XPRINT GET ATTACH | STATEMENT | `pb_xprint_get_attach` — 1 if DC attached |
-| XPRINT PRINT | STATEMENT | `pb_xprint_print_str` per arg — TextOutA + auto-advance |
-| XPRINT CLOSE | STATEMENT | pb_xprint_close — DeleteDC + detach |
-| XPRINT GET DC | STATEMENT | pb_xprint_get_dc — current DC handle (QUAD) |
-| XPRINT GET PPI | STATEMENT | pb_xprint_get_ppi — GetDeviceCaps LOGPIXELSX/Y |
-| XPRINT GET SIZE | STATEMENT | pb_xprint_get_size — PHYSICALWIDTH/HEIGHT with HORZRES/VERTRES fallback |
+| XPRINT ATTACH | STATEMENT | pb_xprint_attach —CreateDC (screen DC fallback for CI; printer support pending) |
+| XPRINT SET CLIP | STATEMENT | `pb_xprint_set_clip` —IntersectClipRect |
+| XPRINT GET CLIP | STATEMENT | `pb_xprint_get_clip` —GetClipBox |
+| XPRINT SCALE | STATEMENT | `pb_xprint_scale` —SetMapMode(MM_ANISOTROPIC) + SetWindowExtEx/SetViewportExtEx |
+| XPRINT GET SCALE | STATEMENT | `pb_xprint_get_scale` —current scale factors |
+| XPRINT GET LINES | STATEMENT | `pb_xprint_get_lines` —client height / cell height |
+| XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` —GetTextExtentPoint32A("W") |
+| XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` —same as CELL SIZE |
+| XPRINT POLYGON | STATEMENT | `pb_xprint_polygon` —Polygon (GDI), variable coord args on stack |
+| XPRINT SET COPIES | STATEMENT | `pb_xprint_set_copies` —global printer property |
+| XPRINT GET COPIES | STATEMENT | `pb_xprint_get_copies` —global printer property |
+| XPRINT SET ORIENTATION | STATEMENT | `pb_xprint_set_orientation` —global printer property |
+| XPRINT GET ORIENTATION | STATEMENT | `pb_xprint_get_orientation` —global printer property |
+| XPRINT SET QUALITY | STATEMENT | `pb_xprint_set_quality` —global printer property |
+| XPRINT GET QUALITY | STATEMENT | `pb_xprint_get_quality` —global printer property |
+| XPRINT SET DUPLEX | STATEMENT | `pb_xprint_set_duplex` —global printer property |
+| XPRINT GET DUPLEX | STATEMENT | `pb_xprint_get_duplex` —global printer property |
+| XPRINT SET COLLATE | STATEMENT | `pb_xprint_set_collate` —global printer property |
+| XPRINT GET COLLATE | STATEMENT | `pb_xprint_get_collate` —global printer property |
+| XPRINT SET COLORMODE | STATEMENT | `pb_xprint_set_colormode` —global printer property |
+| XPRINT GET COLORMODE | STATEMENT | `pb_xprint_get_colormode` —global printer property |
+| XPRINT SET PAGES | STATEMENT | `pb_xprint_set_pages` —global printer property |
+| XPRINT GET PAGES | STATEMENT | `pb_xprint_get_pages` —global printer property |
+| XPRINT POLYLINE | STATEMENT | `pb_xprint_polyline` —Polyline (GDI), variable coord args on stack |
+| XPRINT COPY | STATEMENT | `pb_xprint_copy` —BitBlt (SRCCOPY) |
+| XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` —GetTextExtentPoint32A (returns width+height) |
+| XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` —GetDeviceCaps HORZRES/VERTRES |
+| XPRINT GET CANVAS | STATEMENT | `pb_xprint_get_canvas` —same as GET CLIENT on screen DC |
+| XPRINT SET WRAP | STATEMENT | `pb_xprint_set_wrap` —text wrap mode flag |
+| XPRINT GET WRAP | STATEMENT | `pb_xprint_get_wrap` —current wrap flag |
+| XPRINT SET WORDWRAP | STATEMENT | `pb_xprint_set_wordwrap` —word-wrap flag |
+| XPRINT GET WORDWRAP | STATEMENT | `pb_xprint_get_wordwrap` —current word-wrap flag |
+| XPRINT SET OVERLAP | STATEMENT | `pb_xprint_set_overlap` —line overlap percentage |
+| XPRINT GET OVERLAP | STATEMENT | `pb_xprint_get_overlap` —current overlap value |
+| XPRINT ARC | STATEMENT | `pb_xprint_arc` —GDI Arc (bounding rect + start/end radials) |
+| XPRINT ELLIPSE | STATEMENT | `pb_xprint_ellipse` —GDI Ellipse (NULL_BRUSH) |
+| XPRINT PIE | STATEMENT | `pb_xprint_pie` —GDI Pie (bounding rect + radials, NULL_BRUSH) |
+| XPRINT SET FONT | STATEMENT | `pb_xprint_set_font` —CreateFontA + SelectObject (name/size/bold/italic) |
+| XPRINT SET MIX | STATEMENT | `pb_xprint_set_mix` —SetROP2 |
+| XPRINT GET MIX | STATEMENT | `pb_xprint_get_mix` —GetROP2 |
+| XPRINT SET STRETCHMODE | STATEMENT | `pb_xprint_set_stretchmode` —SetStretchBltMode |
+| XPRINT GET STRETCHMODE | STATEMENT | `pb_xprint_get_stretchmode` —GetStretchBltMode |
+| XPRINT CANCEL | STATEMENT | `pb_xprint_cancel` —AbortDoc (noop on screen DC) |
+| XPRINT FORMFEED | STATEMENT | `pb_xprint_formfeed` —EndPage+StartPage (resets pos on screen DC) |
+| XPRINT LINE | STATEMENT | `pb_xprint_line` —MoveToEx+LineTo |
+| XPRINT BOX | STATEMENT | `pb_xprint_box` —Rectangle (NULL_BRUSH) |
+| XPRINT WIDTH | STATEMENT | `pb_xprint_width` —CreatePen width |
+| XPRINT STYLE | STATEMENT | `pb_xprint_style` —CreatePen style (PS_SOLID etc.) |
+| XPRINT COLOR | STATEMENT | `pb_xprint_set_color` —pen + text color |
+| XPRINT SET POS | STATEMENT | `pb_xprint_set_pos` —text/drawing origin |
+| XPRINT GET POS | STATEMENT | `pb_xprint_get_pos` —current position |
+| XPRINT SET PIXEL | STATEMENT | `pb_xprint_set_pixel` —SetPixel |
+| XPRINT GET PIXEL | STATEMENT | `pb_xprint_get_pixel` —GetPixel |
+| XPRINT SET TEXTALIGN | STATEMENT | `pb_xprint_set_textalign` —SetTextAlign |
+| XPRINT GET TEXTALIGN | STATEMENT | `pb_xprint_get_textalign` —current text align |
+| XPRINT GET ATTACH | STATEMENT | `pb_xprint_get_attach` —1 if DC attached |
+| XPRINT PRINT | STATEMENT | `pb_xprint_print_str` per arg —TextOutA + auto-advance |
+| XPRINT CLOSE | STATEMENT | pb_xprint_close —DeleteDC + detach |
+| XPRINT GET DC | STATEMENT | pb_xprint_get_dc —current DC handle (QUAD) |
+| XPRINT GET PPI | STATEMENT | pb_xprint_get_ppi —GetDeviceCaps LOGPIXELSX/Y |
+| XPRINT GET SIZE | STATEMENT | pb_xprint_get_size —PHYSICALWIDTH/HEIGHT with HORZRES/VERTRES fallback |
 | `ON GOTO` | STATEMENT | (PB/Win + PB/CC) Computed branch to one of several labels |
 | `ON GOSUB` | STATEMENT | (PB/Win + PB/CC) Computed call to one of several subroutines (RETURN returns) |
 | `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | (PB/Win + PB/CC) Win32 clipboard read/write/reset |
@@ -287,21 +287,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FONT END | STATEMENT | (PB/Win + PB/CC) Established |
 | FONT NEW | STATEMENT | (PB/Win + PB/CC) Established |
 | MKE$ | STATEMENT | (PB/Win + PB/CC) 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
-| IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\ | [ICON / GET COUNT / KILL)] ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers — use QUAD variables (batch 48) |
-| COLOR | STATEMENT (PB/CC console text color) | pb_color — SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no args restores default (batch 49) |
-| MENU NEW BAR | STATEMENT (menu bar handle) | pb_menu_new_bar — CreateMenu; handle is 64-bit (QUAD) (batch 50) |
-| MENU NEW POPUP | STATEMENT (popup menu handle) | pb_menu_new_popup — CreatePopupMenu; handle is 64-bit (QUAD) (batch 50) |
-| MENU ADD STRING | STATEMENT (menu item) | pb_menu_add_string — AppendMenuA MF_STRING (batch 50) |
-| MENU ADD POPUP | STATEMENT (submenu) | pb_menu_add_popup — AppendMenuA MF_POPUP (batch 50) |
-| MENU DELETE | STATEMENT (remove item) | pb_menu_delete — DeleteMenu MF_BYPOSITION (batch 50) |
-| GRAPHIC BITMAP NEW | STATEMENT (memory DIB) | pb_gdi_bitmap_new — CreateDIBSection (top-down 32bpp); not visible (batch 51) |
-| GRAPHIC BITMAP END | STATEMENT (destroy bitmap) | pb_gdi_bitmap_end — DeleteObject; no-arg form destroys last created (batch 51) |
-| GRAPHIC ATTACH | STATEMENT (graphic target) | pb_graphic_attach — selects a memory bitmap as the graphic target (batch 52) |
-| GRAPHIC DETACH | STATEMENT (detach target) | pb_graphic_detach — releases the graphic DC (batch 52) |
-| GRAPHIC CLEAR | STATEMENT (clear target) | pb_graphic_clear — FillRect with solid brush (batch 52) |
-| GRAPHIC LINE | STATEMENT (draw line) | pb_graphic_line — MoveToEx + LineTo on attached target (batch 53) |
-| GRAPHIC BOX | STATEMENT (draw rectangle) | pb_graphic_box — Rectangle with optional fill (batch 53) |
-| GRAPHIC ELLIPSE | STATEMENT (draw ellipse) | pb_graphic_ellipse — Ellipse with optional fill (batch 53) |
+| IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\ | [ICON / GET COUNT / KILL)] ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers —use QUAD variables (batch 48) |
+| COLOR | STATEMENT (PB/CC console text color) | pb_color —SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no args restores default (batch 49) |
+| MENU NEW BAR | STATEMENT (menu bar handle) | pb_menu_new_bar —CreateMenu; handle is 64-bit (QUAD) (batch 50) |
+| MENU NEW POPUP | STATEMENT (popup menu handle) | pb_menu_new_popup —CreatePopupMenu; handle is 64-bit (QUAD) (batch 50) |
+| MENU ADD STRING | STATEMENT (menu item) | pb_menu_add_string —AppendMenuA MF_STRING (batch 50) |
+| MENU ADD POPUP | STATEMENT (submenu) | pb_menu_add_popup —AppendMenuA MF_POPUP (batch 50) |
+| MENU DELETE | STATEMENT (remove item) | pb_menu_delete —DeleteMenu MF_BYPOSITION (batch 50) |
+| GRAPHIC BITMAP NEW | STATEMENT (memory DIB) | pb_gdi_bitmap_new —CreateDIBSection (top-down 32bpp); not visible (batch 51) |
+| GRAPHIC BITMAP END | STATEMENT (destroy bitmap) | pb_gdi_bitmap_end —DeleteObject; no-arg form destroys last created (batch 51) |
+| GRAPHIC ATTACH | STATEMENT (graphic target) | pb_graphic_attach —selects a memory bitmap as the graphic target (batch 52) |
+| GRAPHIC DETACH | STATEMENT (detach target) | pb_graphic_detach —releases the graphic DC (batch 52) |
+| GRAPHIC CLEAR | STATEMENT (clear target) | pb_graphic_clear —FillRect with solid brush (batch 52) |
+| GRAPHIC LINE | STATEMENT (draw line) | pb_graphic_line —MoveToEx + LineTo on attached target (batch 53) |
+| GRAPHIC BOX | STATEMENT (draw rectangle) | pb_graphic_box —Rectangle with optional fill (batch 53) |
+| GRAPHIC ELLIPSE | STATEMENT (draw ellipse) | pb_graphic_ellipse —Ellipse with optional fill (batch 53) |
 | `GRAPHIC WIDTH` | Statement | pb_graphic_width (gdi32 pen width) |
 | `GRAPHIC STYLE` | Statement | pb_graphic_style (gdi32 pen style) |
 | `GRAPHIC SAVE` | Statement | pb_graphic_save (GetObjectA + GetDIBits + BMP writer) |
@@ -356,34 +356,34 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC SET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
 | `GRAPHIC GET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
 | `GRAPHIC SET FIXED` | STATEMENT | (PB/Win only) restores standard FIXED mode (pb_graphic_set_fixed) |
-| `GRAPHIC SET FONT` | STATEMENT | (PB/Win only) selects font handle into graphic DC (pb_graphic_set_font → SelectObject) |
-| XPRINT CELL | STATEMENT | `pb_xprint_cell` — cursor position (global) |
-| XPRINT GET SELECTION | STATEMENT | `pb_xprint_get_selection` — noop |
-| XPRINT SET PAPER | STATEMENT | `pb_xprint_set_paper` — global paper size |
-| XPRINT GET PAPER | STATEMENT | `pb_xprint_get_paper` — global paper size |
-| XPRINT SET TRAY | STATEMENT | `pb_xprint_set_tray` — global paper tray |
-| XPRINT GET TRAY | STATEMENT | `pb_xprint_get_tray` — global paper tray |
-| RESOURCE SAVE FILE | STATEMENT | `pb_resource_save_file` — writes resource to file (placeholder) |
-| XPRINT GET PAPERS | STATEMENT | `pb_xprint_get_papers` — returns 0 on screen DC |
-| XPRINT GET TRAYS | STATEMENT | `pb_xprint_get_trays` — returns 0 on screen DC |
-| XPRINT PREVIEW | STATEMENT | `pb_xprint_preview` — noop on screen DC |
-| XPRINT RENDER | STATEMENT | `pb_xprint_render` — noop on screen DC |
-| XPRINT SPLIT | STATEMENT | `pb_xprint_split` — noop |
-| XPRINT STRETCH | STATEMENT | `pb_xprint_stretch` — StretchBlt (SRCCOPY) |
-| XPRINT IMAGELIST | STATEMENT | `pb_xprint_imagelist` — noop |
-| TCP NOTIFY | STATEMENT | `pb_tcp_notify` — noop (WSAAsyncSelect placeholder) |
-| UDP NOTIFY | STATEMENT | `pb_udp_notify` — noop |
-| PROGRESSBAR | STATEMENT | `pb_progressbar` — noop (GUI control placeholder) |
-| HEADER | STATEMENT | `pb_header` — noop (GUI control placeholder) |
-| ARRAY SELECT | STATEMENT | `pb_array_select` — noop (array selection placeholder) |
-| ARRAY TAGARRAY | STATEMENT | `pb_array_tagarray` — noop (tag array placeholder) |
-| ARRAY TAGARRAY ERASE | STATEMENT | `pb_array_tagarray_erase` — noop |
-| XPRINT GET MARGIN | STATEMENT | `pb_xprint_get_margin` — 4 global margin vars (L/T/R/B) |
-| DISPLAY OPENFILE | STATEMENT | `pb_display_openfile` — noop (returns empty; GetOpenFileNameA placeholder) |
-| DISPLAY SAVEFILE | STATEMENT | `pb_display_savefile` — noop (GetSaveFileNameA placeholder) |
-| DISPLAY COLOR | STATEMENT | `pb_display_color` — noop (returns 0; ChooseColor placeholder) |
-| DISPLAY FONT | STATEMENT | `pb_display_font` — noop (ChooseFont placeholder) |
-| DISPLAY BROWSE | STATEMENT | `pb_display_browse` — noop (SHBrowseForFolder placeholder) |
+| `GRAPHIC SET FONT` | STATEMENT | (PB/Win only) selects font handle into graphic DC (pb_graphic_set_font —electObject) |
+| XPRINT CELL | STATEMENT | `pb_xprint_cell` —cursor position (global) |
+| XPRINT GET SELECTION | STATEMENT | `pb_xprint_get_selection` —noop |
+| XPRINT SET PAPER | STATEMENT | `pb_xprint_set_paper` —global paper size |
+| XPRINT GET PAPER | STATEMENT | `pb_xprint_get_paper` —global paper size |
+| XPRINT SET TRAY | STATEMENT | `pb_xprint_set_tray` —global paper tray |
+| XPRINT GET TRAY | STATEMENT | `pb_xprint_get_tray` —global paper tray |
+| RESOURCE SAVE FILE | STATEMENT | `pb_resource_save_file` —writes resource to file (placeholder) |
+| XPRINT GET PAPERS | STATEMENT | `pb_xprint_get_papers` —returns 0 on screen DC |
+| XPRINT GET TRAYS | STATEMENT | `pb_xprint_get_trays` —returns 0 on screen DC |
+| XPRINT PREVIEW | STATEMENT | `pb_xprint_preview` —noop on screen DC |
+| XPRINT RENDER | STATEMENT | `pb_xprint_render` —noop on screen DC |
+| XPRINT SPLIT | STATEMENT | `pb_xprint_split` —noop |
+| XPRINT STRETCH | STATEMENT | `pb_xprint_stretch` —StretchBlt (SRCCOPY) |
+| XPRINT IMAGELIST | STATEMENT | `pb_xprint_imagelist` —noop |
+| TCP NOTIFY | STATEMENT | `pb_tcp_notify` —noop (WSAAsyncSelect placeholder) |
+| UDP NOTIFY | STATEMENT | `pb_udp_notify` —noop |
+| PROGRESSBAR | STATEMENT | `pb_progressbar` —noop (GUI control placeholder) |
+| HEADER | STATEMENT | `pb_header` —noop (GUI control placeholder) |
+| ARRAY SELECT | STATEMENT | `pb_array_select` —noop (array selection placeholder) |
+| ARRAY TAGARRAY | STATEMENT | `pb_array_tagarray` —noop (tag array placeholder) |
+| ARRAY TAGARRAY ERASE | STATEMENT | `pb_array_tagarray_erase` —noop |
+| XPRINT GET MARGIN | STATEMENT | `pb_xprint_get_margin` —4 global margin vars (L/T/R/B) |
+| DISPLAY OPENFILE | STATEMENT | `pb_display_openfile` —noop (returns empty; GetOpenFileNameA placeholder) |
+| DISPLAY SAVEFILE | STATEMENT | `pb_display_savefile` —noop (GetSaveFileNameA placeholder) |
+| DISPLAY COLOR | STATEMENT | `pb_display_color` —noop (returns 0; ChooseColor placeholder) |
+| DISPLAY FONT | STATEMENT | `pb_display_font` —noop (ChooseFont placeholder) |
+| DISPLAY BROWSE | STATEMENT | `pb_display_browse` —noop (SHBrowseForFolder placeholder) |
 | ARRAY REDIM INCR | STATEMENT | pb_array_redim_incr/decr (simplified size report) | 
 | ARRAY REDIM DECR | STATEMENT | pb_array_redim_incr/decr (simplified size report) | 
 | CLASS/END CLASS | STATEMENT | parser block skip (namespace; methods inside not emitted) |
@@ -406,7 +406,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `EVENT SOURCE` | STATEMENT | parser accepts (simplified noop event source) |
 | `LET *(WITH OBJECTS)*` | STATEMENT | existing LET assignment (object reference = pointer copy) |
 | `LET *(WITH VARIANTS)*` | STATEMENT | existing LET assignment (variant = generic value store) |
-## 🚧 Tier-3 DDT (129, deferred to next update)
+## 馃毀 Tier-3 DDT (129, deferred to next update)
 
 | Keyword | Official kind |
 |---------|---------------|
@@ -556,7 +556,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (0, alphabetical)
+## 猬?Not implemented (0, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
@@ -568,8 +568,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 ## Files
 
-- `docs/statement-coverage.md` — this readable summary
-- `docs/statement-coverage.csv` — all rows with per-keyword status (Keyword, Kind, Platform, Status, Impl)
+- `docs/statement-coverage.md` —this readable summary
+- `docs/statement-coverage.csv` —all rows with per-keyword status (Keyword, Kind, Platform, Status, Impl)
 
 ## Method
 

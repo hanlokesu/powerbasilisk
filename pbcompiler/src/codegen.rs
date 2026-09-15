@@ -10584,9 +10584,12 @@ impl Compiler {
             "COS" => Some(self.builtin_unary_math(fb, args, "llvm.cos.f64")),
             "TAN" => Some(self.builtin_unary_math(fb, args, "tan")),
             "ATN" => Some(self.builtin_unary_math(fb, args, "atan")),
-            "CINT" | "CLNG" | "CDWD" => Some(self.builtin_to_i32(fb, args)),
+            "CINT" | "CLNG" | "CDWD" | "CLNGINT" | "CUINT" | "CULNG" => {
+                Some(self.builtin_cint(fb, args))
+            }
             "CDBL" => Some(self.builtin_to_f64(fb, args)),
             "CVBYT" | "CVW" | "CVL" | "CVDWD" | "CVQ" => Some(self.builtin_cv_int(fb, args, name)),
+            "CFLT" => Some(self.builtin_to_f32(fb, args)),
             "CSNG" => Some(self.builtin_to_f32(fb, args)),
             "CSTR" => Some(self.builtin_str(fb, args)),
             "CQUAD" => Some(self.builtin_to_i64(fb, args)),
@@ -11267,6 +11270,19 @@ impl Compiler {
         let val = self.compile_expr(fb, &args[0])?;
         let f64_val = self.to_f64(fb, &val);
         Ok(fb.call(&IrType::Double, func_name, &[f64_val]))
+    }
+
+    // Batch 91 fix: CINT/CLNG/CLNGINT/CUINT/CULNG — round to nearest (ties away from zero), not truncate.
+    fn builtin_cint(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        match &val.ty {
+            IrType::Double | IrType::Float => {
+                let f64_val = self.to_f64(fb, &val);
+                let rounded = fb.call(&IrType::Double, "llvm.round.f64", &[f64_val]);
+                Ok(fb.fptosi(&rounded, &IrType::I32))
+            }
+            _ => Ok(self.to_i32(fb, &val)),
+        }
     }
 
     fn builtin_to_i32(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
