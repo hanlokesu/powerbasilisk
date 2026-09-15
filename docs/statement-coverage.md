@@ -540,13 +540,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
 

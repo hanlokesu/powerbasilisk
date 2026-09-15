@@ -92,6 +92,7 @@ __declspec(dllimport) int __stdcall Polyline(void* hdc, const void* apt, int cpt
 __declspec(dllimport) int __stdcall FloodFill(void* hdc, int x, int y, unsigned long color);
 __declspec(dllimport) unsigned long __stdcall GetPixel(void* hdc, int x, int y);
 __declspec(dllimport) int __stdcall BitBlt(void* hdcDest, int xDest, int yDest, int w, int h, void* hdcSrc, int xSrc, int ySrc, unsigned long rop);
+__declspec(dllimport) int __stdcall StretchBlt(void* hdcDest, int xDest, int yDest, int wDest, int hDest, void* hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, unsigned long rop);
 __declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int count);
 __declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name, unsigned int type, int cx, int cy, unsigned int fuLoad);
 __declspec(dllimport) int __stdcall GetTextExtentPoint32A(void* hdc, const char* str, int count, void* size);
@@ -4839,6 +4840,17 @@ int pb_resource_save_file(const char* resname, const char* filename) {
     fclose(f);
     return 1;
 }
+/* === Batch 76: remaining XPRINT statements (completes XPRINT family) === */
+int pb_xprint_get_papers(long* out) { if (!out) return 0; *out = 0; return 1; } /* screen DC: no printer papers */
+int pb_xprint_get_trays(long* out) { if (!out) return 0; *out = 0; return 1; }  /* screen DC: no printer trays */
+int pb_xprint_preview(int mode) { return 1; } /* noop on screen DC */
+int pb_xprint_render(void) { return 1; }       /* noop on screen DC */
+int pb_xprint_split(int x, int y, int w, int h) { return 1; } /* noop */
+int pb_xprint_stretch(int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh) {
+    if (!g_xp_dc) return 0;
+    return StretchBlt(g_xp_dc, dx, dy, dw, dh, g_xp_dc, sx, sy, sw, sh, 0x00CC0020); /* SRCCOPY */
+}
+int pb_xprint_imagelist(int op, int arg1, int arg2) { return 1; } /* noop */
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

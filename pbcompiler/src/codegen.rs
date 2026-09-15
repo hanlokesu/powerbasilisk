@@ -2150,6 +2150,41 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_xprint_get_papers", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_get_trays", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_preview", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_render", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_xprint_split",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_stretch",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_imagelist",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_graphic_line",
@@ -5751,6 +5786,66 @@ impl Compiler {
                 let r1 = self.compile_expr(fb, &call.args[1])?;
                 let p1 = self.convert_value(fb, &r1, &IrType::Ptr, &PbType::String);
                 fb.call_void("pb_resource_save_file", &[p0, p1]);
+            }
+            "XPRINT_GET_PAPERS" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_papers", &[p]);
+                }
+            }
+            "XPRINT_GET_TRAYS" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_trays", &[p]);
+                }
+            }
+            "XPRINT_PREVIEW" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_preview", &[iv]);
+            }
+            "XPRINT_RENDER" => {
+                fb.call_void("pb_xprint_render", &[]);
+            }
+            "XPRINT_SPLIT" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_split",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "XPRINT_STRETCH" => {
+                let mut ia = Vec::new();
+                for i in 0..8 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_stretch",
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        ia[4].clone(),
+                        ia[5].clone(),
+                        ia[6].clone(),
+                        ia[7].clone(),
+                    ],
+                );
+            }
+            "XPRINT_IMAGELIST" => {
+                let mut ia = Vec::new();
+                for i in 0..3 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_imagelist",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone()],
+                );
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)

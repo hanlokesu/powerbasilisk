@@ -2847,6 +2847,77 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "PREVIEW" {
+                        self.advance();
+                        let mode = if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                            self.parse_expression()?
+                        } else {
+                            Expr::IntegerLit(0)
+                        };
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_PREVIEW".to_string(),
+                            args: vec![mode],
+                            line,
+                        }));
+                    }
+                    if xop == "RENDER" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_RENDER".to_string(),
+                            args: vec![],
+                            line,
+                        }));
+                    }
+                    if xop == "SPLIT" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..4 {
+                            args.push(self.parse_expression()?);
+                            if i < 3 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_SPLIT".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "STRETCH" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..8 {
+                            args.push(self.parse_expression()?);
+                            if i < 7 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_STRETCH".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "IMAGELIST" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..3 {
+                            args.push(self.parse_expression()?);
+                            if i < 2 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_IMAGELIST".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if xop == "POLYGON" {
                         self.advance();
                         let mut args = vec![];
@@ -3363,6 +3434,28 @@ impl Parser {
                             self.consume_to_eol();
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_GET_TRAY".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "PAPERS" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_PAPERS".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "TRAYS" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_TRAYS".to_string(),
                                 args: vec![v],
                                 line,
                             }));
