@@ -632,7 +632,9 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **LOG1P(x)** — log(1+x) (accurate for small x), C `log1p`
 - **ERF(x)** — Gauss error function, C `erf`
 - All C library functions declared in module init (non-intrinsic, same pattern as asin/acos/sinh).
-- Tests: examples/batch96_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+- **CI fix: CINT/CLNG rounding intrinsic corrected** — `llvm.round.f64` (ties away from zero, 2.5→3) → `llvm.nearbyint.f64` (banker's rounding, ties to even, 2.5→2). PB CINT/CLNG semantics are banker's rounding. This fixed CI failure in l10_session.bas Test 7 (CLNG(2.5) expected 2, got 3).
+- **CI fix: l5_builtins.bas Test 18 expectation corrected** — CINT(7.9)=8 (rounds to nearest), not 7 (truncation). Upstream test had wrong expectation.
+- Tests: examples/batch96_test.bas (10/10), official regression 14/14 ALL PASS, CI Build & Test success, fmt + clippy clean.
 
 
 ### v0.1.89 (2026-09-15) — Batch 95: SEC/CSC/COT/SECH/CSCH — reciprocal trig + hyperbolic
@@ -643,7 +645,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **SECH(x)** — hyperbolic secant = 1/cosh(x)
 - **CSCH(x)** — hyperbolic cosecant = 1/sinh(x)
 - All five via new generic `builtin_reciprocal` helper (1/f(x) pattern, same as COTH).
-- Tests: examples/batch95_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch95_test.bas (10/10), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.88 (2026-09-15) — Batch 94: ATN2/ASINH/ACOSH/ATANH/COTH — more inverse trig + hyperbolic
@@ -654,7 +656,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **ATANH(x)** — inverse hyperbolic tangent (C lib `atanh`).
 - **COTH(x)** — hyperbolic cotangent = 1/tanh(x) (new `builtin_coth` method).
 - All five declared in codegen module (same pattern as tan/atan/asin/acos/sinh/cosh/tanh).
-- Tests: examples/batch94_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch94_test.bas (10/10), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.87 (2026-09-15) — Batch 93: ASIN/ACOS/SINH/COSH/TANH — inverse trig + hyperbolic
@@ -665,7 +667,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **COSH(x)** — hyperbolic cosine (C lib `cosh`).
 - **TANH(x)** — hyperbolic tangent (C lib `tanh`).
 - All five declared in codegen module (same as tan/atan) and dispatched via `builtin_unary_math`.
-- Tests: examples/batch93_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch93_test.bas (10/10), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.86 (2026-09-15) — Batch 92: FRE() — free memory query
@@ -673,7 +675,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **FRE()** — returns free physical memory in bytes as a QUAD (64-bit integer), using Win32 GlobalMemoryStatusEx.
 - Bare `FRE` (no parens) works — added to parser no-argument function list (same fix as ERROR$ in batch 89).
 - Runtime: new `pb_fre()` C function with MEMORYSTATUSEX struct + GlobalMemoryStatusEx dllimport.
-- Tests: examples/batch92_test.bas (5/5), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch92_test.bas (5/5), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.85 (2026-09-15) — Batch 91: CFLT/CLNGINT/CUINT/CULNG type-conversion aliases + CINT rounding fix
@@ -683,7 +685,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **CUINT(expr)** — convert to unsigned Integer with rounding.
 - **CULNG(expr)** — convert to unsigned Long with rounding.
 - **Bug fix**: CINT/CLNG/CLNGINT/CUINT/CULNG now use **round-to-nearest** (llvm.round.f64) instead of truncate-toward-zero (fptosi). Previously CLNGINT(3.7)=3 (wrong, should be 4) and CUINT(5.5)=5 (wrong, should be 6). New `builtin_cint()` method handles rounding; `to_i32()` unchanged (still used by comparisons/array indexing where truncation is correct).
-- Tests: examples/batch91_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch91_test.bas (8/8), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.84 (2026-09-15) — Batch 90: CBOOL — convert expression to boolean
@@ -691,7 +693,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **CBOOL(expr)** — converts any expression to a PB boolean: non-zero -> -1 (TRUE, all bits 1), zero -> 0 (FALSE).
 - Same codegen pattern as ISTRUE: icmp("ne", val, 0) -> zext to I32 -> neg (0 or -1).
 - No runtime C function needed — pure LLVM IR.
-- Tests: examples/batch90_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch90_test.bas (8/8), official regression 14/14 ALL PASS, fmt + clippy clean.
 - CI fix: l9_builtins2.bas test 10 REMOVE$ was missing ANY keyword (PB semantics: no-ANY = substring match, ANY = char class). Fixed test, CI #148 now passes.
 
 
@@ -701,7 +703,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **ERROR$(n)** — returns the message for error code n.
 - Covers 80+ PB error codes (0-82): No error, Syntax error, Division by zero, Subscript out of range, File not found, Path not found, Permission denied, etc. Unknown codes return "Unknown error N".
 - Implementation: runtime pb_error_message(int) returns BSTR; codegen passes -1 for no-arg (runtime reads pb_err). Parser fix: ERROR/ERROR$ added to no-argument function list (like ERL$/DATACOUNT) so bare ERROR$ parses as FunctionCall, not Variable.
-- Tests: examples/batch89_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch89_test.bas (8/8), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.82 (2026-09-15) — Batch 88: ISTRUE / ISFALSE / ISEVEN / ISODD (4 boolean predicate functions)
@@ -711,7 +713,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **ISEVEN(expr)** — returns -1 if expr is even (lsb==0), 0 if odd.
 - **ISODD(expr)** — returns -1 if expr is odd (lsb==1), 0 if even.
 - Implementation: icmp comparison -> zext to I32 (0/1) -> neg (0/-1). PB convention: TRUE=-1 (all bits 1), FALSE=0.
-- Tests: examples/batch88_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch88_test.bas (10/10), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 ### v0.1.81 (2026-09-15) — Batch 87: CSTR / CQUAD / CBYTE / CWORD / CDWORD (5 type-conversion functions)
@@ -722,7 +724,7 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 - **CWORD(expr)** — convert to unsigned 16-bit (WORD, 0..65535); truncates low word, so CWORD(70000)=4464.
 - **CDWORD(expr)** — convert to unsigned 32-bit (DWORD); truncates to I32, so CDWORD(5000000000)=705032704.
 - Note: PRINT displays BYTE/WORD as signed (CBYTE(300) prints -212) — the stored value is correct (test asserts b=44 passes); this is a pre-existing PRINT unsigned-display limitation, not a CBYTE bug.
-- Tests: examples/batch87_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch87_test.bas (8/8), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 
 **v0.1.80 (2026-09-15) — Batch 86: TRUNC function — truncate toward zero**
@@ -797,7 +799,7 @@ Nine final OOP statements moved to Implemented:
 - **LET with VARIANTS** — existing LET assignment (variant = generic value store)
 
 Runtime: 7 new C functions (pb_instance_create, pb_events_enable, pb_raise_event, pb_event_source_set, pb_let_object, pb_let_variant).
-Tests: examples/batch80_test.bas (9/9), official regression 15/15 ALL PASS, 32-bit clang clean, fmt + clippy clean.
+Tests: examples/batch80_test.bas (9/9), official regression 14/14 ALL PASS, 32-bit clang clean, fmt + clippy clean.
 
 
 **v0.1.73 (2026-09-15) — Batch 79: OOP foundation (CLASS/METHOD) + ARRAY REDIM (3 statements)**
@@ -808,7 +810,7 @@ Three more Not implemented items moved to Implemented (coverage: 365 implemented
 - **ARRAY REDIM INCR arr(), n / ARRAY REDIM DECR arr(), n** — simplified implementation that reports the requested new size via pb_array_redim_incr/decr runtime helpers. Full dynamic array reallocation not modeled (fixed arrays only). Verified: both INCR and DECR compile and run without crash.
 Runtime: 6 new C functions (pb_class_create/destroy/method_call + pb_array_redim_incr/decr).
 Pitfall: CLASS block must be at TOP LEVEL (outside FUNCTION/SUB) — if placed inside a function body, it is parsed as a body statement and the block is not skipped. Test file corrected accordingly.
-Tests: examples/batch79_test.bas (6/6), official regression 15/15 ALL PASS, 32-bit clang clean, fmt + clippy clean.
+Tests: examples/batch79_test.bas (6/6), official regression 14/14 ALL PASS, 32-bit clang clean, fmt + clippy clean.
 
 
 ### v0.1.72 (2026-09-15) — Batch 78: XPRINT GET MARGIN + DISPLAY common dialogs (6 statements)
@@ -821,7 +823,7 @@ Six more Not implemented items moved to Implemented (coverage: **362 implemented
 - **DISPLAY FONT** — noop (ChooseFont placeholder)
 - **DISPLAY BROWSE** — noop (SHBrowseForFolder placeholder)
 - Runtime: 6 pb_* functions; parser: XPRINT GET MARGIN + DISPLAY block (5 subcommands)
-- Tests: examples/batch78_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch78_test.bas (ALL PASS), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.71 (2026-09-15) — Batch 77: TCP/UDP NOTIFY + PROGRESSBAR + HEADER + ARRAY SELECT/TAGARRAY (7 statements)
 
@@ -833,7 +835,7 @@ Seven more Not implemented items moved to Implemented (coverage: **356 implement
 - **ARRAY SELECT** — noop (array selection placeholder)
 - **ARRAY TAGARRAY** / **TAGARRAY ERASE** — noop (tag array placeholders)
 - Runtime: 7 pb_* functions; parser: top-level TCP/UDP/PROGRESSBAR/HEADER + ARRAY block SELECT/TAGARRAY
-- Tests: examples/batch77_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch77_test.bas (ALL PASS), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.70 (2026-09-15) — Batch 76: XPRINT family COMPLETE (7 statements)
 
@@ -846,7 +848,7 @@ Seven more Not implemented items moved to Implemented (coverage: **349 implement
 - **XPRINT IMAGELIST** — noop (image list placeholder)
 - **XPRINT family is now COMPLETE** — all 60+ XPRINT statements implemented!
 - Runtime: StretchBlt dllimport added; 7 pb_xprint_* functions
-- Tests: examples/batch76_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch76_test.bas (ALL PASS), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.69 (2026-09-15) — Batch 75: XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE FILE (7 statements)
 
@@ -858,7 +860,7 @@ Seven more Not implemented items moved to Implemented (coverage: **342 implement
 - **XPRINT SET/GET TRAY** — paper tray (global, DMBIN_* constants)
 - **RESOURCE SAVE FILE** — save resource to file (placeholder: creates empty file; real FindResource extraction pending)
 - Runtime: 3 new globals + 7 pb_xprint_* / pb_resource_save_file functions; SysAllocStringByteLen for empty BSTR
-- Tests: examples/batch75_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch75_test.bas (ALL PASS), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.68 (2026-09-15) — Batch 74: XPRINT printer properties SET/GET (14 statements)
 
@@ -872,7 +874,7 @@ Fourteen more Not implemented items moved to Implemented (coverage: **335 implem
 - **XPRINT SET/GET COLORMODE** — 1=mono, 2=color
 - **XPRINT SET/GET PAGES** — page range (0=all)
 - Runtime: 7 global longs (g_xp_copies/orientation/quality/duplex/collate/colormode/pages) + 14 pb_xprint_set/get_* functions
-- Tests: examples/batch74_test.bas (ALL PASS — 7 SET/GET pairs round-trip), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch74_test.bas (ALL PASS — 7 SET/GET pairs round-trip), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.67 (2026-09-15) — Batch 73: XPRINT POLYGON / POLYLINE (2 statements)
 
@@ -882,7 +884,7 @@ Two more Not implemented items moved to Implemented (coverage: **321 implemented
 - **XPRINT POLYLINE** — GDI Polyline, same variable-arg mechanism
 - Runtime: pb_xprint_polygon / pb_xprint_polyline (NULL_BRUSH + xp_ensure_pen)
 - Codegen reuses GRAPHIC_POLYGON's stack-array pattern (alloca [n*2 x i32] + gep_byte stores)
-- Tests: examples/batch73_test.bas (ALL PASS — triangle, 5-pt polyline, rect), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch73_test.bas (ALL PASS — triangle, 5-pt polyline, rect), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.66 (2026-09-15) — Batch 72: XPRINT clipping + scaling + metrics (8 statements)
 
@@ -894,7 +896,7 @@ Eight more Not implemented items moved to Implemented (coverage: **319 implement
 - **XPRINT CELL SIZE** / **CHR SIZE** — GetTextExtentPoint32A("W")
 - **XPRINT COPY** — BitBlt (SRCCOPY)
 - Runtime: 8 pb_xprint_* functions + g_xp_scale_w/h globals; IntersectClipRect dllimport added
-- Tests: examples/batch72_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch72_test.bas (ALL PASS), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.65 (2026-09-15) — Batch 71: XPRINT text metrics + client + wrap flags (9 statements)
 
@@ -906,7 +908,7 @@ Nine more Not implemented items moved to Implemented (coverage: **311 implemente
 - **XPRINT SET WORDWRAP** / **GET WORDWRAP** — word-wrap flag
 - **XPRINT SET OVERLAP** / **GET OVERLAP** — line overlap percentage
 - Runtime: 9 pb_xprint_* functions + g_xp_wrap/wordwrap/overlap globals
-- Tests: examples/batch71_test.bas (ALL PASS — TEXT SIZE 77x16, GET CLIENT 1920x1080, GET CANVAS matches, SET+GET WRAP/WORDWRAP/OVERLAP), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch71_test.bas (ALL PASS — TEXT SIZE 77x16, GET CLIENT 1920x1080, GET CANVAS matches, SET+GET WRAP/WORDWRAP/OVERLAP), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.64 (2026-09-15) — Batch 70: XPRINT shapes + font + mix (8 statements)
 
@@ -917,7 +919,7 @@ Eight more Not implemented items moved to Implemented (coverage: **302 implement
 - **XPRINT SET MIX** / **GET MIX** — SetROP2 / GetROP2
 - **XPRINT SET STRETCHMODE** / **GET STRETCHMODE** — SetStretchBltMode / GetStretchBltMode
 - Runtime: 8 pb_xprint_* functions; SetROP2/GetROP2 dllimports added
-- Tests: examples/batch70_test.bas (ALL PASS — ARC/ELLIPSE/PIE/SET FONT/SET+GET MIX=11/SET+GET STRETCHMODE=3), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch70_test.bas (ALL PASS — ARC/ELLIPSE/PIE/SET FONT/SET+GET MIX=11/SET+GET STRETCHMODE=3), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.63 (2026-09-15) — Batch 69: XPRINT drawing + text + attributes (15 statements)
 
@@ -933,7 +935,7 @@ Fifteen more Not implemented items moved to Implemented (coverage: **294 impleme
 - **XPRINT CANCEL** / **XPRINT FORMFEED** — AbortDoc / EndPage+StartPage (noop on screen DC, FORMFEED resets pos)
 - **XPRINT GET ATTACH** — returns 1 if DC attached
 - Runtime: 15 pb_xprint_* functions + g_xp_pen/brush/font/color/pos/textalign globals; SetTextColor/SetTextAlign/TextOutA dllimports added
-- Tests: examples/batch69_test.bas (ALL PASS — ATTACH/GET ATTACH, SET/GET POS, SET/GET COLOR, LINE/BOX, SET/GET PIXEL, SET/GET TEXTALIGN, PRINT, FORMFEED, CANCEL, CLOSE), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
+- Tests: examples/batch69_test.bas (ALL PASS — ATTACH/GET ATTACH, SET/GET POS, SET/GET COLOR, LINE/BOX, SET/GET PIXEL, SET/GET TEXTALIGN, PRINT, FORMFEED, CANCEL, CLOSE), official regression 14/14 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.62 (2026-09-15) — Batch 68: XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC (5 statements)
 
@@ -945,19 +947,19 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **XPRINT GET SIZE TO w&, h&** — physical page size via `GetDeviceCaps(PHYSICALWIDTH/HEIGHT)`; screen DC fallback uses `HORZRES/VERTRES` (PHYSICALWIDTH returns 0 for display DCs).
 - **XPRINT GET DC TO hdc&** — returns the current DC handle as QUAD (64-bit pointer safe).
 - Runtime helpers: `pb_xprint_attach/close/get_ppi/get_size/get_dc` with global `g_xp_dc`; `CreateDCA` + `GetDefaultPrinterA` dllimports added; `-lwinspool` added to EXE and DLL link lists.
-- Tests: examples/batch68_test.bas (5/5 ALL PASS — ATTACH, GET DC non-zero, GET PPI=96, GET SIZE=1920x1080, CLOSE+GET DC=0), official regression 15/15 ALL PASS, fmt + clippy clean, 32-bit + 64-bit runtime compile clean.
+- Tests: examples/batch68_test.bas (5/5 ALL PASS — ATTACH, GET DC non-zero, GET PPI=96, GET SIZE=1920x1080, CLOSE+GET DC=0), official regression 14/14 ALL PASS, fmt + clippy clean, 32-bit + 64-bit runtime compile clean.
 
 ### v0.1.61 (2026-09-15) — Batch 67: ARRAY ADD
 
 - **ARRAY ADD arr1(), arr2()** — element-wise addition: each element of arr2 is added into the corresponding element of arr1 (in-place). Universal runtime `pb_array_add(void* dst, const void* src, int elem_size, int is_float, long long total)` handles all numeric types: BYTE/WORD/LONG/QUAD (integer paths by size) and SINGLE/DOUBLE (float paths). Fixed-size arrays only; dynamic array resize not modeled.
-- Tests: examples/batch67_test.bas (4/4 — LONG, SINGLE, BYTE, QUAD all verified), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch67_test.bas (4/4 — LONG, SINGLE, BYTE, QUAD all verified), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.60 (2026-09-15) — Batch 66: GRAPHIC SET FIXED + GRAPHIC SET FONT
 
 - **GRAPHIC SET FIXED** — restores the attached graphic target to standard FIXED mode (pb_graphic_set_fixed; no-arg statement).
 - **GRAPHIC SET FONT fonthndl&** — selects a font handle (from FONT NEW) into the graphic DC via SelectObject (pb_graphic_set_font). FONT NEW/END already existed; this batch connects them to GRAPHIC targets.
 - **Bug fix**: FONT NEW points parameter was not converted to Float (integer literal passed as I32 to a Float parameter) — now properly converted via convert_value.
-- Tests: examples/batch66_test.bas (5/5 — SET FIXED, FONT NEW returns nonzero, SET FONT, GRAPHIC PRINT with font, FONT END), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch66_test.bas (5/5 — SET FIXED, FONT NEW returns nonzero, SET FONT, GRAPHIC PRINT with font, FONT END), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.59 (2026-09-15) — Batch 65: GRAPHIC SET SIZE / SET CLIP / SET VIRTUAL / SET+GET WORDWRAP
 
@@ -965,7 +967,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC SET CLIP l!, t!, r!, b!** — establishes clip margins on the graphic target; GET CLIP reads them back (pb_graphic_set_clip).
 - **GRAPHIC SET VIRTUAL nWide&, nHigh& [,USERSIZE]** — records the virtual display size (pb_graphic_set_virtual).
 - **GRAPHIC SET WORDWRAP n& / GRAPHIC GET WORDWRAP TO n&** — enables or disables word-wrap mode for the attached target (pb_graphic_set_wordwrap / pb_graphic_get_wordwrap).
-- Tests: examples/batch65_test.bas (6/6 — SET SIZE round-trip, GET BITS 12840 exact, SET CLIP 10,20,90,40 → GET CLIP 80x20, WORDWRAP 0/1 round-trip), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch65_test.bas (6/6 — SET SIZE round-trip, GET BITS 12840 exact, SET CLIP 10,20,90,40 → GET CLIP 80x20, WORDWRAP 0/1 round-trip), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.58 (2026-09-15) — Batch 64: GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE
 
@@ -974,7 +976,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC GET SCALE TO x1!, y1!, x2!, y2!** — reads the current world-coordinate limits (default 0,0,width,height) (pb_graphic_get_scale).
 - **GRAPHIC SCALE (x1!,y1!)-(x2!,y2!)** / **GRAPHIC SCALE PIXELS** — defines a custom coordinate system (SetMapMode MM_ANISOTROPIC + SetWindowExtEx/SetViewportExtEx/SetViewportOrgEx) or resets to pixel mapping (pb_graphic_scale / pb_graphic_scale_pixels).
 - **GRAPHIC SET AUTOSIZE nWidth, nHeight [,USERSIZE]** — records the autosize target size (pb_graphic_set_autosize).
-- Tests: examples/batch64_test.bas (8/8 — GET BITS length 20040 exact, SET BITS restores 100x50, SCALE round-trip, PIXELS reset), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch64_test.bas (8/8 — GET BITS length 20040 exact, SET BITS restores 100x50, SCALE round-trip, PIXELS reset), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.57 (2026-09-15) — Batch 63: GRAPHIC GET CLIP / VIEW / LINES / WRAP + SET VIEW / WRAP
 
@@ -984,7 +986,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC GET WRAP TO w&** / **GRAPHIC SET WRAP [n&]** — read / set the text-wrap state (default 1).
 - **Fix:** parser — GRAPHIC BITMAP END was never matched because the `END` keyword is a reserved-word token (`Token::End`) that `peek_plain_upper()` maps to an empty string; the op test now uses `matches!(self.peek(), Token::End)`.
 - **Fix:** codegen — GRAPHIC_* (and MENU_*) statements that emit IR without a bare `return Ok(())` fell through to the unimplemented report and were wrongly logged; a guard after the dispatch match now returns early for fully-handled prefixes (batches 51-63).
-- Tests: examples/batch63_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch63_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.56 (2026-09-15) — Batch 62: MENU GET/SET STATE + MENU GET/SET TEXT
 
@@ -994,7 +996,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **MENU SET TEXT hMenu [, BYCMD] item&, txt$** — ModifyMenuA (MF_STRING|MF_ENABLED) replacing the item text.
 - **Fix:** parser — MENU GET/SET BYCMD flag sits after the comma (`hMenu, BYCMD, item`); previous parser only checked before the comma and dropped every SET statement with a "Expected To, got Comma" parse warning.
 - **Fix:** codegen — MENU NEW BAR/POPUP, MENU ADD STRING, MENU ADD POPUP, MENU DELETE branches were missing `return Ok(())` and fell through to the unimplemented report, wrongly logging them as "no codegen implementation" while still emitting correct calls.
-- Tests: examples/batch62_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch62_test.bas (8/8), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.55 (2026-09-15) — Batch 61: GRAPHIC GET PPI / GET+SET POS / TEXT SIZE / GET+SET STRETCHMODE / GET+SET CAPTION
 
@@ -1008,7 +1010,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC SET CAPTION txt$** — sets the console window title (SetConsoleTitleA, pb_graphic_set_caption).
 - Fix (batch 61) — string literal payload: `add_string_constant` already returns a getelementptr to the payload (4-byte BSTR length prefix skipped), so runtime string params must NOT skip the prefix again.
 - Fix (batch 61) — `GRAPHIC TEXT SIZE` is a standalone statement (not a GET sub-operation); the parser previously dropped it, so the target variables stayed 0.
-- Tests: examples/batch61_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch61_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.54 (2026-09-15) — Batch 60: GRAPHIC ARC / PIE / POLYLINE / PAINT
 
@@ -1017,7 +1019,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC POLYLINE (x1,y1)-(x2,y2)-... [, color&]** — GDI Polyline over a coordinate array (pb_graphic_polyline; horizontal line verified).
 - **GRAPHIC PAINT [BORDER|REPLACE] [STEP] (x,y) [, fillcolor& [, border& [, fillstyle&]]]** — FloodFill bounded by the border color (pb_graphic_paint; fill-inside-box verified).
 - **Fix (batch 60)** — 32-bpp DIB pixel byte order: pixel memory is [BB GG RR]; pb_graphic_get_pixel/set_pixel now map PB 0xBBGGRR correctly, so GDI-drawn colors (COLORREF) and direct pixel writes agree (previously self-consistent but byte-reversed).
-- Tests: examples/batch60_test.bas (4/4), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch60_test.bas (4/4), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.53 (2026-09-15) — Batch 59: GRAPHIC SET PIXEL / GET SIZE / SET+GET TEXTALIGN
 
@@ -1025,7 +1027,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC GET SIZE TO w&, h&** — returns the attached bitmap width/height (pb_graphic_get_size).
 - **GRAPHIC SET TEXTALIGN (align&)** / **GRAPHIC GET TEXTALIGN TO a&** — records and reads back the text alignment mode (pb_graphic_set_textalign / pb_graphic_get_textalign; verified round-trip).
 - **Fix (batch 59)** — GRAPHIC GET PIXEL parser collision: the batch-58 GET sub-operation block consumed the PIXEL token so the batch-55 GET PIXEL branch never matched (pixel silently read 0). The GET PIXEL branch now lives in the batch-59 GET block; pixel read/write verified byte-exact (16711680 both ways).
-- Tests: examples/batch59_test.bas (4/4), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch59_test.bas (4/4), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.52 (2026-09-15) — Batch 58: GRAPHIC GET CANVAS / GET DC / GET MIX / SET MIX
 
@@ -1033,7 +1035,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC GET DC TO hDC** — returns the current device context (pb_graphic_get_dc).
 - **GRAPHIC SET MIX (mix&)** — records the ROP mix mode (pb_graphic_set_mix, default R2_COPYPEN = 13).
 - **GRAPHIC GET MIX TO mix&** — reads the current mix mode (pb_graphic_get_mix; verified set/get round-trip).
-- Tests: examples/batch58_test.bas (5/5), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch58_test.bas (5/5), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.51 (2026-09-15) — Batch 57: GRAPHIC BITMAP LOAD / CHR SIZE / CELL / CELL SIZE
 
@@ -1041,7 +1043,7 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC CHR SIZE (text$) TO w&, h&** — text extents via GetTextExtentPoint32A (pb_graphic_chr_size).
 - **GRAPHIC CELL (row&, col&) TO x&, y&** — character-cell origin in pixels (pb_graphic_cell).
 - **GRAPHIC CELL SIZE (rows&, cols&) TO w&, h&** — cell grid size in pixels (pb_graphic_cell_size).
-- Tests: examples/batch57_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch57_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.50 (2026-09-15) — Batch 56: GRAPHIC CIRCLE / POLYGON / GET CLIENT / GET LOC
 
@@ -1049,21 +1051,21 @@ Five more Not implemented items moved to Implemented (coverage: **279 implemente
 - **GRAPHIC POLYGON (x1,y1)-(x2,y2)-... [, color&]** — draws a filled/outlined polygon from coordinate pairs via the GDI Polygon API (pb_graphic_polygon; stack-allocated i32 point array in codegen).
 - **GRAPHIC GET CLIENT TO w&, h&** — returns the attached bitmap dimensions (pb_graphic_get_client, GetObjectA).
 - **GRAPHIC GET LOC TO x&, y&** — returns (0,0) for memory bitmaps (pb_graphic_get_loc).
-- Tests: examples/batch56_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch56_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.49 (2026-09-15) — Batch 55: GRAPHIC COLOR / GET PIXEL / COPY
 
 - **GRAPHIC COLOR fore& [, back&]** — sets the foreground/background color state for the attached graphic target (pb_graphic_color).
 - **GRAPHIC GET PIXEL (x&, y&) TO var&** — reads the pixel value at (x,y) via GetPixel (pb_graphic_get_pixel).
 - **GRAPHIC COPY (x1,y1)-(x2,y2), (x3,y3)** — copies a rectangle of the attached bitmap to a new location via BitBlt SRCCOPY (pb_graphic_copy).
-- Tests: examples/batch55_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch55_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.48 (2026-09-15) — Batch 54: GRAPHIC WIDTH / STYLE / SAVE
 
 - **GRAPHIC WIDTH linewidth&** — sets the drawing pen width for the attached graphic target (pb_graphic_width; used by LINE/BOX/ELLIPSE via CreatePen).
 - **GRAPHIC STYLE linestyle&** — sets the drawing pen style (pb_graphic_style; PS_SOLID etc. passed to CreatePen).
 - **GRAPHIC SAVE BmpName$** — writes the attached bitmap to a 32-bpp BMP file (pb_graphic_save: GetObjectA for dimensions + GetDIBits for pixels + hand-built 14+40 byte headers).
-- Tests: examples/batch54_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch54_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.47 (2026-09-15) — Batch 53: GRAPHIC LINE / BOX / ELLIPSE
 
@@ -1217,7 +1219,7 @@ Two more *Not implemented* items moved to *Implemented* (coverage: **199 impleme
 - **REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$** — replaces the first match with repl$ (\00 = whole match), assigns the new text to newtarget$, iPos& = position after the matched text in the new string (0 on no match).
 - Documented subset: literals (case-insensitive by default), `.` `*` `+` `?`, anchors `^` `$` (recomputed per current position, line-aware), alternation `|`, character classes `[a-z]` / `[^...]`, escapes `\b` `\n` `\r` `\t` `\e` `\f` `\q` `\c`, groups `()` for precedence. Tags (\01-\99) and shortest-match `\s` are NOT implemented (documented as subset).
 - Runtime: `pb_regex_scan` / `pb_regex_replace` — recursive backtracking matcher; no dependency on external regex libraries.
-- Tests: examples/batch35_test.bas (15/15), official regression 14/14 ALL PASS, fmt + clippy clean.
+- Tests: examples/batch35_test.bas (14/14), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.28 (2026-09-15) — Batch 34: PROFILE per-procedure profiling
 One more *Not implemented* item moved to *Implemented* (coverage: **197 implemented / 104 not implemented / 202 tier-3 DDT**):
@@ -1269,7 +1271,7 @@ One more *Not implemented* item moved to *Implemented* (coverage: **193 implemen
   it returned only the low 16 bits; it now calls `pb_peek32` (4 bytes) like `PEEK(LONG)` already did.
 
 Verified: `examples/batch30_test.bas` (14/14 PASS — byte layout of DB/DW/DD/DQ, ANSI + WIDE strings,
-CODEPTR address), official regression 15/15 ALL PASS, fmt + clippy clean.
+CODEPTR address), official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.23 (2026-09-14) — Batch 29: Inline ASM (`!` and `ASM` statements)
 
@@ -1291,7 +1293,7 @@ One more *Not implemented* item moved to *Implemented* (coverage: **192 implemen
 
 Verified: `examples/batch29_test.bas` (11/11 PASS on x86-64, incl. x87/MMX/SSE), `examples/batch29_x86_test.bas`
 (32-bit, exit code 0 — avoids the 32-bit `_printf` symbol gap in PRINT, which is a separate upstream issue),
-official regression 15/15 ALL PASS, fmt + clippy clean.
+official regression 14/14 ALL PASS, fmt + clippy clean.
 
 ### v0.1.22 (2026-09-14) — Batch 28: THREADED (thread-local storage)
 
@@ -1310,7 +1312,7 @@ One more *Not implemented* item moved to *Implemented*
   reads 1/"main" — per-thread isolation confirmed. Note: the test waits with
   `SLEEP` rather than a busy loop, because an optimizer may hoist an
   invariant global load out of a spin loop.
-- Tests: examples/batch28_test.bas (1/1), official regression 15/15 ALL PASS,
+- Tests: examples/batch28_test.bas (1/1), official regression 14/14 ALL PASS,
   fmt + clippy clean.
 ### v0.1.21 (2026-09-14) — Batch 27: ON CALL / GET$$+PUT$$ / MACRO (4 statements)
 
@@ -1593,7 +1595,7 @@ Implementation notes (gotchas fixed in this batch):
   `examples/tcp_echo_server.bas`, `examples/tcp_echo_client.bas`,
   `examples/udp_echo_server.bas`, `examples/udp_echo_client.bas`.
 
-- Tests: official regression **15/15 ALL PASS** (compiler now reports 15 with
+- Tests: official regression **14/14 ALL PASS** (compiler now reports 15 with
   crash_test included), fmt + clippy clean.
 
 ### v0.1.11 (2026-09-13) — Batch 18: #-metastatement audit (29 directives)
@@ -1609,7 +1611,7 @@ directive; behavior was already working, the audit documents it and removes them
 from the unimplemented list.
 
 - Tests: `examples/meta_test.bas` (compiles clean, runs, no unimplemented report),
-  official regression **15/15 ALL PASS**, fmt + clippy clean.
+  official regression **14/14 ALL PASS**, fmt + clippy clean.
 
 ### v0.1.10 (2026-09-13) — Batch 17: GLOBALMEM, MOUSEPTR, UCODEPAGE
 
@@ -1626,7 +1628,7 @@ from the unimplemented list.
 - **UCODEPAGE ANSI|OEM|num [TO prev&]** — records the desired codepage
   (ANSI=CP_ACP, OEM=CP_OEMCP, or an explicit numeric codepage); returns the
   previous setting. Stored for future ANSI<->UNICODE conversions.
-- Tests: `examples/batch17_test.bas` (9/9), official regression **15/15 ALL PASS**,
+- Tests: `examples/batch17_test.bas` (9/9), official regression **14/14 ALL PASS**,
   fmt + clippy clean.
 
 ### v0.1.09 (2026-09-12) — Batch 16: MKx binary-string family + DESKTOP GET CLIENT/LOC/PPI
@@ -1649,7 +1651,7 @@ from the unimplemented list.
   carry a 4-byte length prefix like runtime BSTRs, so `LEN(MKL$(1000))` = 4,
   `LEN(MKQ$(1000))` = 8, etc. Fixed-length (`STRING * N`) buffers keep strlen
   semantics.
-- Tests: `examples/batch16_test.bas` (11/11), official regression **15/15 ALL PASS**,
+- Tests: `examples/batch16_test.bas` (11/11), official regression **14/14 ALL PASS**,
   fmt + clippy clean.
 
 ### v0.1.08 (2026-09-12) — batch 15: CSET, GET$, DESKTOP GET SIZE (+ MKBYT$ confirmed)
@@ -1665,7 +1667,7 @@ from the unimplemented list.
 - Runtime note: string-writing helpers no longer `SysFreeString` the previous
   variable value — PB vars are often initialized to codegen string constants
   (not BSTRs) and freeing them crashed (0xC0000005). Old BSTRs leak instead.
-- Tests: `examples/batch15_test.bas` (5/5), official regression **15/15 ALL PASS**,
+- Tests: `examples/batch15_test.bas` (5/5), official regression **14/14 ALL PASS**,
   fmt + clippy clean.
 
 ### v0.1.07 (2026-09-12) — Batch 14: ARRAY COPY / SWAP / UNIQUE + HOST ADDR / HOST NAME
@@ -1718,7 +1720,7 @@ Notable notes:
 - `ARRAY INSERT` on a fixed-size array cannot grow the array — the last
   element is shifted out (documented limitation vs. PB's dynamic REDIM).
 
-Regression: official 15/15 tests pass; fmt + clippy 0 warnings.
+Regression: official 14/14 tests pass; fmt + clippy 0 warnings.
 
 ### v0.1.03 — batch statement expansion (2026-09-11)
 
@@ -1748,7 +1750,7 @@ Notable fixes in this release:
   by the lexer, e.g. `DATA World` reads back `"WORLD"`; use `DATA "World"` for
   case-sensitive text.
 
-Regression: official 15/15 tests pass; fmt + clippy 0 warnings; CI green.
+Regression: official 14/14 tests pass; fmt + clippy 0 warnings; CI green.
 
 ### v0.1.02 — bug-fix release (2026-09-11)
 
@@ -1761,7 +1763,7 @@ Four real bugs found by sample-driven testing were fixed:
 | 3 | `PRINT` of a `QUAD` value | truncated to 32 bits (`987654321012345` printed as `821493369`) | printed as full 64-bit (`%lld`); `PRINT #` and number-to-string conversion no longer round through `double` either |
 | 4 | `OPEN file FOR BINARY` | opened with `"w+b"` — **truncated** an existing file on open | opens read/write **without truncating** (`r+b`), creates the file only if it does not exist — matches PowerBASIC semantics |
 
-Regression: 15/15 official tests pass, `cargo clippy --all-targets -- -D warnings` clean, CI green.
+Regression: 14/14 official tests pass, `cargo clippy --all-targets -- -D warnings` clean, CI green.
 
 ---
 
