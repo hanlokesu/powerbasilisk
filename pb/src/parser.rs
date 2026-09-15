@@ -2835,6 +2835,18 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "CELL" {
+                        self.advance();
+                        let x = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_CELL".to_string(),
+                            args: vec![x, y],
+                            line,
+                        }));
+                    }
                     if xop == "POLYGON" {
                         self.advance();
                         let mut args = vec![];
@@ -3322,6 +3334,39 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "SELECTION" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_SELECTION".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "PAPER" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_PAPER".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "TRAY" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_TRAY".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -3522,6 +3567,26 @@ impl Parser {
                             self.consume_to_eol();
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_SET_PAGES".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "PAPER" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_PAPER".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "TRAY" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_TRAY".to_string(),
                                 args: vec![v],
                                 line,
                             }));

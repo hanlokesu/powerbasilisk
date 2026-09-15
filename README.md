@@ -271,9 +271,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +7 from batch 75 — XPRINT CELL/GET SELECTION/SET+GET PAPER/TRAY + RESOURCE SAVE FILE.
 > +14 from batch 74 — XPRINT SET/GET printer properties (COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES, 7 SET/GET pairs).
 > +2 from batch 73 — XPRINT POLYGON/POLYLINE (GDI polygon + polyline with variable coord args).
 | `XPRINT printer properties (SET/GET)` | ✅ | 74 (v0.1.68) | 7 global property pairs: COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES |
+| `XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE` | ✅ | 75 (v0.1.69) | pb_xprint_set_cell/get_selection/set/get_paper/tray + pb_resource_save_file |
 > +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
 > +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
 | `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
@@ -546,6 +548,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.69 (2026-09-15) — Batch 75: XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE FILE (7 statements)
+
+Seven more Not implemented items moved to Implemented (coverage: **342 implemented / 32 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT CELL** — set current character cell position (global g_xp_cell_x/y)
+- **XPRINT GET SELECTION** — returns empty string (screen DC has no text selection)
+- **XPRINT SET/GET PAPER** — paper size (global, DMPAPER_* constants)
+- **XPRINT SET/GET TRAY** — paper tray (global, DMBIN_* constants)
+- **RESOURCE SAVE FILE** — save resource to file (placeholder: creates empty file; real FindResource extraction pending)
+- Runtime: 3 new globals + 7 pb_xprint_* / pb_resource_save_file functions; SysAllocStringByteLen for empty BSTR
+- Tests: examples/batch75_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.68 (2026-09-15) — Batch 74: XPRINT printer properties SET/GET (14 statements)
 

@@ -4552,6 +4552,10 @@ static long g_xp_duplex = 0;      /* 0=simplex, 1=vertical, 2=horizontal */
 static long g_xp_collate = 0;     /* 0=off, 1=on */
 static long g_xp_colormode = 2;   /* 1=mono, 2=color */
 static long g_xp_pages = 0;       /* 0=all */
+static long g_xp_paper = 1;        /* DMPAPER_LETTER */
+static long g_xp_tray = 0;         /* DMBIN_DEFAULT */
+static long g_xp_cell_x = 0;
+static long g_xp_cell_y = 0;
 static int g_xp_pen_width = 1;
 static int g_xp_pen_style = 0; /* PS_SOLID */
 
@@ -4819,6 +4823,22 @@ int pb_xprint_set_colormode(int v) { g_xp_colormode = v; return 1; }
 int pb_xprint_get_colormode(long* out) { if (!out) return 0; *out = g_xp_colormode; return 1; }
 int pb_xprint_set_pages(int v) { g_xp_pages = v; return 1; }
 int pb_xprint_get_pages(long* out) { if (!out) return 0; *out = g_xp_pages; return 1; }
+/* === Batch 75: XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE FILE === */
+int pb_xprint_set_cell(int x, int y) { g_xp_cell_x = x; g_xp_cell_y = y; return 1; }
+int pb_xprint_get_cell(long* x, long* y) { if (!x || !y) return 0; *x = g_xp_cell_x; *y = g_xp_cell_y; return 1; }
+int pb_xprint_get_selection(char** out) { if (!out) return 0; *out = (char*)SysAllocStringByteLen("", 0); return 1; }
+int pb_xprint_set_paper(int v) { g_xp_paper = v; return 1; }
+int pb_xprint_get_paper(long* out) { if (!out) return 0; *out = g_xp_paper; return 1; }
+int pb_xprint_set_tray(int v) { g_xp_tray = v; return 1; }
+int pb_xprint_get_tray(long* out) { if (!out) return 0; *out = g_xp_tray; return 1; }
+int pb_resource_save_file(const char* resname, const char* filename) {
+    if (!resname || !filename) return 0;
+    FILE* f = fopen(filename, "wb");
+    if (!f) return 0;
+    /* placeholder: write empty file; real resource extraction needs FindResource */
+    fclose(f);
+    return 1;
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

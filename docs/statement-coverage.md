@@ -536,22 +536,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
-| RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
 | TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |
 

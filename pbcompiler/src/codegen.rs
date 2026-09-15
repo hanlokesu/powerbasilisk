@@ -2117,6 +2117,38 @@ impl Compiler {
             .declare_function("pb_xprint_set_pages", &IrType::I32, &[IrType::I32], false);
         self.module
             .declare_function("pb_xprint_get_pages", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_cell",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_cell",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_selection",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_paper", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_paper", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_set_tray", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_tray", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_resource_save_file",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5680,6 +5712,45 @@ impl Compiler {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
                     fb.call_void("pb_xprint_get_pages", &[p]);
                 }
+            }
+            "XPRINT_CELL" => {
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_cell", &[xv, yv]);
+            }
+            "XPRINT_GET_SELECTION" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_selection", &[p]);
+                }
+            }
+            "XPRINT_SET_PAPER" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_paper", &[iv]);
+            }
+            "XPRINT_GET_PAPER" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_paper", &[p]);
+                }
+            }
+            "XPRINT_SET_TRAY" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_tray", &[iv]);
+            }
+            "XPRINT_GET_TRAY" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_tray", &[p]);
+                }
+            }
+            "RESOURCE_SAVE_FILE" => {
+                let r0 = self.compile_expr(fb, &call.args[0])?;
+                let p0 = self.convert_value(fb, &r0, &IrType::Ptr, &PbType::String);
+                let r1 = self.compile_expr(fb, &call.args[1])?;
+                let p1 = self.convert_value(fb, &r1, &IrType::Ptr, &PbType::String);
+                fb.call_void("pb_resource_save_file", &[p0, p1]);
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)
