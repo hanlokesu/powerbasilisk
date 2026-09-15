@@ -548,6 +548,11 @@ exit code 0:
 | `COT` | ✅ | 95 (v0.1.89) | cotangent = 1/tan(x) (builtin_reciprocal) |
 | `SECH` | ✅ | 95 (v0.1.89) | hyperbolic secant = 1/cosh(x) (builtin_reciprocal) |
 | `CSCH` | ✅ | 95 (v0.1.89) | hyperbolic cosecant = 1/sinh(x) (builtin_reciprocal) |
+| `HYPOT`(x,y) | ✅ | 96 (v0.1.90) | C `hypot` — sqrt(x²+y²) |
+| `CBRT`(x) | ✅ | 96 (v0.1.90) | C `cbrt` — cube root |
+| `EXPM1`(x) | ✅ | 96 (v0.1.90) | C `expm1` — exp(x)-1 (accurate for small x) |
+| `LOG1P`(x) | ✅ | 96 (v0.1.90) | C `log1p` — log(1+x) (accurate for small x) |
+| `ERF`(x) | ✅ | 96 (v0.1.90) | C `erf` — Gauss error function |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -584,6 +589,17 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+### v0.1.90 (2026-09-15) — Batch 96: HYPOT/CBRT/EXPM1/LOG1P/ERF — C math library special functions
+
+- **HYPOT(x,y)** — sqrt(x²+y²), C `hypot` (two-arg, via `builtin_binary_math`)
+- **CBRT(x)** — cube root, C `cbrt`
+- **EXPM1(x)** — exp(x)-1 (accurate for small x), C `expm1`
+- **LOG1P(x)** — log(1+x) (accurate for small x), C `log1p`
+- **ERF(x)** — Gauss error function, C `erf`
+- All C library functions declared in module init (non-intrinsic, same pattern as asin/acos/sinh).
+- Tests: examples/batch96_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+
 
 ### v0.1.89 (2026-09-15) — Batch 95: SEC/CSC/COT/SECH/CSCH — reciprocal trig + hyperbolic
 

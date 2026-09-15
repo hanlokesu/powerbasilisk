@@ -1294,6 +1294,20 @@ impl Compiler {
             .declare_function("acosh", &IrType::Double, &[IrType::Double], false);
         self.module
             .declare_function("atanh", &IrType::Double, &[IrType::Double], false);
+        self.module.declare_function(
+            "hypot",
+            &IrType::Double,
+            &[IrType::Double, IrType::Double],
+            false,
+        );
+        self.module
+            .declare_function("cbrt", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("expm1", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("log1p", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("erf", &IrType::Double, &[IrType::Double], false);
 
         // C stdlib for RND
         self.module
@@ -10623,6 +10637,11 @@ impl Compiler {
             "COT" => Some(self.builtin_reciprocal(fb, args, "tan")),
             "SECH" => Some(self.builtin_reciprocal(fb, args, "cosh")),
             "CSCH" => Some(self.builtin_reciprocal(fb, args, "sinh")),
+            "HYPOT" => Some(self.builtin_binary_math(fb, args, "hypot")),
+            "CBRT" => Some(self.builtin_unary_math(fb, args, "cbrt")),
+            "EXPM1" => Some(self.builtin_unary_math(fb, args, "expm1")),
+            "LOG1P" => Some(self.builtin_unary_math(fb, args, "log1p")),
+            "ERF" => Some(self.builtin_unary_math(fb, args, "erf")),
             "CINT" | "CLNG" | "CDWD" | "CLNGINT" | "CUINT" | "CULNG" => {
                 Some(self.builtin_cint(fb, args))
             }
