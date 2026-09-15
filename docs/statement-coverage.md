@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 374 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 375 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (374)
+## ✅ Implemented (375)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -384,7 +384,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DISPLAY COLOR | STATEMENT | `pb_display_color` — noop (returns 0; ChooseColor placeholder) |
 | DISPLAY FONT | STATEMENT | `pb_display_font` — noop (ChooseFont placeholder) |
 | DISPLAY BROWSE | STATEMENT | `pb_display_browse` — noop (SHBrowseForFolder placeholder) |
-| ARRAY REDIM INCR/DECR | STATEMENT | pb_array_redim_incr/decr (simplified size report) |
+| ARRAY REDIM INCR | STATEMENT | pb_array_redim_incr/decr (simplified size report) | 
+| ARRAY REDIM DECR | STATEMENT | pb_array_redim_incr/decr (simplified size report) | 
 | CLASS/END CLASS | STATEMENT | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | STATEMENT | parsed as SUB at top level (simplified OOP method) |
 | `OBJECT` | STATEMENT | parsed as LONG (COM object pointer; DIM x AS OBJECT) |
