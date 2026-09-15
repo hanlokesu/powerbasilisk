@@ -506,6 +506,18 @@ exit code 0:
 | `WAITKEY$` | ✅ | v0.1.14 | `pb_waitkey` — console `_getch`, redirected `getchar` dual mode (v0.1.14) |
 | `ARRAY SORT arr()` | ✅ | early | `pb_array_sort` — in-place sort |
 | `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
+| CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
+| METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
+| ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
+| `OBJECT` | ✅ | 80 (v0.1.74) | parsed as LONG (COM object pointer) |
+| `INSTANCE` | ✅ | 80 (v0.1.74) | parser accepts (simplified noop) |
+| `INTERFACE / END INTERFACE (DIRECT)` | ✅ | 80 (v0.1.74) | parser block skip (namespace) |
+| `INTERFACE/END INTERFACE (IDBIND)` | ✅ | 80 (v0.1.74) | parser block skip (IDBIND variant) |
+| `EVENTS` | ✅ | 80 (v0.1.74) | parser accepts (noop event declaration) |
+| `RAISEEVENT` | ✅ | 80 (v0.1.74) | parser accepts (noop event trigger) |
+| `EVENT SOURCE` | ✅ | 80 (v0.1.74) | parser accepts (noop event source) |
+| `LET *(WITH OBJECTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (pointer copy) |
+| `LET *(WITH VARIANTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (generic value) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -539,19 +551,6 @@ arrays, and core string/numeric built-ins — **✅**
 | `CLOSE` (no file number) | ⚠️ |
 | `DIALOG` / `CONTROL` / `MENU` / `TOOLBAR` / `STATUSBAR` | 🔲 Tier 3 GUI |
 | `COMBOBOX` / `LISTBOX` / `TREEVIEW` / `LISTVIEW` / `XPRINT` | 🔲 Tier 3 GUI |
-| CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
-| METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
-| ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
-| `OBJECT` | ✅ | 80 (v0.1.74) | parsed as LONG (COM object pointer) |
-| `INSTANCE` | ✅ | 80 (v0.1.74) | parser accepts (simplified noop) |
-| `INTERFACE / END INTERFACE (DIRECT)` | ✅ | 80 (v0.1.74) | parser block skip (namespace) |
-| `INTERFACE/END INTERFACE (IDBIND)` | ✅ | 80 (v0.1.74) | parser block skip (IDBIND variant) |
-| `EVENTS` | ✅ | 80 (v0.1.74) | parser accepts (noop event declaration) |
-| `RAISEEVENT` | ✅ | 80 (v0.1.74) | parser accepts (noop event trigger) |
-| `EVENT SOURCE` | ✅ | 80 (v0.1.74) | parser accepts (noop event source) |
-| `LET *(WITH OBJECTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (pointer copy) |
-| `LET *(WITH VARIANTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (generic value) |
-
 > Every ⚠️ / 🔲 line is reported in `*.unimplemented.log` after each build
 > with its exact source line, so nothing is silently dropped.
 
