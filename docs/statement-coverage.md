@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| —mplemented | 375 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 馃毀 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| 猬?Not implemented | 0 | Documented upstream, no codegen evidence yet |
+| ✅ Implemented | 375 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
+| ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## —mplemented (375)
+## ✅ Implemented (375)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -406,7 +406,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `EVENT SOURCE` | STATEMENT | parser accepts (simplified noop event source) |
 | `LET *(WITH OBJECTS)*` | STATEMENT | existing LET assignment (object reference = pointer copy) |
 | `LET *(WITH VARIANTS)*` | STATEMENT | existing LET assignment (variant = generic value store) |
-## 馃毀 Tier-3 DDT (129, deferred to next update)
+## 🚧 Tier-3 DDT (129, deferred to next update)
 
 | Keyword | Official kind |
 |---------|---------------|
@@ -556,7 +556,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## 猬?Not implemented (0, alphabetical)
+## ⬜ Not implemented (0, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
