@@ -19,7 +19,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
 ## ✅ Implemented (702)
-| Keyword | Official PB category | Implementation method | Batch | Status |
+| Keyword | Kind | Platform | Status | Impl |
 | --- | --- | --- | --- | --- |
 | #ALIGN METASTATEMENT | #BLOAT METASTATEMENT | #BREAK METASTATEMENT | #COM METASTATEMENT | #COMPILE METASTATEMENT |
 | `#BLOAT METASTATEMENT` | STATEMENT | PB/Win + PB/CC | Established | ✅ |
