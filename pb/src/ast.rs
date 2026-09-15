@@ -480,7 +480,7 @@ pub struct InputConsoleStmt {
 #[derive(Debug, Clone)]
 pub struct LineInputConsoleStmt {
     pub prompt: Option<Expr>, // optional prompt string
-    pub var: Expr,             // string variable to read whole line into
+    pub var: Expr,            // string variable to read whole line into
     pub line: usize,
 }
 

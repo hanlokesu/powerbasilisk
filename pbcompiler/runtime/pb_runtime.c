@@ -462,6 +462,51 @@ char* pb_retain_string(char* main, char* match, int any_flag) {
     buf[o] = 0;
     return pb_bstr_alloc(buf, (unsigned int)o);
 }
+char* pb_remain_string(char* main, char* match, long long start, int any_flag) {
+    size_t n = strlen(main);
+    size_t mlen = match ? strlen(match) : 0;
+    if (mlen == 0 || n == 0) {
+        return pb_bstr_alloc("", 0);
+    }
+    // Convert start to 0-based index
+    long long s;
+    if (start == 0) {
+        return pb_bstr_alloc("", 0);
+    } else if (start > 0) {
+        s = start - 1;
+    } else {
+        s = (long long)n + start; // -1 means last char
+    }
+    if (s < 0) s = 0;
+    if ((size_t)s >= n) {
+        return pb_bstr_alloc("", 0);
+    }
+    // Search for match
+    size_t found = (size_t)-1;
+    if (any_flag) {
+        for (size_t i = (size_t)s; i < n; i++) {
+            for (size_t j = 0; j < mlen; j++) {
+                if (main[i] == match[j]) { found = i; break; }
+            }
+            if (found != (size_t)-1) break;
+        }
+    } else {
+        for (size_t i = (size_t)s; i + mlen <= n; i++) {
+            if (memcmp(main + i, match, mlen) == 0) { found = i; break; }
+        }
+    }
+    if (found == (size_t)-1) {
+        return pb_bstr_alloc("", 0);
+    }
+    // Return everything after the match (ANY mode matches 1 char)
+    size_t match_len = any_flag ? 1 : mlen;
+    size_t after = found + match_len;
+    if (after >= n) {
+        return pb_bstr_alloc("", 0);
+    }
+    size_t rlen = n - after;
+    return pb_bstr_alloc(main + after, (unsigned int)rlen);
+}
 char* pb_build(char** arr, long long n) {
     size_t total = 0;
     for (long long i = 0; i < n; i++) total += strlen(arr[i]);

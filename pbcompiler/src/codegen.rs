@@ -1688,6 +1688,12 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_remain_string",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I64, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
@@ -9394,7 +9400,11 @@ impl Compiler {
         };
         let has_prompt = fb.const_i32(if inp.prompt.is_some() { 1 } else { 0 });
         let no_newline = fb.const_i32(if inp.no_newline { 1 } else { 0 });
-        let result = fb.call(&IrType::Ptr, "pb_input_console", &[prompt_val, has_prompt, no_newline]);
+        let result = fb.call(
+            &IrType::Ptr,
+            "pb_input_console",
+            &[prompt_val, has_prompt, no_newline],
+        );
         // assign to first variable (string only for now)
         if let Some(var_expr) = inp.vars.first() {
             let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, var_expr)?;
@@ -9414,7 +9424,11 @@ impl Compiler {
             fb.const_null_ptr()
         };
         let has_prompt = fb.const_i32(if li.prompt.is_some() { 1 } else { 0 });
-        let result = fb.call(&IrType::Ptr, "pb_line_input_console", &[prompt_val, has_prompt]);
+        let result = fb.call(
+            &IrType::Ptr,
+            "pb_line_input_console",
+            &[prompt_val, has_prompt],
+        );
         let (ptr, _pb_type) = self.compile_lvalue_ptr(fb, &li.var)?;
         fb.store(&result, &ptr);
         Ok(())
@@ -10611,6 +10625,7 @@ impl Compiler {
             "EXTRACT" => Some(self.builtin_extract(fb, args)),
             "REMOVE" => Some(self.builtin_remove(fb, args)),
             "RETAIN" => Some(self.builtin_retain(fb, args)),
+            "REMAIN" => Some(self.builtin_remain(fb, args)),
             "RGB" | "BGR" => Some(self.builtin_rgb(fb, args, name)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
@@ -12495,6 +12510,46 @@ impl Compiler {
         let m = self.compile_expr(fb, &args[match_idx])?;
         let flag = fb.const_i32(if any_flag { 1 } else { 0 });
         Ok(fb.call(&IrType::Ptr, "pb_retain_string", &[s, m, flag]))
+    }
+
+    fn builtin_remain(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("REMAIN$ requires at least 2 arguments"));
+        }
+        // Determine if first arg is Start (integer literal) or MainStr
+        let (start_idx, main_idx): (Option<usize>, usize) = if let Expr::IntegerLit(_) = args[0] {
+            (Some(0), 1)
+        } else {
+            (None, 0)
+        };
+        let main = self.compile_expr(fb, &args[main_idx])?;
+        let start_val = if let Some(si) = start_idx {
+            self.compile_expr(fb, &args[si])?
+        } else {
+            fb.const_i64(1)
+        };
+        // Check for ANY after main
+        let any_pos = main_idx + 1;
+        let any_flag = if any_pos < args.len() {
+            if let Expr::Variable(ref name) = args[any_pos] {
+                name.to_uppercase() == "ANY"
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        let match_idx = if any_flag { any_pos + 1 } else { any_pos };
+        if args.len() <= match_idx {
+            return Err(PbError::runtime("REMAIN$ requires a match string"));
+        }
+        let m = self.compile_expr(fb, &args[match_idx])?;
+        let flag = fb.const_i32(if any_flag { 1 } else { 0 });
+        Ok(fb.call(
+            &IrType::Ptr,
+            "pb_remain_string",
+            &[main, m, start_val, flag],
+        ))
     }
 
     fn builtin_using(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

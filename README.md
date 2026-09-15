@@ -509,6 +509,7 @@ exit code 0:
 | `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
 | `REMOVE$(main, match)` / `REMOVE$(main, ANY, chars)` | ✅ | 82 (v0.1.76) | `pb_remove_string` — substring removal + ANY char-set removal |
 | `RETAIN$(main, match)` / `RETAIN$(main, ANY, chars)` | ✅ | 83 (v0.1.77) | `pb_retain_string` — substring retention + ANY char-set retention |
+| `REMAIN$([start,] main, [ANY] match)` | ✅ | 84 (v0.1.78) | `pb_remain_string` — portion after first match (complement to EXTRACT$) |
 | CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
 | ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
@@ -559,6 +560,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+**v0.1.78 (2026-09-15) — Batch 84: REMAIN$ function — portion after first match**
+
+The `REMAIN$` string function (complement to `EXTRACT$`) is now implemented:
+- **`REMAIN$(main$, match$)`** — returns all characters after the first occurrence of `match$`. If not found, returns empty string.
+- **`REMAIN$(start, main$, match$)`** — optional 1-based `start` position to begin searching (0 returns empty, negative counts from right).
+- **`REMAIN$(main$, ANY, chars$)`** — `ANY` mode: match is any single character in `chars$`; returns everything after that character.
+
+Runtime: `pb_remain_string(main, match, start, any_flag)` — 0-based index conversion + memcmp/char scan.
+Tests: `examples/batch84_test.bas` (4/4 ALL PASS: basic, not-found, with Start, ANY mode).
 
 **v0.1.77 (2026-09-15) — Batch 83: RETAIN$ function — substring + ANY character retention**
 
