@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 96 (v0.1.90)** — 2026-09-15. All statements through batch 95 are reflected in this matrix. Function-class additions (REMOVE$/RETAIN$/REMAIN$/FLOOR/TRUNC/INPUT console etc.) are tracked in README "Newly implemented by this branch" table, not in this official statement-keyword index.
+> **Last updated from batch 96 (v0.1.90)** — 2026-09-15. All statements and functions through batch 96 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -21,219 +21,147 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 ## ✅ Implemented (375)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
-| `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
-| `ASM` | STATEMENT | LLVM inline assembly: `!` shortcut or `ASM` keyword; Intel dialect, PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`), mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block so register state is preserved; x87 / MMX / SSE / SIMD instructions pass through verbatim (verified FLD1/FSTP, PXOR, EMMS, XORPS on x64; 32-bit build verified via exit-code test) |
-| `ASMDATA / END ASMDATA` | BLOCK | read-only data blocks (outside any Sub/Function): `ASMDATA Name` + DB/DW/DD/DQ lines (ANSI strings in DB, WIDE/UTF-16LE strings in DW) + `END ASMDATA`; packed, never aligned; addressable via `CODEPTR(Name)`; byte blob emitted as `@__asmdata_<NAME>` constant |
-| `TCP OPEN` | STATEMENT | winsock socket/connect/listen/bind; SO_RCVTIMEO |
-| `TCP ACCEPT` | STATEMENT | winsock accept; new file number |
-| `TCP SEND` | STATEMENT | winsock send |
-| `TCP RECV` | STATEMENT | winsock recv into PB string |
-| `TCP LINE INPUT` | STATEMENT | byte-wise recv until LF |
-| `TCP PRINT` | STATEMENT | send data + CRLF |
-| `TCP CLOSE` | STATEMENT | closesocket |
-| `UDP OPEN` | STATEMENT | winsock SOCK_DGRAM bind; PORT=server, no PORT=client |
-| `UDP SEND` | STATEMENT | sendto; AT accepts LONG or string address |
-| `UDP RECV` | STATEMENT | recvfrom; returns source ip/port |
-| `UDP CLOSE` | STATEMENT | closesocket |
-| `#ALIGN METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#BLOAT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#BREAK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#COM METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#COMPILE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#COMPILER METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#CONSOLE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG BOUNDS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG CODE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG DISPLAY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG ERROR METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG NUMERIC METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DEBUG PRINT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#DIM METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#EXPORT METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#INCLUDE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#LINK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#MESSAGES METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#OPTIMIZE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#OPTION METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#PAGE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#PBFORMS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#REGISTER METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#RESOURCE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#STACK METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#TOOLS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#UNIQUE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| `#UTILITY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-| ARRAY ADD | STATEMENT | `pb_array_add` (element-wise add into first array; all numeric types incl. BYTE/WORD/LONG/QUAD/SINGLE/DOUBLE) |
-| ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
-| ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
-| ARRAY UNIQUE | STATEMENT | `pb_array_unique` (in-place dedup; UBOUND shrink not modeled) |
-| ARRAY DELETE | STATEMENT | `core` |
-| HOST ADDR | STATEMENT | `pb_host_addr` (gethostbyname, winsock) |
-| HOST NAME | STATEMENT | `pb_host_name` (gethostbyaddr/gethostname, winsock) |
-| ARRAY INSERT | STATEMENT | `core` |
-| ARRAY REVERSE | STATEMENT | `core` |
-| ARRAY SCAN | STATEMENT | `core` |
-| ARRAY SHUFFLE | STATEMENT | `core` |
-| ARRAY SORT | STATEMENT | `core` |
-| ASC | STATEMENT | `core` |
-| BEEP | STATEMENT | `core` |
-| BIT | STATEMENT | `core` |
-| BIT CALC | STATEMENT | `core` |
-| CALL | STATEMENT | `core` |
-| CHDIR | STATEMENT | `core` |
-| CSET | STATEMENT | `pb_cset`/`pb_cset_buf` (center-justify, pads spaces) |
-| CHDRIVE | STATEMENT | `core` |
-| CLOSE | STATEMENT | `core` |
-| CLS | STATEMENT | `PB/CC only` |
-| DATA | STATEMENT | `core` |
-| DECR | STATEMENT | `core` |
-| DESKTOP GET SIZE | STATEMENT | `GetSystemMetrics` (SM_CXSCREEN/SM_CYSCREEN) |
-| DESKTOP GET CLIENT | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA —,h (work area) |
-| DESKTOP GET LOC | STATEMENT | `SystemParametersInfoA` SPI_GETWORKAREA —,y (origin) |
-| DESKTOP GET PPI | STATEMENT | `GetDeviceCaps` LOGPIXELSX/Y (pixels per inch) |
-| DIM | STATEMENT | `core` |
-| END | STATEMENT | `core` |
-| ENVIRON | STATEMENT | `core` |
-| ERASE | STATEMENT | `core` |
-| ERROR | STATEMENT | `core` |
-| EXIT | STATEMENT | `core` |
-| FILECOPY | STATEMENT | `core` |
-| FLUSH | STATEMENT | `core` |
-| FOR / NEXT | STATEMENT | `core` |
-| FUNCTION / END FUNCTION | STATEMENT | `core` |
-| GET | STATEMENT | `core` |
-| GET$ | STATEMENT | `pb_get_string` (read N bytes into string var) |
-| GLOBALMEM | STATEMENT | `pb_globalmem_alloc/free/lock/size/unlock` (moveable global memory via slot ids) |
-| IF | STATEMENT | `core` |
-| IF/END IF | BLOCK | `core` |
-| INCR | STATEMENT | `core` |
-| INPUT# | STATEMENT | `PB/CC only` |
-| ISINFINITE | STATEMENT | `core` |
-| ISNORMAL | STATEMENT | `core` |
-| ITERATE | STATEMENT | `core` |
-| KILL | STATEMENT | `core` |
-| LET | STATEMENT | `core` |
-| LINE INPUT# | STATEMENT | `core` |
-| LOCK | STATEMENT | `core` |
-| LSET | STATEMENT | `core` |
-| MID$ | STATEMENT | `core` |
-| MKBYT$ | STATEMENT | `pb_mkbyt` (1-byte binary string) |
-| MKCUR$ | STATEMENT | `pb_mkquad` (8-byte little-endian, currency) |
-| MKCUX$ | STATEMENT | `pb_mkquad` (8-byte little-endian, extended currency) |
-| MKD$ | STATEMENT | `pb_mkdouble` (8-byte IEEE-754) |
-| MKDWD$ | STATEMENT | `pb_mklong` (4-byte little-endian, double-word) |
-| `MAT` | Statement | matrix algebra (CON / CON(expr) / IDN / ZER / + / - / * / scalar / TRN / INV) |
-| MKI$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
-| MKL$ | STATEMENT | `pb_mklong` (4-byte little-endian) |
-| MKQ$ | STATEMENT | `pb_mkquad` (8-byte little-endian) |
-| MKS$ | STATEMENT | `pb_mksingle` (4-byte IEEE-754) |
-| MKWRD$ | STATEMENT | `pb_mkint` (2-byte little-endian) |
-| MKDIR | STATEMENT | `core` |
-| MOUSEPTR | STATEMENT | `pb_mouseptr` (stock cursors 0-13, PB/CC only) |
-| MSGBOX | STATEMENT | `PB/Win only` |
-| NAME | STATEMENT | `core` |
-| OPEN | STATEMENT | `core` |
-| PARSE | STATEMENT | `core` |
-| PLAY SOUND | STATEMENT | `core` |
-| PLAY WAVE | STATEMENT | `core` |
-| PRINT# | STATEMENT | `core` |
-| PROCESS GET PRIORITY | STATEMENT | `core` |
-| PROCESS SET PRIORITY | STATEMENT | `core` |
-| PUT | STATEMENT | `core` |
-| PUT$ | STATEMENT | `core` |
-| RANDOMIZE | STATEMENT | `core` |
-| REDIM | STATEMENT | `core` |
-| REPLACE | STATEMENT | `core` |
-| RESET | STATEMENT | `core` |
-| RETURN | STATEMENT | `core` |
-| RMDIR | STATEMENT | `core` |
-| ROTATE | STATEMENT | `core` |
-| RSET | STATEMENT | `core` |
-| SEEK | STATEMENT | `core` |
-| SELECT CASE/END SELECT | BLOCK | `core` |
-| SETATTR | STATEMENT | `core` |
-| SETEOF | STATEMENT | `core` |
-| SHELL | STATEMENT | `core` |
-| SHIFT | STATEMENT | `core` |
-| SLEEP | STATEMENT | `core` |
-| SPLIT | STATEMENT | `core` |
-| SWAP | STATEMENT | `core` |
-| TIX | STATEMENT | `core` |
-| UNLOCK | STATEMENT | `core` |
-| UCODEPAGE | STATEMENT | `pb_ucodepage` (records ANSI/OEM/numeric codepage) |
-| VAL | STATEMENT | `core` |
-| WRITE# | STATEMENT | `core` |
-| XPRINT ATTACH | STATEMENT | pb_xprint_attach —CreateDC (screen DC fallback for CI; printer support pending) |
-| XPRINT SET CLIP | STATEMENT | `pb_xprint_set_clip` —IntersectClipRect |
-| XPRINT GET CLIP | STATEMENT | `pb_xprint_get_clip` —GetClipBox |
-| XPRINT SCALE | STATEMENT | `pb_xprint_scale` —SetMapMode(MM_ANISOTROPIC) + SetWindowExtEx/SetViewportExtEx |
-| XPRINT GET SCALE | STATEMENT | `pb_xprint_get_scale` —current scale factors |
-| XPRINT GET LINES | STATEMENT | `pb_xprint_get_lines` —client height / cell height |
-| XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` —GetTextExtentPoint32A("W") |
-| XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` —same as CELL SIZE |
-| XPRINT POLYGON | STATEMENT | `pb_xprint_polygon` —Polygon (GDI), variable coord args on stack |
-| XPRINT SET COPIES | STATEMENT | `pb_xprint_set_copies` —global printer property |
-| XPRINT GET COPIES | STATEMENT | `pb_xprint_get_copies` —global printer property |
-| XPRINT SET ORIENTATION | STATEMENT | `pb_xprint_set_orientation` —global printer property |
-| XPRINT GET ORIENTATION | STATEMENT | `pb_xprint_get_orientation` —global printer property |
-| XPRINT SET QUALITY | STATEMENT | `pb_xprint_set_quality` —global printer property |
-| XPRINT GET QUALITY | STATEMENT | `pb_xprint_get_quality` —global printer property |
-| XPRINT SET DUPLEX | STATEMENT | `pb_xprint_set_duplex` —global printer property |
-| XPRINT GET DUPLEX | STATEMENT | `pb_xprint_get_duplex` —global printer property |
-| XPRINT SET COLLATE | STATEMENT | `pb_xprint_set_collate` —global printer property |
-| XPRINT GET COLLATE | STATEMENT | `pb_xprint_get_collate` —global printer property |
-| XPRINT SET COLORMODE | STATEMENT | `pb_xprint_set_colormode` —global printer property |
-| XPRINT GET COLORMODE | STATEMENT | `pb_xprint_get_colormode` —global printer property |
-| XPRINT SET PAGES | STATEMENT | `pb_xprint_set_pages` —global printer property |
-| XPRINT GET PAGES | STATEMENT | `pb_xprint_get_pages` —global printer property |
-| XPRINT POLYLINE | STATEMENT | `pb_xprint_polyline` —Polyline (GDI), variable coord args on stack |
-| XPRINT COPY | STATEMENT | `pb_xprint_copy` —BitBlt (SRCCOPY) |
-| XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` —GetTextExtentPoint32A (returns width+height) |
-| XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` —GetDeviceCaps HORZRES/VERTRES |
-| XPRINT GET CANVAS | STATEMENT | `pb_xprint_get_canvas` —same as GET CLIENT on screen DC |
-| XPRINT SET WRAP | STATEMENT | `pb_xprint_set_wrap` —text wrap mode flag |
-| XPRINT GET WRAP | STATEMENT | `pb_xprint_get_wrap` —current wrap flag |
-| XPRINT SET WORDWRAP | STATEMENT | `pb_xprint_set_wordwrap` —word-wrap flag |
-| XPRINT GET WORDWRAP | STATEMENT | `pb_xprint_get_wordwrap` —current word-wrap flag |
-| XPRINT SET OVERLAP | STATEMENT | `pb_xprint_set_overlap` —line overlap percentage |
-| XPRINT GET OVERLAP | STATEMENT | `pb_xprint_get_overlap` —current overlap value |
-| XPRINT ARC | STATEMENT | `pb_xprint_arc` —GDI Arc (bounding rect + start/end radials) |
-| XPRINT ELLIPSE | STATEMENT | `pb_xprint_ellipse` —GDI Ellipse (NULL_BRUSH) |
-| XPRINT PIE | STATEMENT | `pb_xprint_pie` —GDI Pie (bounding rect + radials, NULL_BRUSH) |
-| XPRINT SET FONT | STATEMENT | `pb_xprint_set_font` —CreateFontA + SelectObject (name/size/bold/italic) |
-| XPRINT SET MIX | STATEMENT | `pb_xprint_set_mix` —SetROP2 |
-| XPRINT GET MIX | STATEMENT | `pb_xprint_get_mix` —GetROP2 |
-| XPRINT SET STRETCHMODE | STATEMENT | `pb_xprint_set_stretchmode` —SetStretchBltMode |
-| XPRINT GET STRETCHMODE | STATEMENT | `pb_xprint_get_stretchmode` —GetStretchBltMode |
-| XPRINT CANCEL | STATEMENT | `pb_xprint_cancel` —AbortDoc (noop on screen DC) |
-| XPRINT FORMFEED | STATEMENT | `pb_xprint_formfeed` —EndPage+StartPage (resets pos on screen DC) |
-| XPRINT LINE | STATEMENT | `pb_xprint_line` —MoveToEx+LineTo |
-| XPRINT BOX | STATEMENT | `pb_xprint_box` —Rectangle (NULL_BRUSH) |
-| XPRINT WIDTH | STATEMENT | `pb_xprint_width` —CreatePen width |
-| XPRINT STYLE | STATEMENT | `pb_xprint_style` —CreatePen style (PS_SOLID etc.) |
-| XPRINT COLOR | STATEMENT | `pb_xprint_set_color` —pen + text color |
-| XPRINT SET POS | STATEMENT | `pb_xprint_set_pos` —text/drawing origin |
-| XPRINT GET POS | STATEMENT | `pb_xprint_get_pos` —current position |
-| XPRINT SET PIXEL | STATEMENT | `pb_xprint_set_pixel` —SetPixel |
-| XPRINT GET PIXEL | STATEMENT | `pb_xprint_get_pixel` —GetPixel |
-| XPRINT SET TEXTALIGN | STATEMENT | `pb_xprint_set_textalign` —SetTextAlign |
-| XPRINT GET TEXTALIGN | STATEMENT | `pb_xprint_get_textalign` —current text align |
-| XPRINT GET ATTACH | STATEMENT | `pb_xprint_get_attach` —1 if DC attached |
-| XPRINT PRINT | STATEMENT | `pb_xprint_print_str` per arg —TextOutA + auto-advance |
-| XPRINT CLOSE | STATEMENT | pb_xprint_close —DeleteDC + detach |
-| XPRINT GET DC | STATEMENT | pb_xprint_get_dc —current DC handle (QUAD) |
-| XPRINT GET PPI | STATEMENT | pb_xprint_get_ppi —GetDeviceCaps LOGPIXELSX/Y |
-| XPRINT GET SIZE | STATEMENT | pb_xprint_get_size —PHYSICALWIDTH/HEIGHT with HORZRES/VERTRES fallback |
-| `ON GOTO` | STATEMENT | (PB/Win + PB/CC) Computed branch to one of several labels |
-| `ON GOSUB` | STATEMENT | (PB/Win + PB/CC) Computed call to one of several subroutines (RETURN returns) |
-| `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | (PB/Win + PB/CC) Win32 clipboard read/write/reset |
-| `INPUT FLUSH` | STATEMENT | (PB/CC only) Flush console input buffer |
-| `OPTION EXPLICIT` | STATEMENT | (PB/Win + PB/CC) Accepted (requires explicit declarations) |
-| `REM` | STATEMENT | (PB/Win + PB/CC) Comments accepted at top level and in bodies |
-| `GLOBAL` | STATEMENT | (PB/Win + PB/CC) Global variable declarations |
-| `ARRAY ARRAYIX` | STATEMENT | implemented |
-| `ARRAY ASSIGN` | STATEMENT | (PB/Win + PB/CC) pb_array_copy: target() = source() element copy (batch 23) |
+| #ALIGN METASTATEMENT | #BLOAT METASTATEMENT | #BREAK METASTATEMENT | #COM METASTATEMENT | #COMPILE METASTATEMENT |
+| #COMPILER METASTATEMENT | #CONSOLE METASTATEMENT | #DEBUG BOUNDS METASTATEMENT | #DEBUG CODE METASTATEMENT | #DEBUG DISPLAY METASTATEMENT |
+| #DEBUG ERROR METASTATEMENT | #DEBUG NUMERIC METASTATEMENT | #DEBUG PRINT METASTATEMENT | #DIM METASTATEMENT | #EXPORT METASTATEMENT |
+| #IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | #INCLUDE METASTATEMENT | #LINK METASTATEMENT | #MESSAGES METASTATEMENT | #OPTIMIZE METASTATEMENT |
+| #OPTION METASTATEMENT | #PAGE METASTATEMENT | #PBFORMS METASTATEMENT | #REGISTER METASTATEMENT | #RESOURCE METASTATEMENT |
+| #STACK METASTATEMENT | #TOOLS METASTATEMENT | #UNIQUE METASTATEMENT | #UTILITY METASTATEMENT | ABS |
+| ACOS | ACOSH | ARRAY ADD | ARRAY ARRAYIX | ARRAY ASSIGN |
+| ARRAY COPY | ARRAY DELETE | ARRAY INSERT | ARRAY REDIM DECR | ARRAY REDIM INCR |
+| ARRAY REVERSE | ARRAY SCAN | ARRAY SELECT | ARRAY SHUFFLE | ARRAY SORT |
+| ARRAY SWAP | ARRAY TAGARRAY | ARRAY TAGARRAY ERASE | ARRAY UNIQUE | ARRAY_REDIM_DECR |
+| ARRAY_REDIM_INCR | ARRAY_SELECT | ARRAY_TAGARRAY | ARRAY_TAGARRAY_ERASE | ASC |
+| ASIN | ASINH | ASM | ASMDATA / END ASMDATA | ATANH |
+| ATN | ATN2 | BEEP | BGR | BIN |
+| BIT | BIT CALC | BITS | BUILD | BYTE |
+| CALL | CALL DWORD | CALLSTK | CALLSTKCOUNT | CBOOL |
+| CBRT | CBYTE | CDBL | CDWORD | CEIL |
+| CFLT | CHDIR | CHDRIVE | CHOOSE | CHR |
+| CHRTOOEM | CHRTOUTF8 | CLASS/END CLASS | CLIP | CLIPBOARD |
+| CLOSE | CLS | CODEPTR | COLOR | COMM CLOSE |
+| COMM LINE | COMM OPEN | COMM PRINT | COMM RECV | COMM RESET |
+| COMM SEND | COMM SET | COMM TIMEOUT | COMMAND | COS |
+| COSH | COT | COTH | CQUAD | CSC |
+| CSCH | CSET | CSNG | CSTR | CULNG |
+| CURDIR | CVBYT | CVCUX | CVDWD | CVL |
+| CVQ | CVW | CWORD | DATA | DATACOUNT |
+| DAYNAME | DEC | DECLARE | DECR | DESKTOP GET CLIENT |
+| DESKTOP GET LOC | DESKTOP GET PPI | DESKTOP GET SIZE | DIM | DIR |
+| DIR FUNCTION AND | DISKFREE | DISKSIZE | DISPLAY BROWSE | DISPLAY COLOR |
+| DISPLAY FONT | DISPLAY OPENFILE | DISPLAY SAVEFILE | DISPLAY_BROWSE | DISPLAY_COLOR |
+| DISPLAY_FONT | DISPLAY_OPENFILE | DISPLAY_SAVEFILE | DOUBLE | END |
+| ENVIRON | EOF | ERASE | ERF | ERL |
+| ERR | ERRCLEAR | ERROR | EVENT SOURCE | EVENTS |
+| EXE | EXIST | EXIT | EXP | EXP10 |
+| EXP2 | EXPM1 | EXTRACT | FIELD | FILEATTR |
+| FILECOPY | FILENAME | FILESCAN | FIX | FLOOR |
+| FLUSH | FONT END | FONT NEW | FONT_END | FONT_NEW |
+| FOR / NEXT | FORMAT | FRAC | FRE | FREEFILE |
+| FUNCTION / END FUNCTION | GET | GET$ | GET$$ | GET_STR |
+| GET_WSTR | GETATTR | GLOBAL | GLOBALMEM | GRAPHIC ARC |
+| GRAPHIC ATTACH | GRAPHIC BITMAP END | GRAPHIC BITMAP LOAD | GRAPHIC BITMAP NEW | GRAPHIC BOX |
+| GRAPHIC CELL | GRAPHIC CELL SIZE | GRAPHIC CHR SIZE | GRAPHIC CLEAR | GRAPHIC COLOR |
+| GRAPHIC COPY | GRAPHIC DETACH | GRAPHIC ELLIPSE | GRAPHIC GET BITS | GRAPHIC GET CANVAS |
+| GRAPHIC GET CAPTION | GRAPHIC GET CLIENT | GRAPHIC GET CLIP | GRAPHIC GET DC | GRAPHIC GET LINES |
+| GRAPHIC GET LOC | GRAPHIC GET MIX | GRAPHIC GET PIXEL | GRAPHIC GET POS | GRAPHIC GET PPI |
+| GRAPHIC GET SCALE | GRAPHIC GET SIZE | GRAPHIC GET STRETCHMODE | GRAPHIC GET TEXTALIGN | GRAPHIC GET VIEW |
+| GRAPHIC GET WORDWRAP | GRAPHIC GET WRAP | GRAPHIC LINE | GRAPHIC PAINT | GRAPHIC PIE |
+| GRAPHIC POLYGON | GRAPHIC POLYLINE | GRAPHIC SAVE | GRAPHIC SCALE | GRAPHIC SET AUTOSIZE |
+| GRAPHIC SET BITS | GRAPHIC SET CAPTION | GRAPHIC SET CLIP | GRAPHIC SET FIXED | GRAPHIC SET FONT |
+| GRAPHIC SET MIX | GRAPHIC SET PIXEL | GRAPHIC SET POS | GRAPHIC SET SIZE | GRAPHIC SET STRETCHMODE |
+| GRAPHIC SET TEXTALIGN | GRAPHIC SET VIEW | GRAPHIC SET VIRTUAL | GRAPHIC SET WORDWRAP | GRAPHIC SET WRAP |
+| GRAPHIC STYLE | GRAPHIC TEXT SIZE | GRAPHIC WIDTH | GRAPHIC_ARC | GRAPHIC_ATTACH |
+| GRAPHIC_BITMAP_END | GRAPHIC_BITMAP_LOAD | GRAPHIC_BITMAP_NEW | GRAPHIC_CELL | GRAPHIC_CHR_SIZE |
+| GRAPHIC_CIRCLE | GRAPHIC_CLEAR | GRAPHIC_COLOR | GRAPHIC_COPY | GRAPHIC_DETACH |
+| GRAPHIC_ELLIPSE | GRAPHIC_GET_BITS | GRAPHIC_GET_CAPTION | GRAPHIC_GET_CLIP | GRAPHIC_GET_DC |
+| GRAPHIC_GET_LINES | GRAPHIC_GET_LOC | GRAPHIC_GET_MIX | GRAPHIC_GET_PIXEL | GRAPHIC_GET_POS |
+| GRAPHIC_GET_PPI | GRAPHIC_GET_SCALE | GRAPHIC_GET_SIZE | GRAPHIC_GET_STRETCHMODE | GRAPHIC_GET_TEXTALIGN |
+| GRAPHIC_GET_VIEW | GRAPHIC_GET_WORDWRAP | GRAPHIC_GET_WRAP | GRAPHIC_LINE | GRAPHIC_PAINT |
+| GRAPHIC_PIE | GRAPHIC_POLYGON | GRAPHIC_POLYLINE | GRAPHIC_SAVE | GRAPHIC_SCALE |
+| GRAPHIC_SCALE_PIXELS | GRAPHIC_SET_AUTOSIZE | GRAPHIC_SET_BITS | GRAPHIC_SET_CAPTION | GRAPHIC_SET_CLIP |
+| GRAPHIC_SET_FIXED | GRAPHIC_SET_FONT | GRAPHIC_SET_MIX | GRAPHIC_SET_PIXEL | GRAPHIC_SET_POS |
+| GRAPHIC_SET_SIZE | GRAPHIC_SET_STRETCHMODE | GRAPHIC_SET_TEXTALIGN | GRAPHIC_SET_VIEW | GRAPHIC_SET_VIRTUAL |
+| GRAPHIC_SET_WORDWRAP | GRAPHIC_SET_WRAP | GRAPHIC_STYLE | GRAPHIC_TEXT_SIZE | HEADER |
+| HEADER_CTRL | HEX | HIWRD | HOST ADDR | HOST NAME |
+| HYPOT | IF | IF/END IF | IIF | IMAGELIST |
+| IMAGELIST_COUNT | IMAGELIST_KILL | IMAGELIST_NEW | IMPORT | INCR |
+| INPUT FLUSH | INPUT# | INSTANCE | INSTR | INT |
+| INTEGER | INTERFACE / END INTERFACE (DIRECT) | INTERFACE/END INTERFACE (IDBIND) | ISEVEN | ISFALSE |
+| ISFILE | ISFOLDER | ISINFINITE | ISNORMAL | ISODD |
+| ISTRUE | ITERATE | KILL | LCASE | LEFT |
+| LEN | LET | LET *(WITH OBJECTS)* | LET *(WITH TYPES)* | LET *(WITH VARIANTS)* |
+| LINE INPUT# | LO | LOCAL | LOCK | LOG |
+| LOG10 | LOG1P | LOG2 | LONG | LOWRD |
+| LPRINT | LPRINT ATTACH | LPRINT CLOSE | LPRINT FLUSH | LPRINT FORMFEED |
+| LSET | LTRIM | MACRO/END MACRO | MAK | MAT |
+| MAX | MEMORY | MEMORY_FILL | MEMORY_FILLS | MENU ADD POPUP |
+| MENU ADD STRING | MENU DELETE | MENU GET STATE | MENU GET TEXT | MENU NEW BAR |
+| MENU NEW POPUP | MENU SET STATE | MENU SET TEXT | MENU_ADD_POPUP | MENU_ADD_STRING |
+| MENU_DELETE | MENU_GET_STATE | MENU_GET_TEXT | MENU_NEW_POPUP | MENU_SET_STATE |
+| MENU_SET_TEXT | METHOD / END METHOD | MID | MID$ | MIN |
+| MKBYT | MKBYT$ | MKCUR$ | MKCUX | MKCUX$ |
+| MKD$ | MKDIR | MKDWD | MKDWD$ | MKE |
+| MKE$ | MKI$ | MKL$ | MKQ$ | MKS |
+| MKS$ | MKWRD | MKWRD$ | MOD | MONTHNAME |
+| MOUSEPTR | MSGBOX | NAME | OBJECT | OCT |
+| OEMTOCHR | ON CALL | ON ERROR | ON GOSUB | ON GOTO |
+| OPEN | OPTION EXPLICIT | PARSE | PARSECOUNT | PATHNAME |
+| PATHSCAN | PEEK | PLAY SOUND | PLAY WAVE | POKE |
+| PREFIX | PRINT# | PRINTERCOUNT | PROCESS GET PRIORITY | PROCESS SET PRIORITY |
+| PROFILE | PROGRESSBAR | PUT | PUT$ | PUT$$ |
+| PUT_STR | PUT_WSTR | QUAD | RAISEEVENT | RANDOMIZE |
+| READ | REDIM | REGEXPR | REGISTER | REGREPL |
+| REM | REMAIN | REMOVE | REPEAT | REPLACE |
+| RESET | RESOURCE SAVE FILE | RESOURCE_SAVE_FILE | RESUME | RETAIN |
+| RETURN | RIGHT | RMDIR | RND | ROTATE |
+| ROUND | RSET | RTRIM | SEC | SECH |
+| SEEK | SELECT CASE/END SELECT | SETATTR | SETEOF | SGN |
+| SHELL | SHIFT | SHRINK | SIN | SINGLE |
+| SINH | SIZEOF | SLEEP | SPACE | SPLIT |
+| SQR | STATIC | STR | STRDELETE | STRING |
+| STRINSERT | STRPTR | STRREVERSE | SWAP | SWITCH$ |
+| TALLY | TAN | TANH | TCP ACCEPT | TCP CLOSE |
+| TCP LINE INPUT | TCP NOTIFY | TCP OPEN | TCP PRINT | TCP RECV |
+| TCP SEND | TCP_NOTIFY | THREAD CLOSE | THREAD CREATE | THREAD GET PRIORITY |
+| THREAD RESUME | THREAD SET PRIORITY | THREAD STATUS | THREAD SUSPEND | THREADCOUNT |
+| THREADED | TIMER | TIX | TRACE | TRIM |
+| TRUNC | TRY/END TRY | TYPE SET | TYPE/END TYPE | UCASE |
+| UCODEPAGE | UDP CLOSE | UDP NOTIFY | UDP OPEN | UDP RECV |
+| UDP SEND | UDP_NOTIFY | UNLOCK | UNWRAP | USING |
+| UTF8TOCHR | VAL | VARPTR | VERIFY | WAITKEY |
+| WINDOW GET | WINDOW SET | WORD | WRAP | WRITE |
+| WRITE# | XPRINT ARC | XPRINT ATTACH | XPRINT BOX | XPRINT CANCEL |
+| XPRINT CELL | XPRINT CELL SIZE | XPRINT CHR SIZE | XPRINT CLOSE | XPRINT COLOR |
+| XPRINT COPY | XPRINT ELLIPSE | XPRINT FORMFEED | XPRINT GET ATTACH | XPRINT GET CANVAS |
+| XPRINT GET CLIENT | XPRINT GET CLIP | XPRINT GET COLLATE | XPRINT GET COLORMODE | XPRINT GET COPIES |
+| XPRINT GET DC | XPRINT GET DUPLEX | XPRINT GET LINES | XPRINT GET MARGIN | XPRINT GET MIX |
+| XPRINT GET ORIENTATION | XPRINT GET OVERLAP | XPRINT GET PAGES | XPRINT GET PAPER | XPRINT GET PAPERS |
+| XPRINT GET PIXEL | XPRINT GET POS | XPRINT GET PPI | XPRINT GET QUALITY | XPRINT GET SCALE |
+| XPRINT GET SELECTION | XPRINT GET SIZE | XPRINT GET STRETCHMODE | XPRINT GET TEXTALIGN | XPRINT GET TRAY |
+| XPRINT GET TRAYS | XPRINT GET WORDWRAP | XPRINT GET WRAP | XPRINT IMAGELIST | XPRINT LINE |
+| XPRINT PIE | XPRINT POLYGON | XPRINT POLYLINE | XPRINT PREVIEW | XPRINT PRINT |
+| XPRINT RENDER | XPRINT SCALE | XPRINT SET CLIP | XPRINT SET COLLATE | XPRINT SET COLORMODE |
+| XPRINT SET COPIES | XPRINT SET DUPLEX | XPRINT SET FONT | XPRINT SET MIX | XPRINT SET ORIENTATION |
+| XPRINT SET OVERLAP | XPRINT SET PAGES | XPRINT SET PAPER | XPRINT SET PIXEL | XPRINT SET POS |
+| XPRINT SET QUALITY | XPRINT SET STRETCHMODE | XPRINT SET TEXTALIGN | XPRINT SET TRAY | XPRINT SET WORDWRAP |
+| XPRINT SET WRAP | XPRINT SPLIT | XPRINT STRETCH | XPRINT STYLE | XPRINT TEXT SIZE |
+| XPRINT WIDTH | XPRINT_ARC | XPRINT_ATTACH | XPRINT_BOX | XPRINT_CANCEL |
+| XPRINT_CELL | XPRINT_CELL_SIZE | XPRINT_CHR_SIZE | XPRINT_CLOSE | XPRINT_COPY |
+| XPRINT_ELLIPSE | XPRINT_FORMFEED | XPRINT_GET_ATTACH | XPRINT_GET_CANVAS | XPRINT_GET_CLIENT |
+| XPRINT_GET_CLIP | XPRINT_GET_COLLATE | XPRINT_GET_COLOR | XPRINT_GET_COLORMODE | XPRINT_GET_COPIES |
+| XPRINT_GET_DC | XPRINT_GET_DUPLEX | XPRINT_GET_LINES | XPRINT_GET_MARGIN | XPRINT_GET_MIX |
+| XPRINT_GET_ORIENTATION | XPRINT_GET_OVERLAP | XPRINT_GET_PAGES | XPRINT_GET_PAPER | XPRINT_GET_PAPERS |
+| XPRINT_GET_PIXEL | XPRINT_GET_POS | XPRINT_GET_PPI | XPRINT_GET_QUALITY | XPRINT_GET_SCALE |
+| XPRINT_GET_SELECTION | XPRINT_GET_SIZE | XPRINT_GET_STRETCHMODE | XPRINT_GET_TEXTALIGN | XPRINT_GET_TRAY |
+| XPRINT_GET_TRAYS | XPRINT_GET_WORDWRAP | XPRINT_GET_WRAP | XPRINT_IMAGELIST | XPRINT_LINE |
+| XPRINT_PIE | XPRINT_POLYGON | XPRINT_POLYLINE | XPRINT_PREVIEW | XPRINT_PRINT |
+| XPRINT_RENDER | XPRINT_SCALE | XPRINT_SET_CLIP | XPRINT_SET_COLLATE | XPRINT_SET_COLOR |
+| XPRINT_SET_COLORMODE | XPRINT_SET_COPIES | XPRINT_SET_DUPLEX | XPRINT_SET_FONT | XPRINT_SET_MIX |
+| XPRINT_SET_ORIENTATION | XPRINT_SET_OVERLAP | XPRINT_SET_PAGES | XPRINT_SET_PAPER | XPRINT_SET_PIXEL |
+| XPRINT_SET_POS | XPRINT_SET_QUALITY | XPRINT_SET_STRETCHMODE | XPRINT_SET_TEXTALIGN | XPRINT_SET_TRAY |
+| XPRINT_SET_WORDWRAP | XPRINT_SET_WRAP | XPRINT_SPLIT | XPRINT_STRETCH | XPRINT_STYLE |
+| XPRINT_TEXT_SIZE | XPRINT_WIDTH |  |  |  |
  STATEMENT | PB/Win + PB/CC | Each element = its index (batch 20) |
 | `DECLARE` | STATEMENT | (PB/Win + PB/CC) DECLARE SUB/FUNCTION prototypes (batch 20) |
 | `FILESCAN` | STATEMENT | (PB/Win + PB/CC) Records/width scan, INPUT+BINARY modes (batch 20) |
