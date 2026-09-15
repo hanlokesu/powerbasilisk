@@ -1282,6 +1282,18 @@ impl Compiler {
             .declare_function("cosh", &IrType::Double, &[IrType::Double], false);
         self.module
             .declare_function("tanh", &IrType::Double, &[IrType::Double], false);
+        self.module.declare_function(
+            "atan2",
+            &IrType::Double,
+            &[IrType::Double, IrType::Double],
+            false,
+        );
+        self.module
+            .declare_function("asinh", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("acosh", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("atanh", &IrType::Double, &[IrType::Double], false);
 
         // C stdlib for RND
         self.module
@@ -10601,6 +10613,11 @@ impl Compiler {
             "SINH" => Some(self.builtin_unary_math(fb, args, "sinh")),
             "COSH" => Some(self.builtin_unary_math(fb, args, "cosh")),
             "TANH" => Some(self.builtin_unary_math(fb, args, "tanh")),
+            "ATN2" => Some(self.builtin_binary_math(fb, args, "atan2")),
+            "ASINH" => Some(self.builtin_unary_math(fb, args, "asinh")),
+            "ACOSH" => Some(self.builtin_unary_math(fb, args, "acosh")),
+            "ATANH" => Some(self.builtin_unary_math(fb, args, "atanh")),
+            "COTH" => Some(self.builtin_coth(fb, args)),
             "CINT" | "CLNG" | "CDWD" | "CLNGINT" | "CUINT" | "CULNG" => {
                 Some(self.builtin_cint(fb, args))
             }
@@ -11288,6 +11305,29 @@ impl Compiler {
         let val = self.compile_expr(fb, &args[0])?;
         let f64_val = self.to_f64(fb, &val);
         Ok(fb.call(&IrType::Double, func_name, &[f64_val]))
+    }
+
+    // Batch 94: two-argument math (ATN2(y, x) -> atan2)
+    fn builtin_binary_math(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        func_name: &str,
+    ) -> PbResult<Val> {
+        let a = self.compile_expr(fb, &args[0])?;
+        let b = self.compile_expr(fb, &args[1])?;
+        let fa = self.to_f64(fb, &a);
+        let fb_val = self.to_f64(fb, &b);
+        Ok(fb.call(&IrType::Double, func_name, &[fa, fb_val]))
+    }
+
+    // Batch 94: COTH(x) = 1/tanh(x)
+    fn builtin_coth(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let f64_val = self.to_f64(fb, &val);
+        let t = fb.call(&IrType::Double, "tanh", &[f64_val]);
+        let one = fb.const_f64(1.0);
+        Ok(fb.fdiv(&one, &t))
     }
 
     // Batch 91 fix: CINT/CLNG/CLNGINT/CUINT/CULNG — round to nearest (ties away from zero), not truncate.

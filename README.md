@@ -563,6 +563,17 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.88 (2026-09-15) — Batch 94: ATN2/ASINH/ACOSH/ATANH/COTH — more inverse trig + hyperbolic
+
+- **ATN2(y, x)** — two-argument arctangent, quadrant-aware (C lib `atan2`). New `builtin_binary_math` helper for two-arg math calls.
+- **ASINH(x)** — inverse hyperbolic sine (C lib `asinh`).
+- **ACOSH(x)** — inverse hyperbolic cosine (C lib `acosh`).
+- **ATANH(x)** — inverse hyperbolic tangent (C lib `atanh`).
+- **COTH(x)** — hyperbolic cotangent = 1/tanh(x) (new `builtin_coth` method).
+- All five declared in codegen module (same pattern as tan/atan/asin/acos/sinh/cosh/tanh).
+- Tests: examples/batch94_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.87 (2026-09-15) — Batch 93: ASIN/ACOS/SINH/COSH/TANH — inverse trig + hyperbolic
 
 - **ASIN(x)** — inverse sine, result in radians (C lib `asin`).

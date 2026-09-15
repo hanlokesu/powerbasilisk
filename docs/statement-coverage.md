@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 93 (v0.1.87)** — 2026-09-15. All statements through batch 93 are reflected in this matrix. Function-class additions (REMOVE$/RETAIN$/REMAIN$/FLOOR/TRUNC/INPUT console etc.) are tracked in README "Newly implemented by this branch" table, not in this official statement-keyword index.
+> **Last updated from batch 94 (v0.1.88)** — 2026-09-15. All statements through batch 94 are reflected in this matrix. Function-class additions (REMOVE$/RETAIN$/REMAIN$/FLOOR/TRUNC/INPUT console etc.) are tracked in README "Newly implemented by this branch" table, not in this official statement-keyword index.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
