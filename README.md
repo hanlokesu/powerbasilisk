@@ -37,10 +37,10 @@ silently dropped during code generation.
 ### New Built-ins (previously silently discarded)
 > **Early snapshot** — the first implementations from the initial releases of
 > this fork (derived from [benstopics/powerbasilisk](https://github.com/benstopics/powerbasilisk)).
-> Later batches (1-27) were added after this table was written; the complete,
+> Later batches were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
-> table below (196 implemented / 105 not implemented / 202 tier-3 DDT).
+> table below.
 > **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
