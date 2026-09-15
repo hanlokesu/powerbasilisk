@@ -1455,12 +1455,12 @@ impl Parser {
                     vars.push(self.parse_expression()?);
                 }
                 self.consume_to_eol();
-                return Ok(Statement::InputConsole(InputConsoleStmt {
+                Ok(Statement::InputConsole(InputConsoleStmt {
                     prompt,
                     no_newline,
                     vars,
                     line,
-                }));
+                }))
             }
             Token::Open => self.parse_open_statement(),
             Token::Close => self.parse_close_statement(),

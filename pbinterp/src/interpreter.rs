@@ -569,6 +569,8 @@ impl Interpreter {
             }
             Statement::Data(_) => Ok(Flow::Normal),
             Statement::Restore => Ok(Flow::Normal),
+            Statement::InputConsole(_) => Ok(Flow::Normal),
+            Statement::LineInputConsole(_) => Ok(Flow::Normal),
             Statement::Noop(_, _) => Ok(Flow::Normal),
             // Inline assembly is not executed by the interpreter.
             Statement::Asm(_) => Ok(Flow::Normal),
