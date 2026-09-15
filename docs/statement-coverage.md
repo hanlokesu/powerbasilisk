@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (375)
+## ✅ Implemented (702)
 | Keyword | Official PB category | Implementation method | Batch | Status |
 | --- | --- | --- | --- | --- |
 | #ALIGN METASTATEMENT | #BLOAT METASTATEMENT | #BREAK METASTATEMENT | #COM METASTATEMENT | #COMPILE METASTATEMENT |
