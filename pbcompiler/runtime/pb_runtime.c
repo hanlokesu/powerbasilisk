@@ -33,6 +33,19 @@ __declspec(dllimport) int __stdcall CheckMenuItem(void* h, unsigned int id, unsi
 __declspec(dllimport) int __stdcall GetMenuStringA(void* h, unsigned int id, char* buf, int max, unsigned int f);
 __declspec(dllimport) int __stdcall ModifyMenuA(void* h, unsigned int id, unsigned int f, unsigned int newid, const char* txt);
 __declspec(dllimport) int __stdcall GetDiskFreeSpaceExA(char* lpDir, unsigned long long* lpFreeAvail, unsigned long long* lpTotalBytes, unsigned long long* lpTotalFree);
+/* Memory status for FRE() */
+typedef struct _MEMORYSTATUSEX {
+    unsigned long dwLength;
+    unsigned long dwMemoryLoad;
+    unsigned long long ullTotalPhys;
+    unsigned long long ullAvailPhys;
+    unsigned long long ullTotalPageFile;
+    unsigned long long ullAvailPageFile;
+    unsigned long long ullTotalVirtual;
+    unsigned long long ullAvailVirtual;
+    unsigned long long ullAvailExtendedVirtual;
+} MEMORYSTATUSEX;
+__declspec(dllimport) int __stdcall GlobalMemoryStatusEx(MEMORYSTATUSEX* lpBuffer);
 /* Win32 API for crash handling */
 __declspec(dllimport) void* __stdcall AddVectoredExceptionHandler(unsigned long First, void* Handler);
 __declspec(dllimport) void __stdcall ExitProcess(unsigned int uExitCode);
@@ -1156,6 +1169,17 @@ static long long rec_pos[MAX_FILE_HANDLES] = {0};
 int pb_freefile(void) {
     for (int i = 1; i < MAX_FILE_HANDLES; i++) {
         if (file_handles[i] == NULL) return i;
+    }
+    return 0;
+}
+
+/* Batch 92: FRE() — free memory in bytes (uses GlobalMemoryStatusEx) */
+long long pb_fre(void) {
+    MEMORYSTATUSEX msx;
+    memset(&msx, 0, sizeof(msx));
+    msx.dwLength = sizeof(MEMORYSTATUSEX);
+    if (GlobalMemoryStatusEx(&msx)) {
+        return (long long)msx.ullAvailPhys;
     }
     return 0;
 }

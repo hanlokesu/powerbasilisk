@@ -1360,6 +1360,8 @@ impl Compiler {
         // File I/O runtime
         self.module
             .declare_function("pb_freefile", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_fre", &IrType::I64, &[], false);
         self.module.declare_function(
             "pb_open",
             &IrType::I32,
@@ -10675,6 +10677,7 @@ impl Compiler {
             "USING" => Some(self.builtin_using(fb, args)),
             // File I/O builtins
             "FREEFILE" => Some(Ok(fb.call(&IrType::I32, "pb_freefile", &[]))),
+            "FRE" => Some(Ok(fb.call(&IrType::I64, "pb_fre", &[]))),
             "EOF" => {
                 let filenum = self.compile_expr(fb, &args[0]);
                 Some(filenum.map(|v| {

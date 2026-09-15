@@ -563,6 +563,14 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.86 (2026-09-15) — Batch 92: FRE() — free memory query
+
+- **FRE()** — returns free physical memory in bytes as a QUAD (64-bit integer), using Win32 GlobalMemoryStatusEx.
+- Bare `FRE` (no parens) works — added to parser no-argument function list (same fix as ERROR$ in batch 89).
+- Runtime: new `pb_fre()` C function with MEMORYSTATUSEX struct + GlobalMemoryStatusEx dllimport.
+- Tests: examples/batch92_test.bas (5/5), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.85 (2026-09-15) — Batch 91: CFLT/CLNGINT/CUINT/CULNG type-conversion aliases + CINT rounding fix
 
 - **CFLT(expr)** — convert to Single (alias of CSNG, builtin_to_f32).
