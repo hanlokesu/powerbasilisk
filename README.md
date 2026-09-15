@@ -219,7 +219,10 @@ exit code 0:
 
 > **Official coverage audit** — every keyword below has been checked against the PowerBASIC official documentation (MIT-licensed keyword index, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
-> Summary: **365** statement/function keywords implemented · **129** DDT/GUI-class deferred (Tier 3) · **12** documented but not yet implemented.
+> Summary:
+> - **365** statement/function keywords implemented
+> - **129** DDT/GUI-class deferred (Tier 3)
+> - **9** documented but not yet implemented.
 
 **All 365 supported keywords (alphabetical):**
 
