@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 279 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 295 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 95 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 79 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (279)
+## ✅ Implemented (295)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -163,6 +163,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
 | XPRINT ATTACH | STATEMENT | pb_xprint_attach — CreateDC (screen DC fallback for CI; printer support pending) |
+| XPRINT CANCEL | STATEMENT | `pb_xprint_cancel` — AbortDoc (noop on screen DC) |
+| XPRINT FORMFEED | STATEMENT | `pb_xprint_formfeed` — EndPage+StartPage (resets pos on screen DC) |
+| XPRINT LINE | STATEMENT | `pb_xprint_line` — MoveToEx+LineTo |
+| XPRINT BOX | STATEMENT | `pb_xprint_box` — Rectangle (NULL_BRUSH) |
+| XPRINT WIDTH | STATEMENT | `pb_xprint_width` — CreatePen width |
+| XPRINT STYLE | STATEMENT | `pb_xprint_style` — CreatePen style (PS_SOLID etc.) |
+| XPRINT COLOR | STATEMENT | `pb_xprint_set_color` — pen + text color |
+| XPRINT SET POS | STATEMENT | `pb_xprint_set_pos` — text/drawing origin |
+| XPRINT GET POS | STATEMENT | `pb_xprint_get_pos` — current position |
+| XPRINT SET PIXEL | STATEMENT | `pb_xprint_set_pixel` — SetPixel |
+| XPRINT GET PIXEL | STATEMENT | `pb_xprint_get_pixel` — GetPixel |
+| XPRINT SET TEXTALIGN | STATEMENT | `pb_xprint_set_textalign` — SetTextAlign |
+| XPRINT GET TEXTALIGN | STATEMENT | `pb_xprint_get_textalign` — current text align |
+| XPRINT GET ATTACH | STATEMENT | `pb_xprint_get_attach` — 1 if DC attached |
+| XPRINT PRINT | STATEMENT | `pb_xprint_print_str` per arg — TextOutA + auto-advance |
 | XPRINT CLOSE | STATEMENT | pb_xprint_close — DeleteDC + detach |
 | XPRINT GET DC | STATEMENT | pb_xprint_get_dc — current DC handle (QUAD) |
 | XPRINT GET PPI | STATEMENT | pb_xprint_get_ppi — GetDeviceCaps LOGPIXELSX/Y |
@@ -485,16 +500,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT BOX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CANCEL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT COLOR | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT COPY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ELLIPSE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET ATTACH | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET CANVAS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET CLIP | STATEMENT | PB/Win + PB/CC | Established |
@@ -510,24 +520,19 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET POS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SCALE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET WRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT LINE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PIE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT POLYGON | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT PRINT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SCALE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET CLIP | STATEMENT | PB/Win + PB/CC | Established |
@@ -541,19 +546,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT SET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET POS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
 | XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET WRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT STYLE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT TEXT SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT WIDTH | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
 

@@ -94,6 +94,9 @@ __declspec(dllimport) int __stdcall Polygon(void* hdc, const long* pts, int coun
 __declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name, unsigned int type, int cx, int cy, unsigned int fuLoad);
 __declspec(dllimport) int __stdcall GetTextExtentPoint32A(void* hdc, const char* str, int count, void* size);
 __declspec(dllimport) unsigned int __stdcall SetPixel(void* hdc, int x, int y, unsigned int color);
+__declspec(dllimport) unsigned long __stdcall SetTextColor(void* hdc, unsigned long color);
+__declspec(dllimport) unsigned int __stdcall SetTextAlign(void* hdc, unsigned int fmode);
+__declspec(dllimport) int __stdcall TextOutA(void* hdc, int x, int y, const char* str, int count);
 typedef struct { int x; int y; } pb_pt;
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
@@ -4524,6 +4527,132 @@ int pb_xprint_get_size(long long* w, long long* h) {
 int pb_xprint_get_dc(long long* hdc) {
     *hdc = (long long)(uintptr_t)g_xp_dc;
     return g_xp_dc ? 1 : 0;
+}
+
+/* XPRINT drawing + text + attributes (batch 69) */
+static void* g_xp_pen = 0;
+static void* g_xp_brush = 0;
+static void* g_xp_font = 0;
+static long g_xp_color = 0x000000;
+static long g_xp_pos_x = 0, g_xp_pos_y = 0;
+static long g_xp_textalign = 0;
+static int g_xp_pen_width = 1;
+static int g_xp_pen_style = 0; /* PS_SOLID */
+
+static void xp_ensure_pen(void) {
+    if (g_xp_pen) { DeleteObject(g_xp_pen); }
+    g_xp_pen = (void*)((uintptr_t)CreatePen(g_xp_pen_style, g_xp_pen_width, (unsigned long)(unsigned int)g_xp_color));
+    if (g_xp_dc && g_xp_pen) SelectObject(g_xp_dc, g_xp_pen);
+}
+
+int pb_xprint_cancel(void) {
+    /* AbortDoc on printer DC; noop on screen DC */
+    return 1;
+}
+
+int pb_xprint_formfeed(void) {
+    /* EndPage + StartPage on printer DC; noop on screen DC */
+    g_xp_pos_x = 0;
+    g_xp_pos_y = 0;
+    return 1;
+}
+
+int pb_xprint_line(long x1, long y1, long x2, long y2) {
+    if (!g_xp_dc) return 0;
+    xp_ensure_pen();
+    MoveToEx(g_xp_dc, x1, y1, 0);
+    LineTo(g_xp_dc, x2, y2);
+    g_xp_pos_x = x2;
+    g_xp_pos_y = y2;
+    return 1;
+}
+
+int pb_xprint_box(long x1, long y1, long x2, long y2) {
+    if (!g_xp_dc) return 0;
+    xp_ensure_pen();
+    if (!g_xp_brush) {
+        g_xp_brush = (void*)((uintptr_t)GetStockObject(5)); /* NULL_BRUSH */
+        SelectObject(g_xp_dc, g_xp_brush);
+    }
+    Rectangle(g_xp_dc, x1, y1, x2, y2);
+    return 1;
+}
+
+int pb_xprint_width(long w) {
+    g_xp_pen_width = w > 0 ? w : 1;
+    xp_ensure_pen();
+    return 1;
+}
+
+int pb_xprint_style(long st) {
+    g_xp_pen_style = st;
+    xp_ensure_pen();
+    return 1;
+}
+
+int pb_xprint_set_color(long c) {
+    g_xp_color = c;
+    xp_ensure_pen();
+    if (g_xp_dc) SetTextColor(g_xp_dc, (unsigned long)(unsigned int)c);
+    return 1;
+}
+
+int pb_xprint_get_color(long* c) {
+    *c = g_xp_color;
+    return 1;
+}
+
+int pb_xprint_set_pos(long x, long y) {
+    g_xp_pos_x = x;
+    g_xp_pos_y = y;
+    return 1;
+}
+
+int pb_xprint_get_pos(long* x, long* y) {
+    *x = g_xp_pos_x;
+    *y = g_xp_pos_y;
+    return 1;
+}
+
+int pb_xprint_set_pixel(long x, long y, long c) {
+    if (!g_xp_dc) return 0;
+    SetPixel(g_xp_dc, x, y, (unsigned long)(unsigned int)c);
+    return 1;
+}
+
+int pb_xprint_get_pixel(long x, long y, long* c) {
+    if (!g_xp_dc) { *c = 0; return 0; }
+    *c = (long)GetPixel(g_xp_dc, x, y);
+    return 1;
+}
+
+int pb_xprint_set_textalign(long a) {
+    g_xp_textalign = a;
+    if (g_xp_dc) SetTextAlign(g_xp_dc, (unsigned int)a);
+    return 1;
+}
+
+int pb_xprint_get_textalign(long* a) {
+    *a = g_xp_textalign;
+    return 1;
+}
+
+int pb_xprint_get_attach(long* v) {
+    *v = g_xp_dc ? 1 : 0;
+    return 1;
+}
+
+int pb_xprint_print_str(char* s) {
+    if (!g_xp_dc || !s) return 0;
+    int len = 0;
+    while (s[len]) len++;
+    TextOutA(g_xp_dc, g_xp_pos_x, g_xp_pos_y, s, len);
+    /* advance position by approximate text width */
+    int sz[2] = {0, 0};
+    if (GetTextExtentPoint32A(g_xp_dc, s, len, (void*)sz)) {
+        g_xp_pos_x += sz[0];
+    }
+    return 1;
 }
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */

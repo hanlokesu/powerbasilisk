@@ -2823,6 +2823,92 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "CANCEL" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_CANCEL".to_string(),
+                            args: vec![],
+                            line,
+                        }));
+                    }
+                    if xop == "FORMFEED" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_FORMFEED".to_string(),
+                            args: vec![],
+                            line,
+                        }));
+                    }
+                    if xop == "LINE" {
+                        self.advance();
+                        let x1 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y1 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let x2 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y2 = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_LINE".to_string(),
+                            args: vec![x1, y1, x2, y2],
+                            line,
+                        }));
+                    }
+                    if xop == "BOX" {
+                        self.advance();
+                        let x1 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y1 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let x2 = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y2 = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_BOX".to_string(),
+                            args: vec![x1, y1, x2, y2],
+                            line,
+                        }));
+                    }
+                    if xop == "WIDTH" {
+                        self.advance();
+                        let w = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_WIDTH".to_string(),
+                            args: vec![w],
+                            line,
+                        }));
+                    }
+                    if xop == "STYLE" {
+                        self.advance();
+                        let st = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_STYLE".to_string(),
+                            args: vec![st],
+                            line,
+                        }));
+                    }
+                    if xop == "PRINT" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        while !matches!(self.peek(), Token::Eol | Token::Colon | Token::Eof) {
+                            if matches!(self.peek(), Token::Comma | Token::Semicolon) {
+                                self.advance();
+                                continue;
+                            }
+                            args.push(self.parse_expression()?);
+                        }
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_PRINT".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if xop == "GET" {
                         self.advance();
                         let sub = self.peek_plain_upper();
@@ -2849,6 +2935,116 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_GET_DC".to_string(),
                                 args: vec![dst],
+                                line,
+                            }));
+                        }
+                        if sub == "ATTACH" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_ATTACH".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "POS" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_POS".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "COLOR" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_COLOR".to_string(),
+                                args: vec![c],
+                                line,
+                            }));
+                        }
+                        if sub == "PIXEL" {
+                            self.advance();
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::To)?;
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_PIXEL".to_string(),
+                                args: vec![x, y, c],
+                                line,
+                            }));
+                        }
+                        if sub == "TEXTALIGN" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let a = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_TEXTALIGN".to_string(),
+                                args: vec![a],
+                                line,
+                            }));
+                        }
+                    }
+                    if xop == "SET" {
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "POS" {
+                            self.advance();
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_POS".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "COLOR" {
+                            self.advance();
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_COLOR".to_string(),
+                                args: vec![c],
+                                line,
+                            }));
+                        }
+                        if sub == "PIXEL" {
+                            self.advance();
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let c = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_PIXEL".to_string(),
+                                args: vec![x, y, c],
+                                line,
+                            }));
+                        }
+                        if sub == "TEXTALIGN" {
+                            self.advance();
+                            let a = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_TEXTALIGN".to_string(),
+                                args: vec![a],
                                 line,
                             }));
                         }

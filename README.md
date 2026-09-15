@@ -271,7 +271,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
 > +5 from batch 68 — XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC host-based printer GDI (screen DC fallback).
+| \XPRINT LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH\ | ✅ | 69 (v0.1.63) | GDI MoveToEx/LineTo/Rectangle/CreatePen/SetPixel/TextOutA/SetTextAlign on screen DC |
 > +1 from batch 28 — THREADED thread-local storage declaration, LLVM `thread_local`
 > globals with per-thread copies.)
 > (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
@@ -534,6 +536,22 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.63 (2026-09-15) — Batch 69: XPRINT drawing + text + attributes (15 statements)
+
+Fifteen more Not implemented items moved to Implemented (coverage: **294 implemented / 80 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT LINE** / **XPRINT BOX** — GDI MoveToEx+LineTo / Rectangle (NULL_BRUSH)
+- **XPRINT WIDTH** / **XPRINT STYLE** — CreatePen width/style
+- **XPRINT COLOR** — pen + text color (SetTextColor)
+- **XPRINT SET POS** / **XPRINT GET POS** — drawing/text origin
+- **XPRINT SET PIXEL** / **XPRINT GET PIXEL** — SetPixel/GetPixel
+- **XPRINT SET TEXTALIGN** / **XPRINT GET TEXTALIGN** — SetTextAlign
+- **XPRINT PRINT** — TextOutA per argument with auto-advance (GetTextExtentPoint32A)
+- **XPRINT CANCEL** / **XPRINT FORMFEED** — AbortDoc / EndPage+StartPage (noop on screen DC, FORMFEED resets pos)
+- **XPRINT GET ATTACH** — returns 1 if DC attached
+- Runtime: 15 pb_xprint_* functions + g_xp_pen/brush/font/color/pos/textalign globals; SetTextColor/SetTextAlign/TextOutA dllimports added
+- Tests: examples/batch69_test.bas (ALL PASS — ATTACH/GET ATTACH, SET/GET POS, SET/GET COLOR, LINE/BOX, SET/GET PIXEL, SET/GET TEXTALIGN, PRINT, FORMFEED, CANCEL, CLOSE), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.62 (2026-09-15) — Batch 68: XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC (5 statements)
 

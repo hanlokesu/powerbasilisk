@@ -1851,6 +1851,70 @@ impl Compiler {
         self.module
             .declare_function("pb_xprint_get_dc", &IrType::I32, &[IrType::Ptr], false);
         self.module
+            .declare_function("pb_xprint_cancel", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_xprint_formfeed", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_xprint_line",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_box",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_width", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_style", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_set_color", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_color", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_pos",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_pos",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_set_pixel",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_pixel",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_set_textalign",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_textalign",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_get_attach", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_print_str", &IrType::I32, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_graphic_line",
@@ -4993,6 +5057,107 @@ impl Compiler {
             "XPRINT_GET_DC" => {
                 if let Some((dp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
                     fb.call_void("pb_xprint_get_dc", &[dp]);
+                }
+            }
+            "XPRINT_CANCEL" => {
+                fb.call_void("pb_xprint_cancel", &[]);
+            }
+            "XPRINT_FORMFEED" => {
+                fb.call_void("pb_xprint_formfeed", &[]);
+            }
+            "XPRINT_LINE" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_line",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "XPRINT_BOX" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_box",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "XPRINT_WIDTH" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_width", &[iv]);
+            }
+            "XPRINT_STYLE" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_style", &[iv]);
+            }
+            "XPRINT_SET_COLOR" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_color", &[iv]);
+            }
+            "XPRINT_GET_COLOR" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_color", &[p]);
+                }
+            }
+            "XPRINT_SET_POS" => {
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_pos", &[xv, yv]);
+            }
+            "XPRINT_GET_POS" => {
+                if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_pos", &[xp, yp]);
+                    }
+                }
+            }
+            "XPRINT_SET_PIXEL" => {
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                let c = self.compile_expr(fb, &call.args[2])?;
+                let cv = self.convert_value(fb, &c, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_pixel", &[xv, yv, cv]);
+            }
+            "XPRINT_GET_PIXEL" => {
+                let x = self.compile_expr(fb, &call.args[0])?;
+                let xv = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                let y = self.compile_expr(fb, &call.args[1])?;
+                let yv = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                if let Some((cp, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                    fb.call_void("pb_xprint_get_pixel", &[xv, yv, cp]);
+                }
+            }
+            "XPRINT_SET_TEXTALIGN" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_textalign", &[iv]);
+            }
+            "XPRINT_GET_TEXTALIGN" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_textalign", &[p]);
+                }
+            }
+            "XPRINT_GET_ATTACH" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_attach", &[p]);
+                }
+            }
+            "XPRINT_PRINT" => {
+                for arg in &call.args {
+                    let v = self.compile_expr(fb, arg)?;
+                    fb.call_void("pb_xprint_print_str", &[v]);
                 }
             }
             "GRAPHIC_GET_BITS" => {
