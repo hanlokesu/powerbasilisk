@@ -241,6 +241,41 @@ impl Parser {
                 let ad = self.parse_asmdata_decl(line)?;
                 Ok(Some(TopLevel::AsmData(ad)))
             }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("CLASS") => {
+                // CLASS ClassName ... END CLASS — OOP class block (simplified: skip entire block)
+                self.advance(); // consume CLASS
+                                // consume optional class name
+                if let Token::Identifier(_) = self.peek() {
+                    self.advance();
+                }
+                self.consume_to_eol();
+                // skip block body until END CLASS (line-based: read lines until one starts with END CLASS)
+                let mut depth = 1;
+                while depth > 0 && self.peek() != &Token::Eof {
+                    // check if current line starts with CLASS (nested) or END CLASS
+                    let is_class_start = matches!(self.peek(), Token::Identifier(w2) if w2.eq_ignore_ascii_case("CLASS"));
+                    let is_end = matches!(self.peek(), Token::End);
+                    let next_is_class = matches!(self.peek_at(1), Some(Token::Identifier(w3)) if w3.eq_ignore_ascii_case("CLASS"));
+                    if is_end && next_is_class {
+                        depth -= 1;
+                        self.advance(); // END
+                        self.advance(); // CLASS
+                        self.consume_to_eol();
+                        continue;
+                    }
+                    if is_class_start {
+                        depth += 1;
+                    }
+                    self.advance();
+                }
+                Ok(None)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("METHOD") => {
+                // METHOD name [([args])] — treat as SUB (simplified OOP method)
+                self.advance(); // consume METHOD
+                let sd = self.parse_sub_decl()?;
+                Ok(Some(TopLevel::SubDecl(sd)))
+            }
             Token::HashIf => {
                 // Should have been handled by preprocessor, but skip if present
                 self.skip_conditional_block();
@@ -4905,6 +4940,35 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "ARRAY_TAGARRAY".to_string(),
                         args: vec![arr, tag],
+                        line,
+                    }));
+                }
+
+                // ARRAY REDIM INCR arr(), n / ARRAY REDIM DECR arr(), n
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "REDIM")
+                {
+                    self.advance(); // ARRAY
+                    self.advance(); // REDIM
+                    let is_incr = if let Token::Identifier(w) = self.peek() {
+                        let up = w.to_uppercase();
+                        self.advance();
+                        up == "INCR"
+                    } else {
+                        false
+                    };
+                    let arr = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let n = self.parse_expression()?;
+                    self.consume_to_eol();
+                    let call_name = if is_incr {
+                        "ARRAY_REDIM_INCR"
+                    } else {
+                        "ARRAY_REDIM_DECR"
+                    };
+                    return Ok(Statement::Call(CallStmt {
+                        name: call_name.to_string(),
+                        args: vec![arr, n],
                         line,
                     }));
                 }

@@ -2255,6 +2255,28 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_class_create", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_class_destroy", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_method_call",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_redim_incr",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_redim_decr",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_graphic_line",
@@ -6028,6 +6050,26 @@ impl Compiler {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
                     fb.call_void("pb_display_browse", &[pt0, pt1, p]);
                 }
+            }
+            "ARRAY_REDIM_INCR" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                let a1 = self.compile_expr(fb, &call.args[1])?;
+                let ia1 = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
+                fb.call_void(
+                    "pb_array_redim_incr",
+                    &[pa0, fb.const_i32(4), fb.const_i32(0), ia1],
+                );
+            }
+            "ARRAY_REDIM_DECR" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                let a1 = self.compile_expr(fb, &call.args[1])?;
+                let ia1 = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
+                fb.call_void(
+                    "pb_array_redim_decr",
+                    &[pa0, fb.const_i32(4), fb.const_i32(0), ia1],
+                );
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)

@@ -4882,6 +4882,26 @@ int pb_display_browse(const char* title, const char* initialdir, char** out) {
     if (out) *out = SysAllocStringByteLen("", 0);
     return 0;
 }
+/* === Batch 79: OOP foundation (CLASS/METHOD/OBJECT/INSTANCE) + ARRAY REDIM === */
+/* OOP simplified model: objects are opaque pointers (void*), methods are regular functions
+   with a hidden 'this' pointer as first arg. CLASS/END CLASS is a namespace block. */
+static void* g_oop_last_instance = 0;
+void* pb_class_create(const char* classname) {
+    /* allocate a minimal object stub (16 bytes: vtable ptr + refcount + classname hash) */
+    void* obj = calloc(1, 16);
+    g_oop_last_instance = obj;
+    return obj;
+}
+void pb_class_destroy(void* obj) { if (obj) free(obj); }
+int pb_method_call(void* obj, const char* methodname) { return 1; } /* noop dispatch stub */
+int pb_array_redim_incr(void* arr_ptr, int elem_size, int old_count, int increment) {
+    /* simplified: report requested new size; actual realloc needs dynamic array model */
+    return old_count + increment;
+}
+int pb_array_redim_decr(void* arr_ptr, int elem_size, int old_count, int decrement) {
+    int n = old_count - decrement;
+    return n < 0 ? 0 : n;
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;
