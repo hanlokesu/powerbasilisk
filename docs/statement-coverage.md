@@ -1015,11 +1015,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 ## Files
 
 - `docs/statement-coverage.md` —this readable summary
-- `docs/statement-coverage.csv` —all rows with per-keyword status (Keyword, Kind, Platform, Status, Impl)
+- `docs/statement-coverage.csv` —all rows with per-keyword status (Keyword, Kind, Platform, Status)
 
 ## Method
 
 1. Parse `keyword-index.md` from the official docs package (735 keywords, one line per keyword).
-2. Keep statement-class keywords (STATEMENT / BLOCK / KEYWORD / DIRECTIVE) = 493.
+2. Keep statement-class keywords (STATEMENT / BLOCK / KEYWORD / DIRECTIVE) = 504 (494 STATEMENT + 10 BLOCK).
 3. Grep `codegen.rs` for the runtime helpers / Win32 API calls / compile_* functions each keyword maps to.
 4. Classify: IMPLEMENTED (real codegen evidence) / TIER3_DDT (GUI framework, deferred) / NOT_IMPL (no evidence).
