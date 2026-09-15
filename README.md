@@ -271,7 +271,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
 > +8 from batch 70 — XPRINT ARC/ELLIPSE/PIE/SET FONT/GET+SET MIX/GET+SET STRETCHMODE (GDI shapes + font + ROP2).
+| \XPRINT TEXT SIZE/GET CLIENT/CANVAS/WRAP/WORDWRAP/OVERLAP\ | ✅ | 71 (v0.1.65) | GetTextExtentPoint32A + GetDeviceCaps + wrap/wordwrap/overlap flags |
 > +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
 > +5 from batch 68 — XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC host-based printer GDI (screen DC fallback).
 | \XPRINT ARC/ELLIPSE/PIE/SET FONT/MIX/STRETCHMODE\ | ✅ | 70 (v0.1.64) | GDI Arc/Ellipse/Pie + CreateFontA + SetROP2/GetROP2 + SetStretchBltMode |
@@ -538,6 +540,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.65 (2026-09-15) — Batch 71: XPRINT text metrics + client + wrap flags (9 statements)
+
+Nine more Not implemented items moved to Implemented (coverage: **311 implemented / 63 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT TEXT SIZE** — GetTextExtentPoint32A (returns width+height of a string)
+- **XPRINT GET CLIENT** / **GET CANVAS** — GetDeviceCaps HORZRES/VERTRES
+- **XPRINT SET WRAP** / **GET WRAP** — text wrap mode flag
+- **XPRINT SET WORDWRAP** / **GET WORDWRAP** — word-wrap flag
+- **XPRINT SET OVERLAP** / **GET OVERLAP** — line overlap percentage
+- Runtime: 9 pb_xprint_* functions + g_xp_wrap/wordwrap/overlap globals
+- Tests: examples/batch71_test.bas (ALL PASS — TEXT SIZE 77x16, GET CLIENT 1920x1080, GET CANVAS matches, SET+GET WRAP/WORDWRAP/OVERLAP), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.64 (2026-09-15) — Batch 70: XPRINT shapes + font + mix (8 statements)
 

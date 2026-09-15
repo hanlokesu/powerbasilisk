@@ -163,6 +163,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
 | XPRINT ATTACH | STATEMENT | pb_xprint_attach — CreateDC (screen DC fallback for CI; printer support pending) |
+| XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` — GetTextExtentPoint32A (returns width+height) |
+| XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` — GetDeviceCaps HORZRES/VERTRES |
+| XPRINT GET CANVAS | STATEMENT | `pb_xprint_get_canvas` — same as GET CLIENT on screen DC |
+| XPRINT SET WRAP | STATEMENT | `pb_xprint_set_wrap` — text wrap mode flag |
+| XPRINT GET WRAP | STATEMENT | `pb_xprint_get_wrap` — current wrap flag |
+| XPRINT SET WORDWRAP | STATEMENT | `pb_xprint_set_wordwrap` — word-wrap flag |
+| XPRINT GET WORDWRAP | STATEMENT | `pb_xprint_get_wordwrap` — current word-wrap flag |
+| XPRINT SET OVERLAP | STATEMENT | `pb_xprint_set_overlap` — line overlap percentage |
+| XPRINT GET OVERLAP | STATEMENT | `pb_xprint_get_overlap` — current overlap value |
 | XPRINT ARC | STATEMENT | `pb_xprint_arc` — GDI Arc (bounding rect + start/end radials) |
 | XPRINT ELLIPSE | STATEMENT | `pb_xprint_ellipse` — GDI Ellipse (NULL_BRUSH) |
 | XPRINT PIE | STATEMENT | `pb_xprint_pie` — GDI Pie (bounding rect + radials, NULL_BRUSH) |
@@ -511,8 +520,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT COPY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CANVAS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET CLIP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
@@ -521,7 +528,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET LINES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
@@ -530,8 +536,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET WRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT POLYGON | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
@@ -544,16 +548,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT SET COPIES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET WRAP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT TEXT SIZE | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
 

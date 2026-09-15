@@ -2823,6 +2823,23 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "TEXT" {
+                        self.advance();
+                        if self.peek_plain_upper() == "SIZE" {
+                            self.advance();
+                            let txt = self.parse_expression()?;
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_TEXT_SIZE".to_string(),
+                                args: vec![txt, w, h],
+                                line,
+                            }));
+                        }
+                    }
                     if xop == "ARC" {
                         self.advance();
                         let mut args = vec![];
@@ -3032,6 +3049,65 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "CLIENT" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_CLIENT".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "CANVAS" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_CANVAS".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "WRAP" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_WRAP".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "WORDWRAP" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_WORDWRAP".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "OVERLAP" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_OVERLAP".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -3116,6 +3192,36 @@ impl Parser {
                             self.consume_to_eol();
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_SET_STRETCHMODE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "WRAP" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_WRAP".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "WORDWRAP" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_WORDWRAP".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "OVERLAP" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_OVERLAP".to_string(),
                                 args: vec![v],
                                 line,
                             }));

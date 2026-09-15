@@ -4538,6 +4538,9 @@ static void* g_xp_font = 0;
 static long g_xp_color = 0x000000;
 static long g_xp_pos_x = 0, g_xp_pos_y = 0;
 static long g_xp_textalign = 0;
+static long g_xp_wrap = 0;
+static long g_xp_wordwrap = 0;
+static long g_xp_overlap = 0;
 static int g_xp_pen_width = 1;
 static int g_xp_pen_style = 0; /* PS_SOLID */
 
@@ -4701,6 +4704,32 @@ int pb_xprint_get_stretchmode(long* out) {
     *out = GetStretchBltMode(g_xp_dc);
     return 1;
 }
+/* === Batch 71: XPRINT TEXT SIZE / GET CLIENT / GET CANVAS / WRAP / WORDWRAP / OVERLAP === */
+int pb_xprint_text_size(char* s, long* w, long* h) {
+    if (!g_xp_dc || !s || !w || !h) return 0;
+    int len = 0;
+    while (s[len]) len++;
+    int sz[2] = {0, 0};
+    if (!GetTextExtentPoint32A(g_xp_dc, s, len, (void*)sz)) return 0;
+    *w = sz[0];
+    *h = sz[1];
+    return 1;
+}
+int pb_xprint_get_client(long* w, long* h) {
+    if (!g_xp_dc || !w || !h) return 0;
+    *w = GetDeviceCaps(g_xp_dc, 8);  /* HORZRES */
+    *h = GetDeviceCaps(g_xp_dc, 10); /* VERTRES */
+    return 1;
+}
+int pb_xprint_get_canvas(long* w, long* h) {
+    return pb_xprint_get_client(w, h);
+}
+int pb_xprint_set_wrap(long v) { g_xp_wrap = v; return 1; }
+int pb_xprint_get_wrap(long* out) { if (!out) return 0; *out = g_xp_wrap; return 1; }
+int pb_xprint_set_wordwrap(long v) { g_xp_wordwrap = v; return 1; }
+int pb_xprint_get_wordwrap(long* out) { if (!out) return 0; *out = g_xp_wordwrap; return 1; }
+int pb_xprint_set_overlap(long v) { g_xp_overlap = v; return 1; }
+int pb_xprint_get_overlap(long* out) { if (!out) return 0; *out = g_xp_overlap; return 1; }
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

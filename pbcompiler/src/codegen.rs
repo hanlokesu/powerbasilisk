@@ -1972,6 +1972,44 @@ impl Compiler {
             &[IrType::Ptr],
             false,
         );
+        self.module.declare_function(
+            "pb_xprint_text_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_client",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_canvas",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_wrap", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_wrap", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_wordwrap",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_wordwrap",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_overlap", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_overlap", &IrType::I32, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5297,6 +5335,58 @@ impl Compiler {
             "XPRINT_GET_STRETCHMODE" => {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
                     fb.call_void("pb_xprint_get_stretchmode", &[p]);
+                }
+            }
+            "XPRINT_TEXT_SIZE" => {
+                let txt = self.compile_expr(fb, &call.args[0])?;
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.call_void("pb_xprint_text_size", &[txt, wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_GET_CLIENT" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_client", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_GET_CANVAS" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_canvas", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_SET_WRAP" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_wrap", &[iv]);
+            }
+            "XPRINT_GET_WRAP" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_wrap", &[p]);
+                }
+            }
+            "XPRINT_SET_WORDWRAP" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_wordwrap", &[iv]);
+            }
+            "XPRINT_GET_WORDWRAP" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_wordwrap", &[p]);
+                }
+            }
+            "XPRINT_SET_OVERLAP" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_overlap", &[iv]);
+            }
+            "XPRINT_GET_OVERLAP" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_overlap", &[p]);
                 }
             }
             "GRAPHIC_GET_BITS" => {
