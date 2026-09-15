@@ -63,7 +63,7 @@ __declspec(dllimport) void* __stdcall GetStdHandle(unsigned int nStdHandle);
 __declspec(dllimport) int __stdcall SetConsoleTextAttribute(void* hConsoleOutput, unsigned short wAttributes);
 __declspec(dllimport) void* __stdcall CreateMenu(void);
 __declspec(dllimport) void* __stdcall CreatePopupMenu(void);
-__declspec(dllimport) int __stdcall AppendMenuA(void* hMenu, unsigned int uFlags, unsigned long long uIDNewItem, const char* lpNewItem);
+__declspec(dllimport) int __stdcall AppendMenuA(void* hMenu, unsigned int uFlags, uintptr_t uIDNewItem, const char* lpNewItem);
 __declspec(dllimport) int __stdcall DeleteMenu(void* hMenu, unsigned int uPosition, unsigned int uFlags);
 __declspec(dllimport) int __stdcall DestroyMenu(void* hMenu);
 __declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
