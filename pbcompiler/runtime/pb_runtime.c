@@ -99,6 +99,9 @@ __declspec(dllimport) int __stdcall SetDIBits(void* hdc, void* hbm, unsigned int
 __declspec(dllimport) int __stdcall GetClipBox(void* hdc, void* lprc);
 __declspec(dllimport) int __stdcall GetViewportOrgEx(void* hdc, void* lppt);
 __declspec(dllimport) int __stdcall SetViewportOrgEx(void* hdc, int x, int y, void* lppt);
+__declspec(dllimport) int __stdcall SetMapMode(void* hdc, int fnMapMode);
+__declspec(dllimport) int __stdcall SetWindowExtEx(void* hdc, int x, int y, void* lpsz);
+__declspec(dllimport) int __stdcall SetViewportExtEx(void* hdc, int x, int y, void* lpsz);
 
 
 
@@ -3941,6 +3944,105 @@ int pb_graphic_set_textalign(long align) {
 }
 int pb_graphic_get_textalign(long* align) {
     *align = g_gr_textalign;
+    return 1;
+}
+
+
+/* GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE (batch 64) */
+static long g_gr_scale_x1 = 0, g_gr_scale_y1 = 0, g_gr_scale_x2 = 0, g_gr_scale_y2 = 0;
+static long g_gr_autosize_w = 0, g_gr_autosize_h = 0;
+#define PB_MM_TEXT 1
+#define PB_MM_ANISOTROPIC 10
+
+int pb_graphic_get_bits(char** dest) {
+    if (!g_gr_bmp) return 0;
+    int w = 0, h = 0;
+    if (!gr_bmp_dim(g_gr_bmp, &w, &h)) return 0;
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    int stride = ((w * 32 + 31) / 32) * 4;
+    long size = (long)stride * h;
+    bi[0] = 40;
+    bi[4] = (unsigned char)(w & 255); bi[5] = (unsigned char)((w >> 8) & 255);
+    bi[6] = (unsigned char)((w >> 16) & 255); bi[7] = (unsigned char)((w >> 24) & 255);
+    bi[8] = (unsigned char)(h & 255); bi[9] = (unsigned char)((h >> 8) & 255);
+    bi[10] = (unsigned char)((h >> 16) & 255); bi[11] = (unsigned char)((h >> 24) & 255);
+    bi[12] = 1; bi[14] = 32;
+    bi[20] = (unsigned char)(size & 255); bi[21] = (unsigned char)((size >> 8) & 255);
+    bi[22] = (unsigned char)((size >> 16) & 255); bi[23] = (unsigned char)((size >> 24) & 255);
+    unsigned char* buf = gr_read_bits(g_gr_dc, g_gr_bmp, w, h, (void*)bi);
+    if (!buf) return 0;
+    unsigned char* dib = (unsigned char*)malloc((size_t)40 + (size_t)size);
+    if (!dib) { free(buf); return 0; }
+    memcpy(dib, bi, 40);
+    memcpy(dib + 40, buf, (size_t)size);
+    free(buf);
+    *dest = pb_bstr_alloc((const char*)dib, (unsigned int)(40 + size));
+    free(dib);
+    return 1;
+}
+
+int pb_graphic_set_bits(char* src) {
+    if (!src || !g_gr_dc) return 0;
+    int w = src[4] | (src[5] << 8) | (src[6] << 16) | ((int)src[7] << 24);
+    int h = src[8] | (src[9] << 8) | (src[10] << 16) | ((int)src[11] << 24);
+    int bpp = src[14] | (src[15] << 8);
+    if (w <= 0 || w > 100000 || h == 0) return 0;
+    if (bpp != 32 && bpp != 24 && bpp != 8 && bpp != 1) return 0;
+    int ah = (h < 0) ? -h : h;
+    if (ah <= 0 || ah > 100000) return 0;
+    long size = src[20] | (src[21] << 8) | (src[22] << 16) | ((long)src[23] << 24);
+    if (size <= 0) { int stride = ((w * bpp + 31) / 32) * 4; size = (long)stride * ah; }
+    /* src IS a 40-byte BITMAPINFOHEADER (produced by pb_graphic_get_bits) */
+    void* bits = NULL;
+    void* nb = CreateDIBSection(g_gr_dc, (void*)src, 0, &bits, NULL, 0);
+    if (!nb) return 0;
+    SetDIBits(g_gr_dc, nb, 0, (unsigned int)ah, src + 40, (void*)src, 0);
+    if (g_gr_bmp) {
+        SelectObject(g_gr_dc, GetStockObject(5)); /* NULL_BRUSH: detach old bitmap */
+        DeleteObject(g_gr_bmp);
+    }
+    g_gr_bmp = nb;
+    SelectObject(g_gr_dc, g_gr_bmp);
+    return 1;
+}
+
+int pb_graphic_get_scale(float* x1, float* y1, float* x2, float* y2) {
+    if (!g_gr_bmp) return 0;
+    int w = 0, h = 0;
+    gr_bmp_dim(g_gr_bmp, &w, &h);
+    *x1 = (float)g_gr_scale_x1;
+    *y1 = (float)g_gr_scale_y1;
+    long x2l = g_gr_scale_x2, y2l = g_gr_scale_y2;
+    if (x2l == 0 && y2l == 0) { x2l = w; y2l = h; }
+    *x2 = (float)x2l;
+    *y2 = (float)y2l;
+    return 1;
+}
+
+int pb_graphic_scale(float x1, float y1, float x2, float y2) {
+    if (!g_gr_dc) return 0;
+    g_gr_scale_x1 = (long)x1; g_gr_scale_y1 = (long)y1;
+    g_gr_scale_x2 = (long)x2; g_gr_scale_y2 = (long)y2;
+    int w = 0, h = 0;
+    if (g_gr_bmp) gr_bmp_dim(g_gr_bmp, &w, &h);
+    SetMapMode(g_gr_dc, PB_MM_ANISOTROPIC);
+    SetWindowExtEx(g_gr_dc, w, h, NULL);
+    SetViewportExtEx(g_gr_dc, (int)(x2 - x1), (int)(y2 - y1), NULL);
+    SetViewportOrgEx(g_gr_dc, (int)x1, (int)y1, NULL);
+    return 1;
+}
+
+int pb_graphic_scale_pixels(void) {
+    if (!g_gr_dc) return 0;
+    SetMapMode(g_gr_dc, PB_MM_TEXT);
+    g_gr_scale_x1 = 0; g_gr_scale_y1 = 0; g_gr_scale_x2 = 0; g_gr_scale_y2 = 0;
+    return 1;
+}
+
+int pb_graphic_set_autosize(long w, long h) {
+    g_gr_autosize_w = w;
+    g_gr_autosize_h = h;
     return 1;
 }
 

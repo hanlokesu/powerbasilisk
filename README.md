@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +5 official statement keywords from batch 64 — GRAPHIC GET BITS (whole bitmap as DIB string), GRAPHIC SET BITS (replace bitmap from DIB), GRAPHIC GET SCALE (4 world-coordinate limits), GRAPHIC SCALE (custom coordinate system, incl. SCALE PIXELS), GRAPHIC SET AUTOSIZE. Coverage now 266 implemented / 136 tier-3 / 101 not implemented.
 > (2026-09-15: +6 official statement keywords from batch 63 — GRAPHIC GET CLIP (GetClipBox), GRAPHIC GET VIEW / GRAPHIC SET VIEW (GetViewportOrgEx / SetViewportOrgEx), GRAPHIC GET LINES (bitmap height), GRAPHIC GET WRAP / GRAPHIC SET WRAP (text-wrap state). Coverage now 261 implemented / 141 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 62 — MENU GET STATE / MENU SET STATE (GetMenuState / EnableMenuItem / CheckMenuItem, PB-compatible 1-based positions mapped to Win32 MF_BYPOSITION), MENU GET TEXT / MENU SET TEXT (GetMenuStringA / ModifyMenuA). Coverage now 255 implemented / 147 tier-3 / 101 not implemented.
 > (2026-09-15: +8 official statement keywords from batch 61 — GRAPHIC GET PPI (GetDeviceCaps LOGPIXELS), GRAPHIC GET POS / GRAPHIC SET POS (GetCurrentPositionEx / MoveToEx with optional STEP), GRAPHIC TEXT SIZE (GetTextExtentPoint32A), GRAPHIC GET/SET STRETCHMODE (GetStretchBltMode / SetStretchBltMode), GRAPHIC GET/SET CAPTION (console-title bridge via GetConsoleTitleA / SetConsoleTitleA). Coverage now 251 implemented / 151 tier-3 / 101 not implemented.
@@ -246,7 +247,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **261** statement-class keywords implemented · **141** DDT/GUI-class
+> Summary: **266** statement-class keywords implemented · **136** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -294,6 +295,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `MENU SET STATE` | ✅ | 62 (v0.1.56) | EnableMenuItem/CheckMenuItem (pb_menu_set_state) |
 | `MENU GET TEXT` | ✅ | 62 (v0.1.56) | GetMenuStringA (pb_menu_get_text) |
 | `MENU SET TEXT` | ✅ | 62 (v0.1.56) | ModifyMenuA (pb_menu_set_text) |
+| `GRAPHIC GET BITS` | ✅ | 64 (v0.1.58) | whole bitmap as DIB string (pb_graphic_get_bits) |
+| `GRAPHIC SET BITS` | ✅ | 64 (v0.1.58) | replace bitmap from DIB string (pb_graphic_set_bits) |
+| `GRAPHIC GET SCALE` | ✅ | 64 (v0.1.58) | world-coordinate limits (pb_graphic_get_scale) |
+| `GRAPHIC SCALE` | ✅ | 64 (v0.1.58) | custom coordinate system, incl. PIXELS (pb_graphic_scale) |
+| `GRAPHIC SET AUTOSIZE` | ✅ | 64 (v0.1.58) | autosize target (pb_graphic_set_autosize) |
 | `GRAPHIC GET CLIP` | ✅ | 63 (v0.1.57) | GetClipBox (pb_graphic_get_clip) |
 | `GRAPHIC GET VIEW` | ✅ | 63 (v0.1.57) | GetViewportOrgEx (pb_graphic_get_view) |
 | `GRAPHIC SET VIEW` | ✅ | 63 (v0.1.57) | SetViewportOrgEx (pb_graphic_set_view) |
@@ -515,6 +521,15 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.58 (2026-09-15) — Batch 64: GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE
+
+- **GRAPHIC GET BITS TO bitvar$** — copies the whole attached bitmap as a device-independent bitmap (40-byte BITMAPINFOHEADER + 32-bpp BI_RGB pixels) into a dynamic string variable (pb_graphic_get_bits).
+- **GRAPHIC SET BITS bitexpr$** — replaces the attached bitmap from a previously retrieved DIB string (CreateDIBSection + SetDIBits; the old bitmap is detached and freed) (pb_graphic_set_bits).
+- **GRAPHIC GET SCALE TO x1!, y1!, x2!, y2!** — reads the current world-coordinate limits (default 0,0,width,height) (pb_graphic_get_scale).
+- **GRAPHIC SCALE (x1!,y1!)-(x2!,y2!)** / **GRAPHIC SCALE PIXELS** — defines a custom coordinate system (SetMapMode MM_ANISOTROPIC + SetWindowExtEx/SetViewportExtEx/SetViewportOrgEx) or resets to pixel mapping (pb_graphic_scale / pb_graphic_scale_pixels).
+- **GRAPHIC SET AUTOSIZE nWidth, nHeight [,USERSIZE]** — records the autosize target size (pb_graphic_set_autosize).
+- Tests: examples/batch64_test.bas (8/8 — GET BITS length 20040 exact, SET BITS restores 100x50, SCALE round-trip, PIXELS reset), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.57 (2026-09-15) — Batch 63: GRAPHIC GET CLIP / VIEW / LINES / WRAP + SET VIEW / WRAP
 

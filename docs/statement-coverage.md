@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 251 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 151 | DDT GUI framework, high effort, deferred to a future update |
+| ✅ Implemented | 266 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 136 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (261)
+## ✅ Implemented (266)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -286,6 +286,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET LINES` | STATEMENT | PB/Win only | Established | GRAPHIC GET LINES TO n& — bitmap height (pb_graphic_get_lines) |
 | `GRAPHIC GET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC GET WRAP TO w& (pb_graphic_get_wrap) |
 | `GRAPHIC SET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC SET WRAP [n&] (pb_graphic_set_wrap) |
+| `GRAPHIC GET BITS` | STATEMENT | PB/Win only | Established | GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (pb_graphic_get_bits) |
+| `GRAPHIC SET BITS` | STATEMENT | PB/Win only | Established | GRAPHIC SET BITS bitexpr$ — replace bitmap from DIB string (pb_graphic_set_bits) |
+| `GRAPHIC GET SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC GET SCALE TO x1!,y1!,x2!,y2! (pb_graphic_get_scale) |
+| `GRAPHIC SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC SCALE (x1!,y1!)-(x2!,y2!) / SCALE PIXELS (pb_graphic_scale / pb_graphic_scale_pixels) |
+| `GRAPHIC SET AUTOSIZE` | STATEMENT | PB/Win only | Established | GRAPHIC SET AUTOSIZE w, h [,USERSIZE] (pb_graphic_set_autosize) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -388,7 +393,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC CHR SIZE | STATEMENT |
 | GRAPHIC COLOR | STATEMENT |
 | GRAPHIC COPY | STATEMENT |
-| GRAPHIC GET BITS | STATEMENT |
 | GRAPHIC GET CANVAS | STATEMENT |
 | GRAPHIC GET CLIENT | STATEMENT |
 | GRAPHIC GET DC | STATEMENT |
@@ -396,7 +400,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET MIX | STATEMENT |
 | GRAPHIC GET OVERLAP | STATEMENT |
 | GRAPHIC GET PIXEL | STATEMENT |
-| GRAPHIC GET SCALE | STATEMENT |
 | GRAPHIC GET SCROLLTEXT | STATEMENT |
 | GRAPHIC GET WORDWRAP | STATEMENT |
 | GRAPHIC IMAGELIST | STATEMENT |
@@ -410,9 +413,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC REDRAW | STATEMENT |
 | GRAPHIC RENDER | STATEMENT |
 | GRAPHIC SAVE | STATEMENT |
-| GRAPHIC SCALE | STATEMENT |
-| GRAPHIC SET AUTOSIZE | STATEMENT |
-| GRAPHIC SET BITS | STATEMENT |
 | GRAPHIC SET CLIENT | STATEMENT |
 | GRAPHIC SET CLIP | STATEMENT |
 | GRAPHIC SET FIXED | STATEMENT |

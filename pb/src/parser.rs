@@ -1982,6 +1982,35 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "BITS" {
+                            // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_BITS".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
+                        if sub == "SCALE" {
+                            // GRAPHIC GET SCALE TO x1!, y1!, x2!, y2!  (batch 64)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let a = self.parse_expression()?;
+                            let mut args = vec![a];
+                            for _ in 0..3 {
+                                self.expect(&Token::Comma)?;
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_SCALE".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
                         if sub == "PIXEL" {
                             // GRAPHIC GET PIXEL (x,y) TO dst&
                             self.advance();
@@ -2097,6 +2126,36 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "GRAPHIC_SET_TEXTALIGN".to_string(),
                                 args: vec![align],
+                                line,
+                            }));
+                        }
+                        if sub == "BITS" {
+                            // GRAPHIC SET BITS bitexpr$ — replace bitmap from DIB string (batch 64)
+                            self.advance();
+                            let src = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_BITS".to_string(),
+                                args: vec![src],
+                                line,
+                            }));
+                        }
+                        if sub == "AUTOSIZE" {
+                            // GRAPHIC SET AUTOSIZE nWidth, nHeight [,USERSIZE]  (batch 64)
+                            self.advance();
+                            let mut args = vec![self.parse_expression()?];
+                            while matches!(self.peek(), Token::Comma) {
+                                self.advance();
+                                if self.peek_plain_upper() == "USERSIZE" {
+                                    self.advance();
+                                    break;
+                                }
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_AUTOSIZE".to_string(),
+                                args,
                                 line,
                             }));
                         }
@@ -2279,6 +2338,38 @@ impl Parser {
                         return Ok(Statement::Call(CallStmt {
                             name: "GRAPHIC_POLYGON".to_string(),
                             args,
+                            line,
+                        }));
+                    }
+                    if gop == "SCALE" {
+                        // GRAPHIC SCALE (x1!,y1!)-(x2!,y2!) | GRAPHIC SCALE PIXELS  (batch 64)
+                        self.advance();
+                        if matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            let x1 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y1 = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            if matches!(self.peek(), Token::Minus) {
+                                self.advance();
+                            }
+                            self.expect(&Token::LParen)?;
+                            let x2 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y2 = self.parse_expression()?;
+                            self.expect(&Token::RParen)?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SCALE".to_string(),
+                                args: vec![x1, y1, x2, y2],
+                                line,
+                            }));
+                        }
+                        // SCALE PIXELS
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_SCALE_PIXELS".to_string(),
+                            args: vec![],
                             line,
                         }));
                     }

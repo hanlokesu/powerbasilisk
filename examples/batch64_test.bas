@@ -1,0 +1,55 @@
+﻿' PowerBasilisk Enhanced - Batch 64 test
+' GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE
+FUNCTION PBMAIN() AS LONG
+    LOCAL hBmp AS QUAD
+    LOCAL hBmp2 AS QUAD
+    LOCAL s AS STRING
+    LOCAL w AS LONG
+    LOCAL h AS LONG
+    LOCAL x1 AS SINGLE
+    LOCAL y1 AS SINGLE
+    LOCAL x2 AS SINGLE
+    LOCAL y2 AS SINGLE
+    LOCAL waitk AS STRING
+    LOCAL ok AS LONG
+    ok = 0
+
+    GRAPHIC BITMAP NEW 100, 50 TO hBmp
+    GRAPHIC ATTACH hBmp
+    GRAPHIC GET SIZE TO w, h
+    IF w = 100 AND h = 50 THEN ok = ok + 1 ELSE PRINT "FAIL1" END IF
+
+    GRAPHIC GET BITS TO s
+    IF LEN(s) = 20040 THEN ok = ok + 1 ELSE PRINT "FAIL2 len="; LEN(s) END IF
+
+    GRAPHIC BITMAP NEW 50, 25 TO hBmp2
+    GRAPHIC ATTACH hBmp2
+    GRAPHIC GET SIZE TO w, h
+    IF w = 50 AND h = 25 THEN ok = ok + 1 ELSE PRINT "FAIL3" END IF
+
+    GRAPHIC SET BITS s
+    GRAPHIC GET SIZE TO w, h
+    IF w = 100 AND h = 50 THEN ok = ok + 1 ELSE PRINT "FAIL4" END IF
+
+    GRAPHIC GET SCALE TO x1, y1, x2, y2
+    IF x1 = 0 AND y1 = 0 AND x2 = 100 AND y2 = 50 THEN ok = ok + 1 ELSE PRINT "FAIL5"; x1; y1; x2; y2 END IF
+
+    GRAPHIC SCALE (10, 20) - (110, 120)
+    GRAPHIC GET SCALE TO x1, y1, x2, y2
+    IF x1 = 10 AND y1 = 20 AND x2 = 110 AND y2 = 120 THEN ok = ok + 1 ELSE PRINT "FAIL6"; x1; y1; x2; y2 END IF
+
+    GRAPHIC SCALE PIXELS
+    GRAPHIC GET SCALE TO x1, y1, x2, y2
+    IF x1 = 0 AND y1 = 0 AND x2 = 100 AND y2 = 50 THEN ok = ok + 1 ELSE PRINT "FAIL7"; x1; y1; x2; y2 END IF
+
+    GRAPHIC SET AUTOSIZE 200, 150
+    ok = ok + 1
+
+    IF ok = 8 THEN
+        PRINT "ALL PASS (8/8)"
+    ELSE
+        PRINT "FAIL: "; ok
+    END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
+END FUNCTION

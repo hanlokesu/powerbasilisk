@@ -2027,6 +2027,30 @@ impl Compiler {
             .declare_function("pb_graphic_get_wrap", &IrType::I32, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_graphic_set_wrap", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_graphic_get_bits", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_graphic_set_bits", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_graphic_get_scale",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_scale",
+            &IrType::I32,
+            &[IrType::Float, IrType::Float, IrType::Float, IrType::Float],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_scale_pixels", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_graphic_set_autosize",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
         self.module.declare_function(
             "pb_graphic_set_pos",
             &IrType::I32,
@@ -4862,6 +4886,61 @@ impl Compiler {
                         fb.call_void("pb_graphic_get_ppi", &[xp, yp]);
                     }
                 }
+            }
+            "GRAPHIC_GET_BITS" => {
+                // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)
+                if let Some(dst) = call.args.first() {
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, dst)?;
+                    fb.call_void("pb_graphic_get_bits", &[ptr]);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SET_BITS" => {
+                // GRAPHIC SET BITS bitexpr$ — replace bitmap from DIB string (batch 64)
+                if let Some(src) = call.args.first() {
+                    let sv = self.compile_expr(fb, src)?;
+                    fb.call_void("pb_graphic_set_bits", &[sv]);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_GET_SCALE" => {
+                // GRAPHIC GET SCALE TO x1!, y1!, x2!, y2!  (batch 64)
+                if call.args.len() == 4 {
+                    let mut ptrs = Vec::new();
+                    for a in &call.args {
+                        let (ptr, _) = self.compile_lvalue_ptr(fb, a)?;
+                        ptrs.push(ptr);
+                    }
+                    fb.call_void("pb_graphic_get_scale", &ptrs);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SCALE" => {
+                // GRAPHIC SCALE (x1!,y1!)-(x2!,y2!)  (batch 64)
+                if call.args.len() == 4 {
+                    let mut vals = Vec::new();
+                    for a in &call.args {
+                        let v0 = self.compile_expr(fb, a)?;
+                        vals.push(self.convert_value(fb, &v0, &IrType::Float, &PbType::Single));
+                    }
+                    fb.call_void("pb_graphic_scale", &vals);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SCALE_PIXELS" => {
+                fb.call_void("pb_graphic_scale_pixels", &[]);
+                return Ok(());
+            }
+            "GRAPHIC_SET_AUTOSIZE" => {
+                // GRAPHIC SET AUTOSIZE nWidth, nHeight [,USERSIZE]  (batch 64)
+                if call.args.len() >= 2 {
+                    let w0 = self.compile_expr(fb, &call.args[0])?;
+                    let w = self.to_i32(fb, &w0);
+                    let h0 = self.compile_expr(fb, &call.args[1])?;
+                    let h = self.to_i32(fb, &h0);
+                    fb.call_void("pb_graphic_set_autosize", &[w, h]);
+                }
+                return Ok(());
             }
             "GRAPHIC_GET_POS" => {
                 if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
