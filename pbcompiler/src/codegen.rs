@@ -2010,6 +2010,57 @@ impl Compiler {
             .declare_function("pb_xprint_set_overlap", &IrType::I32, &[IrType::I32], false);
         self.module
             .declare_function("pb_xprint_get_overlap", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_clip",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_clip",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_scale",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_scale",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_get_lines", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_cell_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_chr_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_copy",
+            &IrType::I32,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5388,6 +5439,79 @@ impl Compiler {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
                     fb.call_void("pb_xprint_get_overlap", &[p]);
                 }
+            }
+            "XPRINT_SET_CLIP" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_set_clip",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "XPRINT_GET_CLIP" => {
+                if let Some((p0, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((p1, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        if let Some((p2, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                            if let Some((p3, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                                fb.call_void("pb_xprint_get_clip", &[p0, p1, p2, p3]);
+                            }
+                        }
+                    }
+                }
+            }
+            "XPRINT_SCALE" => {
+                let w = self.compile_expr(fb, &call.args[0])?;
+                let wv = self.convert_value(fb, &w, &IrType::I32, &PbType::Long);
+                let h = self.compile_expr(fb, &call.args[1])?;
+                let hv = self.convert_value(fb, &h, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_scale", &[wv, hv]);
+            }
+            "XPRINT_GET_SCALE" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_scale", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_GET_LINES" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_lines", &[p]);
+                }
+            }
+            "XPRINT_CELL_SIZE" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_cell_size", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_CHR_SIZE" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_chr_size", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_COPY" => {
+                let mut ia = Vec::new();
+                for i in 0..6 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_xprint_copy",
+                    &[
+                        ia[0].clone(),
+                        ia[1].clone(),
+                        ia[2].clone(),
+                        ia[3].clone(),
+                        ia[4].clone(),
+                        ia[5].clone(),
+                    ],
+                );
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)

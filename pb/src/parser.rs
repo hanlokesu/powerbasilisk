@@ -2823,6 +2823,66 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "SCALE" {
+                        self.advance();
+                        let w = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let h = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_SCALE".to_string(),
+                            args: vec![w, h],
+                            line,
+                        }));
+                    }
+                    if xop == "COPY" {
+                        self.advance();
+                        let mut args = vec![];
+                        for i in 0..6 {
+                            args.push(self.parse_expression()?);
+                            if i < 5 {
+                                self.expect(&Token::Comma)?;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_COPY".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "CELL" {
+                        self.advance();
+                        if self.peek_plain_upper() == "SIZE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_CELL_SIZE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                    }
+                    if xop == "CHR" {
+                        self.advance();
+                        if self.peek_plain_upper() == "SIZE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_CHR_SIZE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                    }
                     if xop == "TEXT" {
                         self.advance();
                         if self.peek_plain_upper() == "SIZE" {
@@ -3108,6 +3168,47 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "CLIP" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x1 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y1 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let x2 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y2 = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_CLIP".to_string(),
+                                args: vec![x1, y1, x2, y2],
+                                line,
+                            }));
+                        }
+                        if sub == "SCALE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_SCALE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "LINES" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let n = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_LINES".to_string(),
+                                args: vec![n],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -3223,6 +3324,22 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_SET_OVERLAP".to_string(),
                                 args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "CLIP" {
+                            self.advance();
+                            let x1 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y1 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let x2 = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y2 = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_CLIP".to_string(),
+                                args: vec![x1, y1, x2, y2],
                                 line,
                             }));
                         }

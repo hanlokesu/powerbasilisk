@@ -163,6 +163,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
 | XPRINT ATTACH | STATEMENT | pb_xprint_attach — CreateDC (screen DC fallback for CI; printer support pending) |
+| XPRINT SET CLIP | STATEMENT | `pb_xprint_set_clip` — IntersectClipRect |
+| XPRINT GET CLIP | STATEMENT | `pb_xprint_get_clip` — GetClipBox |
+| XPRINT SCALE | STATEMENT | `pb_xprint_scale` — SetMapMode(MM_ANISOTROPIC) + SetWindowExtEx/SetViewportExtEx |
+| XPRINT GET SCALE | STATEMENT | `pb_xprint_get_scale` — current scale factors |
+| XPRINT GET LINES | STATEMENT | `pb_xprint_get_lines` — client height / cell height |
+| XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` — GetTextExtentPoint32A("W") |
+| XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` — same as CELL SIZE |
+| XPRINT COPY | STATEMENT | `pb_xprint_copy` — BitBlt (SRCCOPY) |
 | XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` — GetTextExtentPoint32A (returns width+height) |
 | XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` — GetDeviceCaps HORZRES/VERTRES |
 | XPRINT GET CANVAS | STATEMENT | `pb_xprint_get_canvas` — same as GET CLIENT on screen DC |
@@ -517,22 +525,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT COPY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CLIP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COPIES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET LINES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SCALE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
@@ -541,8 +543,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SCALE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET CLIP | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET COPIES | STATEMENT | PB/Win + PB/CC | Established |

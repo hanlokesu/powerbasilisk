@@ -104,6 +104,7 @@ __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* 
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
 __declspec(dllimport) int __stdcall SetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, const void* lpvBits, const void* lpbmi, unsigned int usage);
 __declspec(dllimport) int __stdcall GetClipBox(void* hdc, void* lprc);
+__declspec(dllimport) int __stdcall IntersectClipRect(void* hdc, int left, int top, int right, int bottom);
 __declspec(dllimport) int __stdcall GetViewportOrgEx(void* hdc, void* lppt);
 __declspec(dllimport) int __stdcall SetViewportOrgEx(void* hdc, int x, int y, void* lppt);
 __declspec(dllimport) int __stdcall SetMapMode(void* hdc, int fnMapMode);
@@ -4541,6 +4542,8 @@ static long g_xp_textalign = 0;
 static long g_xp_wrap = 0;
 static long g_xp_wordwrap = 0;
 static long g_xp_overlap = 0;
+static long g_xp_scale_w = 0;
+static long g_xp_scale_h = 0;
 static int g_xp_pen_width = 1;
 static int g_xp_pen_style = 0; /* PS_SOLID */
 
@@ -4730,6 +4733,57 @@ int pb_xprint_set_wordwrap(long v) { g_xp_wordwrap = v; return 1; }
 int pb_xprint_get_wordwrap(long* out) { if (!out) return 0; *out = g_xp_wordwrap; return 1; }
 int pb_xprint_set_overlap(long v) { g_xp_overlap = v; return 1; }
 int pb_xprint_get_overlap(long* out) { if (!out) return 0; *out = g_xp_overlap; return 1; }
+/* === Batch 72: XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY === */
+int pb_xprint_set_clip(int x1, int y1, int x2, int y2) {
+    if (!g_xp_dc) return 0;
+    return IntersectClipRect(g_xp_dc, x1, y1, x2, y2);
+}
+int pb_xprint_get_clip(long* x1, long* y1, long* x2, long* y2) {
+    if (!g_xp_dc || !x1 || !y1 || !x2 || !y2) return 0;
+    int rc[4] = {0, 0, 0, 0};
+    int r = GetClipBox(g_xp_dc, (void*)rc);
+    *x1 = rc[0]; *y1 = rc[1]; *x2 = rc[2]; *y2 = rc[3];
+    return r;
+}
+int pb_xprint_scale(int w, int h) {
+    if (!g_xp_dc) return 0;
+    SetMapMode(g_xp_dc, 8); /* MM_ANISOTROPIC */
+    SetWindowExtEx(g_xp_dc, w, h, 0);
+    int vw = GetDeviceCaps(g_xp_dc, 8);  /* HORZRES */
+    int vh = GetDeviceCaps(g_xp_dc, 10); /* VERTRES */
+    SetViewportExtEx(g_xp_dc, vw, vh, 0);
+    g_xp_scale_w = w;
+    g_xp_scale_h = h;
+    return 1;
+}
+int pb_xprint_get_scale(long* w, long* h) {
+    if (!w || !h) return 0;
+    *w = g_xp_scale_w;
+    *h = g_xp_scale_h;
+    return 1;
+}
+int pb_xprint_get_lines(long* out) {
+    if (!g_xp_dc || !out) return 0;
+    int ch = GetDeviceCaps(g_xp_dc, 10); /* VERTRES */
+    int sz[2] = {0, 0};
+    GetTextExtentPoint32A(g_xp_dc, "W", 1, (void*)sz);
+    *out = (sz[1] > 0) ? ch / sz[1] : 0;
+    return 1;
+}
+int pb_xprint_cell_size(long* w, long* h) {
+    if (!g_xp_dc || !w || !h) return 0;
+    int sz[2] = {0, 0};
+    if (!GetTextExtentPoint32A(g_xp_dc, "W", 1, (void*)sz)) return 0;
+    *w = sz[0]; *h = sz[1];
+    return 1;
+}
+int pb_xprint_chr_size(long* w, long* h) {
+    return pb_xprint_cell_size(w, h);
+}
+int pb_xprint_copy(int dx, int dy, int w, int h, int sx, int sy) {
+    if (!g_xp_dc) return 0;
+    return BitBlt(g_xp_dc, dx, dy, w, h, g_xp_dc, sx, sy, 0x00CC0020); /* SRCCOPY */
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

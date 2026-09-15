@@ -271,7 +271,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
 > +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
+| `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
 > +8 from batch 70 — XPRINT ARC/ELLIPSE/PIE/SET FONT/GET+SET MIX/GET+SET STRETCHMODE (GDI shapes + font + ROP2).
 | \XPRINT TEXT SIZE/GET CLIENT/CANVAS/WRAP/WORDWRAP/OVERLAP\ | ✅ | 71 (v0.1.65) | GetTextExtentPoint32A + GetDeviceCaps + wrap/wordwrap/overlap flags |
 > +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
@@ -540,6 +542,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.66 (2026-09-15) — Batch 72: XPRINT clipping + scaling + metrics (8 statements)
+
+Eight more Not implemented items moved to Implemented (coverage: **319 implemented / 55 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT SET CLIP** / **GET CLIP** — IntersectClipRect / GetClipBox
+- **XPRINT SCALE** / **GET SCALE** — SetMapMode(MM_ANISOTROPIC) + SetWindowExtEx/SetViewportExtEx
+- **XPRINT GET LINES** — client height / cell height
+- **XPRINT CELL SIZE** / **CHR SIZE** — GetTextExtentPoint32A("W")
+- **XPRINT COPY** — BitBlt (SRCCOPY)
+- Runtime: 8 pb_xprint_* functions + g_xp_scale_w/h globals; IntersectClipRect dllimport added
+- Tests: examples/batch72_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.65 (2026-09-15) — Batch 71: XPRINT text metrics + client + wrap flags (9 statements)
 
