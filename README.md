@@ -1781,6 +1781,44 @@ Regression: 14/14 official tests pass, `cargo clippy --all-targets -- -D warning
   `LISTVIEW`, `XPRINT` — effectively a rewrite of the entire windowing
   framework.
 
+### Pending function-class keywords (found in PBWin.chm, not yet implemented)
+
+Identified by cross-referencing the official PBWin.chm documentation against
+the current implementation. Sorted by estimated difficulty.
+
+**Easy (next batch candidates):**
+- `LBOUND` / `UBOUND` — array lower/upper bounds
+- `FRAC` — fractional part of a number
+- `NUL$` — null string constant
+- `TAB$` — tab character string
+- `COMMAND$` — command-line arguments
+- `ENVIRON$` — read environment variable (function form)
+- `THREADID` — current thread ID
+- `MCASE$` — case conversion helper
+
+**Medium:**
+- `FORMAT$` — formatted string (like USING but returns string)
+- `USING$` — formatted output string
+- `CALLSTK$` / `CALLSTKCOUNT` — call stack inspection
+- `FUNCNAME$` — name of current function
+- `INPUTBOX$` — modal input dialog
+- `GUID$` / `GUIDTXT$` — generate GUID
+- `ISINTERFACE` / `ISOBJECT` / `ISNOTHING` / `ISNULL` / `ISNOTNULL` — OOP type checks
+- `UCODE$` — ANSI to Unicode conversion
+- `ARRAYATTR` — array attribute query
+- `ENUM` / `END ENUM` — enumeration type
+- `UNION` / `END UNION` — union type
+- `CLSID$` / `PROGID$` — COM class identifiers
+- `PRINTER$` — printer info
+- `READ$` / `RESOURCE$` — resource reading
+- `VARIANT$` / `VARIANTVT` — VARIANT type helpers
+
+**Hard (deferred):**
+- `FASTPROC` / `END FASTPROC` — fast procedure calling convention
+- `PROPERTY` / `END PROPERTY` — class properties
+- `FOR EACH` / `NEXT` — collection enumeration
+- `OBJACTIVE` / `OBJEQUAL` / `OBJPTR` / `OBJRESULT` / `OBJRESULT$` — COM object helpers
+
 ---
 
 ## Credits & License
