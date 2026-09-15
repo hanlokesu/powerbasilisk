@@ -2011,6 +2011,18 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "WORDWRAP" {
+                            // GRAPHIC GET WORDWRAP TO n&  (batch 65)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_WORDWRAP".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
                         if sub == "PIXEL" {
                             // GRAPHIC GET PIXEL (x,y) TO dst&
                             self.advance();
@@ -2097,6 +2109,66 @@ impl Parser {
                         // GRAPHIC SET MIX (mix&) | GRAPHIC SET PIXEL (x,y),color | GRAPHIC SET TEXTALIGN (align&)
                         self.advance();
                         let sub = self.peek_plain_upper();
+                        if sub == "SIZE" {
+                            // GRAPHIC SET SIZE nWide&, nHigh&  (batch 65)
+                            self.advance();
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_SIZE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "CLIP" {
+                            // GRAPHIC SET CLIP l!, t!, r!, b!  (batch 65)
+                            self.advance();
+                            let mut args = Vec::new();
+                            for k in 0..4 {
+                                if k > 0 {
+                                    self.expect(&Token::Comma)?;
+                                }
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_CLIP".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                        if sub == "VIRTUAL" {
+                            // GRAPHIC SET VIRTUAL nWide&, nHigh& [,USERSIZE]  (batch 65)
+                            self.advance();
+                            let mut args = vec![self.parse_expression()?];
+                            while matches!(self.peek(), Token::Comma) {
+                                self.advance();
+                                if self.peek_plain_upper() == "USERSIZE" {
+                                    self.advance();
+                                    break;
+                                }
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_VIRTUAL".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                        if sub == "WORDWRAP" {
+                            // GRAPHIC SET WORDWRAP n&  (batch 65)
+                            self.advance();
+                            let n = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_WORDWRAP".to_string(),
+                                args: vec![n],
+                                line,
+                            }));
+                        }
                         if sub == "PIXEL" {
                             self.advance();
                             self.expect(&Token::LParen)?;

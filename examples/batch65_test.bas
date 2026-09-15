@@ -1,0 +1,47 @@
+﻿' PowerBasilisk Enhanced - Batch 65 test
+' GRAPHIC SET SIZE / SET CLIP / SET VIRTUAL / SET+GET WORDWRAP
+FUNCTION PBMAIN() AS LONG
+    LOCAL hBmp AS QUAD
+    LOCAL s AS STRING
+    LOCAL w AS LONG
+    LOCAL h AS LONG
+    LOCAL cw AS SINGLE
+    LOCAL ch AS SINGLE
+    LOCAL n AS LONG
+    LOCAL waitk AS STRING
+    LOCAL ok AS LONG
+    ok = 0
+
+    GRAPHIC BITMAP NEW 100, 50 TO hBmp
+    GRAPHIC ATTACH hBmp
+
+    GRAPHIC SET SIZE 80, 40
+    GRAPHIC GET SIZE TO w, h
+    IF w = 80 AND h = 40 THEN ok = ok + 1 ELSE PRINT "FAIL1"; w; h END IF
+
+    GRAPHIC GET BITS TO s
+    IF LEN(s) = 12840 THEN ok = ok + 1 ELSE PRINT "FAIL2"; LEN(s) END IF
+
+    GRAPHIC SET CLIP 10, 20, 90, 40
+    GRAPHIC GET CLIP TO cw, ch
+    IF cw = 80 AND ch = 20 THEN ok = ok + 1 ELSE PRINT "FAIL3"; cw; ch END IF
+
+    GRAPHIC SET VIRTUAL 200, 150
+    ok = ok + 1
+
+    GRAPHIC SET WORDWRAP 0
+    GRAPHIC GET WORDWRAP TO n
+    IF n = 0 THEN ok = ok + 1 ELSE PRINT "FAIL5"; n END IF
+
+    GRAPHIC SET WORDWRAP 1
+    GRAPHIC GET WORDWRAP TO n
+    IF n = 1 THEN ok = ok + 1 ELSE PRINT "FAIL6"; n END IF
+
+    IF ok = 6 THEN
+        PRINT "ALL PASS (6/6)"
+    ELSE
+        PRINT "FAIL: "; ok
+    END IF
+    PRINT "Press any key to exit..."
+    waitk = WAITKEY$
+END FUNCTION

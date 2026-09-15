@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 266 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 136 | DDT GUI framework, high effort, deferred to a future update |
+| ✅ Implemented | 271 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 131 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (266)
+## ✅ Implemented (271)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -291,6 +291,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC GET SCALE TO x1!,y1!,x2!,y2! (pb_graphic_get_scale) |
 | `GRAPHIC SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC SCALE (x1!,y1!)-(x2!,y2!) / SCALE PIXELS (pb_graphic_scale / pb_graphic_scale_pixels) |
 | `GRAPHIC SET AUTOSIZE` | STATEMENT | PB/Win only | Established | GRAPHIC SET AUTOSIZE w, h [,USERSIZE] (pb_graphic_set_autosize) |
+| `GRAPHIC SET SIZE` | STATEMENT | PB/Win only | Established | GRAPHIC SET SIZE w&, h& — rebuild bitmap at new size (pb_graphic_set_size) |
+| `GRAPHIC SET CLIP` | STATEMENT | PB/Win only | Established | GRAPHIC SET CLIP l!,t!,r!,b! — clip margins (pb_graphic_set_clip, read back by GET CLIP) |
+| `GRAPHIC SET VIRTUAL` | STATEMENT | PB/Win only | Established | GRAPHIC SET VIRTUAL w&, h& [,USERSIZE] — virtual display size (pb_graphic_set_virtual) |
+| `GRAPHIC SET WORDWRAP` | STATEMENT | PB/Win only | Established | GRAPHIC SET WORDWRAP n& (pb_graphic_set_wordwrap) |
+| `GRAPHIC GET WORDWRAP` | STATEMENT | PB/Win only | Established | GRAPHIC GET WORDWRAP TO n& (pb_graphic_get_wordwrap) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -401,7 +406,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET OVERLAP | STATEMENT |
 | GRAPHIC GET PIXEL | STATEMENT |
 | GRAPHIC GET SCROLLTEXT | STATEMENT |
-| GRAPHIC GET WORDWRAP | STATEMENT |
 | GRAPHIC IMAGELIST | STATEMENT |
 | GRAPHIC INKEY$ | STATEMENT |
 | GRAPHIC INPUT | STATEMENT |
@@ -414,7 +418,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC RENDER | STATEMENT |
 | GRAPHIC SAVE | STATEMENT |
 | GRAPHIC SET CLIENT | STATEMENT |
-| GRAPHIC SET CLIP | STATEMENT |
 | GRAPHIC SET FIXED | STATEMENT |
 | GRAPHIC SET FOCUS | STATEMENT |
 | GRAPHIC SET FONT | STATEMENT |
@@ -422,9 +425,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SET MIX | STATEMENT |
 | GRAPHIC SET OVERLAP | STATEMENT |
 | GRAPHIC SET SCROLLTEXT | STATEMENT |
-| GRAPHIC SET SIZE | STATEMENT |
-| GRAPHIC SET VIRTUAL | STATEMENT |
-| GRAPHIC SET WORDWRAP | STATEMENT |
 | GRAPHIC SPLIT | STATEMENT |
 | GRAPHIC STRETCH | STATEMENT |
 | GRAPHIC STYLE | STATEMENT |

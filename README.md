@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +5 official statement keywords from batch 65 — GRAPHIC SET SIZE (rebuild bitmap at new size), GRAPHIC SET CLIP (clip margins, read back by GET CLIP), GRAPHIC SET VIRTUAL (virtual display size), GRAPHIC SET/GET WORDWRAP. Coverage now 271 implemented / 131 tier-3 / 101 not implemented.
 > (2026-09-15: +5 official statement keywords from batch 64 — GRAPHIC GET BITS (whole bitmap as DIB string), GRAPHIC SET BITS (replace bitmap from DIB), GRAPHIC GET SCALE (4 world-coordinate limits), GRAPHIC SCALE (custom coordinate system, incl. SCALE PIXELS), GRAPHIC SET AUTOSIZE. Coverage now 266 implemented / 136 tier-3 / 101 not implemented.
 > (2026-09-15: +6 official statement keywords from batch 63 — GRAPHIC GET CLIP (GetClipBox), GRAPHIC GET VIEW / GRAPHIC SET VIEW (GetViewportOrgEx / SetViewportOrgEx), GRAPHIC GET LINES (bitmap height), GRAPHIC GET WRAP / GRAPHIC SET WRAP (text-wrap state). Coverage now 261 implemented / 141 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 62 — MENU GET STATE / MENU SET STATE (GetMenuState / EnableMenuItem / CheckMenuItem, PB-compatible 1-based positions mapped to Win32 MF_BYPOSITION), MENU GET TEXT / MENU SET TEXT (GetMenuStringA / ModifyMenuA). Coverage now 255 implemented / 147 tier-3 / 101 not implemented.
@@ -247,7 +248,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **266** statement-class keywords implemented · **136** DDT/GUI-class
+> Summary: **271** statement-class keywords implemented · **131** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -295,6 +296,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `MENU SET STATE` | ✅ | 62 (v0.1.56) | EnableMenuItem/CheckMenuItem (pb_menu_set_state) |
 | `MENU GET TEXT` | ✅ | 62 (v0.1.56) | GetMenuStringA (pb_menu_get_text) |
 | `MENU SET TEXT` | ✅ | 62 (v0.1.56) | ModifyMenuA (pb_menu_set_text) |
+| `GRAPHIC SET SIZE` | ✅ | 65 (v0.1.59) | rebuild bitmap at new size (pb_graphic_set_size) |
+| `GRAPHIC SET CLIP` | ✅ | 65 (v0.1.59) | clip margins, read back by GET CLIP (pb_graphic_set_clip) |
+| `GRAPHIC SET VIRTUAL` | ✅ | 65 (v0.1.59) | virtual display size (pb_graphic_set_virtual) |
+| `GRAPHIC SET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode on/off (pb_graphic_set_wordwrap) |
+| `GRAPHIC GET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode read (pb_graphic_get_wordwrap) |
 | `GRAPHIC GET BITS` | ✅ | 64 (v0.1.58) | whole bitmap as DIB string (pb_graphic_get_bits) |
 | `GRAPHIC SET BITS` | ✅ | 64 (v0.1.58) | replace bitmap from DIB string (pb_graphic_set_bits) |
 | `GRAPHIC GET SCALE` | ✅ | 64 (v0.1.58) | world-coordinate limits (pb_graphic_get_scale) |
@@ -521,6 +527,14 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.59 (2026-09-15) — Batch 65: GRAPHIC SET SIZE / SET CLIP / SET VIRTUAL / SET+GET WORDWRAP
+
+- **GRAPHIC SET SIZE nWide&, nHigh&** — rebuilds the attached bitmap at a new size (pb_graphic_set_size; contents cleared).
+- **GRAPHIC SET CLIP l!, t!, r!, b!** — establishes clip margins on the graphic target; GET CLIP reads them back (pb_graphic_set_clip).
+- **GRAPHIC SET VIRTUAL nWide&, nHigh& [,USERSIZE]** — records the virtual display size (pb_graphic_set_virtual).
+- **GRAPHIC SET WORDWRAP n& / GRAPHIC GET WORDWRAP TO n&** — enables or disables word-wrap mode for the attached target (pb_graphic_set_wordwrap / pb_graphic_get_wordwrap).
+- Tests: examples/batch65_test.bas (6/6 — SET SIZE round-trip, GET BITS 12840 exact, SET CLIP 10,20,90,40 → GET CLIP 80x20, WORDWRAP 0/1 round-trip), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.58 (2026-09-15) — Batch 64: GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE
 

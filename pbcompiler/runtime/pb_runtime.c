@@ -4049,6 +4049,50 @@ int pb_graphic_set_autosize(long w, long h) {
 /* GRAPHIC GET PPI / GET POS / SET POS / TEXT SIZE / STRETCHMODE / CAPTION (batch 61) */
 #define PB_LOGPIXELSX 88
 #define PB_LOGPIXELSY 90
+/* GRAPHIC SET SIZE / SET CLIP / SET VIRTUAL / WORDWRAP (batch 65) */
+__declspec(dllimport) int __stdcall IntersectClipRect(void* hdc, int l, int t, int r, int b);
+int pb_graphic_set_size(int w, int h) {
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    if (w <= 0 || h <= 0 || w > 100000 || h > 100000) return 0;
+    unsigned char bi[40];
+    for (int i = 0; i < 40; i++) bi[i] = 0;
+    bi[0] = 40;
+    bi[4] = (unsigned char)(w & 0xFF); bi[5] = (unsigned char)((w >> 8) & 0xFF);
+    bi[6] = (unsigned char)((w >> 16) & 0xFF); bi[7] = (unsigned char)((w >> 24) & 0xFF);
+    int hh = -h; /* top-down, matches pb_gdi_bitmap_new */
+    bi[8] = (unsigned char)(hh & 0xFF); bi[9] = (unsigned char)((hh >> 8) & 0xFF);
+    bi[10] = (unsigned char)((hh >> 16) & 0xFF); bi[11] = (unsigned char)((hh >> 24) & 0xFF);
+    bi[12] = 1; /* biPlanes */
+    bi[14] = 32; /* biBitCount */
+    long stride = ((w * 32 + 31) / 32) * 4;
+    long size = stride * h;
+    bi[20] = (unsigned char)(size & 0xFF); bi[21] = (unsigned char)((size >> 8) & 0xFF);
+    bi[22] = (unsigned char)((size >> 16) & 0xFF); bi[23] = (unsigned char)((size >> 24) & 0xFF);
+    void* bits = NULL;
+    void* nb = CreateDIBSection(g_gr_dc, (void*)bi, 0, &bits, NULL, 0);
+    if (!nb) return 0;
+    if (g_gr_bmp) {
+        SelectObject(g_gr_dc, GetStockObject(5)); /* NULL_BRUSH: detach old bitmap */
+        DeleteObject(g_gr_bmp);
+    }
+    g_gr_bmp = nb;
+    SelectObject(g_gr_dc, g_gr_bmp);
+    return 1;
+}
+static float g_gr_clip_l = 0, g_gr_clip_t = 0, g_gr_clip_r = 0, g_gr_clip_b = 0;
+static int g_gr_clip_set = 0;
+int pb_graphic_set_clip(float l, float t, float r, float b) {
+    g_gr_clip_l = l; g_gr_clip_t = t; g_gr_clip_r = r; g_gr_clip_b = b;
+    g_gr_clip_set = 1;
+    if (g_gr_dc) IntersectClipRect(g_gr_dc, (int)l, (int)t, (int)r, (int)b);
+    return 1;
+}
+static long g_gr_virtual_w = 0, g_gr_virtual_h = 0;
+static long g_gr_wordwrap = 1; /* GRAPHIC SET/GET WORDWRAP state (batch 65) */
+int pb_graphic_set_virtual(int w, int h) { g_gr_virtual_w = w; g_gr_virtual_h = h; return 1; }
+int pb_graphic_set_wordwrap(int n) { g_gr_wordwrap = n ? 1 : 0; return 1; }
+int pb_graphic_get_wordwrap(int* out) { if (out) *out = g_gr_wordwrap; return 1; }
+
 int pb_graphic_get_ppi(long* x, long* y) {
     if (!g_gr_dc) return 0;
     *x = GetDeviceCaps(g_gr_dc, PB_LOGPIXELSX);
@@ -4104,6 +4148,11 @@ int pb_graphic_set_caption(char* s) {
 /* GRAPHIC GET CLIP / GET VIEW / SET VIEW / GET LINES / GET+SET WRAP (batch 63) */
 static long g_gr_wrap = 1; /* default: text wraps */
 int pb_graphic_get_clip(float* w, float* h) {
+    if (g_gr_clip_set) {
+        *w = g_gr_clip_r - g_gr_clip_l;
+        *h = g_gr_clip_b - g_gr_clip_t;
+        return 1;
+    }
     if (!g_gr_dc) return 0;
     int rc[4];
     rc[0] = 0; rc[1] = 0; rc[2] = 0; rc[3] = 0;

@@ -2052,6 +2052,37 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_graphic_set_size",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_clip",
+            &IrType::I32,
+            &[IrType::Float, IrType::Float, IrType::Float, IrType::Float],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_virtual",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_wordwrap",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_wordwrap",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+
+        self.module.declare_function(
             "pb_graphic_set_pos",
             &IrType::I32,
             &[IrType::Float, IrType::Float],
@@ -4929,6 +4960,57 @@ impl Compiler {
             }
             "GRAPHIC_SCALE_PIXELS" => {
                 fb.call_void("pb_graphic_scale_pixels", &[]);
+                return Ok(());
+            }
+            "GRAPHIC_SET_SIZE" => {
+                // GRAPHIC SET SIZE nWide&, nHigh&  (batch 65)
+                if call.args.len() == 2 {
+                    let w0 = self.compile_expr(fb, &call.args[0])?;
+                    let w = self.to_i32(fb, &w0);
+                    let h0 = self.compile_expr(fb, &call.args[1])?;
+                    let h = self.to_i32(fb, &h0);
+                    fb.call_void("pb_graphic_set_size", &[w, h]);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SET_CLIP" => {
+                // GRAPHIC SET CLIP l!, t!, r!, b!  (batch 65)
+                if call.args.len() == 4 {
+                    let mut vals = Vec::new();
+                    for a in &call.args {
+                        let v0 = self.compile_expr(fb, a)?;
+                        vals.push(self.convert_value(fb, &v0, &IrType::Float, &PbType::Single));
+                    }
+                    fb.call_void("pb_graphic_set_clip", &vals);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SET_VIRTUAL" => {
+                // GRAPHIC SET VIRTUAL nWide&, nHigh& [,USERSIZE]  (batch 65)
+                if call.args.len() >= 2 {
+                    let w0 = self.compile_expr(fb, &call.args[0])?;
+                    let w = self.to_i32(fb, &w0);
+                    let h0 = self.compile_expr(fb, &call.args[1])?;
+                    let h = self.to_i32(fb, &h0);
+                    fb.call_void("pb_graphic_set_virtual", &[w, h]);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SET_WORDWRAP" => {
+                // GRAPHIC SET WORDWRAP n&  (batch 65)
+                if call.args.len() == 1 {
+                    let w0 = self.compile_expr(fb, &call.args[0])?;
+                    let w = self.to_i32(fb, &w0);
+                    fb.call_void("pb_graphic_set_wordwrap", &[w]);
+                }
+                return Ok(());
+            }
+            "GRAPHIC_GET_WORDWRAP" => {
+                // GRAPHIC GET WORDWRAP TO n&  (batch 65)
+                if let Some(dst) = call.args.first() {
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, dst)?;
+                    fb.call_void("pb_graphic_get_wordwrap", &[ptr]);
+                }
                 return Ok(());
             }
             "GRAPHIC_SET_AUTOSIZE" => {
