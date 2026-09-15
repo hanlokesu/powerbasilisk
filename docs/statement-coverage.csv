@@ -1,5 +1,4 @@
-# Last updated from batch 96 (v0.1.90) — 2026-09-15,,,,
-Keyword,Kind,Platform,Status,Impl
+Keyword (Last updated: batch 96 v0.1.90 — 2026-09-15),Kind,Platform,Status,Impl
 #ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established,IMPLEMENTED
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established,IMPLEMENTED
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established,IMPLEMENTED
