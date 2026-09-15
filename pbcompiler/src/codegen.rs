@@ -1302,6 +1302,8 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
             false,
         );
+        self.module
+            .declare_function("pb_error_message", &IrType::Ptr, &[IrType::I32], false);
         self.module.declare_function(
             "pb_remove",
             &IrType::Ptr,
@@ -10633,6 +10635,7 @@ impl Compiler {
             "FILENAME" => Some(self.builtin_filename(fb, args)),
             "PATHSCAN" => Some(self.builtin_strn(fb, args, "pb_pathscan", 2)),
             "ERL" => Some(self.builtin_str0(fb, "pb_erl_str")),
+            "ERROR" => Some(self.builtin_error_str(fb, args)),
             "EXTRACT" => Some(self.builtin_extract(fb, args)),
             "REMOVE" => Some(self.builtin_remove(fb, args)),
             "RETAIN" => Some(self.builtin_retain(fb, args)),
@@ -11804,6 +11807,19 @@ impl Compiler {
 
     fn builtin_str0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
         Ok(fb.call(&IrType::Ptr, fname, &[]))
+    }
+
+    // Batch 89: ERROR$ — returns error message string.
+    // ERROR$ (no args) -> message for current pb_err (pass -1 to runtime)
+    // ERROR$(n) -> message for error code n
+    fn builtin_error_str(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let code = if args.is_empty() {
+            fb.const_i32(-1) // -1 means "use current pb_err"
+        } else {
+            let v = self.compile_expr(fb, &args[0])?;
+            self.to_i32(fb, &v)
+        };
+        Ok(fb.call(&IrType::Ptr, "pb_error_message", &[code]))
     }
 
     fn builtin_extract(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

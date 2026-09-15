@@ -1461,6 +1461,99 @@ int pb_err = 0;   /* readable from PB source as ERR; set by failing MKDIR/RMDIR/
 int pb_err_stmt_id = 0;  /* id of the statement that triggered the error */
 int pb_err_active = 0;   /* 1 while executing the ON ERROR handler (trapping suspended) */
 
+/* ===== ERROR$ — PB error message lookup ===== */
+static const char* pb_error_msgs[] = {
+    [0] = "No error",
+    [1] = "Out of memory",
+    [2] = "Syntax error",
+    [3] = "Return without Gosub",
+    [4] = "Out of data",
+    [5] = "Illegal function call",
+    [6] = "Overflow",
+    [7] = "Out of memory",
+    [8] = "Undefined line number",
+    [9] = "Subscript out of range",
+    [10] = "Duplicate definition",
+    [11] = "Division by zero",
+    [13] = "Type mismatch",
+    [14] = "Out of string space",
+    [15] = "String too long",
+    [16] = "String formula too complex",
+    [17] = "Can't continue",
+    [18] = "Function not defined",
+    [19] = "No RESUME",
+    [20] = "RESUME without error",
+    [24] = "Device Timeout",
+    [25] = "Device Fault",
+    [26] = "FOR without NEXT",
+    [27] = "Out of paper",
+    [28] = "WHILE without WEND",
+    [29] = "WEND without WHILE",
+    [31] = "Bad file number",
+    [32] = "File not found",
+    [33] = "Bad file mode",
+    [34] = "File already open",
+    [35] = "File already exists",
+    [36] = "Bad filename",
+    [37] = "Too many files",
+    [38] = "Device Unavailable",
+    [39] = "Communication buffer overflow",
+    [40] = "Permission denied",
+    [41] = "Disk not ready",
+    [42] = "Disk media error",
+    [50] = "Field overflow",
+    [51] = "Internal error",
+    [52] = "Bad file number",
+    [53] = "File not found",
+    [54] = "Bad file mode",
+    [55] = "File already open",
+    [56] = "File already exists",
+    [57] = "Bad filename",
+    [58] = "Too many files",
+    [59] = "Device Unavailable",
+    [60] = "Communication buffer overflow",
+    [61] = "Permission denied",
+    [62] = "Disk not ready",
+    [63] = "Disk media error",
+    [64] = "Bad filename",
+    [65] = "Too many files",
+    [66] = "File already open",
+    [67] = "Bad file mode",
+    [68] = "Bad file number",
+    [69] = "Communication buffer overflow",
+    [70] = "Permission denied",
+    [71] = "Disk not ready",
+    [72] = "Disk media error",
+    [73] = "File already exists",
+    [74] = "Bad filename",
+    [75] = "Too many files",
+    [76] = "Path not found",
+    [77] = "Bad file mode",
+    [78] = "Bad file number",
+    [79] = "Communication buffer overflow",
+    [80] = "Permission denied",
+    [81] = "Disk not ready",
+    [82] = "Disk media error",
+};
+#define PB_ERROR_MSG_COUNT (sizeof(pb_error_msgs)/sizeof(pb_error_msgs[0]))
+
+/* Returns BSTR with error message for code n (or current pb_err if n<0).
+   Caller must SysFreeString the result. */
+char* pb_error_message(int n) {
+    int code = (n < 0) ? pb_err : n;
+    const char* msg = NULL;
+    if (code >= 0 && code < (int)PB_ERROR_MSG_COUNT) {
+        msg = pb_error_msgs[code];
+    }
+    if (!msg) {
+        /* Unknown error code — format "Unknown error N" */
+        static char buf[64];
+        snprintf(buf, sizeof(buf), "Unknown error %d", code);
+        msg = buf;
+    }
+    return pb_bstr_alloc(msg, (unsigned int)strlen(msg));
+}
+
 /* ===== System builtins ===== */
 
 #ifdef _WIN32

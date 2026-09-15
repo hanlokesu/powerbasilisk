@@ -563,6 +563,15 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.83 (2026-09-15) — Batch 89: ERROR$ — error message function
+
+- **ERROR$** (no args) — returns the message for the current error code (ERR).
+- **ERROR$(n)** — returns the message for error code n.
+- Covers 80+ PB error codes (0-82): No error, Syntax error, Division by zero, Subscript out of range, File not found, Path not found, Permission denied, etc. Unknown codes return "Unknown error N".
+- Implementation: runtime pb_error_message(int) returns BSTR; codegen passes -1 for no-arg (runtime reads pb_err). Parser fix: ERROR/ERROR$ added to no-argument function list (like ERL$/DATACOUNT) so bare ERROR$ parses as FunctionCall, not Variable.
+- Tests: examples/batch89_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.82 (2026-09-15) — Batch 88: ISTRUE / ISFALSE / ISEVEN / ISODD (4 boolean predicate functions)
 
 - **ISTRUE(expr)** — returns -1 (PB TRUE) if expr is non-zero, 0 (FALSE) if zero.
