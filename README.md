@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +1 official statement keyword from batch 67 — ARRAY ADD arr1(), arr2() (element-wise addition into first array; supports BYTE/WORD/LONG/QUAD/SINGLE/DOUBLE via universal pb_array_add runtime). Coverage now 274 implemented / 129 tier-3 / 100 not implemented.
 > (2026-09-15: +2 official statement keywords from batch 66 — GRAPHIC SET FIXED (restores standard FIXED mode), GRAPHIC SET FONT (selects font handle into graphic DC via SelectObject; FONT NEW/END already existed). Coverage now 273 implemented / 129 tier-3 / 101 not implemented.
 > (2026-09-15: +5 official statement keywords from batch 65 — GRAPHIC SET SIZE (rebuild bitmap at new size), GRAPHIC SET CLIP (clip margins, read back by GET CLIP), GRAPHIC SET VIRTUAL (virtual display size), GRAPHIC SET/GET WORDWRAP. Coverage now 271 implemented / 131 tier-3 / 101 not implemented.
 > (2026-09-15: +5 official statement keywords from batch 64 — GRAPHIC GET BITS (whole bitmap as DIB string), GRAPHIC SET BITS (replace bitmap from DIB), GRAPHIC GET SCALE (4 world-coordinate limits), GRAPHIC SCALE (custom coordinate system, incl. SCALE PIXELS), GRAPHIC SET AUTOSIZE. Coverage now 266 implemented / 136 tier-3 / 101 not implemented.
@@ -249,7 +250,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **273** statement-class keywords implemented · **129** DDT/GUI-class
+> Summary: **274** statement-class keywords implemented · **129** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -301,6 +302,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `GRAPHIC SET CLIP` | ✅ | 65 (v0.1.59) | clip margins, read back by GET CLIP (pb_graphic_set_clip) |
 | `GRAPHIC SET VIRTUAL` | ✅ | 65 (v0.1.59) | virtual display size (pb_graphic_set_virtual) |
 | `GRAPHIC SET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode on/off (pb_graphic_set_wordwrap) |
+| `ARRAY ADD` arr1(), arr2() | ✅ | 67 (v0.1.61) | `pb_array_add` — element-wise add, all numeric types |
 | `GRAPHIC SET FIXED` | ✅ | 66 (v0.1.60) | restore FIXED mode (pb_graphic_set_fixed) |
 | `GRAPHIC SET FONT` | ✅ | 66 (v0.1.60) | select font into DC (pb_graphic_set_font, SelectObject) |
 | `GRAPHIC GET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode read (pb_graphic_get_wordwrap) |
@@ -530,6 +532,11 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.61 (2026-09-15) — Batch 67: ARRAY ADD
+
+- **ARRAY ADD arr1(), arr2()** — element-wise addition: each element of arr2 is added into the corresponding element of arr1 (in-place). Universal runtime `pb_array_add(void* dst, const void* src, int elem_size, int is_float, long long total)` handles all numeric types: BYTE/WORD/LONG/QUAD (integer paths by size) and SINGLE/DOUBLE (float paths). Fixed-size arrays only; dynamic array resize not modeled.
+- Tests: examples/batch67_test.bas (4/4 — LONG, SINGLE, BYTE, QUAD all verified), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.60 (2026-09-15) — Batch 66: GRAPHIC SET FIXED + GRAPHIC SET FONT
 

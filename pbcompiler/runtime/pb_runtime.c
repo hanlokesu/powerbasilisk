@@ -2903,6 +2903,26 @@ void pb_array_sort(char* base, int elem_size, int count, int type) {
     }
 }
 
+/* ARRAY ADD: add elements of src array into dst array (in-place), batch 67 */
+void pb_array_add(void* dst, const void* src, int elem_size, int is_float, long long total) {
+    if (total <= 0) return;
+    if (is_float) {
+        if (elem_size == 4) {
+            float* d = (float*)dst; const float* s = (const float*)src;
+            for (long long i = 0; i < total; i++) d[i] += s[i];
+        } else {
+            double* d = (double*)dst; const double* s = (const double*)src;
+            for (long long i = 0; i < total; i++) d[i] += s[i];
+        }
+    } else {
+        switch (elem_size) {
+            case 1: { unsigned char* d = (unsigned char*)dst; const unsigned char* s = (const unsigned char*)src; for (long long i = 0; i < total; i++) d[i] += s[i]; break; }
+            case 2: { unsigned short* d = (unsigned short*)dst; const unsigned short* s = (const unsigned short*)src; for (long long i = 0; i < total; i++) d[i] += s[i]; break; }
+            case 4: { unsigned int* d = (unsigned int*)dst; const unsigned int* s = (const unsigned int*)src; for (long long i = 0; i < total; i++) d[i] += s[i]; break; }
+            case 8: { unsigned long long* d = (unsigned long long*)dst; const unsigned long long* s = (const unsigned long long*)src; for (long long i = 0; i < total; i++) d[i] += s[i]; break; }
+        }
+    }
+}
 void pb_array_copy(char* dest, char* src, int elem_size, long long total) {
     if (!dest || !src || total <= 0) return;
     memcpy(dest, src, (size_t)(elem_size * total));

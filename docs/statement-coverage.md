@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 273 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 274 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 100 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (273)
+## ✅ Implemented (274)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -64,6 +64,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `#UNIQUE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#UTILITY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 
+| ARRAY ADD | STATEMENT | `pb_array_add` (element-wise add into first array; all numeric types incl. BYTE/WORD/LONG/QUAD/SINGLE/DOUBLE) |
 | ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
 | ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
 | ARRAY UNIQUE | STATEMENT | `pb_array_unique` (in-place dedup; UBOUND shrink not modeled) |

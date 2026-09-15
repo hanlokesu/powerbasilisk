@@ -2388,6 +2388,18 @@ impl Compiler {
         self.module
             .declare_function("pb_input_flush", &IrType::Void, &[], false);
         self.module.declare_function(
+            "pb_array_add",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I64,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_array_copy",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I64],
@@ -5888,7 +5900,7 @@ impl Compiler {
                 }
                 return Ok(());
             }
-            "ARRAY COPY" | "ARRAY SWAP" => {
+            "ARRAY COPY" | "ARRAY SWAP" | "ARRAY ADD" => {
                 // ARRAY COPY src(), dest()  /  ARRAY SWAP a(), b()
                 if let (Some(Expr::FunctionCall(sn, _)), Some(Expr::FunctionCall(dn, _))) =
                     (call.args.first(), call.args.get(1))
@@ -5910,13 +5922,29 @@ impl Compiler {
                         let total = si.total_elements.min(di.total_elements) as i64;
                         let fn_name = if call.name == "ARRAY SWAP" {
                             "pb_array_swap"
+                        } else if call.name == "ARRAY ADD" {
+                            "pb_array_add"
                         } else {
                             "pb_array_copy"
                         };
-                        fb.call_void(
-                            fn_name,
-                            &[dbase, sbase, fb.const_i32(elem_size), fb.const_i64(total)],
-                        );
+                        if call.name == "ARRAY ADD" {
+                            let is_fl = matches!(&si.elem_ir_type, IrType::Float | IrType::Double);
+                            fb.call_void(
+                                fn_name,
+                                &[
+                                    sbase,
+                                    dbase,
+                                    fb.const_i32(elem_size),
+                                    fb.const_i32(if is_fl { 1 } else { 0 }),
+                                    fb.const_i64(total),
+                                ],
+                            );
+                        } else {
+                            fb.call_void(
+                                fn_name,
+                                &[dbase, sbase, fb.const_i32(elem_size), fb.const_i64(total)],
+                            );
+                        }
                     }
                 }
                 return Ok(());

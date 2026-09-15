@@ -3572,7 +3572,7 @@ impl Parser {
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
-                        if matches!(w.to_uppercase().as_str(), "COPY" | "SWAP"))
+                        if matches!(w.to_uppercase().as_str(), "COPY" | "SWAP" | "ADD"))
                 {
                     let op = {
                         if let Token::Identifier(w) = self.peek_at(1).unwrap() {
