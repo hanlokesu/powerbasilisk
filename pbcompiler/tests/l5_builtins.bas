@@ -89,8 +89,8 @@ FUNCTION PBMAIN() AS LONG
     EXIT FUNCTION
   END IF
 
-  ' Test 18: CINT (float to int)
-  IF CINT(7.9) <> 7 THEN
+  ' Test 18: CINT (float to int, rounds to nearest - PB semantics)
+  IF CINT(7.9) <> 8 THEN
     FUNCTION = 18
     EXIT FUNCTION
   END IF

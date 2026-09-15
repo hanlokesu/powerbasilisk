@@ -11374,7 +11374,9 @@ impl Compiler {
         match &val.ty {
             IrType::Double | IrType::Float => {
                 let f64_val = self.to_f64(fb, &val);
-                let rounded = fb.call(&IrType::Double, "llvm.round.f64", &[f64_val]);
+                // PB CINT/CLNG uses banker's rounding (round half to even).
+                // llvm.nearbyint.f64 = ties to even (NOT llvm.round which is ties away from zero).
+                let rounded = fb.call(&IrType::Double, "llvm.nearbyint.f64", &[f64_val]);
                 Ok(fb.fptosi(&rounded, &IrType::I32))
             }
             _ => Ok(self.to_i32(fb, &val)),
