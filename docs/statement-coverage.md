@@ -6,17 +6,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them — both implemented)
 
-- Generated: 2026-09-15 (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / FIELD STRING / FIELD RESET / OPEN FOR RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Generated: 2026-09-15 (batch 86: TRUNC) (batch 85: FLOOR) (batch 84: REMAIN$) (batch 83: RETAIN$) (batch 82: REMOVE$) (batch 81: INPUT/LINE INPUT console) (batch 80: OOP completion — 0 NOT_IMPL milestone) (batch 79: OOP foundation) (batch 37-78: see README changelog) (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 307 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 374 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 79 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (307)
+## ✅ Implemented (374)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -403,7 +403,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `EVENT SOURCE` | STATEMENT | parser accepts (simplified noop event source) |
 | `LET *(WITH OBJECTS)*` | STATEMENT | existing LET assignment (object reference = pointer copy) |
 | `LET *(WITH VARIANTS)*` | STATEMENT | existing LET assignment (variant = generic value store) |
-## 🚧 Tier-3 DDT (deferred to next update)
+## 🚧 Tier-3 DDT (129, deferred to next update)
 
 | Keyword | Official kind |
 |---------|---------------|
@@ -553,7 +553,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR | STATEMENT |
 | TREEVIEW | STATEMENT |
 
-## ⬜ Not implemented (101, alphabetical)
+## ⬜ Not implemented (0, alphabetical)
 
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
