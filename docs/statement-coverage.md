@@ -164,71 +164,71 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | UCODEPAGE | STATEMENT | `pb_ucodepage` (records ANSI/OEM/numeric codepage) |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
-| `ON GOTO` | STATEMENT | PB/Win + PB/CC | Computed branch to one of several labels |
-| `ON GOSUB` | STATEMENT | PB/Win + PB/CC | Computed call to one of several subroutines (RETURN returns) |
-| `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | PB/Win + PB/CC | Win32 clipboard read/write/reset |
-| `INPUT FLUSH` | STATEMENT | PB/CC only | Flush console input buffer |
-| `OPTION EXPLICIT` | STATEMENT | PB/Win + PB/CC | Accepted (requires explicit declarations) |
-| `REM` | STATEMENT | PB/Win + PB/CC | Comments accepted at top level and in bodies |
-| `GLOBAL` | STATEMENT | PB/Win + PB/CC | Global variable declarations |
-| `ARRAY ARRAYIX` |
-| `ARRAY ASSIGN` | STATEMENT | PB/Win + PB/CC | pb_array_copy: target() = source() element copy (batch 23) |
+| `ON GOTO` | STATEMENT | (PB/Win + PB/CC) Computed branch to one of several labels |
+| `ON GOSUB` | STATEMENT | (PB/Win + PB/CC) Computed call to one of several subroutines (RETURN returns) |
+| `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | (PB/Win + PB/CC) Win32 clipboard read/write/reset |
+| `INPUT FLUSH` | STATEMENT | (PB/CC only) Flush console input buffer |
+| `OPTION EXPLICIT` | STATEMENT | (PB/Win + PB/CC) Accepted (requires explicit declarations) |
+| `REM` | STATEMENT | (PB/Win + PB/CC) Comments accepted at top level and in bodies |
+| `GLOBAL` | STATEMENT | (PB/Win + PB/CC) Global variable declarations |
+| `ARRAY ARRAYIX` | STATEMENT | implemented |
+| `ARRAY ASSIGN` | STATEMENT | (PB/Win + PB/CC) pb_array_copy: target() = source() element copy (batch 23) |
  STATEMENT | PB/Win + PB/CC | Each element = its index (batch 20) |
-| `DECLARE` | STATEMENT | PB/Win + PB/CC | DECLARE SUB/FUNCTION prototypes (batch 20) |
-| `FILESCAN` | STATEMENT | PB/Win + PB/CC | Records/width scan, INPUT+BINARY modes (batch 20) |
-| `LOCAL` | STATEMENT | PB/Win + PB/CC | Local variable declarations (batch 20) |
-| `TYPE/END TYPE` | BLOCK | PB/Win + PB/CC | UDT definitions (batch 20) |
-| `COMM OPEN` | STATEMENT | PB/Win + PB/CC | CreateFileA + DCB/SetCommState/SetCommTimeouts; comm channel 0..255 (batch 21) |
-| `COMM CLOSE` | STATEMENT | PB/Win + PB/CC | CloseHandle per channel (batch 21) |
-| `COMM LINE` | STATEMENT | PB/Win + PB/CC | COMM LINE INPUT: byte-wise ReadFile until LF into PB string (batch 21) |
-| `COMM PRINT` | STATEMENT | PB/Win + PB/CC | WriteFile str/int/dbl variants (batch 21) |
-| `COMM RECV` | STATEMENT | PB/Win + PB/CC | ReadFile n bytes into PB string (batch 21) |
-| `COMM RESET` | STATEMENT | PB/Win + PB/CC | close all open COMM channels (batch 21) |
-| `COMM SEND` | STATEMENT | PB/Win + PB/CC | WriteFile + FlushFileBuffers (batch 21) |
-| `COMM SET` | STATEMENT | PB/Win + PB/CC | EscapeCommFunction DTR/RTS/BREAK on/off (batch 21) |
-| `COMM TIMEOUT` | STATEMENT | PB/Win + PB/CC | SetCommTimeouts read/write constants (batch 21) |
-| `THREAD CLOSE` | STATEMENT | PB/Win + PB/CC | TerminateThread + CloseHandle (batch 21) |
-| `THREAD CREATE` | STATEMENT | PB/Win + PB/CC | CreateThread (x64); PB slot id 0..255 (batch 21) |
+| `DECLARE` | STATEMENT | (PB/Win + PB/CC) DECLARE SUB/FUNCTION prototypes (batch 20) |
+| `FILESCAN` | STATEMENT | (PB/Win + PB/CC) Records/width scan, INPUT+BINARY modes (batch 20) |
+| `LOCAL` | STATEMENT | (PB/Win + PB/CC) Local variable declarations (batch 20) |
+| `TYPE/END TYPE` | BLOCK | (PB/Win + PB/CC) UDT definitions (batch 20) |
+| `COMM OPEN` | STATEMENT | (PB/Win + PB/CC) CreateFileA + DCB/SetCommState/SetCommTimeouts; comm channel 0..255 (batch 21) |
+| `COMM CLOSE` | STATEMENT | (PB/Win + PB/CC) CloseHandle per channel (batch 21) |
+| `COMM LINE` | STATEMENT | (PB/Win + PB/CC) COMM LINE INPUT: byte-wise ReadFile until LF into PB string (batch 21) |
+| `COMM PRINT` | STATEMENT | (PB/Win + PB/CC) WriteFile str/int/dbl variants (batch 21) |
+| `COMM RECV` | STATEMENT | (PB/Win + PB/CC) ReadFile n bytes into PB string (batch 21) |
+| `COMM RESET` | STATEMENT | (PB/Win + PB/CC) close all open COMM channels (batch 21) |
+| `COMM SEND` | STATEMENT | (PB/Win + PB/CC) WriteFile + FlushFileBuffers (batch 21) |
+| `COMM SET` | STATEMENT | (PB/Win + PB/CC) EscapeCommFunction DTR/RTS/BREAK on/off (batch 21) |
+| `COMM TIMEOUT` | STATEMENT | (PB/Win + PB/CC) SetCommTimeouts read/write constants (batch 21) |
+| `THREAD CLOSE` | STATEMENT | (PB/Win + PB/CC) TerminateThread + CloseHandle (batch 21) |
+| `THREAD CREATE` | STATEMENT | (PB/Win + PB/CC) CreateThread (x64); PB slot id 0..255 (batch 21) |
 | `THREADED` | STATEMENT | module-level `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
-| `THREAD GET PRIORITY` | STATEMENT | PB/Win + PB/CC | GetThreadPriority (batch 21) |
-| `THREAD RESUME` | STATEMENT | PB/Win + PB/CC | ResumeThread (batch 21) |
-| `THREAD SET PRIORITY` | STATEMENT | PB/Win + PB/CC | SetThreadPriority (batch 21) |
-| `THREAD STATUS` | STATEMENT | PB/Win + PB/CC | GetExitCodeThread STILL_ACTIVE; 1 run / 2 susp / 3 done (batch 21) |
-| `THREAD SUSPEND` | STATEMENT | PB/Win + PB/CC | SuspendThread (batch 21) |
-| `LPRINT` | STATEMENT | PB/Win + PB/CC | direct device/file output via LPRINT ATTACH (batch 22) |
-| `LPRINT ATTACH` | STATEMENT | PB/Win + PB/CC | CreateFileA open device; quoted string/device name (batch 22) |
-| `LPRINT CLOSE` | STATEMENT | PB/Win + PB/CC | CloseHandle (batch 22) |
-| `LPRINT FLUSH` | STATEMENT | PB/Win + PB/CC | FlushFileBuffers (batch 22) |
-| `LPRINT FORMFEED` | STATEMENT | PB/Win + PB/CC | form feed char 0x0C (batch 22) |
-| `TRACE` | STATEMENT | PB/Win + PB/CC | TRACE NEW/ON/OFF/PRINT/CLOSE explicit log file (batch 22) |
-| `IMPORT` | STATEMENT | PB/Win + PB/CC | IMPORT ADDR LoadLibraryA+GetProcAddress into QUAD vars (batch 22) |
-| `CALL DWORD` | STATEMENT | PB/Win + PB/CC | indirect call via inttoptr; USING args + TO result (batch 22) |
-| CALLSTK | STATEMENT | PB/Win + PB/CC | CALLSTKCOUNT depth / CALLSTK$(n) frame names / CALLSTK filename$ file dump (batch 33) |
-| PROFILE | STATEMENT | PB/Win + PB/CC | per-procedure call counts + elapsed ms via the call-stack frames; PROFILE filename$ dumps "<Name>, <Call Count>, <Time mSec>" (batch 34) |
-| REGEXPR | STATEMENT | PB/Win + PB/CC | documented regex subset scan; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&], leftmost-longest, case-insensitive default (batch 35) |
-| REGREPL | STATEMENT | PB/Win + PB/CC | documented regex subset replace; REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$, \00 = whole match (batch 35) |
-| `WINDOW SET` | STATEMENT | PB/Win only | SetConsoleTitleA console title; hwnd ignored (batch 23) |
-| `WINDOW GET` | STATEMENT | PB/Win only | GetConsoleTitleA into string var (batch 23) |
-| `STATIC` | STATEMENT | PB/Win + PB/CC | module-global slot, persists across calls (batch 23) |
-| `ON ERROR` | STATEMENT | PB/Win + PB/CC | run-time error trap: GOTO label / GOTO 0 / RESUME NEXT (batch 25) |
-| `REGISTER` | STATEMENT | PB/Win + PB/CC | optimization hint, accepted as LOCAL (batch 25) |
-| `RESUME` | STATEMENT | PB/Win + PB/CC | RESUME / RESUME NEXT / RESUME FLUSH / RESUME label (batch 25) |
-| `TYPE SET` | STATEMENT | PB/Win + PB/CC | pb_type_set / pb_type_set_str memcpy fill (batch 23) |
+| `THREAD GET PRIORITY` | STATEMENT | (PB/Win + PB/CC) GetThreadPriority (batch 21) |
+| `THREAD RESUME` | STATEMENT | (PB/Win + PB/CC) ResumeThread (batch 21) |
+| `THREAD SET PRIORITY` | STATEMENT | (PB/Win + PB/CC) SetThreadPriority (batch 21) |
+| `THREAD STATUS` | STATEMENT | (PB/Win + PB/CC) GetExitCodeThread STILL_ACTIVE; 1 run / 2 susp / 3 done (batch 21) |
+| `THREAD SUSPEND` | STATEMENT | (PB/Win + PB/CC) SuspendThread (batch 21) |
+| `LPRINT` | STATEMENT | (PB/Win + PB/CC) direct device/file output via LPRINT ATTACH (batch 22) |
+| `LPRINT ATTACH` | STATEMENT | (PB/Win + PB/CC) CreateFileA open device; quoted string/device name (batch 22) |
+| `LPRINT CLOSE` | STATEMENT | (PB/Win + PB/CC) CloseHandle (batch 22) |
+| `LPRINT FLUSH` | STATEMENT | (PB/Win + PB/CC) FlushFileBuffers (batch 22) |
+| `LPRINT FORMFEED` | STATEMENT | (PB/Win + PB/CC) form feed char 0x0C (batch 22) |
+| `TRACE` | STATEMENT | (PB/Win + PB/CC) TRACE NEW/ON/OFF/PRINT/CLOSE explicit log file (batch 22) |
+| `IMPORT` | STATEMENT | (PB/Win + PB/CC) IMPORT ADDR LoadLibraryA+GetProcAddress into QUAD vars (batch 22) |
+| `CALL DWORD` | STATEMENT | (PB/Win + PB/CC) indirect call via inttoptr; USING args + TO result (batch 22) |
+| CALLSTK | STATEMENT | (PB/Win + PB/CC) CALLSTKCOUNT depth / CALLSTK$(n) frame names / CALLSTK filename$ file dump (batch 33) |
+| PROFILE | STATEMENT | (PB/Win + PB/CC) per-procedure call counts + elapsed ms via the call-stack frames; PROFILE filename$ dumps "<Name>, <Call Count>, <Time mSec>" (batch 34) |
+| REGEXPR | STATEMENT | (PB/Win + PB/CC) documented regex subset scan; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&], leftmost-longest, case-insensitive default (batch 35) |
+| REGREPL | STATEMENT | (PB/Win + PB/CC) documented regex subset replace; REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$, \00 = whole match (batch 35) |
+| `WINDOW SET` | STATEMENT | (PB/Win only) SetConsoleTitleA console title; hwnd ignored (batch 23) |
+| `WINDOW GET` | STATEMENT | (PB/Win only) GetConsoleTitleA into string var (batch 23) |
+| `STATIC` | STATEMENT | (PB/Win + PB/CC) module-global slot, persists across calls (batch 23) |
+| `ON ERROR` | STATEMENT | (PB/Win + PB/CC) run-time error trap: GOTO label / GOTO 0 / RESUME NEXT (batch 25) |
+| `REGISTER` | STATEMENT | (PB/Win + PB/CC) optimization hint, accepted as LOCAL (batch 25) |
+| `RESUME` | STATEMENT | (PB/Win + PB/CC) RESUME / RESUME NEXT / RESUME FLUSH / RESUME label (batch 25) |
+| `TYPE SET` | STATEMENT | (PB/Win + PB/CC) pb_type_set / pb_type_set_str memcpy fill (batch 23) |
 | `TRY/END TRY` | BLOCK | structured error trap; CATCH/FINALLY/EXIT TRY, reuses ON ERROR machinery |
-| `DIR FUNCTION AND` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+| `DIR FUNCTION AND` | STATEMENT | (PB/Win + PB/CC) Proposed Improvement |
 | `PREFIX` | BLOCK | preprocessor text transform; prepends source code to each line until END PREFIX |
-| `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
+| `LET *(WITH TYPES)*` | STATEMENT | (PB/Win + PB/CC) Established |
 
 
 | `GET$$` | STATEMENT | pb_get_wstring/pb_put_wstring (UTF-16LE round-trip) |
 | `MACRO/END MACRO` | BLOCK | preprocessor text expansion (single-line + multi-line) |
 | `ON CALL` | STATEMENT | dispatch table to SUB/FUNCTION (batch 27) |
 | `PUT$$` | STATEMENT | pb_put_wstring (WIDE write, UTF-16LE) |
-| MEMORY | STATEMENT | PB/Win + PB/CC | Established |
-| FONT END | STATEMENT | PB/Win + PB/CC | Established |
-| FONT NEW | STATEMENT | PB/Win + PB/CC | Established |
-| MKE$ | STATEMENT | PB/Win + PB/CC | 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
-| IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL) | ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers — use QUAD variables (batch 48) |
+| MEMORY | STATEMENT | (PB/Win + PB/CC) Established |
+| FONT END | STATEMENT | (PB/Win + PB/CC) Established |
+| FONT NEW | STATEMENT | (PB/Win + PB/CC) Established |
+| MKE$ | STATEMENT | (PB/Win + PB/CC) 8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler (official 80-bit format not modelled), so MKE$ == MKD$ (batch 36) |
+| IMAGELIST | STATEMENT (IMAGELIST NEW BITMAP\ | [ICON / GET COUNT / KILL)] ImageList_Create / ImageList_GetImageCount / ImageList_Destroy (comctl32); handles are 64-bit pointers — use QUAD variables (batch 48) |
 | COLOR | STATEMENT (PB/CC console text color) | pb_color — SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no args restores default (batch 49) |
 | MENU NEW BAR | STATEMENT (menu bar handle) | pb_menu_new_bar — CreateMenu; handle is 64-bit (QUAD) (batch 50) |
 | MENU NEW POPUP | STATEMENT (popup menu handle) | pb_menu_new_popup — CreatePopupMenu; handle is 64-bit (QUAD) (batch 50) |
@@ -260,42 +260,42 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET DC` | Statement | pb_graphic_get_dc (current device context) |
 | `GRAPHIC GET MIX` | Statement | pb_graphic_get_mix (ROP mode state) |
 | `GRAPHIC SET MIX` | Statement | pb_graphic_set_mix (ROP mode state) |
-| `GRAPHIC SET PIXEL` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
-| `GRAPHIC GET SIZE` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
-| `GRAPHIC SET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
-| `GRAPHIC GET TEXTALIGN` | Statement | Win32/GDI | Proposed New | IMPLEMENTED |
-| `GRAPHIC ARC` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
-| `GRAPHIC PIE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
-| `GRAPHIC POLYLINE` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
-| `GRAPHIC PAINT` | Statement | PB/Win + PB/CC | Established | IMPLEMENTED |
-| GRAPHIC GET CAPTION | console-title bridge (GetConsoleTitleA) |
-| GRAPHIC GET POS | current pen position (GetCurrentPositionEx) |
-| GRAPHIC GET PPI | pixels per inch (GetDeviceCaps LOGPIXELS) |
-| GRAPHIC GET STRETCHMODE | current stretch mode (GetStretchBltMode) |
-| GRAPHIC SET CAPTION | console-title bridge (SetConsoleTitleA) |
-| GRAPHIC SET POS | move pen position (MoveToEx, optional STEP) |
-| GRAPHIC SET STRETCHMODE | set stretch mode (SetStretchBltMode) |
-| GRAPHIC TEXT SIZE | measure string (GetTextExtentPoint32A) 
+| `GRAPHIC SET PIXEL` | Statement | [Win32/GDI] implemented |
+| `GRAPHIC GET SIZE` | Statement | [Win32/GDI] implemented |
+| `GRAPHIC SET TEXTALIGN` | Statement | [Win32/GDI] implemented |
+| `GRAPHIC GET TEXTALIGN` | Statement | [Win32/GDI] implemented |
+| `GRAPHIC ARC` | Statement | (PB/Win + PB/CC) implemented |
+| `GRAPHIC PIE` | Statement | (PB/Win + PB/CC) implemented |
+| `GRAPHIC POLYLINE` | Statement | (PB/Win + PB/CC) implemented |
+| `GRAPHIC PAINT` | Statement | (PB/Win + PB/CC) implemented |
+| GRAPHIC GET CAPTION | STATEMENT | console-title bridge (GetConsoleTitleA) |
+| GRAPHIC GET POS | STATEMENT | current pen position (GetCurrentPositionEx) |
+| GRAPHIC GET PPI | STATEMENT | pixels per inch (GetDeviceCaps LOGPIXELS) |
+| GRAPHIC GET STRETCHMODE | STATEMENT | current stretch mode (GetStretchBltMode) |
+| GRAPHIC SET CAPTION | STATEMENT | console-title bridge (SetConsoleTitleA) |
+| GRAPHIC SET POS | STATEMENT | move pen position (MoveToEx, optional STEP) |
+| GRAPHIC SET STRETCHMODE | STATEMENT | set stretch mode (SetStretchBltMode) |
+| GRAPHIC TEXT SIZE | STATEMENT | measure string (GetTextExtentPoint32A) |
 | `MENU GET STATE` | STATEMENT | pb_menu_get_state (GetMenuState/EnableMenuItem/CheckMenuItem) |
 | `MENU SET STATE` | STATEMENT | pb_menu_set_state (EnableMenuItem/CheckMenuItem) |
 | `MENU GET TEXT` | STATEMENT | pb_menu_get_text (GetMenuStringA) |
 | `MENU SET TEXT` | STATEMENT | pb_menu_set_text (ModifyMenuA) ||
-| `GRAPHIC GET CLIP` | STATEMENT | PB/Win only | Established | GRAPHIC GET CLIP TO w!, h! — GetClipBox (pb_graphic_get_clip) |
-| `GRAPHIC GET VIEW` | STATEMENT | PB/Win only | Established | GRAPHIC GET VIEW TO x!, y! — GetViewportOrgEx (pb_graphic_get_view) |
-| `GRAPHIC SET VIEW` | STATEMENT | PB/Win only | Established | GRAPHIC SET VIEW x!, y! — SetViewportOrgEx (pb_graphic_set_view) |
-| `GRAPHIC GET LINES` | STATEMENT | PB/Win only | Established | GRAPHIC GET LINES TO n& — bitmap height (pb_graphic_get_lines) |
-| `GRAPHIC GET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC GET WRAP TO w& (pb_graphic_get_wrap) |
-| `GRAPHIC SET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC SET WRAP [n&] (pb_graphic_set_wrap) |
-| `GRAPHIC GET BITS` | STATEMENT | PB/Win only | Established | GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (pb_graphic_get_bits) |
-| `GRAPHIC SET BITS` | STATEMENT | PB/Win only | Established | GRAPHIC SET BITS bitexpr$ — replace bitmap from DIB string (pb_graphic_set_bits) |
-| `GRAPHIC GET SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC GET SCALE TO x1!,y1!,x2!,y2! (pb_graphic_get_scale) |
-| `GRAPHIC SCALE` | STATEMENT | PB/Win only | Established | GRAPHIC SCALE (x1!,y1!)-(x2!,y2!) / SCALE PIXELS (pb_graphic_scale / pb_graphic_scale_pixels) |
-| `GRAPHIC SET AUTOSIZE` | STATEMENT | PB/Win only | Established | GRAPHIC SET AUTOSIZE w, h [,USERSIZE] (pb_graphic_set_autosize) |
-| `GRAPHIC SET SIZE` | STATEMENT | PB/Win only | Established | GRAPHIC SET SIZE w&, h& — rebuild bitmap at new size (pb_graphic_set_size) |
-| `GRAPHIC SET CLIP` | STATEMENT | PB/Win only | Established | GRAPHIC SET CLIP l!,t!,r!,b! — clip margins (pb_graphic_set_clip, read back by GET CLIP) |
-| `GRAPHIC SET VIRTUAL` | STATEMENT | PB/Win only | Established | GRAPHIC SET VIRTUAL w&, h& [,USERSIZE] — virtual display size (pb_graphic_set_virtual) |
-| `GRAPHIC SET WORDWRAP` | STATEMENT | PB/Win only | Established | GRAPHIC SET WORDWRAP n& (pb_graphic_set_wordwrap) |
-| `GRAPHIC GET WORDWRAP` | STATEMENT | PB/Win only | Established | GRAPHIC GET WORDWRAP TO n& (pb_graphic_get_wordwrap) |
+| `GRAPHIC GET CLIP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET VIEW` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET VIEW` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET LINES` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET WRAP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET WRAP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET BITS` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET BITS` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET SCALE` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SCALE` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET AUTOSIZE` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET SIZE` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET CLIP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET VIRTUAL` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC GET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
