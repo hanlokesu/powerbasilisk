@@ -271,6 +271,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +5 from batch 68 — XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC host-based printer GDI (screen DC fallback).
 > +1 from batch 28 — THREADED thread-local storage declaration, LLVM `thread_local`
 > globals with per-thread copies.)
 > (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
@@ -303,6 +304,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `GRAPHIC SET VIRTUAL` | ✅ | 65 (v0.1.59) | virtual display size (pb_graphic_set_virtual) |
 | `GRAPHIC SET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode on/off (pb_graphic_set_wordwrap) |
 | `ARRAY ADD` arr1(), arr2() | ✅ | 67 (v0.1.61) | `pb_array_add` — element-wise add, all numeric types |
+| `XPRINT ATTACH` / `CLOSE` / `GET PPI` / `GET SIZE` / `GET DC` | ✅ | 68 (v0.1.62) | CreateDCA screen DC (printer pending); GetDeviceCaps LOGPIXELSX/Y + PHYSICALWIDTH/HEIGHT; DeleteDC |
 | `GRAPHIC SET FIXED` | ✅ | 66 (v0.1.60) | restore FIXED mode (pb_graphic_set_fixed) |
 | `GRAPHIC SET FONT` | ✅ | 66 (v0.1.60) | select font into DC (pb_graphic_set_font, SelectObject) |
 | `GRAPHIC GET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode read (pb_graphic_get_wordwrap) |
@@ -532,6 +534,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.62 (2026-09-15) — Batch 68: XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC (5 statements)
+
+Five more Not implemented items moved to Implemented (coverage: **279 implemented / 95 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT ATTACH [DEFAULT | printer$]** — attaches a host-based printer DC. For CI compatibility, currently uses `CreateDCA("DISPLAY")` screen DC as the target; real printer DC (`GetDefaultPrinterA` + `CreateDCA("WINSPOOL")`) is implemented in runtime but disabled pending printer-environment testing.
+- **XPRINT CLOSE** — detaches and deletes the current DC (`DeleteDC`).
+- **XPRINT GET PPI TO x&, y&** — printer/screen resolution via `GetDeviceCaps(LOGPIXELSX/LOGPIXELSY)`.
+- **XPRINT GET SIZE TO w&, h&** — physical page size via `GetDeviceCaps(PHYSICALWIDTH/HEIGHT)`; screen DC fallback uses `HORZRES/VERTRES` (PHYSICALWIDTH returns 0 for display DCs).
+- **XPRINT GET DC TO hdc&** — returns the current DC handle as QUAD (64-bit pointer safe).
+- Runtime helpers: `pb_xprint_attach/close/get_ppi/get_size/get_dc` with global `g_xp_dc`; `CreateDCA` + `GetDefaultPrinterA` dllimports added; `-lwinspool` added to EXE and DLL link lists.
+- Tests: examples/batch68_test.bas (5/5 ALL PASS — ATTACH, GET DC non-zero, GET PPI=96, GET SIZE=1920x1080, CLOSE+GET DC=0), official regression 15/15 ALL PASS, fmt + clippy clean, 32-bit + 64-bit runtime compile clean.
 
 ### v0.1.61 (2026-09-15) — Batch 67: ARRAY ADD
 

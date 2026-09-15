@@ -381,6 +381,7 @@ fn link_dll(obj_path: &Path, dll_path: &Path, opts: &CompileOptions) -> PbResult
             "-lole32".to_string(),
             "-lwinmm".to_string(),
             "-lws2_32".to_string(),
+            "-lwinspool".to_string(),
         ]);
     }
 
@@ -432,6 +433,7 @@ fn link_exe(obj_paths: &[&Path], exe_path: &Path, opts: &CompileOptions) -> PbRe
             "-lole32".to_string(),
             "-lwinmm".to_string(),
             "-lws2_32".to_string(),
+            "-lwinspool".to_string(),
         ]);
     }
 
@@ -1826,6 +1828,28 @@ impl Compiler {
             .declare_function("pb_graphic_attach", &IrType::I32, &[IrType::I64], false);
         self.module
             .declare_function("pb_graphic_detach", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_xprint_attach",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_close", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_xprint_get_ppi",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_size",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_get_dc", &IrType::I32, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -4938,6 +4962,37 @@ impl Compiler {
                     if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
                         fb.call_void("pb_graphic_get_ppi", &[xp, yp]);
                     }
+                }
+            }
+            "XPRINT_ATTACH" => {
+                let p = self.compile_expr(fb, &call.args[0])?;
+                let j = if let Some(a1) = call.args.get(1) {
+                    self.compile_expr(fb, a1)?
+                } else {
+                    fb.const_null_ptr()
+                };
+                fb.call_void("pb_xprint_attach", &[p, j]);
+            }
+            "XPRINT_CLOSE" => {
+                fb.call_void("pb_xprint_close", &[]);
+            }
+            "XPRINT_GET_PPI" => {
+                if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_ppi", &[xp, yp]);
+                    }
+                }
+            }
+            "XPRINT_GET_SIZE" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_xprint_get_size", &[wp, hp]);
+                    }
+                }
+            }
+            "XPRINT_GET_DC" => {
+                if let Some((dp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_dc", &[dp]);
                 }
             }
             "GRAPHIC_GET_BITS" => {

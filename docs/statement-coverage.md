@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 274 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 279 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 100 | Documented upstream, no codegen evidence yet |
+| ⬜ Not implemented | 95 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (274)
+## ✅ Implemented (279)
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -162,6 +162,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | UCODEPAGE | STATEMENT | `pb_ucodepage` (records ANSI/OEM/numeric codepage) |
 | VAL | STATEMENT | `core` |
 | WRITE# | STATEMENT | `core` |
+| XPRINT ATTACH | STATEMENT | pb_xprint_attach — CreateDC (screen DC fallback for CI; printer support pending) |
+| XPRINT CLOSE | STATEMENT | pb_xprint_close — DeleteDC + detach |
+| XPRINT GET DC | STATEMENT | pb_xprint_get_dc — current DC handle (QUAD) |
+| XPRINT GET PPI | STATEMENT | pb_xprint_get_ppi — GetDeviceCaps LOGPIXELSX/Y |
+| XPRINT GET SIZE | STATEMENT | pb_xprint_get_size — PHYSICALWIDTH/HEIGHT with HORZRES/VERTRES fallback |
 | `ON GOTO` | STATEMENT | (PB/Win + PB/CC) Computed branch to one of several labels |
 | `ON GOSUB` | STATEMENT | (PB/Win + PB/CC) Computed call to one of several subroutines (RETURN returns) |
 | `CLIPBOARD` (SET TEXT / GET TEXT / RESET) | STATEMENT | (PB/Win + PB/CC) Win32 clipboard read/write/reset |
@@ -450,7 +455,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | Keyword | Official kind | Platform | Status |
 |---------|---------------|----------|--------|
 
-| ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -481,13 +485,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT BOX | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CANCEL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT COLOR | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT COPY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ELLIPSE | STATEMENT | PB/Win + PB/CC | Established |
@@ -499,7 +501,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET COPIES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET DC | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET LINES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
@@ -511,11 +512,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET POS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PPI | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SCALE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |

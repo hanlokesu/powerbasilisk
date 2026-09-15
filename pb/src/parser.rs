@@ -2788,6 +2788,76 @@ impl Parser {
                     }
                 }
 
+                // XPRINT (batch 68): host-based printer GDI operations
+                if name_upper == "XPRINT" {
+                    self.advance(); // consume XPRINT
+                    let xop = self.peek_plain_upper();
+                    if xop == "ATTACH" {
+                        // XPRINT ATTACH {DEFAULT | PrinterName$} [, JobName$]
+                        self.advance();
+                        let first = self.peek_plain_upper();
+                        let printer = if first == "DEFAULT" {
+                            self.advance();
+                            Expr::StringLit(String::new())
+                        } else {
+                            self.parse_expression()?
+                        };
+                        let mut args = vec![printer];
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_ATTACH".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "CLOSE" {
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_CLOSE".to_string(),
+                            args: vec![],
+                            line,
+                        }));
+                    }
+                    if xop == "GET" {
+                        self.advance();
+                        let sub = self.peek_plain_upper();
+                        if sub == "PPI" || sub == "SIZE" {
+                            // XPRINT GET PPI TO x&, y& | XPRINT GET SIZE TO w&, h&
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let a = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let b = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: format!("XPRINT_GET_{}", sub),
+                                args: vec![a, b],
+                                line,
+                            }));
+                        }
+                        if sub == "DC" {
+                            // XPRINT GET DC TO hdc&
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_DC".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
+                    }
+                    // fallback: consume rest as noop for unimplemented XPRINT verbs
+                    self.consume_to_eol();
+                    return Ok(Statement::Noop("XPRINT_".to_string() + &xop, line));
+                }
+
                 if name_upper == "MENU" {
                     self.advance(); // consume MENU
                     let op = self.peek_plain_upper();
@@ -4153,7 +4223,6 @@ impl Parser {
                         | "LISTBOX"
                         | "TREEVIEW"
                         | "LISTVIEW"
-                        | "XPRINT"
                 ) {
                     self.advance();
                     self.consume_to_eol();

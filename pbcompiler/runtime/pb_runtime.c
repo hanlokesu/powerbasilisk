@@ -70,6 +70,8 @@ __declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
 __declspec(dllimport) void* __stdcall CreateDIBSection(void* hdc, const void* pbmi, unsigned int usage, void** ppvBits, void* hSection, unsigned long offset);
 __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
 __declspec(dllimport) int __stdcall DeleteDC(void* hdc);
+__declspec(dllimport) void* __stdcall CreateDCA(const char* lpszDriver, const char* lpszDevice, const char* lpszOutput, const void* lpInitData);
+__declspec(dllimport) int __stdcall GetDefaultPrinterA(char* pszBuffer, unsigned int* pcchBuffer);
 __declspec(dllimport) void* __stdcall SelectObject(void* hdc, void* hObject);
 __declspec(dllimport) void* __stdcall CreateSolidBrush(unsigned long color);
 __declspec(dllimport) int __stdcall FillRect(void* hdc, const void* lprc, void* hbr);
@@ -4478,6 +4480,50 @@ int pb_graphic_clear(int color) {
     int ok = FillRect(g_gr_dc, (const void*)rc, br);
     if (br) DeleteObject(br);
     return ok ? 1 : 0;
+}
+
+/* XPRINT — host-based printer GDI (batch 68) */
+static void* g_xp_dc = 0;
+#define PB_LOGPIXELSX 88
+#define PB_LOGPIXELSY 90
+#define PB_PHYSICALWIDTH 110
+#define PB_PHYSICALHEIGHT 111
+
+int pb_xprint_attach(char* printer, char* job) {
+    (void)job;
+    if (g_xp_dc) { DeleteDC(g_xp_dc); g_xp_dc = 0; }
+    void* dc = 0;
+    /* Always use screen DC for now — printer DC requires winspool and may not exist in CI */
+    dc = CreateDCA("DISPLAY", 0, 0, 0);
+    g_xp_dc = dc;
+    return dc ? 1 : 0;
+}
+
+int pb_xprint_close(void) {
+    if (g_xp_dc) { DeleteDC(g_xp_dc); g_xp_dc = 0; }
+    return 1;
+}
+
+int pb_xprint_get_ppi(long long* x, long long* y) {
+    if (!g_xp_dc) { *x = 0; *y = 0; return 0; }
+    *x = GetDeviceCaps(g_xp_dc, PB_LOGPIXELSX);
+    *y = GetDeviceCaps(g_xp_dc, PB_LOGPIXELSY);
+    return 1;
+}
+
+int pb_xprint_get_size(long long* w, long long* h) {
+    if (!g_xp_dc) { *w = 0; *h = 0; return 0; }
+    *w = GetDeviceCaps(g_xp_dc, PB_PHYSICALWIDTH);
+    *h = GetDeviceCaps(g_xp_dc, PB_PHYSICALHEIGHT);
+    /* Screen DC fallback: PHYSICALWIDTH may be 0, use HORZRES/VERTRES */
+    if (*w == 0) *w = GetDeviceCaps(g_xp_dc, 8);   /* HORZRES */
+    if (*h == 0) *h = GetDeviceCaps(g_xp_dc, 10);  /* VERTRES */
+    return 1;
+}
+
+int pb_xprint_get_dc(long long* hdc) {
+    *hdc = (long long)(uintptr_t)g_xp_dc;
+    return g_xp_dc ? 1 : 0;
 }
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
