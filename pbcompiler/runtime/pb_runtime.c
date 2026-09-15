@@ -4544,6 +4544,14 @@ static long g_xp_wordwrap = 0;
 static long g_xp_overlap = 0;
 static long g_xp_scale_w = 0;
 static long g_xp_scale_h = 0;
+/* === Batch 74: XPRINT printer property globals === */
+static long g_xp_copies = 1;
+static long g_xp_orientation = 1; /* 1=portrait, 2=landscape */
+static long g_xp_quality = 0;     /* 0=draft, 1=low, 2=medium, 3=high */
+static long g_xp_duplex = 0;      /* 0=simplex, 1=vertical, 2=horizontal */
+static long g_xp_collate = 0;     /* 0=off, 1=on */
+static long g_xp_colormode = 2;   /* 1=mono, 2=color */
+static long g_xp_pages = 0;       /* 0=all */
 static int g_xp_pen_width = 1;
 static int g_xp_pen_style = 0; /* PS_SOLID */
 
@@ -4796,6 +4804,21 @@ int pb_xprint_polyline(int* pts, int count, unsigned long col) {
     xp_ensure_pen();
     return Polyline(g_xp_dc, (const void*)pts, count);
 }
+/* === Batch 74: XPRINT printer property SET/GET === */
+int pb_xprint_set_copies(int v) { g_xp_copies = v; return 1; }
+int pb_xprint_get_copies(long* out) { if (!out) return 0; *out = g_xp_copies; return 1; }
+int pb_xprint_set_orientation(int v) { g_xp_orientation = v; return 1; }
+int pb_xprint_get_orientation(long* out) { if (!out) return 0; *out = g_xp_orientation; return 1; }
+int pb_xprint_set_quality(int v) { g_xp_quality = v; return 1; }
+int pb_xprint_get_quality(long* out) { if (!out) return 0; *out = g_xp_quality; return 1; }
+int pb_xprint_set_duplex(int v) { g_xp_duplex = v; return 1; }
+int pb_xprint_get_duplex(long* out) { if (!out) return 0; *out = g_xp_duplex; return 1; }
+int pb_xprint_set_collate(int v) { g_xp_collate = v; return 1; }
+int pb_xprint_get_collate(long* out) { if (!out) return 0; *out = g_xp_collate; return 1; }
+int pb_xprint_set_colormode(int v) { g_xp_colormode = v; return 1; }
+int pb_xprint_get_colormode(long* out) { if (!out) return 0; *out = g_xp_colormode; return 1; }
+int pb_xprint_set_pages(int v) { g_xp_pages = v; return 1; }
+int pb_xprint_get_pages(long* out) { if (!out) return 0; *out = g_xp_pages; return 1; }
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

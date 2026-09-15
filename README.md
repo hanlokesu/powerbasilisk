@@ -271,7 +271,9 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +14 from batch 74 — XPRINT SET/GET printer properties (COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES, 7 SET/GET pairs).
 > +2 from batch 73 — XPRINT POLYGON/POLYLINE (GDI polygon + polyline with variable coord args).
+| `XPRINT printer properties (SET/GET)` | ✅ | 74 (v0.1.68) | 7 global property pairs: COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES |
 > +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
 > +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
 | `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
@@ -544,6 +546,20 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.68 (2026-09-15) — Batch 74: XPRINT printer properties SET/GET (14 statements)
+
+Fourteen more Not implemented items moved to Implemented (coverage: **335 implemented / 39 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT SET/GET COPIES** — print copy count
+- **XPRINT SET/GET ORIENTATION** — 1=portrait, 2=landscape
+- **XPRINT SET/GET QUALITY** — 0=draft, 1=low, 2=medium, 3=high
+- **XPRINT SET/GET DUPLEX** — 0=simplex, 1=vertical, 2=horizontal
+- **XPRINT SET/GET COLLATE** — 0=off, 1=on
+- **XPRINT SET/GET COLORMODE** — 1=mono, 2=color
+- **XPRINT SET/GET PAGES** — page range (0=all)
+- Runtime: 7 global longs (g_xp_copies/orientation/quality/duplex/collate/colormode/pages) + 14 pb_xprint_set/get_* functions
+- Tests: examples/batch74_test.bas (ALL PASS — 7 SET/GET pairs round-trip), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.67 (2026-09-15) — Batch 73: XPRINT POLYGON / POLYLINE (2 statements)
 

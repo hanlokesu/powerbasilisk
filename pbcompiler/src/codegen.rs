@@ -2074,6 +2074,50 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_xprint_set_copies", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_copies", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_orientation",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_orientation",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_quality", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_quality", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_set_duplex", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_duplex", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_xprint_set_collate", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_collate", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_xprint_set_colormode",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_get_colormode",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_xprint_set_pages", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_xprint_get_pages", &IrType::I32, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
             "pb_graphic_line",
@@ -5565,6 +5609,76 @@ impl Compiler {
                         fb.const_i64(0)
                     };
                     fb.call_void("pb_xprint_polyline", &[ptr, fb.const_i32(npts as i32), col]);
+                }
+            }
+            "XPRINT_SET_COPIES" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_copies", &[iv]);
+            }
+            "XPRINT_GET_COPIES" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_copies", &[p]);
+                }
+            }
+            "XPRINT_SET_ORIENTATION" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_orientation", &[iv]);
+            }
+            "XPRINT_GET_ORIENTATION" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_orientation", &[p]);
+                }
+            }
+            "XPRINT_SET_QUALITY" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_quality", &[iv]);
+            }
+            "XPRINT_GET_QUALITY" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_quality", &[p]);
+                }
+            }
+            "XPRINT_SET_DUPLEX" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_duplex", &[iv]);
+            }
+            "XPRINT_GET_DUPLEX" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_duplex", &[p]);
+                }
+            }
+            "XPRINT_SET_COLLATE" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_collate", &[iv]);
+            }
+            "XPRINT_GET_COLLATE" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_collate", &[p]);
+                }
+            }
+            "XPRINT_SET_COLORMODE" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_colormode", &[iv]);
+            }
+            "XPRINT_GET_COLORMODE" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_colormode", &[p]);
+                }
+            }
+            "XPRINT_SET_PAGES" => {
+                let v = self.compile_expr(fb, &call.args[0])?;
+                let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_xprint_set_pages", &[iv]);
+            }
+            "XPRINT_GET_PAGES" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_xprint_get_pages", &[p]);
                 }
             }
             "GRAPHIC_GET_BITS" => {

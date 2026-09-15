@@ -171,6 +171,20 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` — GetTextExtentPoint32A("W") |
 | XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` — same as CELL SIZE |
 | XPRINT POLYGON | STATEMENT | `pb_xprint_polygon` — Polygon (GDI), variable coord args on stack |
+| XPRINT SET COPIES | STATEMENT | `pb_xprint_set_copies` — global printer property |
+| XPRINT GET COPIES | STATEMENT | `pb_xprint_get_copies` — global printer property |
+| XPRINT SET ORIENTATION | STATEMENT | `pb_xprint_set_orientation` — global printer property |
+| XPRINT GET ORIENTATION | STATEMENT | `pb_xprint_get_orientation` — global printer property |
+| XPRINT SET QUALITY | STATEMENT | `pb_xprint_set_quality` — global printer property |
+| XPRINT GET QUALITY | STATEMENT | `pb_xprint_get_quality` — global printer property |
+| XPRINT SET DUPLEX | STATEMENT | `pb_xprint_set_duplex` — global printer property |
+| XPRINT GET DUPLEX | STATEMENT | `pb_xprint_get_duplex` — global printer property |
+| XPRINT SET COLLATE | STATEMENT | `pb_xprint_set_collate` — global printer property |
+| XPRINT GET COLLATE | STATEMENT | `pb_xprint_get_collate` — global printer property |
+| XPRINT SET COLORMODE | STATEMENT | `pb_xprint_set_colormode` — global printer property |
+| XPRINT GET COLORMODE | STATEMENT | `pb_xprint_get_colormode` — global printer property |
+| XPRINT SET PAGES | STATEMENT | `pb_xprint_set_pages` — global printer property |
+| XPRINT GET PAGES | STATEMENT | `pb_xprint_get_pages` — global printer property |
 | XPRINT POLYLINE | STATEMENT | `pb_xprint_polyline` — Polyline (GDI), variable coord args on stack |
 | XPRINT COPY | STATEMENT | `pb_xprint_copy` — BitBlt (SRCCOPY) |
 | XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` — GetTextExtentPoint32A (returns width+height) |
@@ -527,30 +541,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COPIES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COPIES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PAGES | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |

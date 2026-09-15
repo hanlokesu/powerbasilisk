@@ -3245,6 +3245,83 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "COPIES" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_COPIES".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "ORIENTATION" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_ORIENTATION".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "QUALITY" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_QUALITY".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "DUPLEX" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_DUPLEX".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "COLLATE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_COLLATE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "COLORMODE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_COLORMODE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "PAGES" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_PAGES".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;
@@ -3376,6 +3453,76 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "XPRINT_SET_CLIP".to_string(),
                                 args: vec![x1, y1, x2, y2],
+                                line,
+                            }));
+                        }
+                        if sub == "COPIES" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_COPIES".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "ORIENTATION" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_ORIENTATION".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "QUALITY" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_QUALITY".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "DUPLEX" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_DUPLEX".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "COLLATE" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_COLLATE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "COLORMODE" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_COLORMODE".to_string(),
+                                args: vec![v],
+                                line,
+                            }));
+                        }
+                        if sub == "PAGES" {
+                            self.advance();
+                            let v = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_SET_PAGES".to_string(),
+                                args: vec![v],
                                 line,
                             }));
                         }
