@@ -1963,6 +1963,25 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "CLIP" || sub == "VIEW" || sub == "LINES" || sub == "WRAP" {
+                            // GRAPHIC GET CLIP TO w!, h! | GRAPHIC GET VIEW TO x!, y!
+                            // GRAPHIC GET LINES TO n& | GRAPHIC GET WRAP TO w&  (batch 63)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let a = self.parse_expression()?;
+                            let mut args = vec![a];
+                            if sub == "CLIP" || sub == "VIEW" {
+                                self.expect(&Token::Comma)?;
+                                let b = self.parse_expression()?;
+                                args.push(b);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: format!("GRAPHIC_GET_{}", sub),
+                                args,
+                                line,
+                            }));
+                        }
                         if sub == "PIXEL" {
                             // GRAPHIC GET PIXEL (x,y) TO dst&
                             self.advance();
@@ -2078,6 +2097,23 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "GRAPHIC_SET_TEXTALIGN".to_string(),
                                 args: vec![align],
+                                line,
+                            }));
+                        }
+                        if sub == "VIEW" || sub == "WRAP" {
+                            // GRAPHIC SET VIEW x!, y! | GRAPHIC SET WRAP [n&]  (batch 63)
+                            self.advance();
+                            let a = self.parse_expression()?;
+                            let mut args = vec![a];
+                            if sub == "VIEW" {
+                                self.expect(&Token::Comma)?;
+                                let b = self.parse_expression()?;
+                                args.push(b);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: format!("GRAPHIC_SET_{}", sub),
+                                args,
                                 line,
                             }));
                         }
@@ -2552,7 +2588,7 @@ impl Parser {
                                 line,
                             }));
                         }
-                        if op == "END" {
+                        if matches!(self.peek(), Token::End) {
                             self.advance();
                             let mut args = Vec::new();
                             if self.peek() != &Token::Eol && self.peek() != &Token::Eof {

@@ -225,6 +225,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
 > [**statement-coverage.md**](docs/statement-coverage.md) · full data:
 > [**statement-coverage.csv**](docs/statement-coverage.csv).
+> (2026-09-15: +6 official statement keywords from batch 63 — GRAPHIC GET CLIP (GetClipBox), GRAPHIC GET VIEW / GRAPHIC SET VIEW (GetViewportOrgEx / SetViewportOrgEx), GRAPHIC GET LINES (bitmap height), GRAPHIC GET WRAP / GRAPHIC SET WRAP (text-wrap state). Coverage now 261 implemented / 141 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 62 — MENU GET STATE / MENU SET STATE (GetMenuState / EnableMenuItem / CheckMenuItem, PB-compatible 1-based positions mapped to Win32 MF_BYPOSITION), MENU GET TEXT / MENU SET TEXT (GetMenuStringA / ModifyMenuA). Coverage now 255 implemented / 147 tier-3 / 101 not implemented.
 > (2026-09-15: +8 official statement keywords from batch 61 — GRAPHIC GET PPI (GetDeviceCaps LOGPIXELS), GRAPHIC GET POS / GRAPHIC SET POS (GetCurrentPositionEx / MoveToEx with optional STEP), GRAPHIC TEXT SIZE (GetTextExtentPoint32A), GRAPHIC GET/SET STRETCHMODE (GetStretchBltMode / SetStretchBltMode), GRAPHIC GET/SET CAPTION (console-title bridge via GetConsoleTitleA / SetConsoleTitleA). Coverage now 251 implemented / 151 tier-3 / 101 not implemented.
 > (2026-09-15: +4 official statement keywords from batch 60 — GRAPHIC ARC / GRAPHIC PIE (GDI Arc/Pie with PB degree angles mapped to ellipse points), GRAPHIC POLYLINE (Polyline with coordinate array), GRAPHIC PAINT (FloodFill with border color). > (2026-09-15: +4 official statement keywords from batch 59 — GRAPHIC SET PIXEL (direct 32-bpp pixel write via GetDIBits/SetDIBits), GRAPHIC GET SIZE (bitmap width/height), GRAPHIC SET TEXTALIGN / GRAPHIC GET TEXTALIGN (text alignment mode). > (2026-09-15: +4 official statement keywords from batch 58 — GRAPHIC GET CANVAS (current bitmap handle), GRAPHIC GET DC (device context), GRAPHIC SET MIX / GRAPHIC GET MIX (ROP mode state, default R2_COPYPEN). Coverage now 235 implemented / 167 tier-3 / 101 not implemented.)
@@ -245,7 +246,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
 > (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **255** statement-class keywords implemented · **147** DDT/GUI-class
+> Summary: **261** statement-class keywords implemented · **141** DDT/GUI-class
 > deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
 > (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
 > (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
@@ -293,6 +294,12 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `MENU SET STATE` | ✅ | 62 (v0.1.56) | EnableMenuItem/CheckMenuItem (pb_menu_set_state) |
 | `MENU GET TEXT` | ✅ | 62 (v0.1.56) | GetMenuStringA (pb_menu_get_text) |
 | `MENU SET TEXT` | ✅ | 62 (v0.1.56) | ModifyMenuA (pb_menu_set_text) |
+| `GRAPHIC GET CLIP` | ✅ | 63 (v0.1.57) | GetClipBox (pb_graphic_get_clip) |
+| `GRAPHIC GET VIEW` | ✅ | 63 (v0.1.57) | GetViewportOrgEx (pb_graphic_get_view) |
+| `GRAPHIC SET VIEW` | ✅ | 63 (v0.1.57) | SetViewportOrgEx (pb_graphic_set_view) |
+| `GRAPHIC GET LINES` | ✅ | 63 (v0.1.57) | bitmap height (pb_graphic_get_lines) |
+| `GRAPHIC GET WRAP` | ✅ | 63 (v0.1.57) | text-wrap state (pb_graphic_get_wrap) |
+| `GRAPHIC SET WRAP` | ✅ | 63 (v0.1.57) | text-wrap state (pb_graphic_set_wrap) |
 | `GRAPHIC GET PPI` | ✅ | 61 (v0.1.55) | GetDeviceCaps LOGPIXELSX/LOGPIXELSY (pb_graphic_get_ppi) |
 | `GRAPHIC GET POS` | ✅ | 61 (v0.1.55) | GetCurrentPositionEx (pb_graphic_get_pos) |
 | `GRAPHIC SET POS` | ✅ | 61 (v0.1.55) | MoveToEx, optional STEP (pb_graphic_set_pos) |
@@ -508,6 +515,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.57 (2026-09-15) — Batch 63: GRAPHIC GET CLIP / VIEW / LINES / WRAP + SET VIEW / WRAP
+
+- **GRAPHIC GET CLIP TO w!, h!** — GetClipBox on the attached target; default clip area equals the bitmap size in page units.
+- **GRAPHIC GET VIEW TO x!, y!** / **GRAPHIC SET VIEW x!, y!** — GetViewportOrgEx / SetViewportOrgEx (viewport position, page units).
+- **GRAPHIC GET LINES TO n&** — the attached bitmap height (line count).
+- **GRAPHIC GET WRAP TO w&** / **GRAPHIC SET WRAP [n&]** — read / set the text-wrap state (default 1).
+- **Fix:** parser — GRAPHIC BITMAP END was never matched because the `END` keyword is a reserved-word token (`Token::End`) that `peek_plain_upper()` maps to an empty string; the op test now uses `matches!(self.peek(), Token::End)`.
+- **Fix:** codegen — GRAPHIC_* (and MENU_*) statements that emit IR without a bare `return Ok(())` fell through to the unimplemented report and were wrongly logged; a guard after the dispatch match now returns early for fully-handled prefixes (batches 51-63).
+- Tests: examples/batch63_test.bas (6/6), official regression 15/15 ALL PASS, fmt + clippy clean.
 
 ### v0.1.56 (2026-09-15) — Batch 62: MENU GET/SET STATE + MENU GET/SET TEXT
 

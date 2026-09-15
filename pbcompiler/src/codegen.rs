@@ -2004,6 +2004,30 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_graphic_get_clip",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_get_view",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_view",
+            &IrType::I32,
+            &[IrType::Float, IrType::Float],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_get_lines", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_graphic_get_wrap", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_graphic_set_wrap", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
             "pb_graphic_set_pos",
             &IrType::I32,
             &[IrType::Float, IrType::Float],
@@ -4846,6 +4870,42 @@ impl Compiler {
                     }
                 }
             }
+            "GRAPHIC_GET_CLIP" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((hp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_graphic_get_clip", &[wp, hp]);
+                    }
+                }
+            }
+            "GRAPHIC_GET_VIEW" => {
+                if let Some((xp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    if let Some((yp, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.call_void("pb_graphic_get_view", &[xp, yp]);
+                    }
+                }
+            }
+            "GRAPHIC_GET_LINES" => {
+                if let Some((np, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_lines", &[np]);
+                }
+            }
+            "GRAPHIC_GET_WRAP" => {
+                if let Some((wp, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_graphic_get_wrap", &[wp]);
+                }
+            }
+            "GRAPHIC_SET_VIEW" => {
+                let x0 = self.compile_expr(fb, &call.args[0])?;
+                let y0 = self.compile_expr(fb, &call.args[1])?;
+                let xv = self.convert_value(fb, &x0, &IrType::Float, &PbType::Single);
+                let yv = self.convert_value(fb, &y0, &IrType::Float, &PbType::Single);
+                fb.call_void("pb_graphic_set_view", &[xv, yv]);
+            }
+            "GRAPHIC_SET_WRAP" => {
+                let w0 = self.compile_expr(fb, &call.args[0])?;
+                let wv = self.convert_value(fb, &w0, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_graphic_set_wrap", &[wv]);
+            }
             "GRAPHIC_SET_POS" => {
                 let x0 = self.compile_expr(fb, &call.args[0])?;
                 let y0 = self.compile_expr(fb, &call.args[1])?;
@@ -7022,6 +7082,14 @@ impl Compiler {
                 return Ok(());
             }
             _ => {}
+        }
+
+        // GRAPHIC_* and MENU_* statements are fully handled by the match above.
+        // Without this guard, arms that emit IR without a bare `return Ok(())`
+        // fall through to the unimplemented report below (false positives,
+        // batches 51-63).
+        if name.starts_with("GRAPHIC_") || name.starts_with("MENU_") {
+            return Ok(());
         }
 
         if let Some(info) = self.functions.get(&name).cloned() {

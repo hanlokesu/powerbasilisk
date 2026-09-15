@@ -96,6 +96,9 @@ typedef struct { int x; int y; } pb_pt;
 __declspec(dllimport) int __stdcall GetObjectA(void* hObject, int nCount, void* lpObject);
 __declspec(dllimport) int __stdcall GetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, void* lpvBits, void* lpbmi, unsigned int usage);
 __declspec(dllimport) int __stdcall SetDIBits(void* hdc, void* hbm, unsigned int start, unsigned int cLines, const void* lpvBits, const void* lpbmi, unsigned int usage);
+__declspec(dllimport) int __stdcall GetClipBox(void* hdc, void* lprc);
+__declspec(dllimport) int __stdcall GetViewportOrgEx(void* hdc, void* lppt);
+__declspec(dllimport) int __stdcall SetViewportOrgEx(void* hdc, int x, int y, void* lppt);
 
 
 
@@ -3993,6 +3996,48 @@ int pb_graphic_get_caption(char** dest) {
 }
 int pb_graphic_set_caption(char* s) {
     SetConsoleTitleA(s);
+    return 1;
+}
+
+/* GRAPHIC GET CLIP / GET VIEW / SET VIEW / GET LINES / GET+SET WRAP (batch 63) */
+static long g_gr_wrap = 1; /* default: text wraps */
+int pb_graphic_get_clip(float* w, float* h) {
+    if (!g_gr_dc) return 0;
+    int rc[4];
+    rc[0] = 0; rc[1] = 0; rc[2] = 0; rc[3] = 0;
+    if (!GetClipBox(g_gr_dc, (void*)rc)) return 0;
+    *w = (float)(rc[2] - rc[0]);
+    *h = (float)(rc[3] - rc[1]);
+    return 1;
+}
+int pb_graphic_get_view(float* x, float* y) {
+    if (!g_gr_dc) return 0;
+    pb_pt pt;
+    pt.x = 0; pt.y = 0;
+    if (!GetViewportOrgEx(g_gr_dc, (void*)&pt)) return 0;
+    *x = (float)pt.x;
+    *y = (float)pt.y;
+    return 1;
+}
+int pb_graphic_set_view(float x, float y) {
+    if (!g_gr_dc) return 0;
+    SetViewportOrgEx(g_gr_dc, (int)x, (int)y, 0);
+    return 1;
+}
+int pb_graphic_get_lines(long* n) {
+    if (!g_gr_bmp) return 0;
+    unsigned char bm[32];
+    for (int i = 0; i < 32; i++) bm[i] = 0;
+    GetObjectA(g_gr_bmp, 32, (void*)bm);
+    *n = bm[8] | (bm[9] << 8) | (bm[10] << 16) | ((long)bm[11] << 24);
+    return 1;
+}
+int pb_graphic_get_wrap(long* w) {
+    *w = g_gr_wrap;
+    return 1;
+}
+int pb_graphic_set_wrap(long w) {
+    g_gr_wrap = w ? 1 : 0;
     return 1;
 }
 

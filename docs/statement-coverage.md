@@ -16,7 +16,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 151 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (255)
+## ✅ Implemented (261)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -280,6 +280,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `MENU SET STATE` | STATEMENT | pb_menu_set_state (EnableMenuItem/CheckMenuItem) |
 | `MENU GET TEXT` | STATEMENT | pb_menu_get_text (GetMenuStringA) |
 | `MENU SET TEXT` | STATEMENT | pb_menu_set_text (ModifyMenuA) ||
+| `GRAPHIC GET CLIP` | STATEMENT | PB/Win only | Established | GRAPHIC GET CLIP TO w!, h! — GetClipBox (pb_graphic_get_clip) |
+| `GRAPHIC GET VIEW` | STATEMENT | PB/Win only | Established | GRAPHIC GET VIEW TO x!, y! — GetViewportOrgEx (pb_graphic_get_view) |
+| `GRAPHIC SET VIEW` | STATEMENT | PB/Win only | Established | GRAPHIC SET VIEW x!, y! — SetViewportOrgEx (pb_graphic_set_view) |
+| `GRAPHIC GET LINES` | STATEMENT | PB/Win only | Established | GRAPHIC GET LINES TO n& — bitmap height (pb_graphic_get_lines) |
+| `GRAPHIC GET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC GET WRAP TO w& (pb_graphic_get_wrap) |
+| `GRAPHIC SET WRAP` | STATEMENT | PB/Win only | Established | GRAPHIC SET WRAP [n&] (pb_graphic_set_wrap) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -385,18 +391,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET BITS | STATEMENT |
 | GRAPHIC GET CANVAS | STATEMENT |
 | GRAPHIC GET CLIENT | STATEMENT |
-| GRAPHIC GET CLIP | STATEMENT |
 | GRAPHIC GET DC | STATEMENT |
-| GRAPHIC GET LINES | STATEMENT |
 | GRAPHIC GET LOC | STATEMENT |
 | GRAPHIC GET MIX | STATEMENT |
 | GRAPHIC GET OVERLAP | STATEMENT |
 | GRAPHIC GET PIXEL | STATEMENT |
 | GRAPHIC GET SCALE | STATEMENT |
 | GRAPHIC GET SCROLLTEXT | STATEMENT |
-| GRAPHIC GET VIEW | STATEMENT |
 | GRAPHIC GET WORDWRAP | STATEMENT |
-| GRAPHIC GET WRAP | STATEMENT |
 | GRAPHIC IMAGELIST | STATEMENT |
 | GRAPHIC INKEY$ | STATEMENT |
 | GRAPHIC INPUT | STATEMENT |
@@ -421,10 +423,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC SET OVERLAP | STATEMENT |
 | GRAPHIC SET SCROLLTEXT | STATEMENT |
 | GRAPHIC SET SIZE | STATEMENT |
-| GRAPHIC SET VIEW | STATEMENT |
 | GRAPHIC SET VIRTUAL | STATEMENT |
 | GRAPHIC SET WORDWRAP | STATEMENT |
-| GRAPHIC SET WRAP | STATEMENT |
 | GRAPHIC SPLIT | STATEMENT |
 | GRAPHIC STRETCH | STATEMENT |
 | GRAPHIC STYLE | STATEMENT |
