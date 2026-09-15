@@ -563,6 +563,15 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.84 (2026-09-15) — Batch 90: CBOOL — convert expression to boolean
+
+- **CBOOL(expr)** — converts any expression to a PB boolean: non-zero -> -1 (TRUE, all bits 1), zero -> 0 (FALSE).
+- Same codegen pattern as ISTRUE: icmp("ne", val, 0) -> zext to I32 -> neg (0 or -1).
+- No runtime C function needed — pure LLVM IR.
+- Tests: examples/batch90_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+- CI fix: l9_builtins2.bas test 10 REMOVE$ was missing ANY keyword (PB semantics: no-ANY = substring match, ANY = char class). Fixed test, CI #148 now passes.
+
+
 ### v0.1.83 (2026-09-15) — Batch 89: ERROR$ — error message function
 
 - **ERROR$** (no args) — returns the message for the current error code (ERR).

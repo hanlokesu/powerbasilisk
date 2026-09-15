@@ -10635,6 +10635,7 @@ impl Compiler {
             "FILENAME" => Some(self.builtin_filename(fb, args)),
             "PATHSCAN" => Some(self.builtin_strn(fb, args, "pb_pathscan", 2)),
             "ERL" => Some(self.builtin_str0(fb, "pb_erl_str")),
+            "CBOOL" => Some(self.builtin_cbool(fb, args)),
             "ERROR" => Some(self.builtin_error_str(fb, args)),
             "EXTRACT" => Some(self.builtin_extract(fb, args)),
             "REMOVE" => Some(self.builtin_remove(fb, args)),
@@ -11310,6 +11311,19 @@ impl Compiler {
         } else {
             fb.icmp("ne", &i32v, &zero)
         };
+        let zext = fb.zext(&cmp, &IrType::I32); // 0 or 1
+        Ok(fb.neg(&zext)) // 0 or -1 (PB TRUE=-1)
+    }
+
+    // Batch 90: CBOOL — convert expression to boolean (non-zero -> -1, zero -> 0).
+    fn builtin_cbool(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("CBOOL requires an argument"));
+        }
+        let val = self.compile_expr(fb, &args[0])?;
+        let i32v = self.to_i32(fb, &val);
+        let zero = fb.const_i32(0);
+        let cmp = fb.icmp("ne", &i32v, &zero);
         let zext = fb.zext(&cmp, &IrType::I32); // 0 or 1
         Ok(fb.neg(&zext)) // 0 or -1 (PB TRUE=-1)
     }
