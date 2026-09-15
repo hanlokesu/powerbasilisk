@@ -526,6 +526,8 @@ exit code 0:
 `GOTO` + labels, `GOSUB/RETURN`, `FUNCTION`/`CALL`, `DIM`/`GLOBAL`/`LOCAL`,
 arrays, and core string/numeric built-ins — **✅**
 
+This fork adds its own test suite in the [`examples/`](examples/) folder — each `batch*_test.bas` verifies a batch of newly implemented statements, alongside feature demos like `demo.bas` and `official_hello.bas`.
+
 ### Live demos
 - `examples/demo.bas` — **full-feature showcase**: control flow, all 18 string
   equates, REPLACE/LSET/RSET, arrays+ERASE, file I/O (WRITE#/SEEK#/LOCK/UNLOCK/
