@@ -1743,11 +1743,7 @@ static long long pb_profile_total_ms[PB_PROFILE_MAX];
 static int pb_profile_count = 0;
 
 static long long pb_now_ms(void) {
-#ifdef _WIN64
     return (long long)GetTickCount64();
-#else
-    return (long long)GetTickCount();
-#endif
 }
 
 /* 0 = new entry added at pb_profile_count-1; -1 = table full (not tracked) */
