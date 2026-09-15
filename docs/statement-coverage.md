@@ -50,10 +50,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `#TOOLS METASTATEMENT` | STATEMENT | PB/Win + PB/CC | Established |
 | `#UNIQUE METASTATEMENT` | STATEMENT | PB/Win + PB/CC | Established |
 | `#UTILITY METASTATEMENT` | STATEMENT | PB/Win + PB/CC | Established |
-| `ABS` | FUNCTION | LLVM intrinsic |  |
+| `ABS` | FUNCTION | LLVM intrinsic | Implemented |
 | `ACCEL ATTACH` | STATEMENT | PB/Win only | Established |
-| `ACOS` | FUNCTION | LLVM intrinsic |  |
-| `ACOSH` | FUNCTION | LLVM intrinsic |  |
+| `ACOS` | FUNCTION | LLVM intrinsic | Implemented |
+| `ACOSH` | FUNCTION | LLVM intrinsic | Implemented |
 | `ARRAY ADD` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ARRAY ARRAYIX` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ARRAY ASSIGN` | STATEMENT | PB/Win + PB/CC | Proposed New |
@@ -71,50 +71,50 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `ARRAY TAGARRAY` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ARRAY TAGARRAY ERASE` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ARRAY UNIQUE` | STATEMENT | PB/Win + PB/CC | Proposed New |
-| `ARRAY_REDIM_DECR` | FUNCTION | codegen builtin |  |
-| `ARRAY_REDIM_INCR` | FUNCTION | codegen builtin |  |
-| `ARRAY_SELECT` | FUNCTION | codegen builtin |  |
-| `ARRAY_TAGARRAY` | FUNCTION | codegen builtin |  |
-| `ARRAY_TAGARRAY_ERASE` | FUNCTION | codegen builtin |  |
+| `ARRAY_REDIM_DECR` | FUNCTION | codegen builtin | Implemented |
+| `ARRAY_REDIM_INCR` | FUNCTION | codegen builtin | Implemented |
+| `ARRAY_SELECT` | FUNCTION | codegen builtin | Implemented |
+| `ARRAY_TAGARRAY` | FUNCTION | codegen builtin | Implemented |
+| `ARRAY_TAGARRAY_ERASE` | FUNCTION | codegen builtin | Implemented |
 | `ASC` | STATEMENT | PB/Win + PB/CC | Established |
-| `ASIN` | FUNCTION | LLVM intrinsic |  |
-| `ASINH` | FUNCTION | LLVM intrinsic |  |
+| `ASIN` | FUNCTION | LLVM intrinsic | Implemented |
+| `ASINH` | FUNCTION | LLVM intrinsic | Implemented |
 | `ASM` | STATEMENT | PB/Win + PB/CC | Established |
 | `ASMDATA / END ASMDATA` | BLOCK | PB/Win + PB/CC | Established |
-| `ATANH` | FUNCTION | LLVM intrinsic |  |
-| `ATN` | FUNCTION | LLVM intrinsic |  |
-| `ATN2` | FUNCTION | codegen builtin |  |
+| `ATANH` | FUNCTION | LLVM intrinsic | Implemented |
+| `ATN` | FUNCTION | LLVM intrinsic | Implemented |
+| `ATN2` | FUNCTION | codegen builtin | Implemented |
 | `BEEP` | STATEMENT | PB/Win + PB/CC | Established |
-| `BGR` | FUNCTION | codegen builtin |  |
-| `BIN` | FUNCTION | codegen builtin |  |
+| `BGR` | FUNCTION | codegen builtin | Implemented |
+| `BIN` | FUNCTION | codegen builtin | Implemented |
 | `BIT` | STATEMENT | PB/Win + PB/CC | Established |
 | `BIT CALC` | STATEMENT | PB/Win + PB/CC | Established |
-| `BITS` | FUNCTION | codegen builtin |  |
-| `BUILD` | FUNCTION | codegen builtin |  |
-| `BYTE` | FUNCTION | codegen builtin |  |
+| `BITS` | FUNCTION | codegen builtin | Implemented |
+| `BUILD` | FUNCTION | codegen builtin | Implemented |
+| `BYTE` | FUNCTION | codegen builtin | Implemented |
 | `CALL` | STATEMENT | PB/Win + PB/CC | Established |
 | `CALL DWORD` | STATEMENT | PB/Win + PB/CC | Established |
 | `CALLSTK` | STATEMENT | PB/Win + PB/CC | Established |
-| `CALLSTKCOUNT` | FUNCTION | codegen builtin |  |
-| `CBOOL` | FUNCTION | codegen builtin |  |
-| `CBRT` | FUNCTION | C runtime (MSVCRT) |  |
-| `CBYTE` | FUNCTION | codegen builtin |  |
-| `CDBL` | FUNCTION | codegen builtin |  |
-| `CDWORD` | FUNCTION | codegen builtin |  |
-| `CEIL` | FUNCTION | LLVM intrinsic |  |
-| `CFLT` | FUNCTION | codegen builtin |  |
+| `CALLSTKCOUNT` | FUNCTION | codegen builtin | Implemented |
+| `CBOOL` | FUNCTION | codegen builtin | Implemented |
+| `CBRT` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `CBYTE` | FUNCTION | codegen builtin | Implemented |
+| `CDBL` | FUNCTION | codegen builtin | Implemented |
+| `CDWORD` | FUNCTION | codegen builtin | Implemented |
+| `CEIL` | FUNCTION | LLVM intrinsic | Implemented |
+| `CFLT` | FUNCTION | codegen builtin | Implemented |
 | `CHDIR` | STATEMENT | PB/Win + PB/CC | Established |
 | `CHDRIVE` | STATEMENT | PB/Win + PB/CC | Established |
-| `CHOOSE` | FUNCTION | codegen builtin |  |
-| `CHR` | FUNCTION | codegen builtin |  |
-| `CHRTOOEM` | FUNCTION | codegen builtin |  |
-| `CHRTOUTF8` | FUNCTION | codegen builtin |  |
+| `CHOOSE` | FUNCTION | codegen builtin | Implemented |
+| `CHR` | FUNCTION | codegen builtin | Implemented |
+| `CHRTOOEM` | FUNCTION | codegen builtin | Implemented |
+| `CHRTOUTF8` | FUNCTION | codegen builtin | Implemented |
 | `CLASS/END CLASS` | BLOCK | PB/Win + PB/CC | Established |
-| `CLIP` | FUNCTION | codegen builtin |  |
+| `CLIP` | FUNCTION | codegen builtin | Implemented |
 | `CLIPBOARD` | STATEMENT | PB/Win + PB/CC | Established |
 | `CLOSE` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `CLS` | STATEMENT | PB/CC only | Established |
-| `CODEPTR` | FUNCTION | codegen builtin |  |
+| `CODEPTR` | FUNCTION | codegen builtin | Implemented |
 | `COLOR` | STATEMENT | PB/CC only | Established |
 | `COMBOBOX` | STATEMENT | PB/Win only | Established |
 | `COMM CLOSE` | STATEMENT | PB/Win + PB/CC | Established |
@@ -126,7 +126,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `COMM SEND` | STATEMENT | PB/Win + PB/CC | Established |
 | `COMM SET` | STATEMENT | PB/Win + PB/CC | Established |
 | `COMM TIMEOUT` | STATEMENT | PB/Win + PB/CC | Established |
-| `COMMAND` | FUNCTION | codegen builtin |  |
+| `COMMAND` | FUNCTION | codegen builtin | Implemented |
 | `CONTROL ADD *CUSTOM CONTROL*` | STATEMENT | PB/Win only | Proposed Improvement |
 | `CONTROL ADD BUTTON` | STATEMENT | PB/Win only | Established |
 | `CONTROL ADD CHECK3STATE` | STATEMENT | PB/Win only | Established |
@@ -182,29 +182,29 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `CONTROL SET USER` | STATEMENT | PB/Win only | Established |
 | `CONTROL SHOW STATE` | STATEMENT | PB/Win only | Established |
 | `CONTROL TRAXOMATIC` | STATEMENT | PB/Win only | Proposed New |
-| `COS` | FUNCTION | LLVM intrinsic |  |
-| `COSH` | FUNCTION | LLVM intrinsic |  |
-| `COT` | FUNCTION | C runtime (MSVCRT) |  |
-| `COTH` | FUNCTION | C runtime (MSVCRT) |  |
-| `CQUAD` | FUNCTION | codegen builtin |  |
-| `CSC` | FUNCTION | C runtime (MSVCRT) |  |
-| `CSCH` | FUNCTION | C runtime (MSVCRT) |  |
+| `COS` | FUNCTION | LLVM intrinsic | Implemented |
+| `COSH` | FUNCTION | LLVM intrinsic | Implemented |
+| `COT` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `COTH` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `CQUAD` | FUNCTION | codegen builtin | Implemented |
+| `CSC` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `CSCH` | FUNCTION | C runtime (MSVCRT) | Implemented |
 | `CSET` | STATEMENT | PB/Win + PB/CC | Established |
-| `CSNG` | FUNCTION | codegen builtin |  |
-| `CSTR` | FUNCTION | codegen builtin |  |
-| `CULNG` | FUNCTION | codegen builtin |  |
-| `CURDIR` | FUNCTION | codegen builtin |  |
-| `CVBYT` | FUNCTION | codegen builtin |  |
-| `CVCUX` | FUNCTION | codegen builtin |  |
-| `CVDWD` | FUNCTION | codegen builtin |  |
-| `CVL` | FUNCTION | codegen builtin |  |
-| `CVQ` | FUNCTION | codegen builtin |  |
-| `CVW` | FUNCTION | codegen builtin |  |
-| `CWORD` | FUNCTION | codegen builtin |  |
+| `CSNG` | FUNCTION | codegen builtin | Implemented |
+| `CSTR` | FUNCTION | codegen builtin | Implemented |
+| `CULNG` | FUNCTION | codegen builtin | Implemented |
+| `CURDIR` | FUNCTION | codegen builtin | Implemented |
+| `CVBYT` | FUNCTION | codegen builtin | Implemented |
+| `CVCUX` | FUNCTION | codegen builtin | Implemented |
+| `CVDWD` | FUNCTION | codegen builtin | Implemented |
+| `CVL` | FUNCTION | codegen builtin | Implemented |
+| `CVQ` | FUNCTION | codegen builtin | Implemented |
+| `CVW` | FUNCTION | codegen builtin | Implemented |
+| `CWORD` | FUNCTION | codegen builtin | Implemented |
 | `DATA` | STATEMENT | PB/Win + PB/CC | Established |
-| `DATACOUNT` | FUNCTION | codegen builtin |  |
-| `DAYNAME` | FUNCTION | codegen builtin |  |
-| `DEC` | FUNCTION | codegen builtin |  |
+| `DATACOUNT` | FUNCTION | codegen builtin | Implemented |
+| `DAYNAME` | FUNCTION | codegen builtin | Implemented |
+| `DEC` | FUNCTION | codegen builtin | Implemented |
 | `DECLARE` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `DECR` | STATEMENT | PB/Win + PB/CC | Established |
 | `DESKTOP GET CLIENT` | STATEMENT | PB/Win + PB/CC | Established |
@@ -246,64 +246,64 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `DIALOG UNITS` | STATEMENT | PB/Win only | Established |
 | `DIALOG XLAT` | STATEMENT | PB/Win only | Proposed New |
 | `DIM` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `DIR` | FUNCTION | codegen builtin |  |
+| `DIR` | FUNCTION | codegen builtin | Implemented |
 | `DIR FUNCTION AND` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `DISKFREE` | FUNCTION | codegen builtin |  |
-| `DISKSIZE` | FUNCTION | codegen builtin |  |
+| `DISKFREE` | FUNCTION | codegen builtin | Implemented |
+| `DISKSIZE` | FUNCTION | codegen builtin | Implemented |
 | `DISPLAY BROWSE` | STATEMENT | PB/Win only | Established |
 | `DISPLAY COLOR` | STATEMENT | PB/Win only | Established |
 | `DISPLAY FONT` | STATEMENT | PB/Win only | Established |
 | `DISPLAY OPENFILE` | STATEMENT | PB/Win only | Established |
 | `DISPLAY SAVEFILE` | STATEMENT | PB/Win only | Established |
-| `DISPLAY_BROWSE` | FUNCTION | codegen builtin |  |
-| `DISPLAY_COLOR` | FUNCTION | codegen builtin |  |
-| `DISPLAY_FONT` | FUNCTION | codegen builtin |  |
-| `DISPLAY_OPENFILE` | FUNCTION | codegen builtin |  |
-| `DISPLAY_SAVEFILE` | FUNCTION | codegen builtin |  |
-| `DOUBLE` | FUNCTION | codegen builtin |  |
+| `DISPLAY_BROWSE` | FUNCTION | codegen builtin | Implemented |
+| `DISPLAY_COLOR` | FUNCTION | codegen builtin | Implemented |
+| `DISPLAY_FONT` | FUNCTION | codegen builtin | Implemented |
+| `DISPLAY_OPENFILE` | FUNCTION | codegen builtin | Implemented |
+| `DISPLAY_SAVEFILE` | FUNCTION | codegen builtin | Implemented |
+| `DOUBLE` | FUNCTION | codegen builtin | Implemented |
 | `END` | STATEMENT | PB/Win + PB/CC | Established |
 | `ENVIRON` | STATEMENT | PB/Win + PB/CC | Established |
-| `EOF` | FUNCTION | codegen builtin |  |
+| `EOF` | FUNCTION | codegen builtin | Implemented |
 | `ERASE` | STATEMENT | PB/Win + PB/CC | Established |
-| `ERF` | FUNCTION | C runtime (MSVCRT) |  |
-| `ERL` | FUNCTION | codegen builtin |  |
-| `ERR` | FUNCTION | codegen builtin |  |
-| `ERRCLEAR` | FUNCTION | codegen builtin |  |
+| `ERF` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `ERL` | FUNCTION | codegen builtin | Implemented |
+| `ERR` | FUNCTION | codegen builtin | Implemented |
+| `ERRCLEAR` | FUNCTION | codegen builtin | Implemented |
 | `ERROR` | STATEMENT | PB/Win + PB/CC | Established |
 | `EVENT SOURCE` | STATEMENT | PB/Win + PB/CC | Established |
 | `EVENTS` | STATEMENT | PB/Win + PB/CC | Established |
-| `EXE` | FUNCTION | codegen builtin |  |
-| `EXIST` | FUNCTION | codegen builtin |  |
+| `EXE` | FUNCTION | codegen builtin | Implemented |
+| `EXIST` | FUNCTION | codegen builtin | Implemented |
 | `EXIT` | STATEMENT | PB/Win + PB/CC | Established |
-| `EXP` | FUNCTION | LLVM intrinsic |  |
-| `EXP10` | FUNCTION | LLVM intrinsic |  |
-| `EXP2` | FUNCTION | LLVM intrinsic |  |
-| `EXPM1` | FUNCTION | C runtime (MSVCRT) |  |
-| `EXTRACT` | FUNCTION | codegen builtin |  |
+| `EXP` | FUNCTION | LLVM intrinsic | Implemented |
+| `EXP10` | FUNCTION | LLVM intrinsic | Implemented |
+| `EXP2` | FUNCTION | LLVM intrinsic | Implemented |
+| `EXPM1` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `EXTRACT` | FUNCTION | codegen builtin | Implemented |
 | `FIELD` | STATEMENT | PB/Win + PB/CC | Established |
-| `FILEATTR` | FUNCTION | codegen builtin |  |
+| `FILEATTR` | FUNCTION | codegen builtin | Implemented |
 | `FILECOPY` | STATEMENT | PB/Win + PB/CC | Established |
-| `FILENAME` | FUNCTION | codegen builtin |  |
+| `FILENAME` | FUNCTION | codegen builtin | Implemented |
 | `FILESCAN` | STATEMENT | PB/Win + PB/CC | Established |
-| `FIX` | FUNCTION | codegen builtin |  |
-| `FLOOR` | FUNCTION | LLVM intrinsic |  |
+| `FIX` | FUNCTION | codegen builtin | Implemented |
+| `FLOOR` | FUNCTION | LLVM intrinsic | Implemented |
 | `FLUSH` | STATEMENT | PB/Win + PB/CC | Established |
 | `FONT END` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `FONT NEW` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `FONT_END` | FUNCTION | codegen builtin |  |
-| `FONT_NEW` | FUNCTION | codegen builtin |  |
+| `FONT_END` | FUNCTION | codegen builtin | Implemented |
+| `FONT_NEW` | FUNCTION | codegen builtin | Implemented |
 | `FOR / NEXT` | STATEMENT | PB/Win + PB/CC | Established |
-| `FORMAT` | FUNCTION | codegen builtin |  |
-| `FRAC` | FUNCTION | codegen builtin |  |
-| `FRE` | FUNCTION | codegen builtin |  |
-| `FREEFILE` | FUNCTION | codegen builtin |  |
+| `FORMAT` | FUNCTION | codegen builtin | Implemented |
+| `FRAC` | FUNCTION | codegen builtin | Implemented |
+| `FRE` | FUNCTION | codegen builtin | Implemented |
+| `FREEFILE` | FUNCTION | codegen builtin | Implemented |
 | `FUNCTION / END FUNCTION` | STATEMENT | PB/Win + PB/CC | Established |
 | `GET` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `GET$` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `GET$$` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `GET_STR` | FUNCTION | codegen builtin |  |
-| `GET_WSTR` | FUNCTION | codegen builtin |  |
-| `GETATTR` | FUNCTION | codegen builtin |  |
+| `GET_STR` | FUNCTION | codegen builtin | Implemented |
+| `GET_WSTR` | FUNCTION | codegen builtin | Implemented |
+| `GETATTR` | FUNCTION | codegen builtin | Implemented |
 | `GLOBAL` | STATEMENT | PB/Win + PB/CC | Established |
 | `GLOBALMEM` | STATEMENT | PB/Win + PB/CC | Established |
 | `GRAPHIC ARC` | STATEMENT | PB/Win + PB/CC | Established |
@@ -393,99 +393,99 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC WINDOW NONSTABLE` | STATEMENT | PB/Win + PB/CC | Established |
 | `GRAPHIC WINDOW NORMALIZE` | STATEMENT | PB/Win + PB/CC | Established |
 | `GRAPHIC WINDOW STABILIZE` | STATEMENT | PB/Win + PB/CC | Established |
-| `GRAPHIC_ARC` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_ATTACH` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_BITMAP_END` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_BITMAP_LOAD` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_BITMAP_NEW` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_CELL` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_CHR_SIZE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_CIRCLE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_CLEAR` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_COLOR` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_COPY` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_DETACH` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_ELLIPSE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_BITS` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_CAPTION` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_CLIP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_DC` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_LINES` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_LOC` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_MIX` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_PIXEL` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_POS` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_PPI` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_SCALE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_SIZE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_STRETCHMODE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_TEXTALIGN` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_VIEW` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_WORDWRAP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_GET_WRAP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_LINE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_PAINT` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_PIE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_POLYGON` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_POLYLINE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SAVE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SCALE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SCALE_PIXELS` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_AUTOSIZE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_BITS` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_CAPTION` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_CLIP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_FIXED` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_FONT` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_MIX` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_PIXEL` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_POS` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_SIZE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_STRETCHMODE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_TEXTALIGN` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_VIEW` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_VIRTUAL` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_WORDWRAP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_SET_WRAP` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_STYLE` | FUNCTION | codegen builtin |  |
-| `GRAPHIC_TEXT_SIZE` | FUNCTION | codegen builtin |  |
+| `GRAPHIC_ARC` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_ATTACH` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_BITMAP_END` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_BITMAP_LOAD` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_BITMAP_NEW` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_CELL` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_CHR_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_CIRCLE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_CLEAR` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_COLOR` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_COPY` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_DETACH` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_ELLIPSE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_BITS` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_CAPTION` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_CLIP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_DC` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_LINES` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_LOC` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_MIX` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_PIXEL` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_POS` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_PPI` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_SCALE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_STRETCHMODE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_TEXTALIGN` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_VIEW` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_WORDWRAP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_GET_WRAP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_LINE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_PAINT` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_PIE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_POLYGON` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_POLYLINE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SAVE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SCALE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SCALE_PIXELS` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_AUTOSIZE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_BITS` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_CAPTION` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_CLIP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_FIXED` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_FONT` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_MIX` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_PIXEL` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_POS` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_STRETCHMODE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_TEXTALIGN` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_VIEW` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_VIRTUAL` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_WORDWRAP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_SET_WRAP` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_STYLE` | FUNCTION | codegen builtin | Implemented |
+| `GRAPHIC_TEXT_SIZE` | FUNCTION | codegen builtin | Implemented |
 | `HEADER` | STATEMENT | PB/Win only | Established |
-| `HEADER_CTRL` | FUNCTION | codegen builtin |  |
-| `HEX` | FUNCTION | codegen builtin |  |
-| `HIWRD` | FUNCTION | codegen builtin |  |
+| `HEADER_CTRL` | FUNCTION | codegen builtin | Implemented |
+| `HEX` | FUNCTION | codegen builtin | Implemented |
+| `HIWRD` | FUNCTION | codegen builtin | Implemented |
 | `HOST ADDR` | STATEMENT | PB/Win + PB/CC | Established |
 | `HOST NAME` | STATEMENT | PB/Win + PB/CC | Established |
-| `HYPOT` | FUNCTION | C runtime (MSVCRT) |  |
+| `HYPOT` | FUNCTION | C runtime (MSVCRT) | Implemented |
 | `IF` | STATEMENT | PB/Win + PB/CC | Established |
 | `IF/END IF` | BLOCK | PB/Win + PB/CC | Established |
-| `IIF` | FUNCTION | codegen builtin |  |
+| `IIF` | FUNCTION | codegen builtin | Implemented |
 | `IMAGELIST` | STATEMENT | PB/Win only | Established |
-| `IMAGELIST_COUNT` | FUNCTION | codegen builtin |  |
-| `IMAGELIST_KILL` | FUNCTION | codegen builtin |  |
-| `IMAGELIST_NEW` | FUNCTION | codegen builtin |  |
+| `IMAGELIST_COUNT` | FUNCTION | codegen builtin | Implemented |
+| `IMAGELIST_KILL` | FUNCTION | codegen builtin | Implemented |
+| `IMAGELIST_NEW` | FUNCTION | codegen builtin | Implemented |
 | `IMPORT` | STATEMENT | PB/Win + PB/CC | Established |
 | `INCR` | STATEMENT | PB/Win + PB/CC | Established |
 | `INPUT FLUSH` | STATEMENT | PB/CC only | Established |
 | `INPUT#` | STATEMENT | PB/CC only | Proposed Improvement |
 | `INSTANCE` | STATEMENT | PB/Win + PB/CC | Established |
-| `INSTR` | FUNCTION | codegen builtin |  |
-| `INT` | FUNCTION | codegen builtin |  |
-| `INTEGER` | FUNCTION | codegen builtin |  |
+| `INSTR` | FUNCTION | codegen builtin | Implemented |
+| `INT` | FUNCTION | codegen builtin | Implemented |
+| `INTEGER` | FUNCTION | codegen builtin | Implemented |
 | `INTERFACE / END INTERFACE (DIRECT)` | BLOCK | PB/Win + PB/CC | Established |
 | `INTERFACE/END INTERFACE (IDBIND)` | BLOCK | PB/Win + PB/CC | Established |
-| `ISEVEN` | FUNCTION | codegen builtin |  |
-| `ISFALSE` | FUNCTION | codegen builtin |  |
-| `ISFILE` | FUNCTION | codegen builtin |  |
-| `ISFOLDER` | FUNCTION | codegen builtin |  |
+| `ISEVEN` | FUNCTION | codegen builtin | Implemented |
+| `ISFALSE` | FUNCTION | codegen builtin | Implemented |
+| `ISFILE` | FUNCTION | codegen builtin | Implemented |
+| `ISFOLDER` | FUNCTION | codegen builtin | Implemented |
 | `ISINFINITE` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ISNORMAL` | STATEMENT | PB/Win + PB/CC | Proposed New |
-| `ISODD` | FUNCTION | codegen builtin |  |
-| `ISTRUE` | FUNCTION | codegen builtin |  |
+| `ISODD` | FUNCTION | codegen builtin | Implemented |
+| `ISTRUE` | FUNCTION | codegen builtin | Implemented |
 | `ITERATE` | STATEMENT | PB/Win + PB/CC | Established |
 | `KILL` | STATEMENT | PB/Win + PB/CC | Established |
-| `LCASE` | FUNCTION | codegen builtin |  |
-| `LEFT` | FUNCTION | codegen builtin |  |
-| `LEN` | FUNCTION | codegen builtin |  |
+| `LCASE` | FUNCTION | codegen builtin | Implemented |
+| `LEFT` | FUNCTION | codegen builtin | Implemented |
+| `LEN` | FUNCTION | codegen builtin | Implemented |
 | `LET` | STATEMENT | PB/Win + PB/CC | Established |
 | `LET *(WITH OBJECTS)*` | STATEMENT | PB/Win + PB/CC | Established |
 | `LET *(WITH TYPES)*` | STATEMENT | PB/Win + PB/CC | Established |
@@ -493,29 +493,29 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `LINE INPUT#` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `LISTBOX` | STATEMENT | PB/Win only | Established |
 | `LISTVIEW` | STATEMENT | PB/Win only | Established |
-| `LO` | FUNCTION | codegen builtin |  |
+| `LO` | FUNCTION | codegen builtin | Implemented |
 | `LOCAL` | STATEMENT | PB/Win + PB/CC | Established |
 | `LOCK` | STATEMENT | PB/Win + PB/CC | Established |
-| `LOG` | FUNCTION | LLVM intrinsic |  |
-| `LOG10` | FUNCTION | LLVM intrinsic |  |
-| `LOG1P` | FUNCTION | C runtime (MSVCRT) |  |
-| `LOG2` | FUNCTION | LLVM intrinsic |  |
-| `LONG` | FUNCTION | codegen builtin |  |
-| `LOWRD` | FUNCTION | codegen builtin |  |
+| `LOG` | FUNCTION | LLVM intrinsic | Implemented |
+| `LOG10` | FUNCTION | LLVM intrinsic | Implemented |
+| `LOG1P` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `LOG2` | FUNCTION | LLVM intrinsic | Implemented |
+| `LONG` | FUNCTION | codegen builtin | Implemented |
+| `LOWRD` | FUNCTION | codegen builtin | Implemented |
 | `LPRINT` | STATEMENT | PB/Win + PB/CC | Established |
 | `LPRINT ATTACH` | STATEMENT | PB/Win + PB/CC | Established |
 | `LPRINT CLOSE` | STATEMENT | PB/Win + PB/CC | Established |
 | `LPRINT FLUSH` | STATEMENT | PB/Win + PB/CC | Established |
 | `LPRINT FORMFEED` | STATEMENT | PB/Win + PB/CC | Established |
 | `LSET` | STATEMENT | PB/Win + PB/CC | Established |
-| `LTRIM` | FUNCTION | codegen builtin |  |
+| `LTRIM` | FUNCTION | codegen builtin | Implemented |
 | `MACRO/END MACRO` | BLOCK | PB/Win + PB/CC | Established |
-| `MAK` | FUNCTION | codegen builtin |  |
+| `MAK` | FUNCTION | codegen builtin | Implemented |
 | `MAT` | STATEMENT | PB/Win + PB/CC | Established |
-| `MAX` | FUNCTION | codegen builtin |  |
+| `MAX` | FUNCTION | codegen builtin | Implemented |
 | `MEMORY` | STATEMENT | PB/Win + PB/CC | Established |
-| `MEMORY_FILL` | FUNCTION | codegen builtin |  |
-| `MEMORY_FILLS` | FUNCTION | codegen builtin |  |
+| `MEMORY_FILL` | FUNCTION | codegen builtin | Implemented |
+| `MEMORY_FILLS` | FUNCTION | codegen builtin | Implemented |
 | `MENU ADD POPUP` | STATEMENT | PB/Win only | Established |
 | `MENU ADD STRING` | STATEMENT | PB/Win only | Established |
 | `MENU ATTACH` | STATEMENT | PB/Win only | Established |
@@ -528,44 +528,44 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `MENU NEW POPUP` | STATEMENT | PB/Win only | Established |
 | `MENU SET STATE` | STATEMENT | PB/Win only | Established |
 | `MENU SET TEXT` | STATEMENT | PB/Win only | Established |
-| `MENU_ADD_POPUP` | FUNCTION | codegen builtin |  |
-| `MENU_ADD_STRING` | FUNCTION | codegen builtin |  |
-| `MENU_DELETE` | FUNCTION | codegen builtin |  |
-| `MENU_GET_STATE` | FUNCTION | codegen builtin |  |
-| `MENU_GET_TEXT` | FUNCTION | codegen builtin |  |
-| `MENU_NEW_POPUP` | FUNCTION | codegen builtin |  |
-| `MENU_SET_STATE` | FUNCTION | codegen builtin |  |
-| `MENU_SET_TEXT` | FUNCTION | codegen builtin |  |
+| `MENU_ADD_POPUP` | FUNCTION | codegen builtin | Implemented |
+| `MENU_ADD_STRING` | FUNCTION | codegen builtin | Implemented |
+| `MENU_DELETE` | FUNCTION | codegen builtin | Implemented |
+| `MENU_GET_STATE` | FUNCTION | codegen builtin | Implemented |
+| `MENU_GET_TEXT` | FUNCTION | codegen builtin | Implemented |
+| `MENU_NEW_POPUP` | FUNCTION | codegen builtin | Implemented |
+| `MENU_SET_STATE` | FUNCTION | codegen builtin | Implemented |
+| `MENU_SET_TEXT` | FUNCTION | codegen builtin | Implemented |
 | `METHOD / END METHOD` | STATEMENT | PB/Win + PB/CC | Established |
-| `MID` | FUNCTION | codegen builtin |  |
+| `MID` | FUNCTION | codegen builtin | Implemented |
 | `MID$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MIN` | FUNCTION | codegen builtin |  |
-| `MKBYT` | FUNCTION | codegen builtin |  |
+| `MIN` | FUNCTION | codegen builtin | Implemented |
+| `MKBYT` | FUNCTION | codegen builtin | Implemented |
 | `MKBYT$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKCUR$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MKCUX` | FUNCTION | codegen builtin |  |
+| `MKCUX` | FUNCTION | codegen builtin | Implemented |
 | `MKCUX$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKD$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKDIR` | STATEMENT | PB/Win + PB/CC | Established |
-| `MKDWD` | FUNCTION | codegen builtin |  |
+| `MKDWD` | FUNCTION | codegen builtin | Implemented |
 | `MKDWD$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MKE` | FUNCTION | codegen builtin |  |
+| `MKE` | FUNCTION | codegen builtin | Implemented |
 | `MKE$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKI$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKL$` | STATEMENT | PB/Win + PB/CC | Established |
 | `MKQ$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MKS` | FUNCTION | codegen builtin |  |
+| `MKS` | FUNCTION | codegen builtin | Implemented |
 | `MKS$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MKWRD` | FUNCTION | codegen builtin |  |
+| `MKWRD` | FUNCTION | codegen builtin | Implemented |
 | `MKWRD$` | STATEMENT | PB/Win + PB/CC | Established |
-| `MOD` | FUNCTION | codegen builtin |  |
-| `MONTHNAME` | FUNCTION | codegen builtin |  |
+| `MOD` | FUNCTION | codegen builtin | Implemented |
+| `MONTHNAME` | FUNCTION | codegen builtin | Implemented |
 | `MOUSEPTR` | STATEMENT | PB/CC only | Established |
 | `MSGBOX` | STATEMENT | PB/Win only | Established |
 | `NAME` | STATEMENT | PB/Win + PB/CC | Established |
 | `OBJECT` | STATEMENT | PB/Win + PB/CC | Established |
-| `OCT` | FUNCTION | codegen builtin |  |
-| `OEMTOCHR` | FUNCTION | codegen builtin |  |
+| `OCT` | FUNCTION | codegen builtin | Implemented |
+| `OEMTOCHR` | FUNCTION | codegen builtin | Implemented |
 | `ON CALL` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `ON ERROR` | STATEMENT | PB/Win + PB/CC | Established |
 | `ON GOSUB` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
@@ -573,16 +573,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `OPEN` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `OPTION EXPLICIT` | STATEMENT | PB/Win + PB/CC | Established |
 | `PARSE` | STATEMENT | PB/Win + PB/CC | Established |
-| `PARSECOUNT` | FUNCTION | codegen builtin |  |
-| `PATHNAME` | FUNCTION | codegen builtin |  |
-| `PATHSCAN` | FUNCTION | codegen builtin |  |
-| `PEEK` | FUNCTION | codegen builtin |  |
+| `PARSECOUNT` | FUNCTION | codegen builtin | Implemented |
+| `PATHNAME` | FUNCTION | codegen builtin | Implemented |
+| `PATHSCAN` | FUNCTION | codegen builtin | Implemented |
+| `PEEK` | FUNCTION | codegen builtin | Implemented |
 | `PLAY SOUND` | STATEMENT | PB/Win + PB/CC | Proposed New |
 | `PLAY WAVE` | STATEMENT | PB/Win + PB/CC | Established |
-| `POKE` | FUNCTION | codegen builtin |  |
+| `POKE` | FUNCTION | codegen builtin | Implemented |
 | `PREFIX` | BLOCK | PB/Win + PB/CC | Established |
 | `PRINT#` | STATEMENT | PB/Win + PB/CC | Established |
-| `PRINTERCOUNT` | FUNCTION | codegen builtin |  |
+| `PRINTERCOUNT` | FUNCTION | codegen builtin | Implemented |
 | `PROCESS GET PRIORITY` | STATEMENT | PB/Win + PB/CC | Established |
 | `PROCESS SET PRIORITY` | STATEMENT | PB/Win + PB/CC | Established |
 | `PROFILE` | STATEMENT | PB/Win + PB/CC | Established |
@@ -590,67 +590,67 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `PUT` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `PUT$` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `PUT$$` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `PUT_STR` | FUNCTION | codegen builtin |  |
-| `PUT_WSTR` | FUNCTION | codegen builtin |  |
-| `QUAD` | FUNCTION | codegen builtin |  |
+| `PUT_STR` | FUNCTION | codegen builtin | Implemented |
+| `PUT_WSTR` | FUNCTION | codegen builtin | Implemented |
+| `QUAD` | FUNCTION | codegen builtin | Implemented |
 | `RAISEEVENT` | STATEMENT | PB/Win + PB/CC | Established |
 | `RANDOMIZE` | STATEMENT | PB/Win + PB/CC | Established |
-| `READ` | FUNCTION | codegen builtin |  |
+| `READ` | FUNCTION | codegen builtin | Implemented |
 | `REDIM` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `REGEXPR` | STATEMENT | PB/Win + PB/CC | Established |
 | `REGISTER` | STATEMENT | PB/Win + PB/CC | Established |
 | `REGREPL` | STATEMENT | PB/Win + PB/CC | Established |
 | `REM` | STATEMENT | PB/Win + PB/CC | Established |
-| `REMAIN` | FUNCTION | codegen builtin |  |
-| `REMOVE` | FUNCTION | codegen builtin |  |
-| `REPEAT` | FUNCTION | codegen builtin |  |
+| `REMAIN` | FUNCTION | codegen builtin | Implemented |
+| `REMOVE` | FUNCTION | codegen builtin | Implemented |
+| `REPEAT` | FUNCTION | codegen builtin | Implemented |
 | `REPLACE` | STATEMENT | PB/Win + PB/CC | Established |
 | `RESET` | STATEMENT | PB/Win + PB/CC | Established |
 | `RESOURCE SAVE FILE` | STATEMENT | PB/Win + PB/CC | Proposed New |
-| `RESOURCE_SAVE_FILE` | FUNCTION | codegen builtin |  |
+| `RESOURCE_SAVE_FILE` | FUNCTION | codegen builtin | Implemented |
 | `RESUME` | STATEMENT | PB/Win + PB/CC | Established |
-| `RETAIN` | FUNCTION | codegen builtin |  |
+| `RETAIN` | FUNCTION | codegen builtin | Implemented |
 | `RETURN` | STATEMENT | PB/Win + PB/CC | Established |
-| `RIGHT` | FUNCTION | codegen builtin |  |
+| `RIGHT` | FUNCTION | codegen builtin | Implemented |
 | `RMDIR` | STATEMENT | PB/Win + PB/CC | Established |
-| `RND` | FUNCTION | codegen builtin |  |
+| `RND` | FUNCTION | codegen builtin | Implemented |
 | `ROTATE` | STATEMENT | PB/Win + PB/CC | Established |
-| `ROUND` | FUNCTION | LLVM intrinsic |  |
+| `ROUND` | FUNCTION | LLVM intrinsic | Implemented |
 | `RSET` | STATEMENT | PB/Win + PB/CC | Established |
-| `RTRIM` | FUNCTION | codegen builtin |  |
+| `RTRIM` | FUNCTION | codegen builtin | Implemented |
 | `SCROLLBAR` | STATEMENT | PB/Win only | Established |
-| `SEC` | FUNCTION | C runtime (MSVCRT) |  |
-| `SECH` | FUNCTION | C runtime (MSVCRT) |  |
+| `SEC` | FUNCTION | C runtime (MSVCRT) | Implemented |
+| `SECH` | FUNCTION | C runtime (MSVCRT) | Implemented |
 | `SEEK` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `SELECT CASE/END SELECT` | BLOCK | PB/Win + PB/CC | Established |
 | `SETATTR` | STATEMENT | PB/Win + PB/CC | Established |
 | `SETEOF` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| `SGN` | FUNCTION | codegen builtin |  |
+| `SGN` | FUNCTION | codegen builtin | Implemented |
 | `SHELL` | STATEMENT | PB/Win + PB/CC | Established |
 | `SHIFT` | STATEMENT | PB/Win + PB/CC | Established |
-| `SHRINK` | FUNCTION | codegen builtin |  |
-| `SIN` | FUNCTION | LLVM intrinsic |  |
-| `SINGLE` | FUNCTION | codegen builtin |  |
-| `SINH` | FUNCTION | LLVM intrinsic |  |
-| `SIZEOF` | FUNCTION | codegen builtin |  |
+| `SHRINK` | FUNCTION | codegen builtin | Implemented |
+| `SIN` | FUNCTION | LLVM intrinsic | Implemented |
+| `SINGLE` | FUNCTION | codegen builtin | Implemented |
+| `SINH` | FUNCTION | LLVM intrinsic | Implemented |
+| `SIZEOF` | FUNCTION | codegen builtin | Implemented |
 | `SLEEP` | STATEMENT | PB/Win + PB/CC | Established |
-| `SPACE` | FUNCTION | codegen builtin |  |
+| `SPACE` | FUNCTION | codegen builtin | Implemented |
 | `SPLIT` | STATEMENT | PB/Win + PB/CC | Established |
-| `SQR` | FUNCTION | LLVM intrinsic |  |
+| `SQR` | FUNCTION | LLVM intrinsic | Implemented |
 | `STATIC` | STATEMENT | PB/Win + PB/CC | Established |
 | `STATUSBAR` | STATEMENT | PB/Win + PB/CC | Established |
-| `STR` | FUNCTION | codegen builtin |  |
-| `STRDELETE` | FUNCTION | codegen builtin |  |
-| `STRING` | FUNCTION | codegen builtin |  |
-| `STRINSERT` | FUNCTION | codegen builtin |  |
-| `STRPTR` | FUNCTION | codegen builtin |  |
-| `STRREVERSE` | FUNCTION | codegen builtin |  |
+| `STR` | FUNCTION | codegen builtin | Implemented |
+| `STRDELETE` | FUNCTION | codegen builtin | Implemented |
+| `STRING` | FUNCTION | codegen builtin | Implemented |
+| `STRINSERT` | FUNCTION | codegen builtin | Implemented |
+| `STRPTR` | FUNCTION | codegen builtin | Implemented |
+| `STRREVERSE` | FUNCTION | codegen builtin | Implemented |
 | `SWAP` | STATEMENT | PB/Win + PB/CC | Established |
-| `SWITCH$` | FUNCTION | codegen builtin |  |
+| `SWITCH$` | FUNCTION | codegen builtin | Implemented |
 | `TAB` | STATEMENT | PB/Win only | Established |
-| `TALLY` | FUNCTION | codegen builtin |  |
-| `TAN` | FUNCTION | LLVM intrinsic |  |
-| `TANH` | FUNCTION | LLVM intrinsic |  |
+| `TALLY` | FUNCTION | codegen builtin | Implemented |
+| `TAN` | FUNCTION | LLVM intrinsic | Implemented |
+| `TANH` | FUNCTION | LLVM intrinsic | Implemented |
 | `TCP ACCEPT` | STATEMENT | PB/Win + PB/CC | Established |
 | `TCP CLOSE` | STATEMENT | PB/Win + PB/CC | Established |
 | `TCP LINE INPUT` | STATEMENT | PB/Win + PB/CC | Established |
@@ -659,7 +659,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `TCP PRINT` | STATEMENT | PB/Win + PB/CC | Established |
 | `TCP RECV` | STATEMENT | PB/Win + PB/CC | Established |
 | `TCP SEND` | STATEMENT | PB/Win + PB/CC | Established |
-| `TCP_NOTIFY` | FUNCTION | codegen builtin |  |
+| `TCP_NOTIFY` | FUNCTION | codegen builtin | Implemented |
 | `THREAD CLOSE` | STATEMENT | PB/Win + PB/CC | Established |
 | `THREAD CREATE` | STATEMENT | PB/Win + PB/CC | Established |
 | `THREAD GET PRIORITY` | STATEMENT | PB/Win + PB/CC | Established |
@@ -667,39 +667,39 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `THREAD SET PRIORITY` | STATEMENT | PB/Win + PB/CC | Established |
 | `THREAD STATUS` | STATEMENT | PB/Win + PB/CC | Established |
 | `THREAD SUSPEND` | STATEMENT | PB/Win + PB/CC | Established |
-| `THREADCOUNT` | FUNCTION | codegen builtin |  |
+| `THREADCOUNT` | FUNCTION | codegen builtin | Implemented |
 | `THREADED` | STATEMENT | PB/Win + PB/CC | Established |
-| `TIMER` | FUNCTION | codegen builtin |  |
+| `TIMER` | FUNCTION | codegen builtin | Implemented |
 | `TIX` | STATEMENT | PB/Win + PB/CC | Established |
 | `TOOLBAR` | STATEMENT | PB/Win only | Established |
 | `TRACE` | STATEMENT | PB/Win + PB/CC | Established |
 | `TREEVIEW` | STATEMENT | PB/Win only | Established |
-| `TRIM` | FUNCTION | codegen builtin |  |
-| `TRUNC` | FUNCTION | LLVM intrinsic |  |
+| `TRIM` | FUNCTION | codegen builtin | Implemented |
+| `TRUNC` | FUNCTION | LLVM intrinsic | Implemented |
 | `TRY/END TRY` | BLOCK | PB/Win + PB/CC | Established |
 | `TYPE SET` | STATEMENT | PB/Win + PB/CC | Established |
 | `TYPE/END TYPE` | BLOCK | PB/Win + PB/CC | Established |
-| `UCASE` | FUNCTION | codegen builtin |  |
+| `UCASE` | FUNCTION | codegen builtin | Implemented |
 | `UCODEPAGE` | STATEMENT | PB/Win + PB/CC | Established |
 | `UDP CLOSE` | STATEMENT | PB/Win + PB/CC | Established |
 | `UDP NOTIFY` | STATEMENT | PB/Win + PB/CC | Established |
 | `UDP OPEN` | STATEMENT | PB/Win + PB/CC | Established |
 | `UDP RECV` | STATEMENT | PB/Win + PB/CC | Established |
 | `UDP SEND` | STATEMENT | PB/Win + PB/CC | Established |
-| `UDP_NOTIFY` | FUNCTION | codegen builtin |  |
+| `UDP_NOTIFY` | FUNCTION | codegen builtin | Implemented |
 | `UNLOCK` | STATEMENT | PB/Win + PB/CC | Established |
-| `UNWRAP` | FUNCTION | codegen builtin |  |
-| `USING` | FUNCTION | codegen builtin |  |
-| `UTF8TOCHR` | FUNCTION | codegen builtin |  |
+| `UNWRAP` | FUNCTION | codegen builtin | Implemented |
+| `USING` | FUNCTION | codegen builtin | Implemented |
+| `UTF8TOCHR` | FUNCTION | codegen builtin | Implemented |
 | `VAL` | STATEMENT | PB/Win + PB/CC | Established |
-| `VARPTR` | FUNCTION | codegen builtin |  |
-| `VERIFY` | FUNCTION | codegen builtin |  |
-| `WAITKEY` | FUNCTION | codegen builtin |  |
+| `VARPTR` | FUNCTION | codegen builtin | Implemented |
+| `VERIFY` | FUNCTION | codegen builtin | Implemented |
+| `WAITKEY` | FUNCTION | codegen builtin | Implemented |
 | `WINDOW GET` | STATEMENT | PB/Win only | Established |
 | `WINDOW SET` | STATEMENT | PB/Win only | Established |
-| `WORD` | FUNCTION | codegen builtin |  |
-| `WRAP` | FUNCTION | codegen builtin |  |
-| `WRITE` | FUNCTION | codegen builtin |  |
+| `WORD` | FUNCTION | codegen builtin | Implemented |
+| `WRAP` | FUNCTION | codegen builtin | Implemented |
+| `WRITE` | FUNCTION | codegen builtin | Implemented |
 | `WRITE#` | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | `XPRINT ARC` | STATEMENT | PB/Win + PB/CC | Established |
 | `XPRINT ATTACH` | STATEMENT | PB/Win + PB/CC | Established |
@@ -776,82 +776,82 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `XPRINT STYLE` | STATEMENT | PB/Win + PB/CC | Established |
 | `XPRINT TEXT SIZE` | STATEMENT | PB/Win + PB/CC | Established |
 | `XPRINT WIDTH` | STATEMENT | PB/Win + PB/CC | Established |
-| `XPRINT_ARC` | FUNCTION | codegen builtin |  |
-| `XPRINT_ATTACH` | FUNCTION | codegen builtin |  |
-| `XPRINT_BOX` | FUNCTION | codegen builtin |  |
-| `XPRINT_CANCEL` | FUNCTION | codegen builtin |  |
-| `XPRINT_CELL` | FUNCTION | codegen builtin |  |
-| `XPRINT_CELL_SIZE` | FUNCTION | codegen builtin |  |
-| `XPRINT_CHR_SIZE` | FUNCTION | codegen builtin |  |
-| `XPRINT_CLOSE` | FUNCTION | codegen builtin |  |
-| `XPRINT_COPY` | FUNCTION | codegen builtin |  |
-| `XPRINT_ELLIPSE` | FUNCTION | codegen builtin |  |
-| `XPRINT_FORMFEED` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_ATTACH` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_CANVAS` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_CLIENT` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_CLIP` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_COLLATE` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_COLOR` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_COLORMODE` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_COPIES` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_DC` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_DUPLEX` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_LINES` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_MARGIN` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_MIX` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_ORIENTATION` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_OVERLAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_PAGES` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_PAPER` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_PAPERS` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_PIXEL` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_POS` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_PPI` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_QUALITY` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_SCALE` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_SELECTION` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_SIZE` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_STRETCHMODE` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_TEXTALIGN` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_TRAY` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_TRAYS` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_WORDWRAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_GET_WRAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_IMAGELIST` | FUNCTION | codegen builtin |  |
-| `XPRINT_LINE` | FUNCTION | codegen builtin |  |
-| `XPRINT_PIE` | FUNCTION | codegen builtin |  |
-| `XPRINT_POLYGON` | FUNCTION | codegen builtin |  |
-| `XPRINT_POLYLINE` | FUNCTION | codegen builtin |  |
-| `XPRINT_PREVIEW` | FUNCTION | codegen builtin |  |
-| `XPRINT_PRINT` | FUNCTION | codegen builtin |  |
-| `XPRINT_RENDER` | FUNCTION | codegen builtin |  |
-| `XPRINT_SCALE` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_CLIP` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_COLLATE` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_COLOR` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_COLORMODE` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_COPIES` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_DUPLEX` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_FONT` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_MIX` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_ORIENTATION` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_OVERLAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_PAGES` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_PAPER` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_PIXEL` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_POS` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_QUALITY` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_STRETCHMODE` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_TEXTALIGN` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_TRAY` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_WORDWRAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_SET_WRAP` | FUNCTION | codegen builtin |  |
-| `XPRINT_SPLIT` | FUNCTION | codegen builtin |  |
-| `XPRINT_STRETCH` | FUNCTION | codegen builtin |  |
-| `XPRINT_STYLE` | FUNCTION | codegen builtin |  |
-| `XPRINT_TEXT_SIZE` | FUNCTION | codegen builtin |  |
-| `XPRINT_WIDTH` | FUNCTION | codegen builtin |  |
+| `XPRINT_ARC` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_ATTACH` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_BOX` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_CANCEL` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_CELL` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_CELL_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_CHR_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_CLOSE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_COPY` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_ELLIPSE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_FORMFEED` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_ATTACH` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_CANVAS` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_CLIENT` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_CLIP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_COLLATE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_COLOR` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_COLORMODE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_COPIES` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_DC` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_DUPLEX` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_LINES` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_MARGIN` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_MIX` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_ORIENTATION` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_OVERLAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_PAGES` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_PAPER` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_PAPERS` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_PIXEL` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_POS` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_PPI` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_QUALITY` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_SCALE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_SELECTION` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_STRETCHMODE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_TEXTALIGN` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_TRAY` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_TRAYS` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_WORDWRAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_GET_WRAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_IMAGELIST` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_LINE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_PIE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_POLYGON` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_POLYLINE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_PREVIEW` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_PRINT` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_RENDER` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SCALE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_CLIP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_COLLATE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_COLOR` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_COLORMODE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_COPIES` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_DUPLEX` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_FONT` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_MIX` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_ORIENTATION` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_OVERLAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_PAGES` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_PAPER` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_PIXEL` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_POS` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_QUALITY` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_STRETCHMODE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_TEXTALIGN` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_TRAY` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_WORDWRAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SET_WRAP` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_SPLIT` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_STRETCH` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_STYLE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_TEXT_SIZE` | FUNCTION | codegen builtin | Implemented |
+| `XPRINT_WIDTH` | FUNCTION | codegen builtin | Implemented |
 ## 🚧 Tier-3 DDT (129, deferred to next update)
 
 | Keyword | Official kind |
