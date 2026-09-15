@@ -567,6 +567,21 @@ exit code 0:
 | `CUINT` | ✅ | 91 (v0.1.85) | convert to WORD with rounding (builtin_cint) |
 | `CULNG` | ✅ | 91 (v0.1.85) | convert to DWORD with rounding (builtin_cint) |
 | `FRE` | ✅ | 92 (v0.1.86) | free physical memory (GlobalMemoryStatusEx, returns QUAD) |
+| `ABS`(x) | ✅ | core | `llvm.fabs.f64` — absolute value |
+| `SIN`(x) | ✅ | core | `llvm.sin.f64` — sine, radians |
+| `COS`(x) | ✅ | core | `llvm.cos.f64` — cosine, radians |
+| `TAN`(x) | ✅ | core | C `tan` — tangent, radians |
+| `ATN`(x) | ✅ | core | C `atan` — inverse tangent, radians |
+| `EXP`(x) | ✅ | core | `llvm.exp.f64` — exponential e^x |
+| `LOG`(x) | ✅ | core | `llvm.log.f64` — natural logarithm |
+| `SQR`(x) | ✅ | core | `llvm.sqrt.f64` — square root |
+| `INT`(x) | ✅ | core | `llvm.floor.f64` + fptosi — round down to integer (PB semantics: largest integer <= x) |
+| `FIX`(x) | ✅ | core | `llvm.trunc.f64` + fptosi — truncate toward zero |
+| `CEIL`(x) | ✅ | core | `llvm.ceil.f64` + fptosi — round up to integer |
+| `FLOOR`(x) | ✅ | core | `llvm.floor.f64` + fptosi — round down to integer |
+| `ROUND`(x) | ✅ | core | `llvm.round.f64` + fptosi — round to nearest, ties away from zero |
+| `TRUNC`(x) | ✅ | core | `llvm.trunc.f64` — truncate toward zero (returns float) |
+| `FRAC`(x) | ✅ | core | x - FIX(x) — fractional part |
 | `ASIN` | ✅ | 93 (v0.1.87) | inverse sine, radians (C lib asin) |
 | `ACOS` | ✅ | 93 (v0.1.87) | inverse cosine, radians (C lib acos) |
 | `SINH` | ✅ | 93 (v0.1.87) | hyperbolic sine (C lib sinh) |
@@ -587,6 +602,43 @@ exit code 0:
 | `EXPM1`(x) | ✅ | 96 (v0.1.90) | C `expm1` — exp(x)-1 (accurate for small x) |
 | `LOG1P`(x) | ✅ | 96 (v0.1.90) | C `log1p` — log(1+x) (accurate for small x) |
 | `ERF`(x) | ✅ | 96 (v0.1.90) | C `erf` — Gauss error function |
+| `EXP2`(x) / `LOG2`(x) / `EXP10`(x) / `LOG10`(x) | ✅ | core | C `exp2/log2/exp10/log10` — base-2 and base-10 exp/log |
+| `SGN`(x) | ✅ | core | sign function — -1/0/1 |
+| `MAX`(a,b) / `MIN`(a,b) | ✅ | core | maximum/minimum of two values |
+| `CHR$`(n,...) | ✅ | core | character from ASCII code (multi-arg supported) |
+| `STR$`(n) | ✅ | core | numeric to string |
+| `LEN`(s) | ✅ | core | string length (BSTR byte-length, handles NUL bytes) |
+| `LEFT$`(s,n) / `RIGHT$`(s,n) / `MID$`(s,p,n) | ✅ | core | substring extraction |
+| `LTRIM$` / `RTRIM$` / `TRIM$` | ✅ | core | remove leading/trailing spaces |
+| `UCASE$` / `LCASE$` | ✅ | core | uppercase/lowercase conversion |
+| `SPACE$`(n) / `STRING$`(n,c) | ✅ | core | string of n spaces / n copies of char c |
+| `INSTR`([start,] s, sub) | ✅ | core | find substring position |
+| `TALLY`(s, sub) / `VERIFY`(s, chars) | ✅ | core | count occurrences / verify chars |
+| `STRDELETE$` / `STRINSERT$` / `STRREVERSE$` | ✅ | core | string delete/insert/reverse |
+| `EXTRACT$` / `REMOVE$` / `RETAIN$` / `REMAIN$` / `REPEAT$` | ✅ | core | string extraction/removal/repetition (ANY mode supported) |
+| `FORMAT$` / `USING$` | ✅ | core | number formatting |
+| `PARSECOUNT` / `PATHNAME` / `PATHSCAN` | ✅ | core | parse count / path extraction / path scan |
+| `CHRTOOEM$` / `OEMTOCHR$` / `CHRTOUTF8$` / `UTF8TOCHR$` | ✅ | core | character set conversion |
+| `CBYTE` / `CWORD` / `CDWORD` / `CQUAD` / `CSNG` / `CDBL` / `CSTR` | ✅ | core | type conversion functions |
+| `DEC$` / `OCT$` / `BIN$` / `HEX$` | ✅ | core | number to decimal/octal/binary/hex string |
+| `MAK` / `CVBYT` / `CVW` / `CVL` / `CVQ` / `CVDWD` / `CVCUX` | ✅ | core | numeric from memory (PDS-style) |
+| `MKBYT$` / `MKWRD$` / `MKL$` / `MKDWD$` / `MKQ$` / `MKCUR$` / `MKCUX$` / `MKS$` / `MKD$` | ✅ | core | numeric to memory string (little-endian) |
+| `EOF`(f) / `FREEFILE` / `FILEATTR`(f) / `GETATTR`(path) | ✅ | core | file I/O helpers |
+| `FILENAME$` / `DISKFREE` / `DISKSIZE` / `EXIST`(path) | ✅ | core | file/path info |
+| `IIF`(cond, a, b) | ✅ | core | immediate if (inline conditional) |
+| `SIZEOF`(var) / `VARPTR`(var) / `CODEPTR`(proc) / `STRPTR`(s) | ✅ | core | size and pointer functions |
+| `PEEK`(type, addr) / `POKE` type, addr, value | ✅ | core | direct memory read/write (64-bit addresses) |
+| `COMMAND$` / `DATACOUNT` / `THREADCOUNT` / `TIMER` | ✅ | core | system info functions |
+| `DAYNAME$` / `MONTHNAME$` | ✅ | core | date name functions |
+| `ISEVEN` / `ISODD` / `ISFALSE` / `ISTRUE` / `ISFOLDER` | ✅ | core | predicate functions |
+| `SWITCH$`(expr, val1, ...) | ✅ | core | switch function (returns paired value for first true condition) |
+| `BUILD`(s, ...) / `CALLSTKCOUNT` | ✅ | core | string build / call stack depth |
+| `LO`(n) / `HIWRD`(n) / `LOWRD`(n) / `BGR`(r,g,b) | ✅ | core | low byte / high word / low word / BGR color |
+| `BITS`(n) / `WRAP$` / `SHRINK$` / `UNWRAP$` | ✅ | core | bit count / word wrap / shrink / unwrap |
+| `GET_STR$` / `GET_WSTR$` / `PUT_STR` / `PUT_WSTR` | ✅ | core | string/wide-string binary I/O |
+| `READ` var, ... / `DATA` ... / `RESTORE` | ✅ | core | DATA/READ/RESTORE (data pool with cursor) |
+| `WRITE` #f, ... | ✅ | core | CSV-style file output |
+| `DOUBLE` / `INTEGER` / `LONG` / `QUAD` / `SINGLE` / `WORD` / `BYTE` | ✅ | core | type aliases (used in AS clauses) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
