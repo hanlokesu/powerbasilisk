@@ -10574,6 +10574,7 @@ impl Compiler {
             "FIX" => Some(self.builtin_fix(fb, args)),
             "CEIL" => Some(self.builtin_ceil(fb, args)),
             "FLOOR" => Some(self.builtin_floor(fb, args)),
+            "TRUNC" => Some(self.builtin_trunc(fb, args)),
             "SQR" => Some(self.builtin_unary_math(fb, args, "llvm.sqrt.f64")),
             "LOG" => Some(self.builtin_unary_math(fb, args, "llvm.log.f64")),
             "EXP" => Some(self.builtin_unary_math(fb, args, "llvm.exp.f64")),
@@ -11235,6 +11236,13 @@ impl Compiler {
         let f64_val = self.to_f64(fb, &val);
         let floored = fb.call(&IrType::Double, "llvm.floor.f64", &[f64_val]);
         Ok(fb.fptosi(&floored, &IrType::I32))
+    }
+
+    fn builtin_trunc(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let f64_val = self.to_f64(fb, &val);
+        let truncated = fb.call(&IrType::Double, "llvm.trunc.f64", &[f64_val]);
+        Ok(fb.fptosi(&truncated, &IrType::I32))
     }
 
     fn builtin_unary_math(
