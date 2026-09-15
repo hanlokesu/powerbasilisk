@@ -215,343 +215,89 @@ exit code 0:
 ---
 
 
-## Statement Support Matrix
+## Statement / Function Support Matrix
 
-Status legend: **✅** implemented and verified · **⚠️** parsed but produces
-NO code — reported in `*.unimplemented.log` at build time · **🔲** future
+> **Official coverage audit** — every keyword below has been checked against the PowerBASIC official documentation (MIT-licensed keyword index, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
+> Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
+> Summary: **362** statement/function keywords implemented · **129** DDT/GUI-class deferred (Tier 3) · **12** documented but not yet implemented.
 
-> **Official coverage audit** — every keyword below has been checked against
-> the PowerBASIC official documentation (MIT-licensed keyword index,
-> 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7):
-> [**statement-coverage.md**](docs/statement-coverage.md) · full data:
-> [**statement-coverage.csv**](docs/statement-coverage.csv).
-> (2026-09-15: +1 official statement keyword from batch 67 — ARRAY ADD arr1(), arr2() (element-wise addition into first array; supports BYTE/WORD/LONG/QUAD/SINGLE/DOUBLE via universal pb_array_add runtime). Coverage now 274 implemented / 129 tier-3 / 100 not implemented.
-> (2026-09-15: +2 official statement keywords from batch 66 — GRAPHIC SET FIXED (restores standard FIXED mode), GRAPHIC SET FONT (selects font handle into graphic DC via SelectObject; FONT NEW/END already existed). Coverage now 273 implemented / 129 tier-3 / 101 not implemented.
-> (2026-09-15: +5 official statement keywords from batch 65 — GRAPHIC SET SIZE (rebuild bitmap at new size), GRAPHIC SET CLIP (clip margins, read back by GET CLIP), GRAPHIC SET VIRTUAL (virtual display size), GRAPHIC SET/GET WORDWRAP. Coverage now 271 implemented / 131 tier-3 / 101 not implemented.
-> (2026-09-15: +5 official statement keywords from batch 64 — GRAPHIC GET BITS (whole bitmap as DIB string), GRAPHIC SET BITS (replace bitmap from DIB), GRAPHIC GET SCALE (4 world-coordinate limits), GRAPHIC SCALE (custom coordinate system, incl. SCALE PIXELS), GRAPHIC SET AUTOSIZE. Coverage now 266 implemented / 136 tier-3 / 101 not implemented.
-> (2026-09-15: +6 official statement keywords from batch 63 — GRAPHIC GET CLIP (GetClipBox), GRAPHIC GET VIEW / GRAPHIC SET VIEW (GetViewportOrgEx / SetViewportOrgEx), GRAPHIC GET LINES (bitmap height), GRAPHIC GET WRAP / GRAPHIC SET WRAP (text-wrap state). Coverage now 261 implemented / 141 tier-3 / 101 not implemented.
-> (2026-09-15: +4 official statement keywords from batch 62 — MENU GET STATE / MENU SET STATE (GetMenuState / EnableMenuItem / CheckMenuItem, PB-compatible 1-based positions mapped to Win32 MF_BYPOSITION), MENU GET TEXT / MENU SET TEXT (GetMenuStringA / ModifyMenuA). Coverage now 255 implemented / 147 tier-3 / 101 not implemented.
-> (2026-09-15: +8 official statement keywords from batch 61 — GRAPHIC GET PPI (GetDeviceCaps LOGPIXELS), GRAPHIC GET POS / GRAPHIC SET POS (GetCurrentPositionEx / MoveToEx with optional STEP), GRAPHIC TEXT SIZE (GetTextExtentPoint32A), GRAPHIC GET/SET STRETCHMODE (GetStretchBltMode / SetStretchBltMode), GRAPHIC GET/SET CAPTION (console-title bridge via GetConsoleTitleA / SetConsoleTitleA). Coverage now 251 implemented / 151 tier-3 / 101 not implemented.
-> (2026-09-15: +4 official statement keywords from batch 60 — GRAPHIC ARC / GRAPHIC PIE (GDI Arc/Pie with PB degree angles mapped to ellipse points), GRAPHIC POLYLINE (Polyline with coordinate array), GRAPHIC PAINT (FloodFill with border color). > (2026-09-15: +4 official statement keywords from batch 59 — GRAPHIC SET PIXEL (direct 32-bpp pixel write via GetDIBits/SetDIBits), GRAPHIC GET SIZE (bitmap width/height), GRAPHIC SET TEXTALIGN / GRAPHIC GET TEXTALIGN (text alignment mode). > (2026-09-15: +4 official statement keywords from batch 58 — GRAPHIC GET CANVAS (current bitmap handle), GRAPHIC GET DC (device context), GRAPHIC SET MIX / GRAPHIC GET MIX (ROP mode state, default R2_COPYPEN). Coverage now 235 implemented / 167 tier-3 / 101 not implemented.)
-> (2026-09-15: +4 official statement keywords from batch 57 — GRAPHIC BITMAP LOAD (LoadImageA from BMP file), GRAPHIC CHR SIZE (GetTextExtentPoint32A), GRAPHIC CELL / GRAPHIC CELL SIZE (character-cell metrics). Coverage now 231 implemented / 171 tier-3 / 101 not implemented.)
-> (2026-09-15: +4 official statement keywords from batch 56 — GRAPHIC CIRCLE (Ellipse inscribed circle; not in the official CSV index, documented here), GRAPHIC POLYGON (Polygon from coordinate pairs), GRAPHIC GET CLIENT (bitmap dimensions), GRAPHIC GET LOC (0,0). Coverage now 227 implemented / 175 tier-3 / 101 not implemented.)
-> (2026-09-15: +3 official statement keywords from batch 55 — GRAPHIC COLOR (fore/back color state), GRAPHIC GET PIXEL (GetPixel into a LONG), GRAPHIC COPY (BitBlt SRCCOPY block copy; verified pixel-wise on the attached bitmap). Coverage now 224 implemented / 178 tier-3 / 101 not implemented.)
-> (2026-09-15: +3 official statement keywords from batch 54 — GRAPHIC WIDTH (pen width for the attached target), GRAPHIC STYLE (pen style), GRAPHIC SAVE (writes the attached bitmap to a BMP file via GetObjectA + GetDIBits; verified by ISFILE). Coverage now 221 implemented / 181 tier-3 / 101 not implemented.)
-> (2026-09-15: +3 official statement keywords from batch 53 — GRAPHIC LINE / BOX / ELLIPSE (MoveToEx+LineTo, Rectangle, Ellipse on the attached bitmap target, optional fill brush). Coverage now 218 implemented / 184 tier-3 / 101 not implemented.)
-> (2026-09-15: +3 official statement keywords from batch 52 — GRAPHIC ATTACH (selects a memory bitmap as the graphic target), GRAPHIC DETACH, GRAPHIC CLEAR (FillRect). Coverage now 215 implemented / 187 tier-3 / 101 not implemented.)
-> (2026-09-15: +2 official statement keywords from batch 51 — GRAPHIC BITMAP NEW (CreateDIBSection memory bitmap, top-down 32bpp, not visible) and GRAPHIC BITMAP END (DeleteObject; no-arg form destroys the last created bitmap). Coverage now 212 implemented / 190 tier-3 / 101 not implemented.)
-> (2026-09-15: +5 official statement keywords from batch 50 — MENU NEW BAR / MENU NEW POPUP (CreateMenu/CreatePopupMenu), MENU ADD STRING / MENU ADD POPUP (AppendMenuA MF_STRING/MF_POPUP), MENU DELETE (DeleteMenu). Menu handles are 64-bit pointers — QUAD variables. Coverage now 210 implemented / 192 tier-3 / 101 not implemented.)
-> (2026-09-15: +1 official statement keyword from batch 49 — COLOR fore& [, back&], PB/CC console text color via SetConsoleTextAttribute(GetStdHandle(-11)); fore/back 0-15, no arguments restores default. Coverage now 205 implemented / 197 tier-3 / 101 not implemented.)
-> (2026-09-15: +1 official statement keyword from batch 48 — IMAGELIST NEW BITMAP\|ICON / GET COUNT / KILL, comctl32 ImageList_Create/GetImageCount/Destroy; 64-bit handles require QUAD variables (a LONG truncates the pointer and the next call crashes 0xC0000005). Coverage now 204 implemented / 198 tier-3 / 101 not implemented.)
-> (2026-09-15: +2 official statement keywords from batch 47 — FONT NEW (GDI CreateFontA logical font, point-size height via MulDiv/GetDeviceCaps, style bits bold/italic/underline/strikeout, TO handle) and FONT END (DeleteObject). Tier-3 DDT items promoted; coverage now 203 implemented / 199 tier-3 / 101 not implemented.)
-> (2026-09-15: +1 official statement keyword from batch 46 — MEMORY COPY/SWAP/FILL: byte-block memmove copy (overlap-safe), byte-wise block swap, typed fill BYTE|WORD|DWORD with element counts, and string-pattern fill. Statement-class, coverage moved to 201 implemented / 201 tier-3 / 101 not implemented.)
-> (2026-09-15: +4 official function keywords from batch 45 — ERL$ error checkpoint name, EXTRACT$ substring-to-match (with optional start and ANY), RGB/BGR color packing (3-arg compose and 1-arg byte swap). Function-class, coverage counts unchanged.)
-> (2026-09-15: +7 official function keywords from batch 44 — SWITCH/SWITCH$ first-true select chain, HI/LO bit extraction (BYTE/WORD/LONG), FILEATTR file attribute queries (mode/open/OS handle/enumerate), FILENAME$ open-file name, PATHSCAN$ disk-scanned path parts (FULL/PATH/NAME/EXTN/NAMEX). Function-class, coverage counts unchanged.)
-> (2026-09-15: +3 official function keywords from batch 43 — BITS$ (STRING/WSTRING identity copy), PATHNAME$ (FULL/PATH/NAME/EXTN/NAMEX), PRINTERCOUNT (registry-based printer count). Function-class, coverage counts unchanged.)
-> (2026-09-15: +4 official function keywords from batch 42 — DAYNAME$/MONTHNAME$ date-name lookup, DATACOUNT/THREADCOUNT runtime counts. Function-class, coverage counts unchanged.)
-> (2026-09-15: +5 official function keywords from batch 41 — BUILD$/CLIP$/WRAP$/UNWRAP$/SHRINK$. Function-class, coverage counts unchanged.)
-> Summary: **274** statement-class keywords implemented · **129** DDT/GUI-class
-> deferred (Tier 3) · **101** documented upstream with no codegen evidence yet.
-> (2026-09-15: +5 official function keywords from batch 41 — BUILD$ (variadic concat), CLIP$ LEFT/RIGHT/MID (delete chars), WRAP$/UNWRAP$ (paired chars), SHRINK$ (collapse whitespace, trim ends). Coverage count unchanged (function-class).
-> (2026-09-15: +4 official function keywords from batch 40 — ChrToOem$/OemToChr$ (CharToOemA/OemToCharA), ChrToUtf8$/Utf8ToChr$ (MultiByteToWideChar/WideCharToMultiByte, CP 65001). ACODE$ (wide input) honestly skipped — C strlen cannot measure wide strings with embedded NULs. Coverage count unchanged (function-class).
-> (2026-09-15: +8 official function keywords from batch 39 — BIN$/OCT$/DEC$ radix strings, VERIFY (first non-matching char), MOD (register srem), GETATTR (GetFileAttributesA), DISKFREE/DISKSIZE (GetDiskFreeSpaceExA, bytes). Coverage count unchanged (function-class).
-> (2026-09-15: +12 official function keywords from batch 38 — TALLY, STRREVERSE$, STRINSERT$, STRDELETE$, REPEAT$, FRAC, ISFOLDER, EXP2/EXP10/LOG2/LOG10 (runtime helpers), IIF/CHOOSE (register-level select). Coverage count unchanged (function-class keywords are not in the statement CSV).
-> (2026-09-15: +10 official function keywords from batch 37 — CVx binary-string conversion family CVBYT / CVW / CVL / CVDWD / CVQ / CVS / CVD / CVE / CVCUR / CVCUX (read little-endian bytes at a 1-based offset); this also fixed CVD and CVS, which previously behaved like VAL (text-to-number) instead of reading binary bytes — they now match the documented semantics.
-> (2026-09-15: +1 official keyword from batch 36 — MKE$ (8-byte binary string of an EXT value; EXT is an 8-byte IEEE-754 double in this compiler rather than the official 10-byte 80-bit format, so MKE$ and MKD$ yield the same bytes — documented difference).
-> (2026-09-15: +2 official keywords from batch 35 — REGEXPR / REGREPL (documented regex subset: literals, ., *, +, ?, ^, $, |, [class], \ escapes incl. \b word boundary and \c case toggle, () groups; leftmost-longest, case-insensitive default; REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&] and REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$ with \00 = whole match; Tags \01-\99 and shortest-match \s not implemented, documented as subset).
-> (2026-09-15: +1 official keyword from batch 34 — PROFILE (per-procedure call counts and elapsed ms collected by the call-stack instrumentation; PROFILE filename$ writes "<Name>, <Call Count>, <Time mSec>" per line, PB-compatible).
-> (2026-09-15: +1 official keyword from batch 33 — CALLSTK call-stack tracing (CALLSTKCOUNT current depth, CALLSTK$(n) frame names 1-based innermost-first, CALLSTK filename$ writes the stack to a sequential file; pb_callstk_push/pop/count/get/dump).
-> (2026-09-15: +1 official keyword from batch 32 — MAT matrix algebra (CON / CON(expr) / IDN / ZER / elementwise + - assignment / scalar (expr)*a / 2-D TRN / * matrix multiply / INV Gauss-Jordan inverse; runtime pb_mat_* family with is_float element decoding).
-> (2026-09-15: +1 official keyword from batch 31 — FIELD (field variables bound to RANDOM record buffers or to dynamic-string payload slots by reference: FIELD #f, n AS var / FIELD dyn$, n AS var / FIELD STRING / FIELD RESET, OPEN ... FOR RANDOM AS #f LEN=reclen, numbered PUT #f,rec / GET #f,rec record I/O, blank padding).
-> (2026-09-14: +1 official keyword from batch 30 — ASMDATA/END ASMDATA
-> read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ`
-> lines + `END ASMDATA`, packed contiguously and never aligned, ANSI strings in DB,
-> WIDE UTF-16LE strings in DW, addressed via `CODEPTR(Name)` (emitted as
-> `@__asmdata_<NAME>` constant), verified byte-for-byte via `PEEK`. +1 from batch 29 —
-> ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
-> PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
-> automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
-> +6 from batch 78 — XPRINT GET MARGIN + DISPLAY BROWSE/COLOR/FONT/OPENFILE/SAVEFILE (common dialog noops).
-> +7 from batch 77 — TCP NOTIFY/UDP NOTIFY/PROGRESSBAR/HEADER/ARRAY SELECT/TAGARRAY/TAGARRAY ERASE.
-> +7 from batch 76 — XPRINT GET PAPERS/TRAYS/PREVIEW/RENDER/SPLIT/STRETCH/IMAGELIST (XPRINT family COMPLETE).
-> +7 from batch 75 — XPRINT CELL/GET SELECTION/SET+GET PAPER/TRAY + RESOURCE SAVE FILE.
-> +14 from batch 74 — XPRINT SET/GET printer properties (COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES, 7 SET/GET pairs).
-> +2 from batch 73 — XPRINT POLYGON/POLYLINE (GDI polygon + polyline with variable coord args).
-| `XPRINT printer properties (SET/GET)` | ✅ | 74 (v0.1.68) | 7 global property pairs: COPIES/ORIENTATION/QUALITY/DUPLEX/COLLATE/COLORMODE/PAGES |
-| `XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE` | ✅ | 75 (v0.1.69) | pb_xprint_set_cell/get_selection/set/get_paper/tray + pb_resource_save_file |
-| `XPRINT final 7 (PAPERS/TRAYS/PREVIEW/RENDER/SPLIT/STRETCH/IMAGELIST)` | ✅ | 76 (v0.1.70) | StretchBlt real; others noop/0 on screen DC — XPRINT family complete |
-| TCP NOTIFY / UDP NOTIFY / PROGRESSBAR / HEADER / ARRAY SELECT/TAGARRAY/ERASE | ✅ | 77 (v0.1.71) | noop placeholders (WSAAsyncSelect/GUI controls/array ops) |
-| XPRINT GET MARGIN / DISPLAY BROWSE/COLOR/FONT/OPENFILE/SAVEFILE | ✅ | 78 (v0.1.72) | global margin vars; common dialog noops (GetOpenFileName/ChooseColor/ChooseFont/SHBrowseForFolder placeholders) |
-> +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
-> +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
-| `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
-| `XPRINT POLYGON/POLYLINE` | ✅ | 73 (v0.1.67) | Polygon/Polyline (GDI), variable coord args on stack |
-> +8 from batch 70 — XPRINT ARC/ELLIPSE/PIE/SET FONT/GET+SET MIX/GET+SET STRETCHMODE (GDI shapes + font + ROP2).
-| \XPRINT TEXT SIZE/GET CLIENT/CANVAS/WRAP/WORDWRAP/OVERLAP\ | ✅ | 71 (v0.1.65) | GetTextExtentPoint32A + GetDeviceCaps + wrap/wordwrap/overlap flags |
-> +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
-> +5 from batch 68 — XPRINT ATTACH/CLOSE/GET PPI/GET SIZE/GET DC host-based printer GDI (screen DC fallback).
-| \XPRINT ARC/ELLIPSE/PIE/SET FONT/MIX/STRETCHMODE\ | ✅ | 70 (v0.1.64) | GDI Arc/Ellipse/Pie + CreateFontA + SetROP2/GetROP2 + SetStretchBltMode |
-| \XPRINT LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH\ | ✅ | 69 (v0.1.63) | GDI MoveToEx/LineTo/Rectangle/CreatePen/SetPixel/TextOutA/SetTextAlign on screen DC |
-> +1 from batch 28 — THREADED thread-local storage declaration, LLVM `thread_local`
-> globals with per-thread copies.)
-> (2026-09-14: +4 official keywords from batch 27 — ON CALL computed
-> procedure dispatch, GET$$/PUT$$ wide UTF-16LE string I/O, MACRO/END MACRO
-> compile-time text substitution. +2 from batch 26 — PREFIX/END PREFIX
-> compile-time text transform, TRY/CATCH/FINALLY/EXIT TRY structured
-> error trapping. Batch 25 added ON ERROR trapping, RESUME, REGISTER.)
-> (Earlier: +5 official keywords from batch 23 — real STATIC semantics,
-> ARRAY ASSIGN, TYPE SET, WINDOW SET/GET TEXT console-title bridge, plus a
-> TYPE fixed-string field assignment bug fix; +16 official keywords from batch 21 — COMM serial port
-> OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT + THREAD
-> CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY — real Win32
-> CreateFileA/DCB serial + CreateThread thread control, verified live via
-> a thread spin-loop test; +11 official keywords from batch 19 — TCP OPEN/ACCEPT/SEND/RECV/
-> LINE INPUT/PRINT/CLOSE + UDP OPEN/SEND/RECV/CLOSE — Winsock sockets, verified
-> live via loopback TCP/UDP echo; 2026-09-12: +59 official keywords from batches 1-18 (incl. 29 #-metastatements, all verified accepted) — TIX, MKBYT$, PEEK/POKE,
-> SHIFT/ROTATE, DATA/READ/RESTORE, PLAY WAVE/SOUND, SPLIT, ARRAY REVERSE/SHUFFLE,
-> CHDRIVE, SETEOF, PUT$, ISINFINITE/ISNORMAL, MKx binary-string family,
-> DESKTOP GET CLIENT/LOC/PPI — all sample-verified live.)
+**All 362 supported keywords (alphabetical):**
 
-### Newly implemented by this branch
-| PB statement / function | Status | Batch | Maps to |
-| --- | --- | --- | --- |
-| `MENU GET STATE` | ✅ | 62 (v0.1.56) | GetMenuState (pb_menu_get_state) |
-| `MENU SET STATE` | ✅ | 62 (v0.1.56) | EnableMenuItem/CheckMenuItem (pb_menu_set_state) |
-| `MENU GET TEXT` | ✅ | 62 (v0.1.56) | GetMenuStringA (pb_menu_get_text) |
-| `MENU SET TEXT` | ✅ | 62 (v0.1.56) | ModifyMenuA (pb_menu_set_text) |
-| `GRAPHIC SET SIZE` | ✅ | 65 (v0.1.59) | rebuild bitmap at new size (pb_graphic_set_size) |
-| `GRAPHIC SET CLIP` | ✅ | 65 (v0.1.59) | clip margins, read back by GET CLIP (pb_graphic_set_clip) |
-| `GRAPHIC SET VIRTUAL` | ✅ | 65 (v0.1.59) | virtual display size (pb_graphic_set_virtual) |
-| `GRAPHIC SET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode on/off (pb_graphic_set_wordwrap) |
-| `ARRAY ADD` arr1(), arr2() | ✅ | 67 (v0.1.61) | `pb_array_add` — element-wise add, all numeric types |
-| `XPRINT ATTACH` / `CLOSE` / `GET PPI` / `GET SIZE` / `GET DC` | ✅ | 68 (v0.1.62) | CreateDCA screen DC (printer pending); GetDeviceCaps LOGPIXELSX/Y + PHYSICALWIDTH/HEIGHT; DeleteDC |
-| `GRAPHIC SET FIXED` | ✅ | 66 (v0.1.60) | restore FIXED mode (pb_graphic_set_fixed) |
-| `GRAPHIC SET FONT` | ✅ | 66 (v0.1.60) | select font into DC (pb_graphic_set_font, SelectObject) |
-| `GRAPHIC GET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode read (pb_graphic_get_wordwrap) |
-| `GRAPHIC GET BITS` | ✅ | 64 (v0.1.58) | whole bitmap as DIB string (pb_graphic_get_bits) |
-| `GRAPHIC SET BITS` | ✅ | 64 (v0.1.58) | replace bitmap from DIB string (pb_graphic_set_bits) |
-| `GRAPHIC GET SCALE` | ✅ | 64 (v0.1.58) | world-coordinate limits (pb_graphic_get_scale) |
-| `GRAPHIC SCALE` | ✅ | 64 (v0.1.58) | custom coordinate system, incl. PIXELS (pb_graphic_scale) |
-| `GRAPHIC SET AUTOSIZE` | ✅ | 64 (v0.1.58) | autosize target (pb_graphic_set_autosize) |
-| `GRAPHIC GET CLIP` | ✅ | 63 (v0.1.57) | GetClipBox (pb_graphic_get_clip) |
-| `GRAPHIC GET VIEW` | ✅ | 63 (v0.1.57) | GetViewportOrgEx (pb_graphic_get_view) |
-| `GRAPHIC SET VIEW` | ✅ | 63 (v0.1.57) | SetViewportOrgEx (pb_graphic_set_view) |
-| `GRAPHIC GET LINES` | ✅ | 63 (v0.1.57) | bitmap height (pb_graphic_get_lines) |
-| `GRAPHIC GET WRAP` | ✅ | 63 (v0.1.57) | text-wrap state (pb_graphic_get_wrap) |
-| `GRAPHIC SET WRAP` | ✅ | 63 (v0.1.57) | text-wrap state (pb_graphic_set_wrap) |
-| `GRAPHIC GET PPI` | ✅ | 61 (v0.1.55) | GetDeviceCaps LOGPIXELSX/LOGPIXELSY (pb_graphic_get_ppi) |
-| `GRAPHIC GET POS` | ✅ | 61 (v0.1.55) | GetCurrentPositionEx (pb_graphic_get_pos) |
-| `GRAPHIC SET POS` | ✅ | 61 (v0.1.55) | MoveToEx, optional STEP (pb_graphic_set_pos) |
-| `GRAPHIC TEXT SIZE` | ✅ | 61 (v0.1.55) | GetTextExtentPoint32A (pb_graphic_text_size) |
-| `GRAPHIC GET STRETCHMODE` | ✅ | 61 (v0.1.55) | GetStretchBltMode (pb_graphic_get_stretchmode) |
-| `GRAPHIC SET STRETCHMODE` | ✅ | 61 (v0.1.55) | SetStretchBltMode (pb_graphic_set_stretchmode) |
-| `GRAPHIC GET CAPTION` | ✅ | 61 (v0.1.55) | GetConsoleTitleA + BSTR alloc (pb_graphic_get_caption) |
-| `GRAPHIC SET CAPTION` | ✅ | 61 (v0.1.55) | SetConsoleTitleA (pb_graphic_set_caption) |
-| `TCP OPEN/ACCEPT/SEND/RECV/LINE INPUT/PRINT/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `socket/connect/bind/listen/accept/send/recv/closesocket` + `pb_*` helpers |
-| `COMM OPEN/CLOSE/LINE/PRINT/RECV/RESET/SEND/SET/TIMEOUT` | ✅ | 21 (v0.1.15) | CreateFileA + DCB/SetCommState/SetCommTimeouts; channel 0..255 |
-| `THREAD CREATE/CLOSE/SUSPEND/RESUME/STATUS/GET+SET PRIORITY` | ✅ | 21 (v0.1.15) | CreateThread/ResumeThread/SuspendThread/TerminateThread/GetExitCodeThread (x64, slot ids 0..255) |
-| `FIELD` (`#f`/`dyn$` bind, STRING, RESET, RANDOM) | ✅ | 31 (v0.1.25) | `pb_open_random` + `pb_field_bind_file/str` + `pb_field_set/get/tostr/reset` + `pb_put/get_record` + `pb_seek_record` (RANDOM record I/O) |
-| `ASMDATA / END ASMDATA` | ✅ | 30 (v0.1.24) | read-only data blocks outside any Sub/Function: `ASMDATA Name` + `DB`/`DW`/`DD`/`DQ` lines + `END ASMDATA`; packed, never aligned; ANSI strings in DB, WIDE UTF-16LE strings in DW; emitted as `@__asmdata_<NAME>` constant; address via `CODEPTR(Name)` |
-| `ASM` (`!` shortcut or `ASM` keyword) | ✅ | 29 (v0.1.23) | LLVM inline assembly — Intel dialect; PB variable operands passed by pointer (`byte/word/dword/qword ptr [$N]`); mem-to-mem and wide-immediate shuffling automatic; consecutive ASM lines merge into one asm block (register state preserved); x87 / MMX / SSE / SIMD pass through verbatim; works on both x86-64 and i686 targets |
-| `THREADED` | ✅ | 28 (v0.1.22) | LLVM `thread_local` global; per-thread copy, global to every Sub/Function (scalars; arrays pending) |
-| `UDP OPEN/SEND/RECV/CLOSE` | ✅ | 19 (v0.1.12) | Winsock `SOCK_DGRAM` + `sendto/recvfrom`; `UDP SEND AT` accepts LONG or string IP |
-| `MSGBOX` / `SHELL` / `CURDIR$` / `ISFILE` | ✅ | v0.1.0 | `MessageBoxA` / `ShellExecuteA` / `GetCurrentDirectoryA` / `_access` |
-| `REPLACE old$ WITH new$ IN target$` | ✅ | v0.1.0 | `pb_replace` |
-| `ERASE array` | ✅ | v0.1.0 | `pb_erase_array` |
-| `LSET var$ = expr` / `RSET var$ = expr` | ✅ | v0.1.0 | `pb_lset(_buf)` / `pb_rset(_buf)` |
-| `WRITE #f, ...` | ✅ | v0.1.0 | `pb_write_file_begin/str/int/dbl/newline` |
-| `SEEK #f, pos` | ✅ | v0.1.0 | `pb_seek` |
-| `LOCK #f` / `UNLOCK #f` | ✅ | v0.1.0 | `pb_lock` / `pb_unlock` |
-| `RESET` / `FLUSH #f` | ✅ | v0.1.0 | `pb_reset` / `pb_flush` |
-| `NAME old$ AS new$` | ✅ | v0.1.0 | `pb_name` |
-| `BEEP` | ✅ | early | `Beep(800, 300)` (kernel32) |
-| `SWAP a, b` | ✅ | 2 (v0.1.03) | register-level load/store exchange |
-| `MKDIR` / `RMDIR` / `CHDIR` / `KILL` + `ERR` / `ERRCLEAR` | ✅ | early | `_mkdir` / `_rmdir` / `_chdir` / `pb_kill` + `@pb_err` global — PB-compatible error codes (75/76/53) on failure |
-| Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | 17 (v0.1.10) | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
-| `CHR$(a, b, c)` multi-argument | ✅ | early | one byte per argument, concatenated (`CHR$(13,10)` = CR+LF) |
-| `RND` bare form (no parens) | ✅ | early | same as `RND()` — random double in [0,1) |
-| `INPUT #f, s$` reading `WRITE #` output | ✅ | v0.1.0 | CSV double-quotes stripped per PB semantics |
-| `PRINT` console output | ✅ | early | flushed immediately after each line (visible under redirection / on abort) |
-| `CLS` | ✅ | early | `pb_cls` → clears the console screen (PB/CC) |
-| `ERROR n` | ✅ | early | sets the PB error code (readable via `ERR`) |
-| `ENVIRON "VAR=value"` | ✅ | early | `pb_environ_set` → `_putenv`; bare `ENVIRON "VAR"` removes the variable |
-| `FILECOPY src$, dst$` | ✅ | early | `pb_filecopy` → `CopyFileA`, PB-compatible `ERR` on failure (53/70/76) |
-| `SETATTR "path", attr&` | ✅ | early | `pb_setattr` → `SetFileAttributesA`, PB-compatible `ERR` on failure |
-| `TIX` | ✅ | 1 (v0.1.03) | `pb_tix` → 64-bit millisecond tick counter |
-| `MKBYT$(n)` | ✅ | 1 (v0.1.03) | `pb_mkbyt` → one-byte string |
-| `ISINFINITE(x)` / `ISNORMAL(x)` | ✅ | 1 (v0.1.03) | `pb_isinfinite` / `pb_isnormal` — IEEE-754 checks (-1/0) |
-| `PLAY WAVE "file.wav"` | ✅ | 1 (v0.1.03) | `PlaySoundA` (async) |
-| `PLAY SOUND freq, dur` | ✅ | 3 (v0.1.03) | `Beep(freq, dur)` (kernel32) |
-| `CHDRIVE "C:"` | ✅ | 1 (v0.1.03) | `_chdrive` — PB-compatible `ERR` (68) on failure |
-| `DIR$` / `DIR` function + statement family | ✅ | 24 (v0.1.18) | `FindFirstFileA/FindNextFileA/FindClose` — `DIR$(mask)` / `DIR$(NEXT)` / `DIR mask [ONLY attr] TO s$` / `DIR NEXT TO s$` / `DIR CLOSE` |
-| `LET t2 = t1` (whole TYPE) |
-| `MAT a() = CON / CON(expr) / IDN / ZER / a() + b() / a() - b() / a() * b() / (expr) * a() / TRN(a()) / INV(a())` | ✅ | 32 (v0.1.26) | `pb_mat_fill/copy/add/scale/identity/trn/mul/inv` — matrix algebra, is_float element decoding (batch 32) |
-| `CALLSTK` (CALLSTKCOUNT / CALLSTK$(n) / CALLSTK filename$ dump) | ✅ | 33 (v0.1.27) | `pb_callstk_push/pop/count/get/dump` — per-procedure call-stack tracing, 1-based innermost-first frame names (batch 33) |
-| `PROFILE filename$` | ✅ | 34 (v0.1.28) | `pb_profile_enable/dump` — call counts + elapsed ms per procedure, PB-compatible "<Name>, <Call Count>, <Time mSec>" report (batch 34) |
-| `REGEXPR mask$ IN target$ [AT start&] TO iPos& [, iLen&]` | ✅ | 35 (v0.1.29) | `pb_regex_scan` — documented regex subset, leftmost-longest, case-insensitive default (batch 35) |
-| `REGREPL mask$ IN target$ WITH repl$ [AT start&] TO iPos&, newtarget$` | ✅ | 35 (v0.1.29) | `pb_regex_replace` — replace first match, `\00` = whole match (batch 35) |
-| `MKE$` | ✅ | 36 (v0.1.30) | `pb_mkdouble` — 8-byte binary string of an EXT value; EXT is a double in this compiler (documented difference from the official 80-bit format) (batch 36) |
-| `BITS$(director, s$)` | ✅ | 43 (v0.1.37) | pb_bits_str — STRING/WSTRING identity copy (ANSI-only build) |
-| `PATHNAME$(director, spec$)` | ✅ | 43 (v0.1.37) | pb_pathname — FULL/PATH/NAME/EXTN/NAMEX pure string parsing |
-| `PRINTERCOUNT` | ✅ | 43 (v0.1.37) | pb_printer_count — installed printers via registry (advapi32; winspool EnumPrintersW crashed in PB-linked exes) |
-| `SWITCH(expr, val, ...)` / `SWITCH$(...)` | ✅ | 44 (v0.1.38) | first-true select chain — LLVM `select` on each `expr != 0`, values may be LONG or STRING |
-| `GRAPHIC ARC (x1,y1)-(x2,y2), start, end [, color&]` / `GRAPHIC PIE ...` / `GRAPHIC POLYLINE pts [, color&]` / `GRAPHIC PAINT [STEP] (x,y) [, fill& [, border&]]` | ✅ | 60 (v0.1.54) | pb_graphic_arc / pb_graphic_pie / pb_graphic_polyline / pb_graphic_paint |
-| `GRAPHIC SET PIXEL (x,y), color&` / `GRAPHIC GET SIZE TO w&, h&` / `GRAPHIC SET TEXTALIGN (a&)` / `GRAPHIC GET TEXTALIGN TO a&` | ✅ | 59 (v0.1.53) | pb_graphic_set_pixel / pb_graphic_get_size / pb_graphic_set_textalign / pb_graphic_get_textalign |
-| `GRAPHIC GET CANVAS` / `GRAPHIC GET DC` / `GRAPHIC SET MIX` / `GRAPHIC GET MIX` | ✅ | 58 (v0.1.52) | pb_graphic_get_canvas / pb_graphic_get_dc / pb_graphic_set_mix / pb_graphic_get_mix — canvas/DC handles, ROP mix state |
-| `GRAPHIC BITMAP LOAD` / `GRAPHIC CHR SIZE` / `GRAPHIC CELL` / `GRAPHIC CELL SIZE` | ✅ | 57 (v0.1.51) | pb_graphic_bitmap_load / pb_graphic_chr_size / pb_graphic_cell / pb_graphic_cell_size — bitmap load, text extents, cell metrics |
-| `GRAPHIC CIRCLE` / `GRAPHIC POLYGON` / `GRAPHIC GET CLIENT` / `GRAPHIC GET LOC` | ✅ | 56 (v0.1.50) | pb_graphic_circle / pb_graphic_polygon / pb_graphic_get_client / pb_graphic_get_loc — circle, polygon, bitmap size/location |
-| `GRAPHIC COLOR` / `GRAPHIC GET PIXEL` / `GRAPHIC COPY` | ✅ | 55 (v0.1.49) | pb_graphic_color / pb_graphic_get_pixel / pb_graphic_copy — color state + GetPixel + BitBlt block copy |
-| `GRAPHIC WIDTH` / `GRAPHIC STYLE` / `GRAPHIC SAVE` | ✅ | 54 (v0.1.48) | pb_graphic_width / pb_graphic_style / pb_graphic_save — pen width + pen style + save attached bitmap to BMP |
-| `GRAPHIC LINE` / `GRAPHIC BOX` / `GRAPHIC ELLIPSE` | ✅ | 53 (v0.1.47) | pb_graphic_line / pb_graphic_box / pb_graphic_ellipse — MoveToEx+LineTo / Rectangle / Ellipse with optional fill |
-| `GRAPHIC ATTACH` / `GRAPHIC DETACH` / `GRAPHIC CLEAR` | ✅ | 52 (v0.1.46) | pb_graphic_attach / pb_graphic_detach / pb_graphic_clear — bitmap graphic target, CreateCompatibleDC + SelectObject, FillRect |
-| `GRAPHIC BITMAP NEW` / `GRAPHIC BITMAP END` | ✅ | 51 (v0.1.45) | pb_gdi_bitmap_new — CreateDIBSection (memory DIB, top-down 32bpp); pb_gdi_bitmap_end — DeleteObject (no-arg destroys last) |
-| `MENU NEW BAR` / `MENU NEW POPUP` / `MENU ADD STRING` / `MENU ADD POPUP` / `MENU DELETE` | ✅ | 50 (v0.1.44) | pb_menu_new_bar / pb_menu_new_popup — CreateMenu/CreatePopupMenu; pb_menu_add_string / pb_menu_add_popup — AppendMenuA; pb_menu_delete — DeleteMenu |
-| `COLOR` (console text) | ✅ | 49 (v0.1.43) | pb_color — SetConsoleTextAttribute (console text color, PB/CC) |
-| `IMAGELIST NEW` / `IMAGELIST COUNT` / `IMAGELIST KILL` | ✅ | 48 (v0.1.42) | pb_imagelist_new — ImageList_Create (comctl32); pb_imagelist_count — ImageList_GetImageCount; pb_imagelist_kill — ImageList_Destroy; 64-bit handles (QUAD) |
-| `FONT NEW fontname$ [, points!, style&, charset&, pitch&, escapement&] TO fhndl` | ✅ | 47 (v0.1.41) | pb_font_new — CreateFontA logical font (GDI) |
-| `FONT END fhndl` | ✅ | 47 (v0.1.41) | pb_font_end — DeleteObject |
-| `MEMORY COPY src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_copy — memmove byte copy (overlap-safe) |
-| `MEMORY SWAP src&, dst&, count&` | ✅ | 46 (v0.1.40) | pb_mem_swap — byte-wise block exchange |
-| `MEMORY FILL dst&, count&, BYTE\|WORD\|DWORD v` | ✅ | 46 (v0.1.40) | pb_mem_fill — fill count elements of width 1/2/4 bytes |
-| `MEMORY FILL dst&, count&, str$` | ✅ | 46 (v0.1.40) | pb_mem_fill_str — repeat string pattern over count bytes |
-| `ERL$` | ✅ | 45 (v0.1.39) | pb_erl_str — last ON ERROR checkpoint id as a string (numeric approximation of the official label/line-name) |
-| `EXTRACT$([start,] MainStr, [ANY] MatchStr)` | ✅ | 45 (v0.1.39) | pb_extract — substring up to first match (or any match char), start and ANY forms |
-| `RGB(r, g, b)` / `RGB(bgr)` | ✅ | 45 (v0.1.39) | pb_rgb3 pack `R | G<<8 | B<<16`; pb_rgb_swap single-arg byte swap |
-| `BGR(r, g, b)` / `BGR(rgb)` | ✅ | 45 (v0.1.39) | pb_bgr3 pack `B | G<<8 | R<<16`; pb_rgb_swap single-arg byte swap |
-| `HI(DataType, v)` / `LO(DataType, v)` | ✅ | 44 (v0.1.38) | bit extraction — `lshr` + mask per DataType (BYTE=8/WORD·INTEGER=16/LONG=32 bits) |
-| `FILEATTR([#]f, attr)` | ✅ | 44 (v0.1.38) | pb_fileattr — open state, mode bits (Input 1/Output 2/Random 4/Append 10/Binary 32), OS handle, enumerate |
-| `FILENAME$([#]f)` | ✅ | 44 (v0.1.38) | pb_filename — file-system name of an open file (tracked in pb_open/pb_close) |
-| `PATHSCAN$(director, spec$ [, pathspec$])` | ✅ | 44 (v0.1.38) | pb_pathscan — FindFirstFileA existence check across `;`-separated dirs + FULL/PATH/NAME/EXTN/NAMEX parts |
-| DAYNAME$(n&) | ✅ | 42 (v0.1.36) | pb_dayname — 0=Sunday..6=Saturday, runtime name table |
-| MONTHNAME$(n&) | ✅ | 42 (v0.1.36) | pb_monthname — 1=January..12=December, runtime name table |
-| DATACOUNT | ✅ | 42 (v0.1.36) | pb_data_count — current procedure DATA pool size |
-| THREADCOUNT | ✅ | 42 (v0.1.36) | pb_thread_count — active PB threads + primary (>=1) |
-| BUILD$(a$, b$, ...) | ✅ | 41 (v0.1.35) | pb_build — variadic high-efficiency concat |
-| CLIP$(LEFT/RIGHT/MID ...) | ✅ | 41 (v0.1.35) | pb_clip — delete chars from left/right/middle |
-| WRAP$(s$, l$, r$) | ✅ | 41 (v0.1.35) | pb_wrap — prepend l$ + append r$ |
-| UNWRAP$(s$, l$, r$) | ✅ | 41 (v0.1.35) | pb_unwrap — strip matching l$ / r$ |
-| SHRINK$(s$ [, mask$]) | ✅ | 41 (v0.1.35) | pb_shrink — collapse whitespace runs, trim ends |
-| ChrToOem$(s$) | ✅ | 40 (v0.1.34) | pb_chr_to_oem — CharToOemA (ANSI→OEM) |
-| OemToChr$(s$) | ✅ | 40 (v0.1.34) | pb_oem_to_chr — OemToCharA (OEM→ANSI) |
-| ChrToUtf8$(s$) | ✅ | 40 (v0.1.34) | pb_chr_to_utf8 — ANSI→UTF-8 via MultiByteToWideChar/WideCharToMultiByte |
-| Utf8ToChr$(s$) | ✅ | 40 (v0.1.34) | pb_utf8_to_chr — UTF-8→ANSI via the same pair |
-| BIN$(n) | ✅ | 39 (v0.1.33) | pb_bin — unsigned 64-bit binary string (significant bits) |
-| OCT$(n) | ✅ | 39 (v0.1.33) | pb_oct — unsigned 64-bit octal string |
-| DEC$(n) | ✅ | 39 (v0.1.33) | pb_dec — signed decimal string |
-| VERIFY([start&,] s$, m$) | ✅ | 39 (v0.1.33) | pb_verify — first char of s$ not in m$ (1-based), 0 = all match |
-| MOD(p, q) | ✅ | 39 (v0.1.33) | register-level srem — truncated remainder |
-| GETATTR(path$) | ✅ | 39 (v0.1.33) | pb_getattr — GetFileAttributesA attribute bits, -1 on failure |
-| DISKFREE(drive$) | ✅ | 39 (v0.1.33) | pb_diskfree — GetDiskFreeSpaceExA free bytes (QUAD), empty = default drive |
-| DISKSIZE(drive$) | ✅ | 39 (v0.1.33) | pb_disksize — GetDiskFreeSpaceExA total bytes (QUAD) |
-| TALLY(s1$, s2$) | ✅ | 38 (v0.1.32) | pb_tally — count of non-overlapping occurrences |
-| STRREVERSE$(s$) | ✅ | 38 (v0.1.32) | pb_strreverse — reversed string |
-| STRINSERT$(s$, n$, pos&) | ✅ | 38 (v0.1.32) | pb_strinsert — 1-based insert, past-end appends |
-| STRDELETE$(s$, start&, count&) | ✅ | 38 (v0.1.32) | pb_strdelete — 1-based delete, bounded |
-| REPEAT$(n&, s$) | ✅ | 38 (v0.1.32) | pb_repeat — concatenated repetition |
-| FRAC(x) | ✅ | 38 (v0.1.32) | pb_frac — fractional part via modf (sign preserved) |
-| ISFOLDER(name$) | ✅ | 38 (v0.1.32) | pb_isfolder — _stat + _S_IFDIR, -1/0 |
-| EXP2 / EXP10 / LOG2 / LOG10 | ✅ | 38 (v0.1.32) | pb_exp2 / pb_exp10 (pow(10,x)) / pb_log2 / pb_log10 |
-| IIF(n, t, f) | ✅ | 38 (v0.1.32) | register-level select — n≠0 → t else f (string / float / int) |
-| CHOOSE(i, c1, c2, …) | ✅ | 38 (v0.1.32) | register-level select chain — 1-based pick, out-of-range keeps first |
-| `CVBYT` / `CVW` / `CVL` / `CVDWD` / `CVQ` | ✅ | 37 (v0.1.31) | `pb_cv_int` — read 1/2/4/4/8 little-endian bytes into BYTE/WORD/LONG/DWORD/QUAD, 1-based optional offset (batch 37) |
-| `CVS` / `CVD` / `CVE` / `CVCUR` / `CVCUX` | ✅ | 37 (v0.1.31) | `pb_cv_dbl` — read 4/8-byte little-endian into SINGLE/DOUBLE/EXT (CUR/CUX map to DOUBLE here), 1-based optional offset (batch 37) | ✅ | 24 (v0.1.18) | `pb_type_set` — full user-defined-type copy incl. fixed-string fields |
-| `SETEOF #f` | ✅ | 1 (v0.1.03) | `pb_seteof` → truncates file at current position |
-| `SHIFT LEFT/RIGHT var, n` · `SHIFT SIGNED LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_shift_left/right` (logical) + `pb_shift_sleft/sright` (arithmetic) |
-| `ROTATE LEFT/RIGHT var, n` | ✅ | 2 (v0.1.03) | `pb_rotate_left/right` (wrapping) |
-| `ARRAY REVERSE arr` | ✅ | 2 (v0.1.03) | `pb_array_reverse` — in-place element reversal |
-| `ARRAY SHUFFLE arr` | ✅ | 3 (v0.1.03) | `pb_array_shuffle` — in-place Fisher-Yates |
-| `PUT$ = ...` | ✅ | 2 (v0.1.03) | `pb_put_string` — string to file (binary) |
-| `GET$ #f, count, var$` | ✅ | 15 (v0.1.08) | `pb_get_string` — read count bytes from a binary file into a string |
-| `SPLIT [WORD] src$, a TO b, c` | ✅ | 3 (v0.1.03) | `pb_split` — returns pieces via `PARSE$`-compatible out-params |
-| `DATA ...` / `READ var, ...` / `RESTORE` | ✅ | 4 (v0.1.03) | `pb_data_append` / `pb_read_data_str/num` / `pb_data_reset` — DATA pool with cursor + RESTORE rewind |
-| `PEEK(datatype, addr)` / `POKE datatype, addr, v, ...` | ✅ | 5 (v0.1.03) | `pb_peek8/16/32/64/f/d` / `pb_poke8/16/32/64/f/d` — BYTE/WORD/DWORD/INTEGER/LONG/QUAD/SINGLE/DOUBLE; addresses are 64-bit (use `QUAD` vars for `VARPTR`) |
-| `BIT` function / `BIT SET/RESET/TOGGLE var, n` / `BIT CALC var, n, expr` | ✅ | 6 (v0.1.04) | register-level bit ops (in-place, any integral var) |
-| `PROCESS GET PRIORITY TO var` / `PROCESS SET PRIORITY pri` | ✅ | 6 (v0.1.04) | `GetPriorityClass` / `SetPriorityClass` |
-| `LOF(f)` / `LOC(f)` / `SEEK(f)` | ✅ | 7 (v0.1.04) | `pb_lof` / `pb_loc` — file length / current position (QUAD) |
-| `ARRAY DELETE arr(i) [FOR count]` | ✅ | 8 (v0.1.04) | `pb_array_delete` — element(s) removed, tail zeroed |
-| `ARRAY INSERT arr(i), value` | ✅ | 9 (v0.1.04) | `pb_array_insert_num/str` — element inserted, last shifts out (fixed arrays) |
-| `ARRAY SCAN arr(), OP expr, TO var` | ✅ | 10 (v0.1.04) | `pb_array_scan_num/str` — first matching relative index, 0 = none (`= <> < > <= >=`) |
-| `MKI$` / `MKWRD$` | ✅ | 16 (v0.1.09) | `pb_mkint` (2-byte little-endian) |
-| `MKL$` / `MKDWD$` | ✅ | 16 (v0.1.09) | `pb_mklong` (4-byte little-endian) |
-| `MKQ$` / `MKCUR$` / `MKCUX$` | ✅ | 16 (v0.1.09) | `pb_mkquad` (8-byte little-endian) |
-| `MKS$` | ✅ | 16 (v0.1.09) | `pb_mksingle` (4-byte IEEE-754) |
-| `MKD$` | ✅ | 16 (v0.1.09) | `pb_mkdouble` (8-byte IEEE-754) |
-| `DESKTOP GET CLIENT TO w&, h&` | ✅ | 16 (v0.1.09) | work-area size (`SystemParametersInfoA` SPI_GETWORKAREA) |
-| `DESKTOP GET LOC TO x&, y&` | ✅ | 16 (v0.1.09) | work-area origin (same call) |
-| `DESKTOP GET PPI TO x&, y&` | ✅ | 16 (v0.1.09) | `GetDeviceCaps` LOGPIXELSX/Y |
-| `DESKTOP GET SIZE TO w&, h&` | ✅ | 15 (v0.1.08) | screen size in pixels (`GetSystemMetrics` SM_CXSCREEN/SM_CYSCREEN) |
-| `LEN(str)` fix | ✅ | 16 (v0.1.09) | BSTR byte-length prefix (`pb_str_len`) — correct length for strings containing NUL bytes |
-| `ON ERROR GOTO / GOTO 0 / RESUME NEXT` | ✅ | 25 (v0.1.19) | per-function run-time error trap + disarm |
-| `RESUME / RESUME NEXT / RESUME FLUSH / RESUME label` | ✅ | 25 (v0.1.19) | four continuation forms after error handler |
-| `REGISTER` | ✅ | 25 (v0.1.19) | optimization hint, accepted as LOCAL |
-| `PREFIX "..." / END PREFIX` | ✅ | 26 (v0.1.20) | preprocessor text transform — prepends source to every line between |
-| `TRY / CATCH / FINALLY / EXIT TRY` | ✅ | 26 (v0.1.20) | structured run-time error trapping reusing the ON ERROR machinery |
-| `ON CALL` | ✅ | 27 (v0.1.21) | `ON expr CALL proc(args), fn(args) TO var` — 1-based dispatch to SUB/FUNCTION targets, out-of-range falls through |
-| `GET$$ #f, count, var$` / `PUT$$ #f, expr$` | ✅ | 27 (v0.1.21) | WIDE (UTF-16LE) string I/O — `pb_get_wstring` / `pb_put_wstring` via MultiByteToWideChar / WideCharToMultiByte |
-| `MACRO / END MACRO` | ✅ | 27 (v0.1.21) | preprocessor text substitution — single-line expression macros + multi-line statement macros |
-| `STATIC` (real semantics) | ✅ | 23 (v0.1.17) | module-global slot keeps value across calls |
-| `ARRAY ASSIGN dst() = src()` | ✅ | 23 (v0.1.17) | `pb_array_copy` — whole-array copy |
-| `TYPE SET t2 = t1` | ✅ | 23 (v0.1.17) | `pb_type_set` — same machinery as `LET` with TYPEs |
-| `WINDOW SET TEXT s$` / `WINDOW GET TEXT TO s$` | ✅ | 23 (v0.1.17) | `SetConsoleTitleA` / `GetConsoleTitleA` console-title bridge |
-| `LPRINT` / `LPRINT ATTACH/CLOSE/FLUSH/FORMFEED` | ✅ | 22 (v0.1.16) | `pb_lprint_*` — printer device output |
-| `TRACE` / `TRACE PRINT` | ✅ | 22 (v0.1.16) | `pb_trace_new` — trace buffer flushed to file |
-| `IMPORT ADDR func$ TO addr&` / `IMPORT CLOSE` | ✅ | 22 (v0.1.16) | `pb_import_addr` — runtime GetProcAddress |
-| `CALL DWORD target` | ✅ | 22 (v0.1.16) | indirect call through an imported / QUAD address |
-| `FILESCAN #f, RECORDS TO n, WIDTH TO w` | ✅ | 20 (v0.1.13) | `pb_filescan` — record count / max record width |
-| `ARRAY ARRAYIX arr(), i` | ✅ | 20 (v0.1.13) | element = index |
-| `DECLARE` / `TYPE/END TYPE` | ✅ | 20 (v0.1.13) | external declarations + user-defined types |
-| `ON GOTO n, ...` / `ON GOSUB n, ...` | ✅ | 12 (v0.1.05) | dispatch to line labels by expression value (1-based, out-of-range continues) |
-| `OPEN file FOR BINARY AS #f` + `GET #f, pos, var` / `PUT #f, pos, var` | ✅ | early | random-access binary I/O — `pb_open` r+b mode (no truncate) + `pb_get` / `pb_put` |
-| `CLIPBOARD SET TEXT s$` / `GET TEXT TO s$` / `RESET` | ✅ | 13 (v0.1.06) | `pb_clipboard_set_text/get_text/reset` — GlobalAlloc + Set/GetClipboardData |
-| `GLOBALMEM ALLOC/FREE/LOCK/SIZE/UNLOCK` | ✅ | 17 (v0.1.10) | `pb_globalmem_*` — Win32 global-memory heap |
-| `MOUSEPTR` | ✅ | 17 (v0.1.10) | `pb_mouseptr` — LoadCursorA cursor style |
-| `UCODEPAGE` | ✅ | 17 (v0.1.10) | `pb_ucodepage` — console output code page |
-| `HOST ADDR "name" TO a&` / `HOST NAME TO a&` | ✅ | 14 (v0.1.07) | `pb_host_addr` (gethostbyname) / `pb_host_name` (gethostname) |
-| `INPUT FLUSH` | ✅ | 13 (v0.1.06) | `pb_input_flush` — clears the keyboard type-ahead buffer |
-| `OPTION EXPLICIT` / `REM` | ✅ | 13 (v0.1.06) | strict declaration checking / comment statement |
-| `CSET var$ = expr` | ✅ | 15 (v0.1.08) | `pb_cset(_buf)` — assign into fixed-string buffer |
-| `HEX$` | ✅ | v0.1.0 | 64-bit integer → hex string |
-| `WAITKEY$` | ✅ | v0.1.14 | `pb_waitkey` — console `_getch`, redirected `getchar` dual mode (v0.1.14) |
-| `ARRAY SORT arr()` | ✅ | early | `pb_array_sort` — in-place sort |
-| `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
-
-### Core language (upstream, verified by the 15 official tests)
-`PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
-`FREEFILE`, `KILL`, `IF/THEN/ELSE`, `FOR/NEXT`, `WHILE/WEND`, `DO/LOOP`,
-`GOTO` + labels, `GOSUB/RETURN`, `FUNCTION`/`CALL`, `DIM`/`GLOBAL`/`LOCAL`,
-arrays, and core string/numeric built-ins — **✅**
-
-### Live demos
-- `examples/demo.bas` — **full-feature showcase**: control flow, all 18 string
-  equates, REPLACE/LSET/RSET, arrays+ERASE, file I/O (WRITE#/SEEK#/LOCK/UNLOCK/
-  RESET/FLUSH/NAME/KILL), directories + PB-compatible `ERR` codes, RANDOMIZE/RND,
-  SWAP, CURDIR$/ISFILE, BEEP, SLEEP, MSGBOX and SHELL. Compiles with one command
-  and prints `ALL FEATURES VERIFIED OK` to the console (plus a final MSGBOX).
-- `official_hello.bas` — the **original PowerBASIC 10 samples `Hello.bas`**
-  (from a licensed PB/Win 10 install) compiles unmodified after charset
-  conversion and runs as a 64-bit native exe, proving drop-in compatibility
-  with the official sample suite (sample itself is (c) PowerBASIC, Inc.).
-
-### Parsed but produces NO code (reported, not silent)
-| Statement | Notes |
-| --- | --- |
-| `INPUT` (console) | ⚠️ console input not implemented |
-| `ON ERROR GOTO` / `ON ERROR` / `RESUME` | ⚠️ error handling deferred |
-| `REMOVE` | ⚠️ |
-| `#INCLUDE` (inside a SUB) | ⚠️ only top-level include works |
-| `%CONSTANT` | ⚠️ |
-| `END` (mismatched / standalone) | ⚠️ |
-| `LINE INPUT` (console, no `#`) | ⚠️ |
-| `LINE` (drawing) | ⚠️ |
-| `OPEN` (unknown mode) | ⚠️ |
-| `CLOSE` (no file number) | ⚠️ |
-| `DIALOG` / `CONTROL` / `MENU` / `TOOLBAR` / `STATUSBAR` | 🔲 Tier 3 GUI |
-| `COMBOBOX` / `LISTBOX` / `TREEVIEW` / `LISTVIEW` / `XPRINT` | 🔲 Tier 3 GUI |
-
-> Every ⚠️ / 🔲 line is reported in `*.unimplemented.log` after each build
-> with its exact source line, so nothing is silently dropped.
-
----
+| Keyword | Keyword | Keyword | Keyword | Keyword |
+| --- | --- | --- | --- | --- |
+| #ALIGN METASTATEMENT | #BLOAT METASTATEMENT | #BREAK METASTATEMENT | #COM METASTATEMENT | #COMPILE METASTATEMENT |
+| #COMPILER METASTATEMENT | #CONSOLE METASTATEMENT | #DEBUG BOUNDS METASTATEMENT | #DEBUG CODE METASTATEMENT | #DEBUG DISPLAY METASTATEMENT |
+| #DEBUG ERROR METASTATEMENT | #DEBUG NUMERIC METASTATEMENT | #DEBUG PRINT METASTATEMENT | #DIM METASTATEMENT | #EXPORT METASTATEMENT |
+| #IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | #INCLUDE METASTATEMENT | #LINK METASTATEMENT | #MESSAGES METASTATEMENT | #OPTIMIZE METASTATEMENT |
+| #OPTION METASTATEMENT | #PAGE METASTATEMENT | #PBFORMS METASTATEMENT | #REGISTER METASTATEMENT | #RESOURCE METASTATEMENT |
+| #STACK METASTATEMENT | #TOOLS METASTATEMENT | #UNIQUE METASTATEMENT | #UTILITY METASTATEMENT | ARRAY ADD |
+| ARRAY ARRAYIX | ARRAY ASSIGN | ARRAY COPY | ARRAY DELETE | ARRAY INSERT |
+| ARRAY REVERSE | ARRAY SCAN | ARRAY SELECT | ARRAY SHUFFLE | ARRAY SORT |
+| ARRAY SWAP | ARRAY TAGARRAY | ARRAY TAGARRAY ERASE | ARRAY UNIQUE | ASC |
+| ASM | ASMDATA / END ASMDATA | BEEP | BIT | BIT CALC |
+| CALL | CALL DWORD | CALLSTK | CHDIR | CHDRIVE |
+| CLIPBOARD | CLOSE | CLS | COLOR | COMM CLOSE |
+| COMM LINE | COMM OPEN | COMM PRINT | COMM RECV | COMM RESET |
+| COMM SEND | COMM SET | COMM TIMEOUT | CSET | DATA |
+| DECLARE | DECR | DESKTOP GET CLIENT | DESKTOP GET LOC | DESKTOP GET PPI |
+| DESKTOP GET SIZE | DIM | DIR FUNCTION AND | DISPLAY BROWSE | DISPLAY COLOR |
+| DISPLAY FONT | DISPLAY OPENFILE | DISPLAY SAVEFILE | END | ENVIRON |
+| ERASE | ERROR | EXIT | FIELD | FILECOPY |
+| FILESCAN | FLUSH | FONT END | FONT NEW | FOR / NEXT |
+| FUNCTION / END FUNCTION | GET | GET$ | GET$$ | GLOBAL |
+| GLOBALMEM | GRAPHIC ARC | GRAPHIC ATTACH | GRAPHIC BITMAP END | GRAPHIC BITMAP LOAD |
+| GRAPHIC BITMAP NEW | GRAPHIC BOX | GRAPHIC CELL | GRAPHIC CELL SIZE | GRAPHIC CHR SIZE |
+| GRAPHIC CLEAR | GRAPHIC COLOR | GRAPHIC COPY | GRAPHIC DETACH | GRAPHIC ELLIPSE |
+| GRAPHIC GET BITS | GRAPHIC GET CANVAS | GRAPHIC GET CAPTION | GRAPHIC GET CLIENT | GRAPHIC GET CLIP |
+| GRAPHIC GET DC | GRAPHIC GET LINES | GRAPHIC GET LOC | GRAPHIC GET MIX | GRAPHIC GET PIXEL |
+| GRAPHIC GET POS | GRAPHIC GET PPI | GRAPHIC GET SCALE | GRAPHIC GET SIZE | GRAPHIC GET STRETCHMODE |
+| GRAPHIC GET TEXTALIGN | GRAPHIC GET VIEW | GRAPHIC GET WORDWRAP | GRAPHIC GET WRAP | GRAPHIC LINE |
+| GRAPHIC PAINT | GRAPHIC PIE | GRAPHIC POLYGON | GRAPHIC POLYLINE | GRAPHIC SAVE |
+| GRAPHIC SCALE | GRAPHIC SET AUTOSIZE | GRAPHIC SET BITS | GRAPHIC SET CAPTION | GRAPHIC SET CLIP |
+| GRAPHIC SET FIXED | GRAPHIC SET FONT | GRAPHIC SET MIX | GRAPHIC SET PIXEL | GRAPHIC SET POS |
+| GRAPHIC SET SIZE | GRAPHIC SET STRETCHMODE | GRAPHIC SET TEXTALIGN | GRAPHIC SET VIEW | GRAPHIC SET VIRTUAL |
+| GRAPHIC SET WORDWRAP | GRAPHIC SET WRAP | GRAPHIC STYLE | GRAPHIC TEXT SIZE | GRAPHIC WIDTH |
+| HEADER | HOST ADDR | HOST NAME | IF | IF/END IF |
+| IMAGELIST | IMPORT | INCR | INPUT FLUSH | INPUT# |
+| ISINFINITE | ISNORMAL | ITERATE | KILL | LET |
+| LET *(WITH TYPES)* | LINE INPUT# | LOCAL | LOCK | LPRINT |
+| LPRINT ATTACH | LPRINT CLOSE | LPRINT FLUSH | LPRINT FORMFEED | LSET |
+| MACRO/END MACRO | MAT | MEMORY | MENU ADD POPUP | MENU ADD STRING |
+| MENU DELETE | MENU GET STATE | MENU GET TEXT | MENU NEW BAR | MENU NEW POPUP |
+| MENU SET STATE | MENU SET TEXT | MID$ | MKBYT$ | MKCUR$ |
+| MKCUX$ | MKD$ | MKDIR | MKDWD$ | MKE$ |
+| MKI$ | MKL$ | MKQ$ | MKS$ | MKWRD$ |
+| MOUSEPTR | MSGBOX | NAME | ON CALL | ON ERROR |
+| ON GOSUB | ON GOTO | OPEN | OPTION EXPLICIT | PARSE |
+| PLAY SOUND | PLAY WAVE | PREFIX | PRINT# | PROCESS GET PRIORITY |
+| PROCESS SET PRIORITY | PROFILE | PROGRESSBAR | PUT | PUT$ |
+| PUT$$ | RANDOMIZE | REDIM | REGEXPR | REGISTER |
+| REGREPL | REM | REPLACE | RESET | RESOURCE SAVE FILE |
+| RESUME | RETURN | RMDIR | ROTATE | RSET |
+| SEEK | SELECT CASE/END SELECT | SETATTR | SETEOF | SHELL |
+| SHIFT | SLEEP | SPLIT | STATIC | SWAP |
+| TCP ACCEPT | TCP CLOSE | TCP LINE INPUT | TCP NOTIFY | TCP OPEN |
+| TCP PRINT | TCP RECV | TCP SEND | THREAD CLOSE | THREAD CREATE |
+| THREAD GET PRIORITY | THREAD RESUME | THREAD SET PRIORITY | THREAD STATUS | THREAD SUSPEND |
+| THREADED | TIX | TRACE | TRY/END TRY | TYPE SET |
+| TYPE/END TYPE | UCODEPAGE | UDP CLOSE | UDP NOTIFY | UDP OPEN |
+| UDP RECV | UDP SEND | UNLOCK | VAL | WINDOW GET |
+| WINDOW SET | WRITE# | XPRINT ARC | XPRINT ATTACH | XPRINT BOX |
+| XPRINT CANCEL | XPRINT CELL | XPRINT CELL SIZE | XPRINT CHR SIZE | XPRINT CLOSE |
+| XPRINT COLOR | XPRINT COPY | XPRINT ELLIPSE | XPRINT FORMFEED | XPRINT GET ATTACH |
+| XPRINT GET CANVAS | XPRINT GET CLIENT | XPRINT GET CLIP | XPRINT GET COLLATE | XPRINT GET COLORMODE |
+| XPRINT GET COPIES | XPRINT GET DC | XPRINT GET DUPLEX | XPRINT GET LINES | XPRINT GET MARGIN |
+| XPRINT GET MIX | XPRINT GET ORIENTATION | XPRINT GET OVERLAP | XPRINT GET PAGES | XPRINT GET PAPER |
+| XPRINT GET PAPERS | XPRINT GET PIXEL | XPRINT GET POS | XPRINT GET PPI | XPRINT GET QUALITY |
+| XPRINT GET SCALE | XPRINT GET SELECTION | XPRINT GET SIZE | XPRINT GET STRETCHMODE | XPRINT GET TEXTALIGN |
+| XPRINT GET TRAY | XPRINT GET TRAYS | XPRINT GET WORDWRAP | XPRINT GET WRAP | XPRINT IMAGELIST |
+| XPRINT LINE | XPRINT PIE | XPRINT POLYGON | XPRINT POLYLINE | XPRINT PREVIEW |
+| XPRINT PRINT | XPRINT RENDER | XPRINT SCALE | XPRINT SET CLIP | XPRINT SET COLLATE |
+| XPRINT SET COLORMODE | XPRINT SET COPIES | XPRINT SET DUPLEX | XPRINT SET FONT | XPRINT SET MIX |
+| XPRINT SET ORIENTATION | XPRINT SET OVERLAP | XPRINT SET PAGES | XPRINT SET PAPER | XPRINT SET PIXEL |
+| XPRINT SET POS | XPRINT SET QUALITY | XPRINT SET STRETCHMODE | XPRINT SET TEXTALIGN | XPRINT SET TRAY |
+| XPRINT SET WORDWRAP | XPRINT SET WRAP | XPRINT SPLIT | XPRINT STRETCH | XPRINT STYLE |
+| XPRINT TEXT SIZE | XPRINT WIDTH |  |  |  |
 
 ## Changelog
 
