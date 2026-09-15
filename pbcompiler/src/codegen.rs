@@ -2069,6 +2069,10 @@ impl Compiler {
             &[IrType::I32, IrType::I32],
             false,
         );
+        self.module
+            .declare_function("pb_graphic_set_fixed", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_graphic_set_font", &IrType::I32, &[IrType::I64], false);
         self.module.declare_function(
             "pb_graphic_set_wordwrap",
             &IrType::I32,
@@ -4686,8 +4690,14 @@ impl Compiler {
                 let mut i = 1;
                 while i < call.args.len() {
                     match i {
-                        1 => points = self.compile_expr(fb, &call.args[i])?,
-                        2 => style = self.compile_expr(fb, &call.args[i])?,
+                        1 => {
+                            let p = self.compile_expr(fb, &call.args[i])?;
+                            points = self.convert_value(fb, &p, &IrType::Float, &PbType::Single);
+                        }
+                        2 => {
+                            let s = self.compile_expr(fb, &call.args[i])?;
+                            style = self.convert_value(fb, &s, &IrType::I32, &PbType::Long);
+                        }
                         3 => charset = self.compile_expr(fb, &call.args[i])?,
                         4 => pitch = self.compile_expr(fb, &call.args[i])?,
                         5 => escapement = self.compile_expr(fb, &call.args[i])?,
@@ -4995,6 +5005,14 @@ impl Compiler {
                     fb.call_void("pb_graphic_set_virtual", &[w, h]);
                 }
                 return Ok(());
+            }
+            "GRAPHIC_SET_FIXED" => {
+                fb.call_void("pb_graphic_set_fixed", &[]);
+            }
+            "GRAPHIC_SET_FONT" => {
+                let h0 = self.compile_expr(fb, &call.args[0])?;
+                let h64 = self.convert_value(fb, &h0, &IrType::I64, &PbType::Quad);
+                fb.call_void("pb_graphic_set_font", &[h64]);
             }
             "GRAPHIC_SET_WORDWRAP" => {
                 // GRAPHIC SET WORDWRAP n&  (batch 65)

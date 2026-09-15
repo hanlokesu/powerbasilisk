@@ -2158,6 +2158,27 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "FIXED" {
+                            // GRAPHIC SET FIXED  (batch 66)
+                            self.advance();
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_FIXED".to_string(),
+                                args: vec![],
+                                line,
+                            }));
+                        }
+                        if sub == "FONT" {
+                            // GRAPHIC SET FONT fonthndl&  (batch 66)
+                            self.advance();
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_FONT".to_string(),
+                                args: vec![h],
+                                line,
+                            }));
+                        }
                         if sub == "WORDWRAP" {
                             // GRAPHIC SET WORDWRAP n&  (batch 65)
                             self.advance();

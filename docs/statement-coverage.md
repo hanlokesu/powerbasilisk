@@ -12,11 +12,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 271 | Real codegen output (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 131 | DDT GUI framework, high effort, deferred to a future update |
+| ✅ Implemented | 273 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 101 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (271)
+## ✅ Implemented (273)
 
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
@@ -296,6 +296,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC SET VIRTUAL` | STATEMENT | (PB/Win only) implemented |
 | `GRAPHIC SET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
 | `GRAPHIC GET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
+| `GRAPHIC SET FIXED` | STATEMENT | (PB/Win only) restores standard FIXED mode (pb_graphic_set_fixed) |
+| `GRAPHIC SET FONT` | STATEMENT | (PB/Win only) selects font handle into graphic DC (pb_graphic_set_font → SelectObject) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -418,9 +420,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC RENDER | STATEMENT |
 | GRAPHIC SAVE | STATEMENT |
 | GRAPHIC SET CLIENT | STATEMENT |
-| GRAPHIC SET FIXED | STATEMENT |
 | GRAPHIC SET FOCUS | STATEMENT |
-| GRAPHIC SET FONT | STATEMENT |
 | GRAPHIC SET LOC | STATEMENT |
 | GRAPHIC SET MIX | STATEMENT |
 | GRAPHIC SET OVERLAP | STATEMENT |

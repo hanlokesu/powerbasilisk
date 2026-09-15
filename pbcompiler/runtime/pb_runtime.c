@@ -4090,6 +4090,17 @@ int pb_graphic_set_clip(float l, float t, float r, float b) {
 static long g_gr_virtual_w = 0, g_gr_virtual_h = 0;
 static long g_gr_wordwrap = 1; /* GRAPHIC SET/GET WORDWRAP state (batch 65) */
 int pb_graphic_set_virtual(int w, int h) { g_gr_virtual_w = w; g_gr_virtual_h = h; return 1; }
+static long g_gr_fixed = 0;
+static void* g_gr_font = 0;
+int pb_graphic_set_fixed(void) {
+    g_gr_fixed = 1;
+    return 1;
+}
+int pb_graphic_set_font(long long hFont) {
+    g_gr_font = (void*)(intptr_t)hFont;
+    if (g_gr_dc && g_gr_font) SelectObject(g_gr_dc, g_gr_font);
+    return 1;
+}
 int pb_graphic_set_wordwrap(int n) { g_gr_wordwrap = n ? 1 : 0; return 1; }
 int pb_graphic_get_wordwrap(int* out) { if (out) *out = g_gr_wordwrap; return 1; }
 
