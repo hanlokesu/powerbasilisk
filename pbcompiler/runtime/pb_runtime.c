@@ -432,6 +432,36 @@ char* pb_remove_string(char* main, char* match, int any_flag) {
     buf[o] = 0;
     return pb_bstr_alloc(buf, (unsigned int)o);
 }
+char* pb_retain_string(char* main, char* match, int any_flag) {
+    size_t n = strlen(main);
+    size_t mlen = match ? strlen(match) : 0;
+    char* buf = (char*)malloc(n + 1);
+    size_t o = 0;
+    if (mlen == 0) {
+        buf[0] = 0;
+        return pb_bstr_alloc(buf, 0);
+    }
+    if (any_flag) {
+        for (size_t i = 0; i < n; i++) {
+            for (size_t j = 0; j < mlen; j++) {
+                if (main[i] == match[j]) { buf[o++] = main[i]; break; }
+            }
+        }
+    } else {
+        size_t i = 0;
+        while (i < n) {
+            if (i + mlen <= n && memcmp(main + i, match, mlen) == 0) {
+                memcpy(buf + o, match, mlen);
+                o += mlen;
+                i += mlen;
+            } else {
+                i++;
+            }
+        }
+    }
+    buf[o] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)o);
+}
 char* pb_build(char** arr, long long n) {
     size_t total = 0;
     for (long long i = 0; i < n; i++) total += strlen(arr[i]);

@@ -508,6 +508,7 @@ exit code 0:
 | `ARRAY SORT arr()` | ✅ | early | `pb_array_sort` — in-place sort |
 | `ARRAY COPY a() TO b()` / `SWAP a(), b()` / `UNIQUE a()` | ✅ | 14 (v0.1.07) | `pb_array_copy` / `pb_array_swap` / `pb_array_unique` |
 | `REMOVE$(main, match)` / `REMOVE$(main, ANY, chars)` | ✅ | 82 (v0.1.76) | `pb_remove_string` — substring removal + ANY char-set removal |
+| `RETAIN$(main, match)` / `RETAIN$(main, ANY, chars)` | ✅ | 83 (v0.1.77) | `pb_retain_string` — substring retention + ANY char-set retention |
 | CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
 | ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
@@ -558,6 +559,16 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+**v0.1.77 (2026-09-15) — Batch 83: RETAIN$ function — substring + ANY character retention**
+
+The `RETAIN$` string function (inverse of `REMOVE$`) is now implemented:
+- **`RETAIN$(main$, match$)`** — keeps only complete occurrences of `match$` found in `main$`, concatenating them. All other characters are removed.
+- **`RETAIN$(main$, ANY, chars$)`** — keeps only characters listed in `chars$` (character-set mode).
+- Empty `match$` returns empty string (per spec).
+
+Runtime: `pb_retain_string(main, match, any_flag)` — O(n*m) scan, returns BSTR.
+Tests: `examples/batch83_test.bas` (4/4 ALL PASS: single match, multiple matches, ANY digits, empty match).
 
 **v0.1.76 (2026-09-15) — Batch 82: REMOVE$ function — substring + ANY character removal**
 

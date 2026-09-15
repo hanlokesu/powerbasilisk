@@ -1682,6 +1682,12 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_retain_string",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
@@ -10604,6 +10610,7 @@ impl Compiler {
             "ERL" => Some(self.builtin_str0(fb, "pb_erl_str")),
             "EXTRACT" => Some(self.builtin_extract(fb, args)),
             "REMOVE" => Some(self.builtin_remove(fb, args)),
+            "RETAIN" => Some(self.builtin_retain(fb, args)),
             "RGB" | "BGR" => Some(self.builtin_rgb(fb, args, name)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
@@ -12469,6 +12476,25 @@ impl Compiler {
         let m = self.compile_expr(fb, &args[match_idx])?;
         let flag = fb.const_i32(if any_flag { 1 } else { 0 });
         Ok(fb.call(&IrType::Ptr, "pb_remove_string", &[s, m, flag]))
+    }
+
+    fn builtin_retain(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.len() < 2 {
+            return Err(PbError::runtime("RETAIN$ requires at least 2 arguments"));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let any_flag = if let Expr::Variable(ref name) = args[1] {
+            name.to_uppercase() == "ANY"
+        } else {
+            false
+        };
+        let match_idx = if any_flag { 2 } else { 1 };
+        if args.len() <= match_idx {
+            return Err(PbError::runtime("RETAIN$ requires a match string"));
+        }
+        let m = self.compile_expr(fb, &args[match_idx])?;
+        let flag = fb.const_i32(if any_flag { 1 } else { 0 });
+        Ok(fb.call(&IrType::Ptr, "pb_retain_string", &[s, m, flag]))
     }
 
     fn builtin_using(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
