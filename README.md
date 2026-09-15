@@ -510,6 +510,7 @@ exit code 0:
 | `REMOVE$(main, match)` / `REMOVE$(main, ANY, chars)` | ✅ | 82 (v0.1.76) | `pb_remove_string` — substring removal + ANY char-set removal |
 | `RETAIN$(main, match)` / `RETAIN$(main, ANY, chars)` | ✅ | 83 (v0.1.77) | `pb_retain_string` — substring retention + ANY char-set retention |
 | `REMAIN$([start,] main, [ANY] match)` | ✅ | 84 (v0.1.78) | `pb_remain_string` — portion after first match (complement to EXTRACT$) |
+| `FLOOR(n)` | ✅ | 85 (v0.1.79) | `llvm.floor.f64` + fptosi — round down to nearest integer (CEIL counterpart) |
 | CLASS/END CLASS | ✅ | 79 (v0.1.73) | parser block skip (namespace; methods inside not emitted) |
 | METHOD / END METHOD | ✅ | 79 (v0.1.73) | parsed as SUB at top level (simplified OOP method) |
 | ARRAY REDIM INCR/DECR | ✅ | 79 (v0.1.73) | pb_array_redim_incr/decr (simplified size report) |
@@ -560,6 +561,14 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+**v0.1.79 (2026-09-15) — Batch 85: FLOOR function — round down to nearest integer**
+
+The `FLOOR` numeric function (counterpart to the already-implemented `CEIL`) is now implemented:
+- **`FLOOR(n)`** — returns the largest integer less than or equal to `n`. For negative numbers, goes more negative (e.g. `FLOOR(-3.7) = -4`).
+
+Implementation: LLVM intrinsic `llvm.floor.f64` + `fptosi` to I32 (same pattern as `CEIL`). No runtime C function needed.
+Tests: `examples/batch85_test.bas` (4/4 ALL PASS: positive, negative, exact integer, small positive).
 
 **v0.1.78 (2026-09-15) — Batch 84: REMAIN$ function — portion after first match**
 

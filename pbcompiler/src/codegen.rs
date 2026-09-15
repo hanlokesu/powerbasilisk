@@ -10573,6 +10573,7 @@ impl Compiler {
             "INT" => Some(self.builtin_int(fb, args)),
             "FIX" => Some(self.builtin_fix(fb, args)),
             "CEIL" => Some(self.builtin_ceil(fb, args)),
+            "FLOOR" => Some(self.builtin_floor(fb, args)),
             "SQR" => Some(self.builtin_unary_math(fb, args, "llvm.sqrt.f64")),
             "LOG" => Some(self.builtin_unary_math(fb, args, "llvm.log.f64")),
             "EXP" => Some(self.builtin_unary_math(fb, args, "llvm.exp.f64")),
@@ -11227,6 +11228,13 @@ impl Compiler {
         let f64_val = self.to_f64(fb, &val);
         let ceiled = fb.call(&IrType::Double, "llvm.ceil.f64", &[f64_val]);
         Ok(fb.fptosi(&ceiled, &IrType::I32))
+    }
+
+    fn builtin_floor(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let f64_val = self.to_f64(fb, &val);
+        let floored = fb.call(&IrType::Double, "llvm.floor.f64", &[f64_val]);
+        Ok(fb.fptosi(&floored, &IrType::I32))
     }
 
     fn builtin_unary_math(
