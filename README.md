@@ -35,13 +35,14 @@ silently dropped during code generation.
   found, a warning is printed and linking will fail with a clear message.
 
 ### New Built-ins (previously silently discarded)
-> **Early snapshot** — the first implementations from the initial releases of
+> - **Early snapshot** — the first implementations from the initial releases of
 > this fork (derived from [benstopics/powerbasilisk](https://github.com/benstopics/powerbasilisk)).
 > Later batches were added after this table was written; the complete,
 > current list of every statement/function this branch implements is in the
 > [Newly implemented by this branch](#newly-implemented-by-this-branch)
 > table below.
-> **Why this matters:** upstream `pbcompiler` would report "compiled
+>
+> - **Why this matters:** upstream `pbcompiler` would report "compiled
 > successfully" while silently dropping these calls at codegen time — > `Unknown sub — skip` for bare statements and `Unknown function — 0` for
 > expressions. Programs built this way ran but did nothing. This branch wires
 > them to real Win32 / CRT calls and is verified against running executables.
