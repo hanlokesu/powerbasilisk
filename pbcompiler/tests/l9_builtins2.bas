@@ -44,8 +44,8 @@ FUNCTION PBMAIN() AS LONG
     n = PARSECOUNT("hello", "|")
     IF n <> 1 THEN FUNCTION = 9 : EXIT FUNCTION
 
-    ' ==== Test 10: REMOVE$ ====
-    result$ = REMOVE$("Hello World!", " !")
+    ' ==== Test 10: REMOVE$ with ANY ====
+    result$ = REMOVE$("Hello World!", ANY, " !")
     IF result$ <> "HelloWorld" THEN FUNCTION = 10 : EXIT FUNCTION
 
     FUNCTION = 0
