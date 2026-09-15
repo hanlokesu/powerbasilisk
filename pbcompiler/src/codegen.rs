@@ -10618,6 +10618,11 @@ impl Compiler {
             "ACOSH" => Some(self.builtin_unary_math(fb, args, "acosh")),
             "ATANH" => Some(self.builtin_unary_math(fb, args, "atanh")),
             "COTH" => Some(self.builtin_coth(fb, args)),
+            "SEC" => Some(self.builtin_reciprocal(fb, args, "llvm.cos.f64")),
+            "CSC" => Some(self.builtin_reciprocal(fb, args, "llvm.sin.f64")),
+            "COT" => Some(self.builtin_reciprocal(fb, args, "tan")),
+            "SECH" => Some(self.builtin_reciprocal(fb, args, "cosh")),
+            "CSCH" => Some(self.builtin_reciprocal(fb, args, "sinh")),
             "CINT" | "CLNG" | "CDWD" | "CLNGINT" | "CUINT" | "CULNG" => {
                 Some(self.builtin_cint(fb, args))
             }
@@ -11326,6 +11331,20 @@ impl Compiler {
         let val = self.compile_expr(fb, &args[0])?;
         let f64_val = self.to_f64(fb, &val);
         let t = fb.call(&IrType::Double, "tanh", &[f64_val]);
+        let one = fb.const_f64(1.0);
+        Ok(fb.fdiv(&one, &t))
+    }
+
+    // Batch 95: generic reciprocal 1/f(x) — SEC=1/cos, CSC=1/sin, COT=1/tan, SECH=1/cosh, CSCH=1/sinh
+    fn builtin_reciprocal(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        func_name: &str,
+    ) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let f64_val = self.to_f64(fb, &val);
+        let t = fb.call(&IrType::Double, func_name, &[f64_val]);
         let one = fb.const_f64(1.0);
         Ok(fb.fdiv(&one, &t))
     }

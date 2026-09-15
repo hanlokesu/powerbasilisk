@@ -526,6 +526,28 @@ exit code 0:
 | `LET *(WITH VARIANTS)*` | ✅ | 80 (v0.1.74) | existing LET assignment (generic value) |
 | `INPUT` (console) | ✅ | 81 (v0.1.75) | pb_input_console — prompt + fgets read into string var |
 | `LINE INPUT` (console) | ✅ | 81 (v0.1.75) | pb_line_input_console — prompt + whole-line read into string var |
+| `ERROR$` | ✅ | 89 (v0.1.83) | last error message string (pb_error_str) |
+| `CBOOL` | ✅ | 90 (v0.1.84) | convert to boolean (TRUE=-1/FALSE=0) |
+| `CFLT` | ✅ | 91 (v0.1.85) | convert to SINGLE (alias for CSNG) |
+| `CLNGINT` | ✅ | 91 (v0.1.85) | convert to LONG with rounding (builtin_cint) |
+| `CUINT` | ✅ | 91 (v0.1.85) | convert to WORD with rounding (builtin_cint) |
+| `CULNG` | ✅ | 91 (v0.1.85) | convert to DWORD with rounding (builtin_cint) |
+| `FRE` | ✅ | 92 (v0.1.86) | free physical memory (GlobalMemoryStatusEx, returns QUAD) |
+| `ASIN` | ✅ | 93 (v0.1.87) | inverse sine, radians (C lib asin) |
+| `ACOS` | ✅ | 93 (v0.1.87) | inverse cosine, radians (C lib acos) |
+| `SINH` | ✅ | 93 (v0.1.87) | hyperbolic sine (C lib sinh) |
+| `COSH` | ✅ | 93 (v0.1.87) | hyperbolic cosine (C lib cosh) |
+| `TANH` | ✅ | 93 (v0.1.87) | hyperbolic tangent (C lib tanh) |
+| `ATN2` | ✅ | 94 (v0.1.88) | two-arg arctangent, quadrant-aware (C lib atan2, builtin_binary_math) |
+| `ASINH` | ✅ | 94 (v0.1.88) | inverse hyperbolic sine (C lib asinh) |
+| `ACOSH` | ✅ | 94 (v0.1.88) | inverse hyperbolic cosine (C lib acosh) |
+| `ATANH` | ✅ | 94 (v0.1.88) | inverse hyperbolic tangent (C lib atanh) |
+| `COTH` | ✅ | 94 (v0.1.88) | hyperbolic cotangent = 1/tanh(x) (builtin_coth) |
+| `SEC` | ✅ | 95 (v0.1.89) | secant = 1/cos(x) (builtin_reciprocal) |
+| `CSC` | ✅ | 95 (v0.1.89) | cosecant = 1/sin(x) (builtin_reciprocal) |
+| `COT` | ✅ | 95 (v0.1.89) | cotangent = 1/tan(x) (builtin_reciprocal) |
+| `SECH` | ✅ | 95 (v0.1.89) | hyperbolic secant = 1/cosh(x) (builtin_reciprocal) |
+| `CSCH` | ✅ | 95 (v0.1.89) | hyperbolic cosecant = 1/sinh(x) (builtin_reciprocal) |
 
 ### Core language (upstream, verified by the 15 official tests)
 `PRINT`, `OPEN`, `CLOSE`, `PRINT #`, `LINE INPUT #`, `INPUT #`, `EOF`,
@@ -562,6 +584,17 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 ---
 
 ## Changelog
+
+### v0.1.89 (2026-09-15) — Batch 95: SEC/CSC/COT/SECH/CSCH — reciprocal trig + hyperbolic
+
+- **SEC(x)** — secant = 1/cos(x)
+- **CSC(x)** — cosecant = 1/sin(x)
+- **COT(x)** — cotangent = 1/tan(x)
+- **SECH(x)** — hyperbolic secant = 1/cosh(x)
+- **CSCH(x)** — hyperbolic cosecant = 1/sinh(x)
+- All five via new generic `builtin_reciprocal` helper (1/f(x) pattern, same as COTH).
+- Tests: examples/batch95_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+
 
 ### v0.1.88 (2026-09-15) — Batch 94: ATN2/ASINH/ACOSH/ATANH/COTH — more inverse trig + hyperbolic
 
