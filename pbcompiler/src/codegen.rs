@@ -10586,6 +10586,11 @@ impl Compiler {
             "CDBL" => Some(self.builtin_to_f64(fb, args)),
             "CVBYT" | "CVW" | "CVL" | "CVDWD" | "CVQ" => Some(self.builtin_cv_int(fb, args, name)),
             "CSNG" => Some(self.builtin_to_f32(fb, args)),
+            "CSTR" => Some(self.builtin_str(fb, args)),
+            "CQUAD" => Some(self.builtin_to_i64(fb, args)),
+            "CBYTE" => Some(self.builtin_to_u8(fb, args)),
+            "CWORD" => Some(self.builtin_to_u16(fb, args)),
+            "CDWORD" => Some(self.builtin_to_i32(fb, args)),
             "CVS" | "CVD" | "CVE" | "CVCUR" | "CVCUX" => Some(self.builtin_cv_dbl(fb, args, name)),
             "TALLY" => Some(self.builtin_tally(fb, args)),
             "STRREVERSE" => Some(self.builtin_strreverse(fb, args)),
@@ -11259,6 +11264,26 @@ impl Compiler {
     fn builtin_to_i32(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
         let val = self.compile_expr(fb, &args[0])?;
         Ok(self.to_i32(fb, &val))
+    }
+
+    // Batch 87: CQUAD — convert to 64-bit signed integer
+    fn builtin_to_i64(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        Ok(self.to_i64(fb, &val))
+    }
+
+    // Batch 87: CBYTE — convert to unsigned 8-bit (0..255). Truncate low byte.
+    fn builtin_to_u8(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let i32v = self.to_i32(fb, &val);
+        Ok(fb.trunc(&i32v, &IrType::I8))
+    }
+
+    // Batch 87: CWORD — convert to unsigned 16-bit (0..65535). Truncate low word.
+    fn builtin_to_u16(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        let val = self.compile_expr(fb, &args[0])?;
+        let i32v = self.to_i32(fb, &val);
+        Ok(fb.trunc(&i32v, &IrType::I16))
     }
 
     // Batch 37: CVx — read little-endian binary strings. off is 1-based, default 1.

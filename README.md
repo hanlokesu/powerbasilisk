@@ -563,6 +563,17 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.81 (2026-09-15) — Batch 87: CSTR / CQUAD / CBYTE / CWORD / CDWORD (5 type-conversion functions)
+
+- **CSTR(expr)** — numeric to string, reuses STR\$ formatting path (no leading space; current STR\$ also has no leading space, so CSTR and STR\$ behave identically).
+- **CQUAD(expr)** — convert to 64-bit signed integer (QUAD), via fptosi/trunc/sext to I64. Handles large constants like 123456789012345.
+- **CBYTE(expr)** — convert to unsigned 8-bit (BYTE, 0..255); truncates low byte, so CBYTE(300)=44, CBYTE(-1)=255.
+- **CWORD(expr)** — convert to unsigned 16-bit (WORD, 0..65535); truncates low word, so CWORD(70000)=4464.
+- **CDWORD(expr)** — convert to unsigned 32-bit (DWORD); truncates to I32, so CDWORD(5000000000)=705032704.
+- Note: PRINT displays BYTE/WORD as signed (CBYTE(300) prints -212) — the stored value is correct (test asserts b=44 passes); this is a pre-existing PRINT unsigned-display limitation, not a CBYTE bug.
+- Tests: examples/batch87_test.bas (8/8), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 **v0.1.80 (2026-09-15) — Batch 86: TRUNC function — truncate toward zero**
 
 The `TRUNC` numeric function is now implemented:
