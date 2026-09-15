@@ -2061,6 +2061,18 @@ impl Compiler {
             ],
             false,
         );
+        self.module.declare_function(
+            "pb_xprint_polygon",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_xprint_polyline",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I64],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5512,6 +5524,48 @@ impl Compiler {
                         ia[5].clone(),
                     ],
                 );
+            }
+            "XPRINT_POLYGON" => {
+                let ncoords = call.args.len() - if call.args.len() % 2 == 1 { 1 } else { 0 };
+                let npts = ncoords / 2;
+                if npts >= 3 {
+                    let arrty = IrType::Array(npts * 2, Box::new(IrType::I32));
+                    let ptr = fb.alloca(&arrty);
+                    for i in 0..ncoords {
+                        let v = self.compile_expr(fb, &call.args[i])?;
+                        let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                        let elem = fb.gep_byte(&ptr, &fb.const_i32((i as i32) * 4));
+                        fb.store(&iv, &elem);
+                    }
+                    let col = if call.args.len() % 2 == 1 {
+                        let e = self.compile_expr(fb, call.args.last().unwrap())?;
+                        self.convert_value(fb, &e, &IrType::I64, &PbType::Long)
+                    } else {
+                        fb.const_i64(0)
+                    };
+                    fb.call_void("pb_xprint_polygon", &[ptr, fb.const_i32(npts as i32), col]);
+                }
+            }
+            "XPRINT_POLYLINE" => {
+                let ncoords = call.args.len() - if call.args.len() % 2 == 1 { 1 } else { 0 };
+                let npts = ncoords / 2;
+                if npts >= 2 {
+                    let arrty = IrType::Array(npts * 2, Box::new(IrType::I32));
+                    let ptr = fb.alloca(&arrty);
+                    for i in 0..ncoords {
+                        let v = self.compile_expr(fb, &call.args[i])?;
+                        let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                        let elem = fb.gep_byte(&ptr, &fb.const_i32((i as i32) * 4));
+                        fb.store(&iv, &elem);
+                    }
+                    let col = if call.args.len() % 2 == 1 {
+                        let e = self.compile_expr(fb, call.args.last().unwrap())?;
+                        self.convert_value(fb, &e, &IrType::I64, &PbType::Long)
+                    } else {
+                        fb.const_i64(0)
+                    };
+                    fb.call_void("pb_xprint_polyline", &[ptr, fb.const_i32(npts as i32), col]);
+                }
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)

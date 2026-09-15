@@ -2835,6 +2835,42 @@ impl Parser {
                             line,
                         }));
                     }
+                    if xop == "POLYGON" {
+                        self.advance();
+                        let mut args = vec![];
+                        while self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_POLYGON".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if xop == "POLYLINE" {
+                        self.advance();
+                        let mut args = vec![];
+                        while self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                            } else {
+                                break;
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_POLYLINE".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
                     if xop == "COPY" {
                         self.advance();
                         let mut args = vec![];

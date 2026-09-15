@@ -4784,6 +4784,18 @@ int pb_xprint_copy(int dx, int dy, int w, int h, int sx, int sy) {
     if (!g_xp_dc) return 0;
     return BitBlt(g_xp_dc, dx, dy, w, h, g_xp_dc, sx, sy, 0x00CC0020); /* SRCCOPY */
 }
+/* === Batch 73: XPRINT POLYGON / POLYLINE === */
+int pb_xprint_polygon(int* pts, int count, unsigned long col) {
+    if (!g_xp_dc || count < 3 || !pts) return 0;
+    xp_ensure_pen();
+    SelectObject(g_xp_dc, GetStockObject(5)); /* NULL_BRUSH */
+    return Polygon(g_xp_dc, (const long*)pts, count);
+}
+int pb_xprint_polyline(int* pts, int count, unsigned long col) {
+    if (!g_xp_dc || count < 2 || !pts) return 0;
+    xp_ensure_pen();
+    return Polyline(g_xp_dc, (const void*)pts, count);
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

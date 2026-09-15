@@ -271,9 +271,11 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +2 from batch 73 — XPRINT POLYGON/POLYLINE (GDI polygon + polyline with variable coord args).
 > +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
 > +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
 | `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
+| `XPRINT POLYGON/POLYLINE` | ✅ | 73 (v0.1.67) | Polygon/Polyline (GDI), variable coord args on stack |
 > +8 from batch 70 — XPRINT ARC/ELLIPSE/PIE/SET FONT/GET+SET MIX/GET+SET STRETCHMODE (GDI shapes + font + ROP2).
 | \XPRINT TEXT SIZE/GET CLIENT/CANVAS/WRAP/WORDWRAP/OVERLAP\ | ✅ | 71 (v0.1.65) | GetTextExtentPoint32A + GetDeviceCaps + wrap/wordwrap/overlap flags |
 > +15 from batch 69 — XPRINT drawing+text+attributes (LINE/BOX/WIDTH/STYLE/COLOR/POS/PIXEL/TEXTALIGN/PRINT/CANCEL/FORMFEED/GET ATTACH, 15 keywords).
@@ -542,6 +544,16 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.67 (2026-09-15) — Batch 73: XPRINT POLYGON / POLYLINE (2 statements)
+
+Two more Not implemented items moved to Implemented (coverage: **321 implemented / 53 not implemented / 202 tier-3 DDT**):
+
+- **XPRINT POLYGON** — GDI Polygon, variable coordinate args (x1,y1,x2,y2,...) built on stack as i32 array
+- **XPRINT POLYLINE** — GDI Polyline, same variable-arg mechanism
+- Runtime: pb_xprint_polygon / pb_xprint_polyline (NULL_BRUSH + xp_ensure_pen)
+- Codegen reuses GRAPHIC_POLYGON's stack-array pattern (alloca [n*2 x i32] + gep_byte stores)
+- Tests: examples/batch73_test.bas (ALL PASS — triangle, 5-pt polyline, rect), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.66 (2026-09-15) — Batch 72: XPRINT clipping + scaling + metrics (8 statements)
 

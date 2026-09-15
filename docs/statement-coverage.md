@@ -170,6 +170,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET LINES | STATEMENT | `pb_xprint_get_lines` — client height / cell height |
 | XPRINT CELL SIZE | STATEMENT | `pb_xprint_cell_size` — GetTextExtentPoint32A("W") |
 | XPRINT CHR SIZE | STATEMENT | `pb_xprint_chr_size` — same as CELL SIZE |
+| XPRINT POLYGON | STATEMENT | `pb_xprint_polygon` — Polygon (GDI), variable coord args on stack |
+| XPRINT POLYLINE | STATEMENT | `pb_xprint_polyline` — Polyline (GDI), variable coord args on stack |
 | XPRINT COPY | STATEMENT | `pb_xprint_copy` — BitBlt (SRCCOPY) |
 | XPRINT TEXT SIZE | STATEMENT | `pb_xprint_text_size` — GetTextExtentPoint32A (returns width+height) |
 | XPRINT GET CLIENT | STATEMENT | `pb_xprint_get_client` — GetDeviceCaps HORZRES/VERTRES |
@@ -539,8 +541,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT POLYGON | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT SET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
