@@ -352,6 +352,18 @@ exit code 0:
 | `GRAPHIC SET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode on/off (pb_graphic_set_wordwrap) |
 | `ARRAY ADD` arr1(), arr2() | ✅ | 67 (v0.1.61) | `pb_array_add` — element-wise add, all numeric types |
 | `XPRINT ATTACH` / `CLOSE` / `GET PPI` / `GET SIZE` / `GET DC` | ✅ | 68 (v0.1.62) | CreateDCA screen DC (printer pending); GetDeviceCaps LOGPIXELSX/Y + PHYSICALWIDTH/HEIGHT; DeleteDC |
+| `XPRINT ARC` / `BOX` / `ELLIPSE` / `LINE` / `PIE` / `POLYGON` / `POLYLINE` | ✅ | 69-76 | printer drawing primitives (Ellipse/Polygon/Polyline/MoveToEx/LineTo/Arc/Pie) |
+| `XPRINT CANCEL` / `CELL` / `CELL_SIZE` / `CHR_SIZE` / `COPY` / `FORMFEED` | ✅ | 69-76 | printer control: cancel job, cell positioning, char size, copy page, form feed |
+| `XPRINT IMAGELIST` / `PREVIEW` / `PRINT` / `RENDER` / `SCALE` / `SPLIT` / `STRETCH` / `STYLE` / `TEXT_SIZE` / `WIDTH` | ✅ | 69-76 | printer misc: imagelist, preview, print page, render, scale, split, stretch, style, text size, page width |
+| `XPRINT GET_*` (ATTACH/CANVAS/CLIENT/CLIP/COLLATE/COLOR/COLORMODE/COPIES/DC/DUPLEX/LINES/MARGIN/MIX/ORIENTATION/OVERLAP/PAGES/PAPER/PAPERS/PIXEL/POS/PPI/QUALITY/SCALE/SELECTION/SIZE/STRETCHMODE/TEXTALIGN/TRAY/TRAYS/WORDWRAP/WRAP) | ✅ | 69-76 | 34 printer GET functions — read back all printer state and settings |
+| `XPRINT SET_*` (CLIP/COLLATE/COLOR/COLORMODE/COPIES/DUPLEX/FONT/MIX/ORIENTATION/OVERLAP/PAGES/PAPER/PIXEL/POS/QUALITY/STRETCHMODE/TEXTALIGN/TRAY/WORDWRAP/WRAP) | ✅ | 69-76 | 21 printer SET functions — configure all printer state and settings |
+| `GRAPHIC ARC` / `PAINT` / `PIE` / `POLYLINE` / `GET_SIZE` / `GET_TEXTALIGN` / `SET_TEXTALIGN` / `SET_PIXEL` / `SCALE_PIXELS` | ✅ | 60-76 | remaining GRAPHIC drawing and state functions (Arc/Pie/Polyline/Paint, pixel access, text alignment) |
+| `ARRAY REDIM INCR` / `ARRAY REDIM DECR` / `ARRAY SELECT` / `ARRAY TAGARRAY` / `ARRAY TAGARRAY ERASE` | ✅ | 73-80 | array redimension (increment/decrement), element selection, tag array management |
+| `DISPLAY BROWSE` / `COLOR` / `FONT` / `OPENFILE` / `SAVEFILE` | ✅ | 78 | common dialog boxes (ChooseColor/ChooseFont/GetOpenFileName/GetSaveFileName) |
+| `CHOOSE` / `CLIP` / `EXE` / `MOD` | ✅ | core | CHOOSE function (indexed selection), CLIP (clipboard text), EXE (module path), MOD (modulo operator function) |
+| `FONT NEW` / `FONT END` / `HEADER CTRL` | ✅ | 66-77 | font object creation/destruction, header control |
+| `MEMORY FILL` / `MEMORY FILLS` / `RESOURCE SAVE FILE` | ✅ | core | memory fill (byte/string), resource save to file |
+| `TCP NOTIFY` / `UDP NOTIFY` | ✅ | 77 | socket notification callbacks |
 | `GRAPHIC SET FIXED` | ✅ | 66 (v0.1.60) | restore FIXED mode (pb_graphic_set_fixed) |
 | `GRAPHIC SET FONT` | ✅ | 66 (v0.1.60) | select font into DC (pb_graphic_set_font, SelectObject) |
 | `GRAPHIC GET WORDWRAP` | ✅ | 65 (v0.1.59) | word-wrap mode read (pb_graphic_get_wordwrap) |
