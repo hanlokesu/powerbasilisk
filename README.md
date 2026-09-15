@@ -406,7 +406,7 @@ exit code 0:
 | `BEEP` | ✅ | early | `Beep(800, 300)` (kernel32) |
 | `SWAP a, b` | ✅ | 2 (v0.1.03) | register-level load/store exchange |
 | `MKDIR` / `RMDIR` / `CHDIR` / `KILL` + `ERR` / `ERRCLEAR` | ✅ | early | `_mkdir` / `_rmdir` / `_chdir` / `pb_kill` + `@pb_err` global — PB-compatible error codes (75/76/53) on failure |
-| Built-in string equates — all 18 ANSI forms (`$CRLF`, `$TAB`, `$DQ`, `$WHITESPACE`, …) | ✅ | 17 (v0.1.10) | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
+| Built-in string equates — all 18 ANSI forms: `$NUL`, `$BEL`, `$BS`, `$TAB`, `$LF`, `$VT`, `$FF`, `$CR`, `$CRLF`, `$EOF`, `$ESC`, `$SPC`, `$DQ`, `$DQ2`, `$SQ`, `$SQ2`, `$QCQ`, `$WHITESPACE` | ✅ | 17 (v0.1.10) | compile-time string constants (byte-verified against the official table); `$$` wide single-char forms as numeric constants |
 | `CHR$(a, b, c)` multi-argument | ✅ | early | one byte per argument, concatenated (`CHR$(13,10)` = CR+LF) |
 | `RND` bare form (no parens) | ✅ | early | same as `RND()` — random double in [0,1) |
 | `INPUT #f, s$` reading `WRITE #` output | ✅ | v0.1.0 | CSV double-quotes stripped per PB semantics |
