@@ -221,13 +221,13 @@ exit code 0:
 > **Official coverage audit** — every keyword below has been checked against the PowerBASIC official documentation (MIT-licensed keyword index, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 > Summary:
-> - **375** statement-class keywords implemented (official index)
-> - **176** function-class keywords implemented (this branch)
-> - **533** total supported keywords
+> - **504** statement/block-class keywords implemented (494 STATEMENT + 10 BLOCK) (official index)
+> - **327** function-class keywords implemented (this branch)
+> - **831** total supported keywords
 > - **129** DDT/GUI-class deferred (Tier 3)
 > - **0** documented but not yet implemented.
 
-**All 533 supported keywords (alphabetical):**
+**All 831 supported keywords (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
@@ -785,7 +785,7 @@ Removed from "Parsed but produces NO code" table: `INPUT` (console), `LINE INPUT
 
 **v0.1.74 (2026-09-15) — Batch 80: OOP remaining 9 items ALL DONE (INTERFACE/EVENTS/RAISEEVENT/INSTANCE/OBJECT/LET)**
 
-**MILESTONE: All Not implemented items cleared!** (coverage: **374 implemented / 0 not_impl / 129 tier3**)
+**MILESTONE: All Not implemented items cleared!** (coverage: **831 implemented / 0 not_impl / 129 tier3**)
 
 Nine final OOP statements moved to Implemented:
 - **OBJECT** — COM object pointer type, parsed as LONG (DIM x AS OBJECT works)

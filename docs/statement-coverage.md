@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 702 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented | 831 | Real codegen output (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (702)
+## ✅ Implemented (831)
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
 | `#ALIGN METASTATEMENT` | STATEMENT | PB/Win + PB/CC | Established |
