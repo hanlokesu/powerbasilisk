@@ -543,13 +543,11 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 | Statement | Notes |
 | --- | --- |
 | `INPUT` (console) | ⚠️ console input not implemented |
-| `ON ERROR GOTO` / `ON ERROR` / `RESUME` | ⚠️ error handling deferred |
 | `REMOVE` | ⚠️ |
 | `#INCLUDE` (inside a SUB) | ⚠️ only top-level include works |
 | `%CONSTANT` | ⚠️ |
 | `END` (mismatched / standalone) | ⚠️ |
 | `LINE INPUT` (console, no `#`) | ⚠️ |
-| `LINE` (drawing) | ⚠️ |
 | `OPEN` (unknown mode) | ⚠️ |
 | `CLOSE` (no file number) | ⚠️ |
 | `DIALOG` / `CONTROL` / `MENU` / `TOOLBAR` / `STATUSBAR` | 🔲 Tier 3 GUI |
