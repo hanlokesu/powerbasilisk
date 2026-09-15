@@ -17,7 +17,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ⬜ Not implemented | 100 | Documented upstream, no codegen evidence yet |
 
 ## ✅ Implemented (274)
-
 | Keyword | Official kind | Implementation |
 |---------|---------------|----------------|
 | `FIELD` | FIELD statement (RANDOM file / dynamic string binding) | pb_open_random + pb_field_* |
@@ -63,7 +62,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `#TOOLS METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#UNIQUE METASTATEMENT` | STATEMENT | compile-time directive, accepted |
 | `#UTILITY METASTATEMENT` | STATEMENT | compile-time directive, accepted |
-
 | ARRAY ADD | STATEMENT | `pb_array_add` (element-wise add into first array; all numeric types incl. BYTE/WORD/LONG/QUAD/SINGLE/DOUBLE) |
 | ARRAY COPY | STATEMENT | `pb_array_copy` (fixed-array memcpy; dynamic resize not modeled) |
 | ARRAY SWAP | STATEMENT | `pb_array_swap` (fixed-array block exchange) |
@@ -71,7 +69,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY DELETE | STATEMENT | `core` |
 | HOST ADDR | STATEMENT | `pb_host_addr` (gethostbyname, winsock) |
 | HOST NAME | STATEMENT | `pb_host_name` (gethostbyaddr/gethostname, winsock) |
-
 | ARRAY INSERT | STATEMENT | `core` |
 | ARRAY REVERSE | STATEMENT | `core` |
 | ARRAY SCAN | STATEMENT | `core` |
@@ -219,8 +216,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `DIR FUNCTION AND` | STATEMENT | (PB/Win + PB/CC) Proposed Improvement |
 | `PREFIX` | BLOCK | preprocessor text transform; prepends source code to each line until END PREFIX |
 | `LET *(WITH TYPES)*` | STATEMENT | (PB/Win + PB/CC) Established |
-
-
 | `GET$$` | STATEMENT | pb_get_wstring/pb_put_wstring (UTF-16LE round-trip) |
 | `MACRO/END MACRO` | BLOCK | preprocessor text expansion (single-line + multi-line) |
 | `ON CALL` | STATEMENT | dispatch table to SUB/FUNCTION (batch 27) |
