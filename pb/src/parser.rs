@@ -3460,6 +3460,23 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "MARGIN" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let l = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let t = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let r = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let b = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_GET_MARGIN".to_string(),
+                                args: vec![l, t, r, b],
+                                line,
+                            }));
+                        }
                         if sub == "COLOR" {
                             self.advance();
                             self.expect(&Token::To)?;

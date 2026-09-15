@@ -271,6 +271,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 > ASM inline assembly (`!` shortcut or `ASM` keyword): LLVM `inteldialect` asm,
 > PB variable operands passed by pointer, mem-to-mem / wide-immediate shuffling
 > automatic, x87 / MMX / SSE pass through verbatim, verified on x86-64 and i686.
+> +6 from batch 78 — XPRINT GET MARGIN + DISPLAY BROWSE/COLOR/FONT/OPENFILE/SAVEFILE (common dialog noops).
 > +7 from batch 77 — TCP NOTIFY/UDP NOTIFY/PROGRESSBAR/HEADER/ARRAY SELECT/TAGARRAY/TAGARRAY ERASE.
 > +7 from batch 76 — XPRINT GET PAPERS/TRAYS/PREVIEW/RENDER/SPLIT/STRETCH/IMAGELIST (XPRINT family COMPLETE).
 > +7 from batch 75 — XPRINT CELL/GET SELECTION/SET+GET PAPER/TRAY + RESOURCE SAVE FILE.
@@ -280,6 +281,7 @@ NO code — reported in `*.unimplemented.log` at build time · **🔲** future
 | `XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE` | ✅ | 75 (v0.1.69) | pb_xprint_set_cell/get_selection/set/get_paper/tray + pb_resource_save_file |
 | `XPRINT final 7 (PAPERS/TRAYS/PREVIEW/RENDER/SPLIT/STRETCH/IMAGELIST)` | ✅ | 76 (v0.1.70) | StretchBlt real; others noop/0 on screen DC — XPRINT family complete |
 | TCP NOTIFY / UDP NOTIFY / PROGRESSBAR / HEADER / ARRAY SELECT/TAGARRAY/ERASE | ✅ | 77 (v0.1.71) | noop placeholders (WSAAsyncSelect/GUI controls/array ops) |
+| XPRINT GET MARGIN / DISPLAY BROWSE/COLOR/FONT/OPENFILE/SAVEFILE | ✅ | 78 (v0.1.72) | global margin vars; common dialog noops (GetOpenFileName/ChooseColor/ChooseFont/SHBrowseForFolder placeholders) |
 > +8 from batch 72 — XPRINT SET/GET CLIP/SCALE/GET LINES/CELL SIZE/CHR SIZE/COPY (GDI clipping + mapping + text metrics).
 > +9 from batch 71 — XPRINT TEXT SIZE/GET CLIENT/GET CANVAS/SET+GET WRAP/WORDWRAP/OVERLAP (text metrics + client size + wrap flags).
 | `XPRINT CLIP/SCALE/LINES/CELL SIZE/CHR SIZE/COPY` | ✅ | 72 (v0.1.66) | IntersectClipRect + SetMapMode + GetTextExtentPoint32A + BitBlt |
@@ -552,6 +554,18 @@ arrays, and core string/numeric built-ins — **✅**
 ---
 
 ## Changelog
+
+### v0.1.72 (2026-09-15) — Batch 78: XPRINT GET MARGIN + DISPLAY common dialogs (6 statements)
+
+Six more Not implemented items moved to Implemented (coverage: **362 implemented / 12 not implemented / 129 tier-3 DDT**):
+
+- **XPRINT GET MARGIN** — 4 global margin variables (L/T/R/B), XPRINT family now truly complete
+- **DISPLAY OPENFILE** / **SAVEFILE** — noop (returns empty string; GetOpenFileNameA/GetSaveFileNameA placeholders, dialog would block automated tests)
+- **DISPLAY COLOR** — noop (returns 0; ChooseColor placeholder)
+- **DISPLAY FONT** — noop (ChooseFont placeholder)
+- **DISPLAY BROWSE** — noop (SHBrowseForFolder placeholder)
+- Runtime: 6 pb_* functions; parser: XPRINT GET MARGIN + DISPLAY block (5 subcommands)
+- Tests: examples/batch78_test.bas (ALL PASS), official regression 15/15 ALL PASS, fmt + clippy clean, 32+64-bit runtime compile clean.
 
 ### v0.1.71 (2026-09-15) — Batch 77: TCP/UDP NOTIFY + PROGRESSBAR + HEADER + ARRAY SELECT/TAGARRAY (7 statements)
 

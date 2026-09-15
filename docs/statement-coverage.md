@@ -376,6 +376,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY SELECT | STATEMENT | `pb_array_select` — noop (array selection placeholder) |
 | ARRAY TAGARRAY | STATEMENT | `pb_array_tagarray` — noop (tag array placeholder) |
 | ARRAY TAGARRAY ERASE | STATEMENT | `pb_array_tagarray_erase` — noop |
+| XPRINT GET MARGIN | STATEMENT | `pb_xprint_get_margin` — 4 global margin vars (L/T/R/B) |
+| DISPLAY OPENFILE | STATEMENT | `pb_display_openfile` — noop (returns empty; GetOpenFileNameA placeholder) |
+| DISPLAY SAVEFILE | STATEMENT | `pb_display_savefile` — noop (GetSaveFileNameA placeholder) |
+| DISPLAY COLOR | STATEMENT | `pb_display_color` — noop (returns 0; ChooseColor placeholder) |
+| DISPLAY FONT | STATEMENT | `pb_display_font` — noop (ChooseFont placeholder) |
+| DISPLAY BROWSE | STATEMENT | `pb_display_browse` — noop (SHBrowseForFolder placeholder) |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -535,11 +541,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
 
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
-| DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
-| DISPLAY COLOR | STATEMENT | PB/Win only | Established |
-| DISPLAY FONT | STATEMENT | PB/Win only | Established |
-| DISPLAY OPENFILE | STATEMENT | PB/Win only | Established |
-| DISPLAY SAVEFILE | STATEMENT | PB/Win only | Established |
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
 
@@ -553,7 +554,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
 
-| XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
 

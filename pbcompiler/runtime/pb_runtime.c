@@ -4859,6 +4859,29 @@ int pb_header(int hDlg, int id, int col, const char* text) { return 1; } /* noop
 int pb_array_select(int* arr, int count, int start, int end) { return 1; } /* noop: array selection placeholder */
 int pb_array_tagarray(int* arr, int count, int* tag) { return 1; } /* noop: tag array placeholder */
 int pb_array_tagarray_erase(int* arr, int count) { return 1; } /* noop: erase tag array */
+/* === Batch 78: XPRINT GET MARGIN + DISPLAY common dialogs (6 statements) === */
+static long g_xp_margin_left = 0, g_xp_margin_top = 0, g_xp_margin_right = 0, g_xp_margin_bottom = 0;
+int pb_xprint_get_margin(long* left, long* top, long* right, long* bottom) {
+    if (left) *left = g_xp_margin_left;
+    if (top) *top = g_xp_margin_top;
+    if (right) *right = g_xp_margin_right;
+    if (bottom) *bottom = g_xp_margin_bottom;
+    return 1;
+}
+int pb_display_openfile(const char* title, const char* filter, const char* initialdir, char** out) {
+    if (out) *out = SysAllocStringByteLen("", 0); /* noop: return empty string (dialog would block) */
+    return 0;
+}
+int pb_display_savefile(const char* title, const char* filter, const char* initialdir, char** out) {
+    if (out) *out = SysAllocStringByteLen("", 0);
+    return 0;
+}
+int pb_display_color(long* out_color) { if (out_color) *out_color = 0; return 0; } /* noop: return black */
+int pb_display_font(char** out_font) { if (out_font) *out_font = SysAllocStringByteLen("", 0); return 0; } /* noop */
+int pb_display_browse(const char* title, const char* initialdir, char** out) {
+    if (out) *out = SysAllocStringByteLen("", 0);
+    return 0;
+}
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

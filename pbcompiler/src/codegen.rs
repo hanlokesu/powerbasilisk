@@ -2226,6 +2226,34 @@ impl Compiler {
             &[IrType::Ptr, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_xprint_get_margin",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_display_openfile",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_display_savefile",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_display_color", &IrType::I32, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_display_font", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_display_browse",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5945,6 +5973,61 @@ impl Compiler {
                 let a0 = self.compile_expr(fb, &call.args[0])?;
                 let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
                 fb.call_void("pb_array_tagarray_erase", &[pa0, fb.const_i32(0)]);
+            }
+            "XPRINT_GET_MARGIN" => {
+                let mut ps = Vec::new();
+                for i in 0..4 {
+                    if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[i]) {
+                        ps.push(p);
+                    }
+                }
+                if ps.len() == 4 {
+                    fb.call_void(
+                        "pb_xprint_get_margin",
+                        &[ps[0].clone(), ps[1].clone(), ps[2].clone(), ps[3].clone()],
+                    );
+                }
+            }
+            "DISPLAY_OPENFILE" => {
+                let t0 = self.compile_expr(fb, &call.args[0])?;
+                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
+                let t1 = self.compile_expr(fb, &call.args[1])?;
+                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
+                let t2 = self.compile_expr(fb, &call.args[2])?;
+                let pt2 = self.convert_value(fb, &t2, &IrType::Ptr, &PbType::String);
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                    fb.call_void("pb_display_openfile", &[pt0, pt1, pt2, p]);
+                }
+            }
+            "DISPLAY_SAVEFILE" => {
+                let t0 = self.compile_expr(fb, &call.args[0])?;
+                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
+                let t1 = self.compile_expr(fb, &call.args[1])?;
+                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
+                let t2 = self.compile_expr(fb, &call.args[2])?;
+                let pt2 = self.convert_value(fb, &t2, &IrType::Ptr, &PbType::String);
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                    fb.call_void("pb_display_savefile", &[pt0, pt1, pt2, p]);
+                }
+            }
+            "DISPLAY_COLOR" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_display_color", &[p]);
+                }
+            }
+            "DISPLAY_FONT" => {
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.call_void("pb_display_font", &[p]);
+                }
+            }
+            "DISPLAY_BROWSE" => {
+                let t0 = self.compile_expr(fb, &call.args[0])?;
+                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
+                let t1 = self.compile_expr(fb, &call.args[1])?;
+                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
+                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                    fb.call_void("pb_display_browse", &[pt0, pt1, p]);
+                }
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)
