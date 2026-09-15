@@ -4847,6 +4847,50 @@ impl Parser {
                         line,
                     }));
                 }
+                // ARRAY SELECT arr(), start, end
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SELECT")
+                {
+                    self.advance();
+                    self.advance();
+                    let arr = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let start = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let end = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY_SELECT".to_string(),
+                        args: vec![arr, start, end],
+                        line,
+                    }));
+                }
+                // ARRAY TAGARRAY arr(), tagarr() / ARRAY TAGARRAY ERASE arr()
+                if name_upper == "ARRAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "TAGARRAY")
+                {
+                    self.advance();
+                    self.advance();
+                    if self.peek_plain_upper() == "ERASE" {
+                        self.advance();
+                        let arr = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "ARRAY_TAGARRAY_ERASE".to_string(),
+                            args: vec![arr],
+                            line,
+                        }));
+                    }
+                    let arr = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let tag = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ARRAY_TAGARRAY".to_string(),
+                        args: vec![arr, tag],
+                        line,
+                    }));
+                }
                 // GET #filenum [, pos], var / PUT #filenum [, pos], var
                 // (binary file read/write; args = [filenum, (pos), var])
                 // PUT$ [#] filenum&, StrgExpr — write ANSI string at file position

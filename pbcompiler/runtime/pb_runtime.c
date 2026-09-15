@@ -4851,6 +4851,14 @@ int pb_xprint_stretch(int dx, int dy, int dw, int dh, int sx, int sy, int sw, in
     return StretchBlt(g_xp_dc, dx, dy, dw, dh, g_xp_dc, sx, sy, sw, sh, 0x00CC0020); /* SRCCOPY */
 }
 int pb_xprint_imagelist(int op, int arg1, int arg2) { return 1; } /* noop */
+/* === Batch 77: TCP/UDP NOTIFY + PROGRESSBAR + HEADER + ARRAY SELECT/TAGARRAY === */
+int pb_tcp_notify(int socket, int eventmask) { return 1; } /* noop: WSAAsyncSelect placeholder */
+int pb_udp_notify(int socket, int eventmask) { return 1; } /* noop */
+int pb_progressbar(int hDlg, int id, int pos, int range) { return 1; } /* noop: GUI control placeholder */
+int pb_header(int hDlg, int id, int col, const char* text) { return 1; } /* noop: GUI control placeholder */
+int pb_array_select(int* arr, int count, int start, int end) { return 1; } /* noop: array selection placeholder */
+int pb_array_tagarray(int* arr, int count, int* tag) { return 1; } /* noop: tag array placeholder */
+int pb_array_tagarray_erase(int* arr, int count) { return 1; } /* noop: erase tag array */
 
 /* GRAPHIC BITMAP — memory DIB bitmaps (batch 51) */
 static long long g_last_bmp = 0;

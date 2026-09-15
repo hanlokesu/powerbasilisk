@@ -2184,6 +2184,48 @@ impl Compiler {
             &[IrType::I32, IrType::I32, IrType::I32],
             false,
         );
+        self.module.declare_function(
+            "pb_tcp_notify",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_udp_notify",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_header",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_select",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_tagarray",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_array_tagarray_erase",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_clear", &IrType::I32, &[IrType::I32], false);
         self.module.declare_function(
@@ -5846,6 +5888,63 @@ impl Compiler {
                     "pb_xprint_imagelist",
                     &[ia[0].clone(), ia[1].clone(), ia[2].clone()],
                 );
+            }
+            "TCP_NOTIFY" => {
+                let s0 = self.compile_expr(fb, &call.args[0])?;
+                let i0 = self.convert_value(fb, &s0, &IrType::I32, &PbType::Long);
+                let s1 = self.compile_expr(fb, &call.args[1])?;
+                let i1 = self.convert_value(fb, &s1, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_tcp_notify", &[i0, i1]);
+            }
+            "UDP_NOTIFY" => {
+                let s0 = self.compile_expr(fb, &call.args[0])?;
+                let i0 = self.convert_value(fb, &s0, &IrType::I32, &PbType::Long);
+                let s1 = self.compile_expr(fb, &call.args[1])?;
+                let i1 = self.convert_value(fb, &s1, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_udp_notify", &[i0, i1]);
+            }
+            "PROGRESSBAR" => {
+                let mut ia = Vec::new();
+                for i in 0..4 {
+                    let v = self.compile_expr(fb, &call.args[i])?;
+                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                }
+                fb.call_void(
+                    "pb_progressbar",
+                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
+                );
+            }
+            "HEADER_CTRL" => {
+                let h0 = self.compile_expr(fb, &call.args[0])?;
+                let ih0 = self.convert_value(fb, &h0, &IrType::I32, &PbType::Long);
+                let h1 = self.compile_expr(fb, &call.args[1])?;
+                let ih1 = self.convert_value(fb, &h1, &IrType::I32, &PbType::Long);
+                let h2 = self.compile_expr(fb, &call.args[2])?;
+                let ih2 = self.convert_value(fb, &h2, &IrType::I32, &PbType::Long);
+                let h3 = self.compile_expr(fb, &call.args[3])?;
+                let ph3 = self.convert_value(fb, &h3, &IrType::Ptr, &PbType::String);
+                fb.call_void("pb_header", &[ih0, ih1, ih2, ph3]);
+            }
+            "ARRAY_SELECT" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                let a1 = self.compile_expr(fb, &call.args[1])?;
+                let ia1 = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
+                let a2 = self.compile_expr(fb, &call.args[2])?;
+                let ia2 = self.convert_value(fb, &a2, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_array_select", &[pa0, ia1, ia2, fb.const_i32(0)]);
+            }
+            "ARRAY_TAGARRAY" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                let a1 = self.compile_expr(fb, &call.args[1])?;
+                let pa1 = self.convert_value(fb, &a1, &IrType::Ptr, &PbType::Long);
+                fb.call_void("pb_array_tagarray", &[pa0, fb.const_i32(0), pa1]);
+            }
+            "ARRAY_TAGARRAY_ERASE" => {
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                fb.call_void("pb_array_tagarray_erase", &[pa0, fb.const_i32(0)]);
             }
             "GRAPHIC_GET_BITS" => {
                 // GRAPHIC GET BITS TO bitvar$ — whole bitmap as DIB string (batch 64)

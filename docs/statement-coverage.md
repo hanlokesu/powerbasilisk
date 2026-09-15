@@ -355,6 +355,27 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | `GRAPHIC GET WORDWRAP` | STATEMENT | (PB/Win only) implemented |
 | `GRAPHIC SET FIXED` | STATEMENT | (PB/Win only) restores standard FIXED mode (pb_graphic_set_fixed) |
 | `GRAPHIC SET FONT` | STATEMENT | (PB/Win only) selects font handle into graphic DC (pb_graphic_set_font → SelectObject) |
+| XPRINT CELL | STATEMENT | `pb_xprint_cell` — cursor position (global) |
+| XPRINT GET SELECTION | STATEMENT | `pb_xprint_get_selection` — noop |
+| XPRINT SET PAPER | STATEMENT | `pb_xprint_set_paper` — global paper size |
+| XPRINT GET PAPER | STATEMENT | `pb_xprint_get_paper` — global paper size |
+| XPRINT SET TRAY | STATEMENT | `pb_xprint_set_tray` — global paper tray |
+| XPRINT GET TRAY | STATEMENT | `pb_xprint_get_tray` — global paper tray |
+| RESOURCE SAVE FILE | STATEMENT | `pb_resource_save_file` — writes resource to file (placeholder) |
+| XPRINT GET PAPERS | STATEMENT | `pb_xprint_get_papers` — returns 0 on screen DC |
+| XPRINT GET TRAYS | STATEMENT | `pb_xprint_get_trays` — returns 0 on screen DC |
+| XPRINT PREVIEW | STATEMENT | `pb_xprint_preview` — noop on screen DC |
+| XPRINT RENDER | STATEMENT | `pb_xprint_render` — noop on screen DC |
+| XPRINT SPLIT | STATEMENT | `pb_xprint_split` — noop |
+| XPRINT STRETCH | STATEMENT | `pb_xprint_stretch` — StretchBlt (SRCCOPY) |
+| XPRINT IMAGELIST | STATEMENT | `pb_xprint_imagelist` — noop |
+| TCP NOTIFY | STATEMENT | `pb_tcp_notify` — noop (WSAAsyncSelect placeholder) |
+| UDP NOTIFY | STATEMENT | `pb_udp_notify` — noop |
+| PROGRESSBAR | STATEMENT | `pb_progressbar` — noop (GUI control placeholder) |
+| HEADER | STATEMENT | `pb_header` — noop (GUI control placeholder) |
+| ARRAY SELECT | STATEMENT | `pb_array_select` — noop (array selection placeholder) |
+| ARRAY TAGARRAY | STATEMENT | `pb_array_tagarray` — noop (tag array placeholder) |
+| ARRAY TAGARRAY ERASE | STATEMENT | `pb_array_tagarray_erase` — noop |
 ## 🚧 Tier-3 DDT (deferred to next update)
 
 | Keyword | Official kind |
@@ -512,9 +533,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 |---------|---------------|----------|--------|
 
 | ARRAY REDIM INCR/DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
 
 | CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
@@ -524,7 +542,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DISPLAY SAVEFILE | STATEMENT | PB/Win only | Established |
 | EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
 | EVENTS | STATEMENT | PB/Win + PB/CC | Established |
-| HEADER | STATEMENT | PB/Win only | Established |
 
 | INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
 | INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
@@ -534,11 +551,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
 | OBJECT | STATEMENT | PB/Win + PB/CC | Established |
-| PROGRESSBAR | STATEMENT | PB/Win only | Established |
 | RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 
-| UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
 
 ## Files
