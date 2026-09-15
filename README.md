@@ -563,6 +563,17 @@ This fork adds its own test suite in the [`examples/`](examples/) folder — eac
 
 ## Changelog
 
+### v0.1.87 (2026-09-15) — Batch 93: ASIN/ACOS/SINH/COSH/TANH — inverse trig + hyperbolic
+
+- **ASIN(x)** — inverse sine, result in radians (C lib `asin`).
+- **ACOS(x)** — inverse cosine, result in radians (C lib `acos`).
+- **SINH(x)** — hyperbolic sine (C lib `sinh`).
+- **COSH(x)** — hyperbolic cosine (C lib `cosh`).
+- **TANH(x)** — hyperbolic tangent (C lib `tanh`).
+- All five declared in codegen module (same as tan/atan) and dispatched via `builtin_unary_math`.
+- Tests: examples/batch93_test.bas (10/10), official regression 15/15 ALL PASS, fmt + clippy clean.
+
+
 ### v0.1.86 (2026-09-15) — Batch 92: FRE() — free memory query
 
 - **FRE()** — returns free physical memory in bytes as a QUAD (64-bit integer), using Win32 GlobalMemoryStatusEx.

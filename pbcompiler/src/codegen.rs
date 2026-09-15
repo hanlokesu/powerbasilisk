@@ -1272,6 +1272,16 @@ impl Compiler {
             .declare_function("tan", &IrType::Double, &[IrType::Double], false);
         self.module
             .declare_function("atan", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("asin", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("acos", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("sinh", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("cosh", &IrType::Double, &[IrType::Double], false);
+        self.module
+            .declare_function("tanh", &IrType::Double, &[IrType::Double], false);
 
         // C stdlib for RND
         self.module
@@ -10586,6 +10596,11 @@ impl Compiler {
             "COS" => Some(self.builtin_unary_math(fb, args, "llvm.cos.f64")),
             "TAN" => Some(self.builtin_unary_math(fb, args, "tan")),
             "ATN" => Some(self.builtin_unary_math(fb, args, "atan")),
+            "ASIN" => Some(self.builtin_unary_math(fb, args, "asin")),
+            "ACOS" => Some(self.builtin_unary_math(fb, args, "acos")),
+            "SINH" => Some(self.builtin_unary_math(fb, args, "sinh")),
+            "COSH" => Some(self.builtin_unary_math(fb, args, "cosh")),
+            "TANH" => Some(self.builtin_unary_math(fb, args, "tanh")),
             "CINT" | "CLNG" | "CDWD" | "CLNGINT" | "CUINT" | "CULNG" => {
                 Some(self.builtin_cint(fb, args))
             }

@@ -1,4 +1,4 @@
-# Last updated from batch 92 (v0.1.86) — 2026-09-15,,,,
+# Last updated from batch 93 (v0.1.87) — 2026-09-15,,,,
 Keyword,Kind,Platform,Status,Impl
 ACCEL ATTACH,STATEMENT,PB/Win only,Established,TIER3_DDT
 ARRAY ADD,STATEMENT,PB/Win + PB/CC,Proposed New,IMPLEMENTED
