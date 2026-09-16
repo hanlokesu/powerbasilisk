@@ -3292,6 +3292,11 @@ impl Compiler {
             &IrType::I32,
             &[IrType::I32, IrType::Ptr],
         );
+        self.module.declare_dllimport(
+            "GetCurrentThreadId",
+            &IrType::I32,
+            &[],
+        );
 
         // Empty string constant
         let (empty_name, _) = self.module.add_string_constant("");
@@ -10690,6 +10695,7 @@ impl Compiler {
             "BITS" => Some(self.builtin_str2(fb, args, "pb_bits_str")),
             "PATHNAME" => Some(self.builtin_str2(fb, args, "pb_pathname")),
             "PRINTERCOUNT" => Some(self.builtin_count0(fb, "pb_printer_count")),
+            "THREADID" => Some(self.builtin_threadid(fb)),
             "SWITCH" | "SWITCH$" => Some(self.builtin_switch(fb, args, name)),
             "HI" | "LO" => Some(self.builtin_hilo(fb, args, name)),
             "FILEATTR" => Some(self.builtin_fileattr(fb, args)),
@@ -11822,6 +11828,10 @@ impl Compiler {
 
     fn builtin_count0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
         Ok(fb.call(&IrType::I64, fname, &[]))
+    }
+
+    fn builtin_threadid(&mut self, fb: &mut FunctionBuilder) -> PbResult<Val> {
+        Ok(fb.call(&IrType::I32, "GetCurrentThreadId", &[]))
     }
 
     fn builtin_switch(

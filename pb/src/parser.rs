@@ -7598,6 +7598,7 @@ impl Parser {
                     || name.eq_ignore_ascii_case("ERROR")
                     || name.eq_ignore_ascii_case("ERROR$")
                     || name.eq_ignore_ascii_case("FRE")
+                    || name.eq_ignore_ascii_case("THREADID")
                 {
                     // No-argument functions without parentheses (PB syntax: n = DATACOUNT)
                     Expr::FunctionCall(name.to_uppercase(), Vec::new())
