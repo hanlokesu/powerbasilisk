@@ -1735,6 +1735,8 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_mcase_string", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_build", &IrType::Ptr, &[IrType::Ptr, IrType::I64], false);
         self.module
             .declare_function("pb_dayname", &IrType::Ptr, &[IrType::I64], false);
@@ -3294,6 +3296,10 @@ impl Compiler {
         );
         self.module
             .declare_dllimport("GetCurrentThreadId", &IrType::I32, &[]);
+        self.module
+            .declare_dllimport("IsWindow", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("GetDlgItem", &IrType::Ptr, &[IrType::Ptr, IrType::I32]);
 
         // Empty string constant
         let (empty_name, _) = self.module.add_string_constant("");
@@ -10705,6 +10711,11 @@ impl Compiler {
             "REMOVE" => Some(self.builtin_remove(fb, args)),
             "RETAIN" => Some(self.builtin_retain(fb, args)),
             "REMAIN" => Some(self.builtin_remain(fb, args)),
+            "MCASE" => {
+                // MCASE$(s$) — capitalize first letter of each word, lowercase rest
+                let s = self.compile_expr(fb, &args[0]);
+                Some(s.map(|v| fb.call(&IrType::Ptr, "pb_mcase_string", &[v])))
+            }
             "RGB" | "BGR" => Some(self.builtin_rgb(fb, args, name)),
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
@@ -10782,6 +10793,29 @@ impl Compiler {
                     let zero2 = fb.const_i32(0);
                     fb.select(&exists, &neg_one, &zero2)
                 }))
+            }
+            "ISWIN" => {
+                // ISWIN(hWnd&) → -1 if window exists, 0 if not
+                // ISWIN(hParent&, id&) → -1 if control exists, 0 if not
+                if args.len() >= 2 {
+                    let parent = self.compile_expr(fb, &args[0]);
+                    let id = self.compile_expr(fb, &args[1]);
+                    Some(parent.and_then(|p| {
+                        id.map(|i| {
+                            let hwnd = fb.call(&IrType::Ptr, "GetDlgItem", &[p, i]);
+                            let result = fb.call(&IrType::I32, "IsWindow", &[hwnd]);
+                            let exists = fb.icmp("ne", &result, &fb.const_i32(0));
+                            fb.select(&exists, &fb.const_i32(-1), &fb.const_i32(0))
+                        })
+                    }))
+                } else {
+                    let hwnd = self.compile_expr(fb, &args[0]);
+                    Some(hwnd.map(|h| {
+                        let result = fb.call(&IrType::I32, "IsWindow", &[h]);
+                        let exists = fb.icmp("ne", &result, &fb.const_i32(0));
+                        fb.select(&exists, &fb.const_i32(-1), &fb.const_i32(0))
+                    }))
+                }
             }
             "DIR" => {
                 // DIR$(mask [, ONLY attr]) or DIR$(NEXT) — returns BSTR filename

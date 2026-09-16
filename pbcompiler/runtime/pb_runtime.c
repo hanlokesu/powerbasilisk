@@ -475,6 +475,29 @@ char* pb_retain_string(char* main, char* match, int any_flag) {
     buf[o] = 0;
     return pb_bstr_alloc(buf, (unsigned int)o);
 }
+char* pb_mcase_string(char* s) {
+    // MCASE$ — capitalize first letter of each word, lowercase the rest
+    // A "word" is a consecutive series of letters; non-letters reset the word boundary
+    size_t n = strlen(s);
+    char* buf = (char*)malloc(n + 1);
+    int next_upper = 1;
+    for (size_t i = 0; i < n; i++) {
+        unsigned char c = (unsigned char)s[i];
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+            if (next_upper) {
+                buf[i] = (c >= 'a' && c <= 'z') ? c - 32 : c;
+            } else {
+                buf[i] = (c >= 'A' && c <= 'Z') ? c + 32 : c;
+            }
+            next_upper = 0;
+        } else {
+            buf[i] = s[i];
+            next_upper = 1;
+        }
+    }
+    buf[n] = 0;
+    return pb_bstr_alloc(buf, (unsigned int)n);
+}
 char* pb_remain_string(char* main, char* match, long long start, int any_flag) {
     size_t n = strlen(main);
     size_t mlen = match ? strlen(match) : 0;

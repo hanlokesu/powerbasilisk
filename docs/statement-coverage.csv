@@ -1,4 +1,4 @@
-Keyword (Last updated: batch 96 v0.1.90 — 2026-09-16),Kind,Platform,Status
+Keyword (Last updated: batch 98 v0.1.92 — 2026-09-16),Kind,Platform,Status
 #ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established
@@ -481,6 +481,7 @@ ISINFINITE,STATEMENT,PB/Win + PB/CC,Proposed New
 ISNORMAL,STATEMENT,PB/Win + PB/CC,Proposed New
 ISODD,FUNCTION,codegen builtin,Implemented
 ISTRUE,FUNCTION,codegen builtin,Implemented
+ISWIN,FUNCTION,Win32 (IsWindow/GetDlgItem),Implemented
 ITERATE,STATEMENT,PB/Win + PB/CC,Established
 JOIN$,FUNCTION,Win32,Implemented
 KILL,STATEMENT,PB/Win + PB/CC,Established
@@ -521,6 +522,7 @@ MACRO/END MACRO,BLOCK,PB/Win + PB/CC,Established
 MAK,FUNCTION,codegen builtin,Implemented
 MAT,STATEMENT,PB/Win + PB/CC,Established
 MAX,FUNCTION,codegen builtin,Implemented
+MCASE$,FUNCTION,runtime pb_mcase_string,Implemented
 MEMORY,STATEMENT,PB/Win + PB/CC,Established
 MEMORY_FILL,FUNCTION,codegen builtin,Implemented
 MEMORY_FILLS,FUNCTION,codegen builtin,Implemented

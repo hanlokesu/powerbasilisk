@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 96 (v0.1.90)** — 2026-09-15. All statements and functions through batch 96 are reflected in this matrix.
+> **Last updated from batch 98 (v0.1.92)** — 2026-09-15. All statements and functions through batch 98 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (896)
+## ✅ Implemented (898)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -504,6 +504,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ISNORMAL | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ISODD | FUNCTION | codegen builtin | Implemented |
 | ISTRUE | FUNCTION | codegen builtin | Implemented |
+| ISWIN | FUNCTION | Win32 (IsWindow/GetDlgItem) | Implemented |
 | ITERATE | STATEMENT | PB/Win + PB/CC | Established |
 | JOIN$ | FUNCTION | Win32 | Implemented |
 | KILL | STATEMENT | PB/Win + PB/CC | Established |
@@ -544,6 +545,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MAK | FUNCTION | codegen builtin | Implemented |
 | MAT | STATEMENT | PB/Win + PB/CC | Established |
 | MAX | FUNCTION | codegen builtin | Implemented |
+| MCASE$ | FUNCTION | runtime pb_mcase_string | Implemented |
 | MEMORY | STATEMENT | PB/Win + PB/CC | Established |
 | MEMORY_FILL | FUNCTION | codegen builtin | Implemented |
 | MEMORY_FILLS | FUNCTION | codegen builtin | Implemented |
