@@ -10264,6 +10264,18 @@ impl Compiler {
             BinaryOp::And => Ok(fb.and(&l, &r)),
             BinaryOp::Or => Ok(fb.or(&l, &r)),
             BinaryOp::Xor => Ok(fb.xor(&l, &r)),
+            BinaryOp::Eqv => {
+                // a EQV b = NOT (a XOR b) — bitwise equivalence
+                let x = fb.xor(&l, &r);
+                let all_ones = fb.const_i64(-1);
+                Ok(fb.xor(&x, &all_ones))
+            }
+            BinaryOp::Imp => {
+                // a IMP b = (NOT a) OR b — bitwise implication
+                let all_ones = fb.const_i64(-1);
+                let not_l = fb.xor(&l, &all_ones);
+                Ok(fb.or(&not_l, &r))
+            }
             BinaryOp::Eq => Ok(fb.icmp("eq", &l, &r)),
             BinaryOp::Neq => Ok(fb.icmp("ne", &l, &r)),
             BinaryOp::Lt => Ok(fb.icmp("slt", &l, &r)),

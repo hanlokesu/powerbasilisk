@@ -968,6 +968,16 @@ impl Interpreter {
                     BinaryOp::And => lval.and(&rval),
                     BinaryOp::Or => lval.or(&rval),
                     BinaryOp::Xor => lval.xor(&rval),
+                    BinaryOp::Eqv => {
+                        // a EQV b = NOT (a XOR b)
+                        let x = lval.xor(&rval);
+                        x.not()
+                    }
+                    BinaryOp::Imp => {
+                        // a IMP b = (NOT a) OR b
+                        let not_l = lval.not();
+                        not_l.or(&rval)
+                    }
                     BinaryOp::StrConcat => {
                         Value::Str(format!("{}{}", lval.to_string_val(), rval.to_string_val()))
                     }

@@ -546,5 +546,7 @@ pub enum BinaryOp {
     And,
     Or,
     Xor,
+    Eqv,
+    Imp,
     StrConcat, // &
 }

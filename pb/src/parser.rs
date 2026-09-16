@@ -7164,7 +7164,27 @@ impl Parser {
     // ===== Expression parsing with precedence climbing =====
 
     fn parse_expression(&mut self) -> PbResult<Expr> {
-        self.parse_or_expr()
+        self.parse_imp_expr()
+    }
+
+    fn parse_imp_expr(&mut self) -> PbResult<Expr> {
+        let mut left = self.parse_eqv_expr()?;
+        while self.peek() == &Token::Imp {
+            self.advance();
+            let right = self.parse_eqv_expr()?;
+            left = Expr::BinaryOp(BinaryOp::Imp, Box::new(left), Box::new(right));
+        }
+        Ok(left)
+    }
+
+    fn parse_eqv_expr(&mut self) -> PbResult<Expr> {
+        let mut left = self.parse_or_expr()?;
+        while self.peek() == &Token::Eqv {
+            self.advance();
+            let right = self.parse_or_expr()?;
+            left = Expr::BinaryOp(BinaryOp::Eqv, Box::new(left), Box::new(right));
+        }
+        Ok(left)
     }
 
     fn parse_or_expr(&mut self) -> PbResult<Expr> {

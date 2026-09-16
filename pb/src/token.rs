@@ -73,6 +73,8 @@ pub enum Token {
     Wend,
     While,
     Xor,
+    Eqv,
+    Imp,
 
     // Preprocessor directives (kept as tokens after preprocessing)
     // These are mostly consumed by the preprocessor, but INCLUDE may appear
@@ -221,6 +223,8 @@ impl Token {
             "WEND" => Some(Token::Wend),
             "WHILE" => Some(Token::While),
             "XOR" => Some(Token::Xor),
+            "EQV" => Some(Token::Eqv),
+            "IMP" => Some(Token::Imp),
             _ => None,
         }
     }
