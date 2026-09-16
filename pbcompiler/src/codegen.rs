@@ -3292,11 +3292,8 @@ impl Compiler {
             &IrType::I32,
             &[IrType::I32, IrType::Ptr],
         );
-        self.module.declare_dllimport(
-            "GetCurrentThreadId",
-            &IrType::I32,
-            &[],
-        );
+        self.module
+            .declare_dllimport("GetCurrentThreadId", &IrType::I32, &[]);
 
         // Empty string constant
         let (empty_name, _) = self.module.add_string_constant("");
