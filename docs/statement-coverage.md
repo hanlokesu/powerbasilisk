@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 99 (v0.1.93)** — 2026-09-15. All statements and functions through batch 99 are reflected in this matrix.
+> **Last updated from batch 100 (v0.1.94)** — 2026-09-15. All statements and functions through batch 100 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (900)
+## ✅ Implemented (901)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -93,6 +93,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | BIT CALC | STATEMENT | PB/Win + PB/CC | Established |
 | BITS | FUNCTION | codegen builtin | Implemented |
 | BITS$ | FUNCTION | Win32 | Implemented |
+| BITSE | FUNCTION | codegen builtin (lvalue test-and-set) | Implemented |
 | BUILD | FUNCTION | codegen builtin | Implemented |
 | BUILD$ | FUNCTION | Win32 | Implemented |
 | BYTE | FUNCTION | codegen builtin | Implemented |

@@ -11151,6 +11151,36 @@ impl Compiler {
                     (Err(e), _) | (_, Err(e)) => Err(e),
                 })
             }
+            "BITSE" => {
+                // BITSE(intvar, bitnumber) — test bit and set it, return original bit value (0 or 1)
+                if args.len() < 2 {
+                    return Some(Err(PbError::runtime("BITSE requires 2 arguments")));
+                }
+                if let Some((ptr, ir_ty, pb_ty)) = self.lvalue_ptr(fb, &args[0]) {
+                    let cur = fb.load(&ir_ty, &ptr);
+                    let vi = self.to_i64(fb, &cur);
+                    let bitv = match self.compile_expr(fb, &args[1]) {
+                        Ok(b) => b,
+                        Err(e) => return Some(Err(e)),
+                    };
+                    let bi = self.to_i64(fb, &bitv);
+                    let one = fb.const_i64(1);
+                    // Test original bit
+                    let shifted = fb.lshr(&vi, &bi);
+                    let orig = fb.and(&shifted, &one);
+                    // Set the bit
+                    let mask = fb.shl(&one, &bi);
+                    let newv = fb.or(&vi, &mask);
+                    let conv = self.convert_value(fb, &newv, &ir_ty, &pb_ty);
+                    fb.store(&conv, &ptr);
+                    // Return original bit value
+                    Some(Ok(self.to_i32(fb, &orig)))
+                } else {
+                    Some(Err(PbError::runtime(
+                        "BITSE first argument must be a variable",
+                    )))
+                }
+            }
             "PEEK" => {
                 // PEEK([datatype,] address) — default BYTE
                 let (dt, addr_expr) = match args.first() {

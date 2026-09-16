@@ -1,4 +1,4 @@
-Keyword (Last updated: batch 99 v0.1.93 — 2026-09-16),Kind,Platform,Status
+Keyword (Last updated: batch 100 v0.1.94 — 2026-09-16),Kind,Platform,Status
 #ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established
@@ -70,6 +70,7 @@ BIT,STATEMENT,PB/Win + PB/CC,Established
 BIT CALC,STATEMENT,PB/Win + PB/CC,Established
 BITS,FUNCTION,codegen builtin,Implemented
 BITS$,FUNCTION,Win32,Implemented
+BITSE,FUNCTION,codegen builtin (lvalue test-and-set),Implemented
 BUILD,FUNCTION,codegen builtin,Implemented
 BUILD$,FUNCTION,Win32,Implemented
 BYTE,FUNCTION,codegen builtin,Implemented
