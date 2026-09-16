@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 98 (v0.1.92)** — 2026-09-15. All statements and functions through batch 98 are reflected in this matrix.
+> **Last updated from batch 99 (v0.1.93)** — 2026-09-15. All statements and functions through batch 99 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (898)
+## ✅ Implemented (900)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -113,6 +113,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CHOOSE | FUNCTION | codegen builtin | Implemented |
 | CHR | FUNCTION | codegen builtin | Implemented |
 | CHR$ | FUNCTION | Win32 | Implemented |
+| CHRBYTES | FUNCTION | codegen builtin | Implemented |
 | CHRTOOEM | FUNCTION | codegen builtin | Implemented |
 | CHRTOOEM$ | FUNCTION | Win32 | Implemented |
 | CHRTOUTF8 | FUNCTION | codegen builtin | Implemented |
@@ -318,6 +319,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FRAC | FUNCTION | codegen builtin | Implemented |
 | FRE | FUNCTION | codegen builtin | Implemented |
 | FREEFILE | FUNCTION | codegen builtin | Implemented |
+| FUNCNAME$ | FUNCTION | codegen builtin (current_fn_name) | Implemented |
 | FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | Established |
 | GET | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | GET$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |

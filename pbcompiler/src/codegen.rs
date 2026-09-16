@@ -10699,6 +10699,19 @@ impl Compiler {
             "PATHNAME" => Some(self.builtin_str2(fb, args, "pb_pathname")),
             "PRINTERCOUNT" => Some(self.builtin_count0(fb, "pb_printer_count")),
             "THREADID" => Some(self.builtin_threadid(fb)),
+            "CHRBYTES" => {
+                // CHRBYTES(var) — returns 1 for ANSI strings, 2 for wide strings
+                // We only support ANSI strings, so always return 1
+                Some(Ok(fb.const_i32(1)))
+            }
+            "FUNCNAME" => {
+                // FUNCNAME$ — returns the name of the current Sub/Function
+                let name = self.current_fn_name.clone().unwrap_or_default();
+                let (sname, _) = self.module.add_string_constant(&name);
+                let sv = Val::new(sname, IrType::Ptr);
+                let len = fb.const_i32(name.len() as i32);
+                Some(Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[sv, len])))
+            }
             "SWITCH" | "SWITCH$" => Some(self.builtin_switch(fb, args, name)),
             "HI" | "LO" => Some(self.builtin_hilo(fb, args, name)),
             "FILEATTR" => Some(self.builtin_fileattr(fb, args)),
