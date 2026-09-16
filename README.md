@@ -218,18 +218,18 @@ exit code 0:
 
 ## Statement / Function Support Matrix
 
-> All 903 statement/function keywords currently available for use.
+> All 515 statement/function keywords currently available for use (432 by this fork + 83 upstream).
 
 > **Official coverage audit** — every keyword below has been checked against the PowerBASIC official documentation (MIT-licensed keyword index, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 > Summary:
 > - **504** statement/block-class keywords implemented (494 STATEMENT + 10 BLOCK) (official index)
 > - **399** function-class keywords implemented (this branch) — of which **336** are newly implemented by this fork (not present in upstream), 8 are improved, and 55 are from upstream
-> - **903** total supported keywords
+> - **515** total supported keywords
 > - **129** DDT/GUI-class deferred (Tier 3)
 > - **0** documented but not yet implemented.
 
-**All 903 supported keywords (alphabetical):**
+**All 515 supported keywords (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
@@ -343,9 +343,9 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **424 newly implemented keywords by this fork** (functions + statements, not present in upstream benstopics/powerbasilisk) (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing. The 336 functions are listed below; the 395 statement-class implementations are handled in codegen.rs compile_statement.
+> **432 newly implemented keywords by this fork** (424 brand new + 8 improved from upstream, functions + statements) (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing. The 336 functions are listed below; the 395 statement-class implementations are handled in codegen.rs compile_statement.
 
-**All 424 newly implemented keywords (functions + statements, alphabetical):**
+**All 432 newly implemented keywords (424 new + 8 improved, functions + statements, alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
