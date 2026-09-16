@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 100 (v0.1.94)** — 2026-09-15. All statements and functions through batch 100 are reflected in this matrix.
+> **Last updated from batch 101 (v0.1.95)** — 2026-09-15. All statements and functions through batch 101 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
 
-## ✅ Implemented (901)
+## ✅ Implemented (902)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -53,6 +53,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | #UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | ABS | FUNCTION | LLVM intrinsic | Implemented |
 | ACCEL ATTACH | STATEMENT | PB/Win only | Established |
+| ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | Implemented |
 | ACOS | FUNCTION | LLVM intrinsic | Implemented |
 | ACOSH | FUNCTION | LLVM intrinsic | Implemented |
 | ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |

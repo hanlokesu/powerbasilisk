@@ -10704,6 +10704,12 @@ impl Compiler {
                 // We only support ANSI strings, so always return 1
                 Some(Ok(fb.const_i32(1)))
             }
+            "ACODE" => {
+                // ACODE$(unicodestr [, codepage]) — convert Unicode to ANSI
+                // We only support ANSI strings, so return the input as-is
+                let s = self.compile_expr(fb, &args[0]);
+                Some(s.map(|v| v))
+            }
             "FUNCNAME" => {
                 // FUNCNAME$ — returns the name of the current Sub/Function
                 let name = self.current_fn_name.clone().unwrap_or_default();

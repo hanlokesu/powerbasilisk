@@ -1,4 +1,4 @@
-Keyword (Last updated: batch 100 v0.1.94 — 2026-09-16),Kind,Platform,Status
+Keyword (Last updated: batch 101 v0.1.95 — 2026-09-16),Kind,Platform,Status
 #ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established
@@ -30,6 +30,7 @@ Keyword (Last updated: batch 100 v0.1.94 — 2026-09-16),Kind,Platform,Status
 #UTILITY METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 ABS,FUNCTION,LLVM intrinsic,Implemented
 ACCEL ATTACH,STATEMENT,PB/Win only,Established
+ACODE$,FUNCTION,codegen builtin (ANSI passthrough),Implemented
 ACOS,FUNCTION,LLVM intrinsic,Implemented
 ACOSH,FUNCTION,LLVM intrinsic,Implemented
 ARRAY ADD,STATEMENT,PB/Win + PB/CC,Proposed New
