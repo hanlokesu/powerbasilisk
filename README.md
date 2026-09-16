@@ -437,6 +437,53 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.97 (2026-09-17) — Examples file rename to 3-digit format + docs sync fix
+
+- **Examples renamed**: all `batchXX_test.bas` → `batch0XX_test.bas` (1-2 digit) and `batch0X_test.bas` → `batch00X_test.bas` (1 digit), now that we passed 100 batches. 101 files renamed via `git mv` (history preserved).
+- **Docs sync fix**: added missing EQV/IMP operators (batch 102) and THREADID (batch 97) to `docs/statement-coverage.md`; CSV and MD now fully synchronized (401 Implemented each).
+- **README updated**: 81 references to batch test files updated to 3-digit format.
+- No code changes — pure docs/file naming cleanup.
+
+### v0.1.96 (2026-09-17) — Batch 102: EQV/IMP logical operators + clippy fix
+
+- **EQV** — logical equivalence: `a EQV b` = `NOT (a XOR b)`. PB operator precedence: NOT > AND > OR > XOR > EQV > IMP.
+- **IMP** — logical implication: `a IMP b` = `(NOT a) OR b`.
+- Both implemented as register-level LLVM IR (no runtime C function).
+- Added `parse_imp_expr` → `parse_eqv_expr` precedence layers in parser; Token/Ast/Interpreter all updated.
+- **Clippy fix**: `Some(s.map(|v| v))` → `Some(s)` (clippy::map_identity warning became error under CI `-D warnings`).
+- Tests: examples/batch102_test.bas (8/8), official regression 14/14 ALL PASS, CI Build & Test success, fmt + clippy clean.
+
+### v0.1.95 (2026-09-16) — Batch 101: ACODE$ — ANSI character code from string
+
+- **ACODE$(s$)** — returns the ANSI character code (0-255) of the first character of s$, as a string.
+- Pure codegen builtin (no runtime C function): loads first byte, converts to string via pb_int_to_str.
+- Tests: examples/batch101_test.bas (5/5), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+### v0.1.94 (2026-09-16) — Batch 100: BITSE — bit set/extract function
+
+- **BITSE(value, bit)** — tests a bit in value and returns -1 (TRUE) if set, 0 (FALSE) if not.
+- Pure register-level LLVM IR (shift + AND + compare).
+- Tests: examples/batch100_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+### v0.1.93 (2026-09-16) — Batch 99: CHRBYTES + FUNCNAME$
+
+- **CHRBYTES(s$)** — returns the number of bytes in a string (same as LEN for ANSI strings; useful for future UTF-8 support).
+- **FUNCNAME$** — returns the name of the currently executing function/sub (for debugging). Bare `FUNCNAME` (no parens) works — added to parser no-argument function list.
+- Both pure codegen builtins (no runtime C function).
+- Tests: examples/batch099_test.bas (6/6), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+### v0.1.92 (2026-09-16) — Batch 98: ISWIN + MCASE$
+
+- **ISWIN(hWnd)** — returns TRUE (-1) if hWnd is a valid window handle, FALSE (0) otherwise. Win32 `IsWindow` + `GetDlgItem` dllimports.
+- **MCASE$(s$)** — converts string to proper case (first letter of each word uppercase, rest lowercase). Runtime `pb_mcase` C function.
+- Tests: examples/batch098_test.bas (7/7), official regression 14/14 ALL PASS, fmt + clippy clean.
+
+### v0.1.91 (2026-09-16) — Batch 97: THREADID — current thread ID
+
+- **THREADID** — returns the Win32 thread ID of the currently executing thread (DWORD). Bare `THREADID` (no parens) works — added to parser no-argument function list.
+- Win32 `GetCurrentThreadId` dllimport.
+- Tests: examples/batch097_test.bas (4/4), official regression 14/14 ALL PASS, fmt + clippy clean.
+
 ### v0.1.90 (2026-09-15) — Batch 96: HYPOT/CBRT/EXPM1/LOG1P/ERF — C math library special functions
 
 - **HYPOT(x,y)** — sqrt(x²+y²), C `hypot` (two-arg, via `builtin_binary_math`)
