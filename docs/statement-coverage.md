@@ -1,10 +1,10 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 101 (v0.1.95)** — 2026-09-15. All statements and functions through batch 101 are reflected in this matrix.
+> **Last updated from batch 102 (v0.1.96)** — 2026-09-17. All statements and functions through batch 102 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
-- Official **statement-class** keywords total: **493**
+- Official **statement-class** keywords total: **494**
 
 - Official function-class: 190 (CURDIR$ / ISFILE among them —both implemented)
 
@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented | 896 | Real codegen output (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 827 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Not implemented | 0 | Documented upstream, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 78 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ Implemented (902)
+## ✅ All keywords (904, including 401 Implemented + 426 Established + 78 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -280,6 +280,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DISPLAY_SAVEFILE | FUNCTION | codegen builtin | Implemented |
 | DOUBLE | FUNCTION | codegen builtin | Implemented |
 | END | STATEMENT | PB/Win + PB/CC | Established |
+| EQV | FUNCTION | PB/Win + PB/CC | Implemented |
 | ENVIRON | STATEMENT | PB/Win + PB/CC | Established |
 | ENVIRON$ | FUNCTION | Win32 | Implemented |
 | EOF | FUNCTION | codegen builtin | Implemented |
@@ -490,6 +491,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | IMAGELIST_COUNT | FUNCTION | codegen builtin | Implemented |
 | IMAGELIST_KILL | FUNCTION | codegen builtin | Implemented |
 | IMAGELIST_NEW | FUNCTION | codegen builtin | Implemented |
+| IMP | FUNCTION | PB/Win + PB/CC | Implemented |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
 | INCR | STATEMENT | PB/Win + PB/CC | Established |
 | INPUT FLUSH | STATEMENT | PB/CC only | Established |

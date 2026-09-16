@@ -1,4 +1,4 @@
-Keyword (Last updated: batch 101 v0.1.95 — 2026-09-16),Kind,Platform,Status
+Keyword (Last updated: batch 102 v0.1.96 — 2026-09-17),Kind,Platform,Status
 #ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established
@@ -260,6 +260,7 @@ END,STATEMENT,PB/Win + PB/CC,Established
 ENVIRON,STATEMENT,PB/Win + PB/CC,Established
 ENVIRON$,FUNCTION,Win32,Implemented
 EOF,FUNCTION,codegen builtin,Implemented
+EQV,FUNCTION,PB/Win + PB/CC,Implemented
 ERASE,STATEMENT,PB/Win + PB/CC,Established
 ERF,FUNCTION,C runtime (MSVCRT),Implemented
 ERL,FUNCTION,codegen builtin,Implemented
@@ -467,6 +468,7 @@ IMAGELIST,STATEMENT,PB/Win only,Established
 IMAGELIST_COUNT,FUNCTION,codegen builtin,Implemented
 IMAGELIST_KILL,FUNCTION,codegen builtin,Implemented
 IMAGELIST_NEW,FUNCTION,codegen builtin,Implemented
+IMP,FUNCTION,PB/Win + PB/CC,Implemented
 IMPORT,STATEMENT,PB/Win + PB/CC,Established
 INCR,STATEMENT,PB/Win + PB/CC,Established
 INPUT FLUSH,STATEMENT,PB/CC only,Established
