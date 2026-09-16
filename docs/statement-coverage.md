@@ -18,7 +18,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
 | ⬜ Proposed (not yet implemented) | 78 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (904, including 401 Implemented + 426 Established + 78 Proposed)
+## ✅ All keywords (905, including 401 Implemented + 426 Established + 78 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -735,6 +735,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | THREAD STATUS | STATEMENT | PB/Win + PB/CC | Established |
 | THREAD SUSPEND | STATEMENT | PB/Win + PB/CC | Established |
 | THREADCOUNT | FUNCTION | codegen builtin | Implemented |
+| THREADID | FUNCTION | Win32 (GetCurrentThreadId) | Implemented |
 | THREADED | STATEMENT | PB/Win + PB/CC | Established |
 | TIMER | FUNCTION | codegen builtin | Implemented |
 | TIX | STATEMENT | PB/Win + PB/CC | Established |
