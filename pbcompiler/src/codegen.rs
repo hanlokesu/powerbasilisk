@@ -10720,7 +10720,7 @@ impl Compiler {
                 // ACODE$(unicodestr [, codepage]) — convert Unicode to ANSI
                 // We only support ANSI strings, so return the input as-is
                 let s = self.compile_expr(fb, &args[0]);
-                Some(s.map(|v| v))
+                Some(s)
             }
             "FUNCNAME" => {
                 // FUNCNAME$ — returns the name of the current Sub/Function
