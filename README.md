@@ -341,9 +341,9 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **336 functions newly implemented by this fork** (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing.
+> **336 functions + 395 statements = 731 newly implemented by this fork** (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing. The 336 functions are listed below; the 395 statement-class implementations are handled in codegen.rs compile_statement.
 
-**All 336 newly implemented keywords (alphabetical):**
+**All 336 newly implemented functions (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
