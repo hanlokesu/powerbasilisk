@@ -222,12 +222,12 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 > Summary:
 > - **504** statement/block-class keywords implemented (494 STATEMENT + 10 BLOCK) (official index)
-> - **327** function-class keywords implemented (this branch)
-> - **831** total supported keywords
+> - **399** function-class keywords implemented (this branch) — of which **336** are newly implemented by this fork (not present in upstream), 8 are improved, and 55 are from upstream
+> - **903** total supported keywords
 > - **129** DDT/GUI-class deferred (Tier 3)
 > - **0** documented but not yet implemented.
 
-**All 831 supported keywords (alphabetical):**
+**All 903 supported keywords (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
