@@ -428,22 +428,27 @@ exit code 0:
 | XPRINT TEXT SIZE | XPRINT WIDTH |  |  |  |
 
 
+
 ## Core statements originally from upstream benstopics
 
-> Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) exercised **49** statement/function keywords across its 14 official l*.bas tests + interpreter fixtures - its proven core (control flow, operators, file I/O, basic math/string builtins). The remaining **432** keywords in the matrix were added or completed by this fork.
+> Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) shipped **75** statement/function keywords that run - verified by its 14 official l*.bas tests + interpreter fixtures (all pass). These are its proven core: control flow, operators, file I/O, and basic math/string builtins. **8 of these were further completed/improved by this fork** (marked below). Everything else in the matrix was newly added by this fork.
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
-| ABS | AND | ASC | CALL | CEIL |
-| CHR$ | CLOSE | COS | DATA | DECLARE |
-| DIM | END | EXIT | EXP | FOR / NEXT |
-| FORMAT$ | FUNCTION / END FUNCTION | GLOBAL | IF | LCASE$ |
-| LEFT$ | LET | LOC | LOCAL | LOF |
-| LOG | LTRIM$ | MID$ | NOT | OPEN |
-| OR | PARSE | PRINT# | RANDOMIZE | REMOVE$ |
-| RETURN | RIGHT$ | ROUND | RTRIM$ | SELECT CASE/END SELECT |
-| SIN | SPACE$ | SQR | STR$ | TRIM$ |
-| TYPE/END TYPE | UCASE$ | VAL | XOR |  |
+| / | ABS | AND | ASC | CALL |
+| CASE/END | CEIL | CHR$ | CINT | CLNG |
+| CLOSE | COS | DATA | DECLARE | DIM |
+| DO/LOOP | END | EOF | EXIT | EXP |
+| FIX | FOR | FORMAT$ | FREEFILE | FUNCTION |
+| GLOBAL | GOSUB | GOTO | IF | INPUT |
+| INSTR | INT | LCASE$ | LEFT$ | LEN |
+| LET | LINE | LOC | LOCAL | LOF |
+| LOG | LTRIM$ | MID$ | NEXT | NOT |
+| ON | OPEN | PARSE | PRINT# | RANDOMIZE |
+| REMOVE$ | RETURN | RIGHT$ | RND | ROUND |
+| RTRIM$ | SELECT | SGN | SIN | SPACE$ |
+| SQR | STR$ | STRING$ | TRIM$ | TYPE |
+| TYPE/END | UCASE$ | VAL | VARPTR | WHILE/WEND |
 
 ## Changelog
 ### v0.1.119 (2026-09-18) - Batch 119: fix parser silently dropping ARRAY SCAN / SELECT / REDIM INCR/DECR
