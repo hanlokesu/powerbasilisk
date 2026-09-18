@@ -5223,10 +5223,60 @@ int pb_xprint_stretch(int dx, int dy, int dw, int dh, int sx, int sy, int sw, in
 }
 int pb_xprint_imagelist(int op, int arg1, int arg2) { return 1; } /* noop */
 /* === Batch 77: TCP/UDP NOTIFY + PROGRESSBAR + HEADER + ARRAY SELECT/TAGARRAY === */
-int pb_tcp_notify(int socket, int eventmask) { return 1; } /* noop: WSAAsyncSelect placeholder */
-int pb_udp_notify(int socket, int eventmask) { return 1; } /* noop */
-int pb_progressbar(int hDlg, int id, int pos, int range) { return 1; } /* noop: GUI control placeholder */
-int pb_header(int hDlg, int id, int col, const char* text) { return 1; } /* noop: GUI control placeholder */
+/* TCP/UDP NOTIFY: save event mask per socket (async mode flag) */
+static int g_socket_event_mask[256] = {0};
+
+int pb_tcp_notify(int socket, int eventmask) {
+    if (socket < 0 || socket >= 256) return 0;
+    g_socket_event_mask[socket] = eventmask;
+    return 1;
+}
+
+int pb_udp_notify(int socket, int eventmask) {
+    if (socket < 0 || socket >= 256) return 0;
+    g_socket_event_mask[socket] = eventmask;
+    return 1;
+}
+
+/* PROGRESSBAR: Win32 progress bar control (comctl32) */
+__declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, unsigned long long lParam);
+
+#define PBM_SETRANGE 0x0401
+#define PBM_SETPOS   0x0402
+#define PBM_SETRANGE32 0x0406
+
+int pb_progressbar(int hDlg, int id, int pos, int range) {
+    void* hWnd = (void*)(long long)hDlg;
+    if (!hWnd) return 0;
+    SendMessageA(hWnd, PBM_SETRANGE32, 0, (unsigned long long)range);
+    SendMessageA(hWnd, PBM_SETPOS, pos, 0);
+    return 1;
+}
+
+/* HEADER: Win32 header control */
+#define HDM_FIRST 0x1200
+#define HDM_INSERTITEMA (HDM_FIRST + 1)
+
+typedef struct {
+    unsigned long mask;
+    int cxy;
+    const char* pszText;
+    void* hbm;
+    int cchtText;
+    int fmt;
+    void* lParam;
+} HD_ITEMA;
+
+int pb_header(int hDlg, int id, int col, const char* text) {
+    void* hWnd = (void*)(long long)hDlg;
+    if (!hWnd || !text) return 0;
+    HD_ITEMA item = {0};
+    item.mask = 0x00000001 | 0x00000002; /* HDI_TEXT | HDI_WIDTH */
+    item.pszText = text;
+    item.cxy = 100;
+    SendMessageA(hWnd, HDM_INSERTITEMA, col, (unsigned long long)&item);
+    return 1;
+}
 /* ARRAY SELECT state: tracks selected range for subsequent array operations */
 static int g_array_sel_start = 0;
 static int g_array_sel_end = 0;

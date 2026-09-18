@@ -452,7 +452,7 @@ GRAPHIC_SET_WORDWRAP,FUNCTION,codegen builtin,Implemented
 GRAPHIC_SET_WRAP,FUNCTION,codegen builtin,Implemented
 GRAPHIC_STYLE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
-HEADER,STATEMENT,PB/Win only,Established
+HEADER,STATEMENT,PB/Win only,Implemented
 HEADER_CTRL,FUNCTION,codegen builtin,Proposed Improvement
 HEX,FUNCTION,codegen builtin,Implemented
 HEX$,FUNCTION,Win32,Implemented
@@ -612,7 +612,7 @@ PRINTERCOUNT,FUNCTION,codegen builtin,Implemented
 PROCESS GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
 PROCESS SET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
 PROFILE,STATEMENT,PB/Win + PB/CC,Established
-PROGRESSBAR,STATEMENT,PB/Win only,Proposed Improvement
+PROGRESSBAR,STATEMENT,PB/Win only,Implemented
 PUT,STATEMENT,PB/Win + PB/CC,Implemented
 PUT$,STATEMENT,PB/Win + PB/CC,Implemented
 PUT$$,STATEMENT,PB/Win + PB/CC,Implemented
@@ -703,7 +703,7 @@ TCP OPEN,STATEMENT,PB/Win + PB/CC,Established
 TCP PRINT,STATEMENT,PB/Win + PB/CC,Established
 TCP RECV,STATEMENT,PB/Win + PB/CC,Established
 TCP SEND,STATEMENT,PB/Win + PB/CC,Established
-TCP_NOTIFY,FUNCTION,codegen builtin,Proposed Improvement
+TCP_NOTIFY,FUNCTION,codegen builtin,Implemented
 THREAD CLOSE,STATEMENT,PB/Win + PB/CC,Established
 THREAD CREATE,STATEMENT,PB/Win + PB/CC,Established
 THREAD GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
@@ -734,7 +734,7 @@ UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Established
 UDP OPEN,STATEMENT,PB/Win + PB/CC,Established
 UDP RECV,STATEMENT,PB/Win + PB/CC,Established
 UDP SEND,STATEMENT,PB/Win + PB/CC,Established
-UDP_NOTIFY,FUNCTION,codegen builtin,Proposed Improvement
+UDP_NOTIFY,FUNCTION,codegen builtin,Implemented
 UNLOCK,STATEMENT,PB/Win + PB/CC,Established
 UNWRAP,FUNCTION,codegen builtin,Implemented
 UNWRAP$,FUNCTION,Win32,Implemented
