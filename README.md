@@ -438,6 +438,16 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.116 (2026-09-18) — Batch 116: DISPLAY OPENFILE + BROWSE
+
+Replaced 2 more stubs with real Win32 common dialogs:
+
+- **DISPLAY OPENFILE** — real GetOpenFileNameA dialog (was returning empty string)
+- **DISPLAY BROWSE** — real SHBrowseForFolderA folder picker (was returning empty string)
+
+Coverage: 887 implemented / 33 proposed.
+
+
 ### v0.1.115 (2026-09-18) — Batch 113-114: Tier-2 non-GUI completion
 
 Finished all Tier-2 non-GUI items:
