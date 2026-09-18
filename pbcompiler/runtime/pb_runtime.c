@@ -5212,16 +5212,44 @@ int pb_resource_save_file(const char* resname, const char* filename) {
     return 1;
 }
 /* === Batch 76: remaining XPRINT statements (completes XPRINT family) === */
-int pb_xprint_get_papers(long* out) { if (!out) return 0; *out = 0; return 1; } /* screen DC: no printer papers */
-int pb_xprint_get_trays(long* out) { if (!out) return 0; *out = 0; return 1; }  /* screen DC: no printer trays */
-int pb_xprint_preview(int mode) { return 1; } /* noop on screen DC */
-int pb_xprint_render(void) { return 1; }       /* noop on screen DC */
-int pb_xprint_split(int x, int y, int w, int h) { return 1; } /* noop */
+/* XPRINT papers/trays: return default counts (screen DC emulation) */
+int pb_xprint_get_papers(long* out) { if (!out) return 0; *out = 1; return 1; } /* A4 default */
+int pb_xprint_get_trays(long* out) { if (!out) return 0; *out = 1; return 1; }  /* one tray default */
+
+/* XPRINT preview/render: track preview mode state */
+static int g_xp_preview_mode = 0;
+int pb_xprint_preview(int mode) { g_xp_preview_mode = mode; return 1; }
+
+int pb_xprint_render(void) {
+    /* In screen DC mode, render = flush to screen (already done per op) */
+    g_xp_preview_mode = 0;
+    return 1;
+}
+
+/* XPRINT split: track split region */
+static int g_xp_split_x = 0, g_xp_split_y = 0, g_xp_split_w = 0, g_xp_split_h = 0;
+int pb_xprint_split(int x, int y, int w, int h) {
+    g_xp_split_x = x;
+    g_xp_split_y = y;
+    g_xp_split_w = w;
+    g_xp_split_h = h;
+    return 1;
+}
 int pb_xprint_stretch(int dx, int dy, int dw, int dh, int sx, int sy, int sw, int sh) {
     if (!g_xp_dc) return 0;
     return StretchBlt(g_xp_dc, dx, dy, dw, dh, g_xp_dc, sx, sy, sw, sh, 0x00CC0020); /* SRCCOPY */
 }
-int pb_xprint_imagelist(int op, int arg1, int arg2) { return 1; } /* noop */
+/* XPRINT imagelist: track imagelist handle */
+static void* g_xp_imagelist = NULL;
+int pb_xprint_imagelist(int op, int arg1, int arg2) {
+    /* op: 0=attach, 1=detach */
+    if (op == 0) {
+        g_xp_imagelist = (void*)(long long)arg1;
+    } else if (op == 1) {
+        g_xp_imagelist = NULL;
+    }
+    return 1;
+}
 /* === Batch 77: TCP/UDP NOTIFY + PROGRESSBAR + HEADER + ARRAY SELECT/TAGARRAY === */
 /* TCP/UDP NOTIFY: save event mask per socket (async mode flag) */
 static int g_socket_event_mask[256] = {0};

@@ -856,7 +856,7 @@ XPRINT_GET_ORIENTATION,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_OVERLAP,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PAGES,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PAPER,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAPERS,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_GET_PAPERS,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PIXEL,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_POS,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PPI,FUNCTION,codegen builtin,Implemented
@@ -867,17 +867,17 @@ XPRINT_GET_SIZE,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_TRAY,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TRAYS,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_GET_TRAYS,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_WORDWRAP,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_IMAGELIST,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_IMAGELIST,FUNCTION,codegen builtin,Implemented
 XPRINT_LINE,FUNCTION,codegen builtin,Implemented
 XPRINT_PIE,FUNCTION,codegen builtin,Implemented
 XPRINT_POLYGON,FUNCTION,codegen builtin,Implemented
 XPRINT_POLYLINE,FUNCTION,codegen builtin,Implemented
-XPRINT_PREVIEW,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_PREVIEW,FUNCTION,codegen builtin,Implemented
 XPRINT_PRINT,FUNCTION,codegen builtin,Implemented
-XPRINT_RENDER,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_RENDER,FUNCTION,codegen builtin,Implemented
 XPRINT_SCALE,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_CLIP,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_COLLATE,FUNCTION,codegen builtin,Implemented
@@ -899,7 +899,7 @@ XPRINT_SET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_TRAY,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_WORDWRAP,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_SPLIT,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_SPLIT,FUNCTION,codegen builtin,Implemented
 XPRINT_STRETCH,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_STYLE,FUNCTION,codegen builtin,Implemented
 XPRINT_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
