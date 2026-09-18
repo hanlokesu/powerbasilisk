@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 872 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 874 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 33 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 31 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 446 Implemented + 426 Established + 33 Proposed)
+## ✅ All keywords (905, including 448 Implemented + 426 Established + 31 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -249,8 +249,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DIALOG UNITS | STATEMENT | PB/Win only | Established |
 | DIALOG XLAT | STATEMENT | PB/Win only | Proposed New |
 |DIM|STATEMENT|PB/Win + PB/CC| Implemented || DIR | FUNCTION | codegen builtin | Implemented |
-| DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| DIR$ | FUNCTION | Win32 | Implemented |
+|DIR FUNCTION AND|STATEMENT|PB/Win + PB/CC| Implemented || DIR$ | FUNCTION | Win32 | Implemented |
 | DISKFREE | FUNCTION | codegen builtin | Implemented |
 | DISKSIZE | FUNCTION | codegen builtin | Implemented |
 | DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
@@ -637,8 +636,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | REPEAT$ | FUNCTION | Win32 | Implemented |
 | REPLACE | STATEMENT | PB/Win + PB/CC | Established |
 | RESET | STATEMENT | PB/Win + PB/CC | Established |
-| RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| RESOURCE$ | FUNCTION | Win32 | Implemented |
+|RESOURCE SAVE FILE|STATEMENT|PB/Win + PB/CC| Implemented || RESOURCE$ | FUNCTION | Win32 | Implemented |
 | RESOURCE_SAVE_FILE | FUNCTION | codegen builtin | Implemented |
 | RESUME | STATEMENT | PB/Win + PB/CC | Established |
 | RETAIN | FUNCTION | codegen builtin | Implemented |

@@ -241,7 +241,7 @@ DIALOG UNITS,STATEMENT,PB/Win only,Established
 DIALOG XLAT,STATEMENT,PB/Win only,Proposed New
 DIM,STATEMENT,PB/Win + PB/CC,Implemented
 DIR,FUNCTION,codegen builtin,Implemented
-DIR FUNCTION AND,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+DIR FUNCTION AND,STATEMENT,PB/Win + PB/CC,Implemented
 DIR$,FUNCTION,Win32,Implemented
 DISKFREE,FUNCTION,codegen builtin,Implemented
 DISKSIZE,FUNCTION,codegen builtin,Implemented
@@ -636,7 +636,7 @@ REPEAT,FUNCTION,codegen builtin,Implemented
 REPEAT$,FUNCTION,Win32,Implemented
 REPLACE,STATEMENT,PB/Win + PB/CC,Established
 RESET,STATEMENT,PB/Win + PB/CC,Established
-RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Proposed New
+RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Implemented
 RESOURCE$,FUNCTION,Win32,Implemented
 RESOURCE_SAVE_FILE,FUNCTION,codegen builtin,Implemented
 RESUME,STATEMENT,PB/Win + PB/CC,Established
