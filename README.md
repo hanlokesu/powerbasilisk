@@ -438,6 +438,20 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.112 (2026-09-18) — Batch 112: Runtime stub replacement wave (16 stubs)
+
+Replaced 16 runtime noop stubs with real implementations:
+
+- **RESOURCE SAVE FILE** — real Win32 resource extraction (FindResourceA/LoadResource)
+- **ARRAY SELECT / TAGARRAY / ERASE** — selected range + tag array state tracking
+- **DISPLAY SAVEFILE / COLOR / FONT** — real Win32 common dialogs (GetSaveFileName/ChooseColor/ChooseFont)
+- **TCP / UDP NOTIFY** — socket event mask tracking
+- **PROGRESSBAR / HEADER** — real SendMessage Win32 control APIs
+- **XPRINT paper/tray/papers/trays/preview/render/split/imagelist** — real state tracking
+
+Coverage: 882 implemented / 35 proposed.
+
+
 ### v0.1.103 (2026-09-18) — Tier-2 non-GUI complete! Batch 103-108 summary
 
 **All Tier-2 non-GUI statements now verified.** 25 items moved from "Proposed" to "Implemented" across 6 batches:

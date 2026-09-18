@@ -10751,6 +10751,8 @@ impl Compiler {
             "MONTHNAME" => Some(self.builtin_name1(fb, args, "pb_monthname")),
             "DATACOUNT" => Some(self.builtin_count0(fb, "pb_data_count")),
             "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
+            "LBOUND" => Some(Ok(fb.const_i32(1))), /* PB default lower bound = 1 */
+            "UBOUND" => Some(Ok(fb.const_i32(0))), /* TODO: track array dimensions */
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
