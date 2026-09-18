@@ -199,7 +199,7 @@ DAYNAME,FUNCTION,codegen builtin,Implemented
 DAYNAME$,FUNCTION,Win32,Implemented
 DEC,FUNCTION,codegen builtin,Implemented
 DEC$,FUNCTION,Win32,Implemented
-DECLARE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+DECLARE,STATEMENT,PB/Win + PB/CC,Implemented
 DECR,STATEMENT,PB/Win + PB/CC,Established
 DESKTOP GET CLIENT,STATEMENT,PB/Win + PB/CC,Established
 DESKTOP GET LOC,STATEMENT,PB/Win + PB/CC,Established
@@ -239,7 +239,7 @@ DIALOG STABILIZE,STATEMENT,PB/Win only,Established
 DIALOG TRAXOMATIC,STATEMENT,PB/Win only,Proposed New
 DIALOG UNITS,STATEMENT,PB/Win only,Established
 DIALOG XLAT,STATEMENT,PB/Win only,Proposed New
-DIM,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+DIM,STATEMENT,PB/Win + PB/CC,Implemented
 DIR,FUNCTION,codegen builtin,Implemented
 DIR FUNCTION AND,STATEMENT,PB/Win + PB/CC,Proposed Improvement
 DIR$,FUNCTION,Win32,Implemented
@@ -623,7 +623,7 @@ RAISEEVENT,STATEMENT,PB/Win + PB/CC,Established
 RANDOMIZE,STATEMENT,PB/Win + PB/CC,Established
 READ,FUNCTION,codegen builtin,Implemented
 READ$,FUNCTION,Win32,Implemented
-REDIM,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+REDIM,STATEMENT,PB/Win + PB/CC,Implemented
 REGEXPR,STATEMENT,PB/Win + PB/CC,Established
 REGISTER,STATEMENT,PB/Win + PB/CC,Established
 REGREPL,STATEMENT,PB/Win + PB/CC,Established

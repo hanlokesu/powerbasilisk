@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 869 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 872 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 36 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 33 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 443 Implemented + 426 Established + 36 Proposed)
+## ✅ All keywords (905, including 446 Implemented + 426 Established + 33 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -209,8 +209,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DAYNAME$ | FUNCTION | Win32 | Implemented |
 | DEC | FUNCTION | codegen builtin | Implemented |
 | DEC$ | FUNCTION | Win32 | Implemented |
-| DECLARE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| DECR | STATEMENT | PB/Win + PB/CC | Established |
+|DECLARE|STATEMENT|PB/Win + PB/CC| Implemented || DECR | STATEMENT | PB/Win + PB/CC | Established |
 | DESKTOP GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
 | DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | Established |
 |DESKTOP GET PPI|STATEMENT|PB/Win + PB/CC| Implemented |
@@ -249,8 +248,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DIALOG TRAXOMATIC | STATEMENT | PB/Win only | Proposed New |
 | DIALOG UNITS | STATEMENT | PB/Win only | Established |
 | DIALOG XLAT | STATEMENT | PB/Win only | Proposed New |
-| DIM | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| DIR | FUNCTION | codegen builtin | Implemented |
+|DIM|STATEMENT|PB/Win + PB/CC| Implemented || DIR | FUNCTION | codegen builtin | Implemented |
 | DIR FUNCTION AND | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | DIR$ | FUNCTION | Win32 | Implemented |
 | DISKFREE | FUNCTION | codegen builtin | Implemented |
@@ -627,8 +625,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RANDOMIZE | STATEMENT | PB/Win + PB/CC | Established |
 | READ | FUNCTION | codegen builtin | Implemented |
 | READ$ | FUNCTION | Win32 | Implemented |
-| REDIM | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
+|REDIM|STATEMENT|PB/Win + PB/CC| Implemented || REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
 | REGISTER | STATEMENT | PB/Win + PB/CC | Established |
 | REGREPL | STATEMENT | PB/Win + PB/CC | Established |
 | REM | STATEMENT | PB/Win + PB/CC | Established |
