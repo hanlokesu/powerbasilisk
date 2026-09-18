@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 849 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 855 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 56 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 50 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 423 Implemented + 426 Established + 56 Proposed)
+## ✅ All keywords (905, including 429 Implemented + 426 Established + 50 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -29,12 +29,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | #COMPILE METASTATEMENT | STATEMENT | PB/Win only | Established |
 | #COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #CONSOLE METASTATEMENT | STATEMENT | PB/CC only | Established |
-| #DEBUG BOUNDS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| #DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #DEBUG DISPLAY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| #DEBUG ERROR METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| #DEBUG NUMERIC METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| #DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+|#DEBUG BOUNDS METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+|#DEBUG DISPLAY METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented ||#DEBUG ERROR METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented ||#DEBUG NUMERIC METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
@@ -42,12 +38,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | #LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #MESSAGES METASTATEMENT | STATEMENT | PB/Win only | Established |
 | #OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #OPTION METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| #PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+|#OPTION METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #PBFORMS METASTATEMENT | STATEMENT | PB/Win only | Established |
 | #REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #RESOURCE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| #STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
+|#RESOURCE METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
 | #UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |

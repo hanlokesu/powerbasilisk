@@ -239,8 +239,20 @@ impl Preprocessor {
                 continue;
             }
 
-            // #DEBUG — skip
+            // #DEBUG — skip (bounds/display/error/numeric all covered by this)
             if upper_full.starts_with("#DEBUG") {
+                i += 1;
+                continue;
+            }
+
+            // #OPTION — skip (explicit/ansi etc., we don't enforce)
+            if upper_full.starts_with("#OPTION") {
+                i += 1;
+                continue;
+            }
+
+            // #RESOURCE — skip (resource linking, accepted)
+            if upper_full.starts_with("#RESOURCE") {
                 i += 1;
                 continue;
             }
