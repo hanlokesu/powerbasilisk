@@ -224,7 +224,7 @@ exit code 0:
 > Summary:
 > - **481** official PowerBASIC statement/function keywords currently available for use
 >   - **~413** wired up or added by this fork (309 are brand-new; the rest complete statements upstream only half-supported)
->   - Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) itself shipped only **~68** core statements/builtins (control flow + basic math/string functions). Those ~68 are **real** - upstream generated actual machine code for them (its compiler had to run the 180k-line Wall Street Raider). Any statement upstream merely *parsed* but did **not** implement (silently dropped, no codegen) does **not** count as upstream - this fork added the real code for those, and they are the 309 above. The CSV label "Established" means *mature in the official PB docs* - it is **not** a count of what upstream implemented.
+>   - Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) itself shipped only **~68** core statements/builtins (control flow + basic math/string functions). Those ~68 are **real** - upstream generated actual machine code for them. Any statement upstream merely *parsed* but did **not** implement (silently dropped, no codegen) does **not** count as upstream - this fork added the real code for those, and they are the 309 above. The CSV label "Established" means *mature in the official PB docs* - it is **not** a count of what upstream implemented.
 > - **133** DDT/GUI-class keywords deferred (Tier 3)
 > - **9** documented keywords not yet implemented
 >
