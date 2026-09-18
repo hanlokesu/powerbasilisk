@@ -52,8 +52,8 @@ ARRAY TAGARRAY ERASE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY UNIQUE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY_REDIM_DECR,FUNCTION,codegen builtin,Implemented
 ARRAY_REDIM_INCR,FUNCTION,codegen builtin,Implemented
-ARRAY_SELECT,FUNCTION,codegen builtin,Implemented
-ARRAY_TAGARRAY,FUNCTION,codegen builtin,Implemented
+ARRAY_SELECT,FUNCTION,codegen builtin,Proposed Improvement
+ARRAY_TAGARRAY,FUNCTION,codegen builtin,Proposed Improvement
 ARRAY_TAGARRAY_ERASE,FUNCTION,codegen builtin,Implemented
 ASC,STATEMENT,PB/Win + PB/CC,Established
 ASIN,FUNCTION,LLVM intrinsic,Implemented
@@ -251,10 +251,10 @@ DISPLAY FONT,STATEMENT,PB/Win only,Established
 DISPLAY OPENFILE,STATEMENT,PB/Win only,Established
 DISPLAY SAVEFILE,STATEMENT,PB/Win only,Established
 DISPLAY_BROWSE,FUNCTION,codegen builtin,Implemented
-DISPLAY_COLOR,FUNCTION,codegen builtin,Implemented
-DISPLAY_FONT,FUNCTION,codegen builtin,Implemented
+DISPLAY_COLOR,FUNCTION,codegen builtin,Proposed Improvement
+DISPLAY_FONT,FUNCTION,codegen builtin,Proposed Improvement
 DISPLAY_OPENFILE,FUNCTION,codegen builtin,Implemented
-DISPLAY_SAVEFILE,FUNCTION,codegen builtin,Implemented
+DISPLAY_SAVEFILE,FUNCTION,codegen builtin,Proposed Improvement
 DOUBLE,FUNCTION,codegen builtin,Implemented
 END,STATEMENT,PB/Win + PB/CC,Established
 ENVIRON,STATEMENT,PB/Win + PB/CC,Established
@@ -453,7 +453,7 @@ GRAPHIC_SET_WRAP,FUNCTION,codegen builtin,Implemented
 GRAPHIC_STYLE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
 HEADER,STATEMENT,PB/Win only,Established
-HEADER_CTRL,FUNCTION,codegen builtin,Implemented
+HEADER_CTRL,FUNCTION,codegen builtin,Proposed Improvement
 HEX,FUNCTION,codegen builtin,Implemented
 HEX$,FUNCTION,Win32,Implemented
 HI,FUNCTION,Win32,Implemented
@@ -612,7 +612,7 @@ PRINTERCOUNT,FUNCTION,codegen builtin,Implemented
 PROCESS GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
 PROCESS SET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
 PROFILE,STATEMENT,PB/Win + PB/CC,Established
-PROGRESSBAR,STATEMENT,PB/Win only,Established
+PROGRESSBAR,STATEMENT,PB/Win only,Proposed Improvement
 PUT,STATEMENT,PB/Win + PB/CC,Implemented
 PUT$,STATEMENT,PB/Win + PB/CC,Implemented
 PUT$$,STATEMENT,PB/Win + PB/CC,Implemented
@@ -636,9 +636,9 @@ REPEAT,FUNCTION,codegen builtin,Implemented
 REPEAT$,FUNCTION,Win32,Implemented
 REPLACE,STATEMENT,PB/Win + PB/CC,Established
 RESET,STATEMENT,PB/Win + PB/CC,Established
-RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Implemented
+RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
 RESOURCE$,FUNCTION,Win32,Implemented
-RESOURCE_SAVE_FILE,FUNCTION,codegen builtin,Implemented
+RESOURCE_SAVE_FILE,FUNCTION,codegen builtin,Proposed Improvement
 RESUME,STATEMENT,PB/Win + PB/CC,Established
 RETAIN,FUNCTION,codegen builtin,Implemented
 RETAIN$,FUNCTION,Win32,Implemented
@@ -703,7 +703,7 @@ TCP OPEN,STATEMENT,PB/Win + PB/CC,Established
 TCP PRINT,STATEMENT,PB/Win + PB/CC,Established
 TCP RECV,STATEMENT,PB/Win + PB/CC,Established
 TCP SEND,STATEMENT,PB/Win + PB/CC,Established
-TCP_NOTIFY,FUNCTION,codegen builtin,Implemented
+TCP_NOTIFY,FUNCTION,codegen builtin,Proposed Improvement
 THREAD CLOSE,STATEMENT,PB/Win + PB/CC,Established
 THREAD CREATE,STATEMENT,PB/Win + PB/CC,Established
 THREAD GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
@@ -734,7 +734,7 @@ UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Established
 UDP OPEN,STATEMENT,PB/Win + PB/CC,Established
 UDP RECV,STATEMENT,PB/Win + PB/CC,Established
 UDP SEND,STATEMENT,PB/Win + PB/CC,Established
-UDP_NOTIFY,FUNCTION,codegen builtin,Implemented
+UDP_NOTIFY,FUNCTION,codegen builtin,Proposed Improvement
 UNLOCK,STATEMENT,PB/Win + PB/CC,Established
 UNWRAP,FUNCTION,codegen builtin,Implemented
 UNWRAP$,FUNCTION,Win32,Implemented
@@ -855,8 +855,8 @@ XPRINT_GET_MIX,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_ORIENTATION,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_OVERLAP,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PAGES,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAPER,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAPERS,FUNCTION,codegen builtin,Implemented
+XPRINT_GET_PAPER,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_GET_PAPERS,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_GET_PIXEL,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_POS,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_PPI,FUNCTION,codegen builtin,Implemented
@@ -866,18 +866,18 @@ XPRINT_GET_SELECTION,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_SIZE,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TRAY,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TRAYS,FUNCTION,codegen builtin,Implemented
+XPRINT_GET_TRAY,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_GET_TRAYS,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_GET_WORDWRAP,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_IMAGELIST,FUNCTION,codegen builtin,Implemented
+XPRINT_IMAGELIST,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_LINE,FUNCTION,codegen builtin,Implemented
 XPRINT_PIE,FUNCTION,codegen builtin,Implemented
 XPRINT_POLYGON,FUNCTION,codegen builtin,Implemented
 XPRINT_POLYLINE,FUNCTION,codegen builtin,Implemented
-XPRINT_PREVIEW,FUNCTION,codegen builtin,Implemented
+XPRINT_PREVIEW,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_PRINT,FUNCTION,codegen builtin,Implemented
-XPRINT_RENDER,FUNCTION,codegen builtin,Implemented
+XPRINT_RENDER,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_SCALE,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_CLIP,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_COLLATE,FUNCTION,codegen builtin,Implemented
@@ -896,11 +896,11 @@ XPRINT_SET_POS,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_QUALITY,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_TRAY,FUNCTION,codegen builtin,Implemented
+XPRINT_SET_TRAY,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_SET_WORDWRAP,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_SPLIT,FUNCTION,codegen builtin,Implemented
-XPRINT_STRETCH,FUNCTION,codegen builtin,Implemented
+XPRINT_SPLIT,FUNCTION,codegen builtin,Proposed Improvement
+XPRINT_STRETCH,FUNCTION,codegen builtin,Proposed Improvement
 XPRINT_STYLE,FUNCTION,codegen builtin,Implemented
 XPRINT_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
 XPRINT_WIDTH,FUNCTION,codegen builtin,Implemented
