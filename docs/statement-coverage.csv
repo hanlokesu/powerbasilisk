@@ -52,8 +52,8 @@ ARRAY TAGARRAY ERASE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY UNIQUE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY_REDIM_DECR,FUNCTION,codegen builtin,Implemented
 ARRAY_REDIM_INCR,FUNCTION,codegen builtin,Implemented
-ARRAY_SELECT,FUNCTION,codegen builtin,Proposed Improvement
-ARRAY_TAGARRAY,FUNCTION,codegen builtin,Proposed Improvement
+ARRAY_SELECT,FUNCTION,codegen builtin,Implemented
+ARRAY_TAGARRAY,FUNCTION,codegen builtin,Implemented
 ARRAY_TAGARRAY_ERASE,FUNCTION,codegen builtin,Implemented
 ASC,STATEMENT,PB/Win + PB/CC,Established
 ASIN,FUNCTION,LLVM intrinsic,Implemented

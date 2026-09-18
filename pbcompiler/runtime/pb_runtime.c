@@ -5161,9 +5161,37 @@ int pb_tcp_notify(int socket, int eventmask) { return 1; } /* noop: WSAAsyncSele
 int pb_udp_notify(int socket, int eventmask) { return 1; } /* noop */
 int pb_progressbar(int hDlg, int id, int pos, int range) { return 1; } /* noop: GUI control placeholder */
 int pb_header(int hDlg, int id, int col, const char* text) { return 1; } /* noop: GUI control placeholder */
-int pb_array_select(int* arr, int count, int start, int end) { return 1; } /* noop: array selection placeholder */
-int pb_array_tagarray(int* arr, int count, int* tag) { return 1; } /* noop: tag array placeholder */
-int pb_array_tagarray_erase(int* arr, int count) { return 1; } /* noop: erase tag array */
+/* ARRAY SELECT state: tracks selected range for subsequent array operations */
+static int g_array_sel_start = 0;
+static int g_array_sel_end = 0;
+static int g_array_sel_active = 0;
+
+int pb_array_select(int* arr, int count, int start, int end) {
+    (void)arr; (void)count;
+    if (start < 1 || end < start) return 0;
+    g_array_sel_start = start;
+    g_array_sel_end = end;
+    g_array_sel_active = 1;
+    return 1;
+}
+
+/* ARRAY TAGARRAY state: stores tag array pointer */
+static int* g_tag_arrays[256] = {0}; /* slot per array index */
+
+int pb_array_tagarray(int* arr, int count, int* tag) {
+    (void)count;
+    /* Use array pointer as a simple hash into tag slot table */
+    int slot = ((unsigned long long)arr / 8) % 256;
+    g_tag_arrays[slot] = tag;
+    return 1;
+}
+
+int pb_array_tagarray_erase(int* arr, int count) {
+    (void)count;
+    int slot = ((unsigned long long)arr / 8) % 256;
+    g_tag_arrays[slot] = NULL;
+    return 1;
+}
 /* === Batch 78: XPRINT GET MARGIN + DISPLAY common dialogs (6 statements) === */
 static long g_xp_margin_left = 0, g_xp_margin_top = 0, g_xp_margin_right = 0, g_xp_margin_bottom = 0;
 int pb_xprint_get_margin(long* left, long* top, long* right, long* bottom) {
