@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 855 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 860 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 50 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 45 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 429 Implemented + 426 Established + 50 Proposed)
+## ✅ All keywords (905, including 434 Implemented + 426 Established + 45 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -118,8 +118,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CLIP | FUNCTION | codegen builtin | Implemented |
 | CLIP$ | FUNCTION | Win32 | Implemented |
 | CLIPBOARD | STATEMENT | PB/Win + PB/CC | Established |
-| CLOSE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| CLS | STATEMENT | PB/CC only | Established |
+|CLOSE|STATEMENT|PB/Win + PB/CC| Implemented || CLS | STATEMENT | PB/CC only | Established |
 | CODEPTR | FUNCTION | codegen builtin | Implemented |
 | COLOR | STATEMENT | PB/CC only | Established |
 | COMBOBOX | STATEMENT | PB/Win only | Established |
@@ -489,8 +488,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
 | INCR | STATEMENT | PB/Win + PB/CC | Established |
 | INPUT FLUSH | STATEMENT | PB/CC only | Established |
-| INPUT# | STATEMENT | PB/CC only | Proposed Improvement |
-| INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
+|INPUT#|STATEMENT|PB/CC only| Implemented || INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
 | INSTR | FUNCTION | codegen builtin | Implemented |
 | INT | FUNCTION | codegen builtin | Implemented |
 | INTEGER | FUNCTION | codegen builtin | Implemented |
@@ -517,8 +515,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LINE INPUT# | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| LISTBOX | STATEMENT | PB/Win only | Established |
+|LINE INPUT#|STATEMENT|PB/Win + PB/CC| Implemented || LISTBOX | STATEMENT | PB/Win only | Established |
 | LISTVIEW | STATEMENT | PB/Win only | Established |
 | LO | FUNCTION | codegen builtin | Implemented |
 | LOC | FUNCTION | Win32 | Implemented |
@@ -608,8 +605,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
 | ON GOSUB | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ON GOTO | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| OPEN | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
+|OPEN|STATEMENT|PB/Win + PB/CC| Implemented || OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
 | PARSE | STATEMENT | PB/Win + PB/CC | Established |
 | PARSE$ | FUNCTION | Win32 | Implemented |
 | PARSECOUNT | FUNCTION | codegen builtin | Implemented |
@@ -769,8 +765,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | WRAP | FUNCTION | codegen builtin | Implemented |
 | WRAP$ | FUNCTION | Win32 | Implemented |
 | WRITE | FUNCTION | codegen builtin | Implemented |
-| WRITE# | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
+|WRITE#|STATEMENT|PB/Win + PB/CC| Implemented || XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT BOX | STATEMENT | PB/Win + PB/CC | Established |
 | XPRINT CANCEL | STATEMENT | PB/Win + PB/CC | Established |

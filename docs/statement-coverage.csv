@@ -101,7 +101,7 @@ CLASS/END CLASS,BLOCK,PB/Win + PB/CC,Established
 CLIP,FUNCTION,codegen builtin,Implemented
 CLIP$,FUNCTION,Win32,Implemented
 CLIPBOARD,STATEMENT,PB/Win + PB/CC,Established
-CLOSE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+CLOSE,STATEMENT,PB/Win + PB/CC,Implemented
 CLS,STATEMENT,PB/CC only,Established
 CODEPTR,FUNCTION,codegen builtin,Implemented
 COLOR,STATEMENT,PB/CC only,Established
@@ -472,7 +472,7 @@ IMP,FUNCTION,PB/Win + PB/CC,Implemented
 IMPORT,STATEMENT,PB/Win + PB/CC,Established
 INCR,STATEMENT,PB/Win + PB/CC,Established
 INPUT FLUSH,STATEMENT,PB/CC only,Established
-INPUT#,STATEMENT,PB/CC only,Proposed Improvement
+INPUT#,STATEMENT,PB/CC only,Implemented
 INSTANCE,STATEMENT,PB/Win + PB/CC,Established
 INSTR,FUNCTION,codegen builtin,Implemented
 INT,FUNCTION,codegen builtin,Implemented
@@ -500,7 +500,7 @@ LET,STATEMENT,PB/Win + PB/CC,Established
 LET *(WITH OBJECTS)*,STATEMENT,PB/Win + PB/CC,Established
 LET *(WITH TYPES)*,STATEMENT,PB/Win + PB/CC,Established
 LET *(WITH VARIANTS)*,STATEMENT,PB/Win + PB/CC,Established
-LINE INPUT#,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+LINE INPUT#,STATEMENT,PB/Win + PB/CC,Implemented
 LISTBOX,STATEMENT,PB/Win only,Established
 LISTVIEW,STATEMENT,PB/Win only,Established
 LO,FUNCTION,codegen builtin,Implemented
@@ -591,7 +591,7 @@ ON CALL,STATEMENT,PB/Win + PB/CC,Proposed New
 ON ERROR,STATEMENT,PB/Win + PB/CC,Established
 ON GOSUB,STATEMENT,PB/Win + PB/CC,Proposed Improvement
 ON GOTO,STATEMENT,PB/Win + PB/CC,Proposed Improvement
-OPEN,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+OPEN,STATEMENT,PB/Win + PB/CC,Implemented
 OPTION EXPLICIT,STATEMENT,PB/Win + PB/CC,Established
 PARSE,STATEMENT,PB/Win + PB/CC,Established
 PARSE$,FUNCTION,Win32,Implemented
@@ -752,7 +752,7 @@ WORD,FUNCTION,codegen builtin,Implemented
 WRAP,FUNCTION,codegen builtin,Implemented
 WRAP$,FUNCTION,Win32,Implemented
 WRITE,FUNCTION,codegen builtin,Implemented
-WRITE#,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+WRITE#,STATEMENT,PB/Win + PB/CC,Implemented
 XPRINT ARC,STATEMENT,PB/Win + PB/CC,Established
 XPRINT ATTACH,STATEMENT,PB/Win + PB/CC,Established
 XPRINT BOX,STATEMENT,PB/Win + PB/CC,Established
