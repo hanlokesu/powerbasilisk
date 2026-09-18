@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 863 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 869 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 42 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 36 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 437 Implemented + 426 Established + 42 Proposed)
+## ✅ All keywords (905, including 443 Implemented + 426 Established + 36 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -56,17 +56,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 |ARRAY COPY|STATEMENT|PB/Win + PB/CC| Implemented |
 |ARRAY DELETE|STATEMENT|PB/Win + PB/CC| Implemented |
 |ARRAY INSERT|STATEMENT|PB/Win + PB/CC| Implemented |
-| ARRAY REDIM DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY REDIM INCR | STATEMENT | PB/Win + PB/CC | Proposed New |
-|ARRAY REVERSE|STATEMENT|PB/Win + PB/CC| Implemented |
-| ARRAY SCAN | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
-|ARRAY SHUFFLE|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY REDIM DECR|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY REDIM INCR|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY REVERSE|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY SCAN|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY SELECT|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY SHUFFLE|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY SORT | STATEMENT | PB/Win + PB/CC | Established |
 |ARRAY SWAP|STATEMENT|PB/Win + PB/CC| Implemented |
-| ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
-|ARRAY UNIQUE|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY TAGARRAY|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY TAGARRAY ERASE|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY UNIQUE|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY_REDIM_DECR | FUNCTION | codegen builtin | Implemented |
 | ARRAY_REDIM_INCR | FUNCTION | codegen builtin | Implemented |
 | ARRAY_SELECT | FUNCTION | codegen builtin | Implemented |
