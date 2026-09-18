@@ -224,7 +224,7 @@ exit code 0:
 > Summary:
 > - **481** official PowerBASIC statement/function keywords currently available for use
 >   - **432** implemented or completed by this fork
->   - **27** core control-flow structures, operators and basic builtins originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - see the upstream table below. The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
+>   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
 > - **133** DDT/GUI-class keywords deferred (Tier 3)
 > - **9** documented keywords not yet implemented
 >
@@ -334,7 +334,7 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **454 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **432 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 | Keyword | Keyword | Keyword | Keyword | Keyword |
@@ -431,24 +431,24 @@ exit code 0:
 
 ## Core statements originally from upstream benstopics
 
-> Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) shipped **75** statement/function keywords that run - verified by its 14 official l*.bas tests + interpreter fixtures (all pass). These are its proven core: control flow, operators, file I/O, and basic math/string builtins. **8 of these were further completed/improved by this fork** (marked below). Everything else in the matrix was newly added by this fork.
+> Upstream `benstopics/powerbasilisk` (last commit 2026-02-18) shipped **66** statement/function keywords that actually run - verified by its 14 official l*.bas tests + interpreter fixtures, all passing. These are its proven core: control flow, operators, file I/O, and basic math/string builtins. **8 of them were further completed/improved by this fork** (bug fixes and PB-compatible behavior). Everything else in the matrix above was newly added by this fork.
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
-| / | ABS | AND | ASC | CALL |
-| CASE/END | CEIL | CHR$ | CINT | CLNG |
-| CLOSE | COS | DATA | DECLARE | DIM |
-| DO/LOOP | END | EOF | EXIT | EXP |
-| FIX | FOR | FORMAT$ | FREEFILE | FUNCTION |
-| GLOBAL | GOSUB | GOTO | IF | INPUT |
-| INSTR | INT | LCASE$ | LEFT$ | LEN |
-| LET | LINE | LOC | LOCAL | LOF |
-| LOG | LTRIM$ | MID$ | NEXT | NOT |
-| ON | OPEN | PARSE | PRINT# | RANDOMIZE |
-| REMOVE$ | RETURN | RIGHT$ | RND | ROUND |
-| RTRIM$ | SELECT | SGN | SIN | SPACE$ |
-| SQR | STR$ | STRING$ | TRIM$ | TYPE |
-| TYPE/END | UCASE$ | VAL | VARPTR | WHILE/WEND |
+| ABS | AND | ASC | CALL | CEIL |
+| CHR$ | CINT | CLNG | CLOSE | COS |
+| DATA | DECLARE | DIM | DO/LOOP | END |
+| EOF | EXIT | EXP | FIX | FOR / NEXT |
+| FORMAT$ | FREEFILE | FUNCTION / END FUNCTION | GLOBAL | GOSUB |
+| GOTO | IF | INPUT | INSTR | INT |
+| LCASE$ | LEFT$ | LEN | LET | LINE INPUT |
+| LOC | LOCAL | LOF | LOG | LTRIM$ |
+| MID$ | NOT | ON | OPEN | PARSE |
+| PRINT# | RANDOMIZE | REMOVE$ | RETURN | RIGHT$ |
+| RND | ROUND | RTRIM$ | SELECT CASE/END SELECT | SGN |
+| SIN | SPACE$ | SQR | STR$ | STRING$ |
+| TRIM$ | TYPE/END TYPE | UCASE$ | VAL | VARPTR |
+| WHILE/WEND |  |  |  |  |
 
 ## Changelog
 ### v0.1.119 (2026-09-18) - Batch 119: fix parser silently dropping ARRAY SCAN / SELECT / REDIM INCR/DECR
