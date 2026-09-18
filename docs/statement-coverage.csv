@@ -587,10 +587,10 @@ OCT,FUNCTION,codegen builtin,Implemented
 OCT$,FUNCTION,Win32,Implemented
 OEMTOCHR,FUNCTION,codegen builtin,Implemented
 OEMTOCHR$,FUNCTION,Win32,Implemented
-ON CALL,STATEMENT,PB/Win + PB/CC,Proposed New
+ON CALL,STATEMENT,PB/Win + PB/CC,Implemented
 ON ERROR,STATEMENT,PB/Win + PB/CC,Established
-ON GOSUB,STATEMENT,PB/Win + PB/CC,Proposed Improvement
-ON GOTO,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+ON GOSUB,STATEMENT,PB/Win + PB/CC,Implemented
+ON GOTO,STATEMENT,PB/Win + PB/CC,Implemented
 OPEN,STATEMENT,PB/Win + PB/CC,Implemented
 OPTION EXPLICIT,STATEMENT,PB/Win + PB/CC,Established
 PARSE,STATEMENT,PB/Win + PB/CC,Established

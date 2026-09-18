@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 860 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 863 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 45 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 42 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 434 Implemented + 426 Established + 45 Proposed)
+## ✅ All keywords (905, including 437 Implemented + 426 Established + 42 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -601,11 +601,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | OCT$ | FUNCTION | Win32 | Implemented |
 | OEMTOCHR | FUNCTION | codegen builtin | Implemented |
 | OEMTOCHR$ | FUNCTION | Win32 | Implemented |
-| ON CALL | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
-| ON GOSUB | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| ON GOTO | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-|OPEN|STATEMENT|PB/Win + PB/CC| Implemented || OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
+|ON CALL|STATEMENT|PB/Win + PB/CC| Implemented || ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
+|ON GOSUB|STATEMENT|PB/Win + PB/CC| Implemented ||ON GOTO|STATEMENT|PB/Win + PB/CC| Implemented ||OPEN|STATEMENT|PB/Win + PB/CC| Implemented || OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
 | PARSE | STATEMENT | PB/Win + PB/CC | Established |
 | PARSE$ | FUNCTION | Win32 | Implemented |
 | PARSECOUNT | FUNCTION | codegen builtin | Implemented |
