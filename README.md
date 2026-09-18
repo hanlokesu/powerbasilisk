@@ -450,6 +450,22 @@ exit code 0:
 | TRIM$ | TYPE/END TYPE | UCASE$ | VAL | VARPTR |
 | WHILE/WEND |  |  |  |  |
 
+
+## Upstream keywords improved by this fork (8)
+
+> These 8 keywords came from upstream, but this fork fixed or completed their implementation to match real PowerBASIC behavior. They are counted in the upstream table above; the fix itself is this fork's contribution.
+
+| Keyword | What this fork improved |
+| --- | --- |
+| `CINT / CLNG` | Banker's rounding (ties-to-even) via llvm.nearbyint.f64, matching PB semantics; fixed l5 test expectation. |
+| `CVD / CVS` | Read bytes as binary doubles/singles instead of VAL() text semantics (was wrong for packed strings). |
+| `LEN` | Honor the 4-byte BSTR length prefix so binary strings (e.g. MKD$) report correct byte length. |
+| `OPEN` | OPEN FOR BINARY no longer truncates an existing file (open r+b first, fall back to w+b). |
+| `INPUT#` | Strip CSV double-quotes per PB semantics when reading files written by WRITE#. |
+| `CHR$` | Multi-argument form CHR$(a,b,c) concatenates one byte per argument (CHR$(13,10)=CR+LF). |
+| `RND` | Bare form RND (no parentheses) works like RND(); seeded random double in [0,1). |
+| `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
+
 ## Changelog
 ### v0.1.119 (2026-09-18) - Batch 119: fix parser silently dropping ARRAY SCAN / SELECT / REDIM INCR/DECR
 
