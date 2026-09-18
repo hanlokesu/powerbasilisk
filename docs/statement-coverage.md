@@ -14,11 +14,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 827 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented + Established | 849 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
 | 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 78 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ⬜ Proposed (not yet implemented) | 56 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
 
-## ✅ All keywords (905, including 401 Implemented + 426 Established + 78 Proposed)
+## ✅ All keywords (905, including 423 Implemented + 426 Established + 56 Proposed)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
@@ -56,23 +56,23 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | Implemented |
 | ACOS | FUNCTION | LLVM intrinsic | Implemented |
 | ACOSH | FUNCTION | LLVM intrinsic | Implemented |
-| ARRAY ADD | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY COPY | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY DELETE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY INSERT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+|ARRAY ADD|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY ARRAYIX|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY ASSIGN|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY COPY|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY DELETE|STATEMENT|PB/Win + PB/CC| Implemented |
+|ARRAY INSERT|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY REDIM DECR | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY REDIM INCR | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY REVERSE | STATEMENT | PB/Win + PB/CC | Proposed New |
+|ARRAY REVERSE|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY SCAN | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
 | ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | Proposed New |
+|ARRAY SHUFFLE|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY SORT | STATEMENT | PB/Win + PB/CC | Established |
-| ARRAY SWAP | STATEMENT | PB/Win + PB/CC | Proposed New |
+|ARRAY SWAP|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Proposed New |
 | ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ARRAY UNIQUE | STATEMENT | PB/Win + PB/CC | Proposed New |
+|ARRAY UNIQUE|STATEMENT|PB/Win + PB/CC| Implemented |
 | ARRAY_REDIM_DECR | FUNCTION | codegen builtin | Implemented |
 | ARRAY_REDIM_INCR | FUNCTION | codegen builtin | Implemented |
 | ARRAY_SELECT | FUNCTION | codegen builtin | Implemented |
@@ -226,7 +226,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DECR | STATEMENT | PB/Win + PB/CC | Established |
 | DESKTOP GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
 | DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | Established |
-| DESKTOP GET PPI | STATEMENT | PB/Win + PB/CC | Proposed New |
+|DESKTOP GET PPI|STATEMENT|PB/Win + PB/CC| Implemented |
 | DESKTOP GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
 | DIALOG DEFAULT FONT | STATEMENT | PB/Win only | Established |
 | DIALOG DISABLE | STATEMENT | PB/Win only | Established |
@@ -324,9 +324,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | FREEFILE | FUNCTION | codegen builtin | Implemented |
 | FUNCNAME$ | FUNCTION | codegen builtin (current_fn_name) | Implemented |
 | FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | Established |
-| GET | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GET$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GET$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+|GET|STATEMENT|PB/Win + PB/CC| Implemented |
+|GET$|STATEMENT|PB/Win + PB/CC| Implemented |
+|GET$$|STATEMENT|PB/Win + PB/CC| Implemented |
 | GETATTR | FUNCTION | codegen builtin | Implemented |
 | GET_STR | FUNCTION | codegen builtin | Implemented |
 | GET_WSTR | FUNCTION | codegen builtin | Implemented |
@@ -506,8 +506,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ISFALSE | FUNCTION | codegen builtin | Implemented |
 | ISFILE | FUNCTION | codegen builtin | Implemented |
 | ISFOLDER | FUNCTION | codegen builtin | Implemented |
-| ISINFINITE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| ISNORMAL | STATEMENT | PB/Win + PB/CC | Proposed New |
+|ISINFINITE|STATEMENT|PB/Win + PB/CC| Implemented |
+|ISNORMAL|STATEMENT|PB/Win + PB/CC| Implemented |
 | ISODD | FUNCTION | codegen builtin | Implemented |
 | ISTRUE | FUNCTION | codegen builtin | Implemented |
 | ISWIN | FUNCTION | Win32 (IsWindow/GetDlgItem) | Implemented |
@@ -625,7 +625,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | PATHSCAN$ | FUNCTION | Win32 | Implemented |
 | PEEK | FUNCTION | codegen builtin | Implemented |
 | PLAY | FUNCTION | Win32 | Implemented |
-| PLAY SOUND | STATEMENT | PB/Win + PB/CC | Proposed New |
+|PLAY SOUND|STATEMENT|PB/Win + PB/CC| Implemented |
 | PLAY WAVE | STATEMENT | PB/Win + PB/CC | Established |
 | POKE | FUNCTION | codegen builtin | Implemented |
 | PREFIX | BLOCK | PB/Win + PB/CC | Established |
@@ -636,9 +636,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
 | PROGRESSBAR | STATEMENT | PB/Win only | Established |
-| PUT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| PUT$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| PUT$$ | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+|PUT|STATEMENT|PB/Win + PB/CC| Implemented |
+|PUT$|STATEMENT|PB/Win + PB/CC| Implemented |
+|PUT$$|STATEMENT|PB/Win + PB/CC| Implemented |
 | PUT_STR | FUNCTION | codegen builtin | Implemented |
 | PUT_WSTR | FUNCTION | codegen builtin | Implemented |
 | QUAD | FUNCTION | codegen builtin | Implemented |
@@ -680,10 +680,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SCROLLBAR | STATEMENT | PB/Win only | Established |
 | SEC | FUNCTION | C runtime (MSVCRT) | Implemented |
 | SECH | FUNCTION | C runtime (MSVCRT) | Implemented |
-| SEEK | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+|SEEK|STATEMENT|PB/Win + PB/CC| Implemented |
 | SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | Established |
 | SETATTR | STATEMENT | PB/Win + PB/CC | Established |
-| SETEOF | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
+|SETEOF|STATEMENT|PB/Win + PB/CC| Implemented |
 | SGN | FUNCTION | codegen builtin | Implemented |
 | SHELL | STATEMENT | PB/Win + PB/CC | Established |
 | SHIFT | STATEMENT | PB/Win + PB/CC | Established |
