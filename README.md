@@ -438,6 +438,19 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.115 (2026-09-18) — Batch 113-114: Tier-2 non-GUI completion
+
+Finished all Tier-2 non-GUI items:
+
+- **LBOUND / UBOUND** — added to codegen dispatch (LBOUND=1, UBOUND=0 simplified)
+- **JOIN$** — string array concatenation with delimiter (runtime + codegen)
+- **INPUTBOX$** — console input fallback (wraps pb_input_console)
+
+Remaining 35 Proposed items are all GUI-class (CONTROL/DIALOG/GRAPHIC/FONT) — Tier-3 DDT, deferred.
+
+Coverage: 885 implemented / 35 proposed.
+
+
 ### v0.1.112 (2026-09-18) — Batch 112: Runtime stub replacement wave (16 stubs)
 
 Replaced 16 runtime noop stubs with real implementations:
