@@ -904,3 +904,14 @@ XPRINT_STRETCH,FUNCTION,codegen builtin,Implemented
 XPRINT_STYLE,FUNCTION,codegen builtin,Implemented
 XPRINT_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
 XPRINT_WIDTH,FUNCTION,codegen builtin,Implemented
+AND,OPERATOR,PB/Win + PB/CC,Established
+NOT,OPERATOR,PB/Win + PB/CC,Established
+OR,OPERATOR,PB/Win + PB/CC,Established
+XOR,OPERATOR,PB/Win + PB/CC,Established
+DEF,OPERATOR,PB/Win + PB/CC,Proposed New
+DIR CLOSE,STATEMENT,PB/Win + PB/CC,Implemented
+NUL,FUNCTION,PB/Win + PB/CC,Established
+ACODE,FUNCTION,PB/Win + PB/CC,Implemented
+FUNCNAME,FUNCTION,PB/Win + PB/CC,Implemented
+MCASE,FUNCTION,PB/Win + PB/CC,Implemented
+COMM LINE INPUT,STATEMENT,PB/Win,Implemented

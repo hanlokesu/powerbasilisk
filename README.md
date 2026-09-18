@@ -344,9 +344,9 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **432 newly implemented keywords by this fork** (424 brand new + 8 improved from upstream, functions + statements) (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing. The 336 functions are listed below; the 395 statement-class implementations are handled in codegen.rs compile_statement.
+> **453 keywords implemented by this fork** (functions + statements, all verified via live compilation and testing) (not present in upstream benstopics/powerbasilisk). All verified via live compilation and testing. The 336 functions are listed below; the 395 statement-class implementations are handled in codegen.rs compile_statement.
 
-**All 432 newly implemented keywords (424 new + 8 improved, functions + statements, alphabetical):**
+**All 453 keywords implemented by this fork (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
