@@ -467,6 +467,16 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.1.120 (2026-09-18) - Docs: reconcile upstream/fork contribution tables
+
+Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
+
+- **Table 1** - 481 official keywords available to users.
+- **Table 2** - 432 keywords implemented or completed by this fork.
+- **Table 3** - 66 core statement/function keywords originally from upstream `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
+- **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
+- Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
+
 ### v0.1.119 (2026-09-18) - Batch 119: fix parser silently dropping ARRAY SCAN / SELECT / REDIM INCR/DECR
 
 - **Root cause**: `SELECT`, `REDIM`, `INCR`, `DECR` are reserved keyword tokens in the lexer, but the parser guards for `ARRAY SELECT` / `ARRAY REDIM INCR/DECR` only accepted `Token::Identifier(...)`. The guards were always false, so the whole statement was silently dropped - zero LLVM IR, not even reported in `*.unimplemented.log`.
