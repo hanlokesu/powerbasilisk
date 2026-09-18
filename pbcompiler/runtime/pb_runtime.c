@@ -94,10 +94,28 @@ typedef struct {
 } CHOOSEFONTA;
 
 __declspec(dllimport) int __stdcall GetSaveFileNameA(OPENFILENAMEA* lpofn);
+__declspec(dllimport) int __stdcall GetOpenFileNameA(OPENFILENAMEA* lpofn);
+
+/* SHBrowseForFolder (shell32) */
+typedef struct {
+    void* hwndOwner;
+    void* pidlRoot;
+    char* pszDisplayName;
+    const char* lpszTitle;
+    unsigned long ulFlags;
+    void* lpfn;
+    long long lParam;
+    int iImage;
+} BROWSEINFOA;
+
+__declspec(dllimport) void* __stdcall SHBrowseForFolderA(BROWSEINFOA* lpbi);
+__declspec(dllimport) int __stdcall SHGetPathFromIDListA(void* pidl, char* pszPath);
 __declspec(dllimport) int __stdcall ChooseColorA(CHOOSECOLORA* lpcc);
 __declspec(dllimport) int __stdcall ChooseFontA(CHOOSEFONTA* lpcf);
 
 #define OFN_OVERWRITEPROMPT 0x00000002
+#define OFN_FILEMUSTEXIST 0x00001000
+#define OFN_PATHMUSTEXIST 0x00000800
 #define CC_RGBINIT 0x00000001
 #define CF_SCREENFONTS 0x00000001
 #define CF_INITTOLOGFONTSTRUCT 0x00000040
@@ -5346,7 +5364,21 @@ int pb_xprint_get_margin(long* left, long* top, long* right, long* bottom) {
     return 1;
 }
 int pb_display_openfile(const char* title, const char* filter, const char* initialdir, char** out) {
-    if (out) *out = SysAllocStringByteLen("", 0); /* noop: return empty string (dialog would block) */
+    if (!out) return 0;
+    char file_buf[MAX_PATH] = {0};
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.lpstrFilter = filter ? filter : "All Files\0*.*\0";
+    ofn.lpstrFile = file_buf;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrInitialDir = initialdir;
+    ofn.lpstrTitle = title;
+    ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+    if (GetOpenFileNameA(&ofn)) {
+        *out = SysAllocStringByteLen(file_buf, (unsigned int)strlen(file_buf));
+        return 1;
+    }
+    *out = SysAllocStringByteLen("", 0); /* user cancelled */
     return 0;
 }
 int pb_display_savefile(const char* title, const char* filter, const char* initialdir, char** out) {
@@ -5401,7 +5433,23 @@ int pb_display_font(char** out_font) {
     return 0;
 }
 int pb_display_browse(const char* title, const char* initialdir, char** out) {
-    if (out) *out = SysAllocStringByteLen("", 0);
+    if (!out) return 0;
+    char display_name[MAX_PATH] = {0};
+    char path[MAX_PATH] = {0};
+    BROWSEINFOA bi = {0};
+    bi.hwndOwner = 0;
+    bi.pidlRoot = 0;
+    bi.pszDisplayName = display_name;
+    bi.lpszTitle = title ? title : "Select Folder";
+    bi.ulFlags = 0x00000001; /* BIF_RETURNONLYFSDIRS */
+    void* pidl = SHBrowseForFolderA(&bi);
+    if (pidl) {
+        if (SHGetPathFromIDListA(pidl, path)) {
+            *out = SysAllocStringByteLen(path, (unsigned int)strlen(path));
+            return 1;
+        }
+    }
+    *out = SysAllocStringByteLen("", 0); /* user cancelled */
     return 0;
 }
 /* === Batch 79: OOP foundation (CLASS/METHOD/OBJECT/INSTANCE) + ARRAY REDIM === */
