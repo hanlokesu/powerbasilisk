@@ -2665,6 +2665,27 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "PRINT" {
+                        // GRAPHIC PRINT [expr][;|, expr]... (batch 118)
+                        self.advance(); // consume PRINT
+                        let mut pargs = Vec::new();
+                        while self.peek() != &Token::Eol
+                            && self.peek() != &Token::Eof
+                            && self.peek() != &Token::Colon
+                        {
+                            if self.peek() == &Token::Comma || self.peek() == &Token::Semicolon {
+                                self.advance();
+                                continue;
+                            }
+                            pargs.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_PRINT".to_string(),
+                            args: pargs,
+                            line,
+                        }));
+                    }
                     if gop == "COPY" {
                         // GRAPHIC COPY (x1,y1)-(x2,y2), (x3,y3)
                         self.advance();
@@ -3253,6 +3274,21 @@ impl Parser {
                         return Ok(Statement::Call(CallStmt {
                             name: "XPRINT_BOX".to_string(),
                             args: vec![x1, y1, x2, y2],
+                            line,
+                        }));
+                    }
+                    if xop == "COLOR" {
+                        // XPRINT COLOR r[, g[, b]] RGB components (batch 118)
+                        self.advance(); // consume COLOR
+                        let mut cargs = vec![self.parse_expression()?];
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            cargs.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "XPRINT_COLOR".to_string(),
+                            args: cargs,
                             line,
                         }));
                     }
@@ -4558,6 +4594,49 @@ impl Parser {
                     }
                 }
 
+                // DISPLAY common dialogs (batch 118): wire parser to existing codegen/runtime.
+                //   DISPLAY OPENFILE title$, filter$, initialdir$ TO result$
+                //   DISPLAY SAVEFILE title$, filter$, initialdir$ TO result$
+                //   DISPLAY BROWSE   title$, initialdir$ TO result$
+                //   DISPLAY COLOR    TO result&
+                //   DISPLAY FONT     TO result$
+                if name_upper == "DISPLAY" {
+                    if let Some(Token::Identifier(w)) = self.peek_at(1) {
+                        let sub = w.to_uppercase();
+                        if matches!(
+                            sub.as_str(),
+                            "OPENFILE" | "SAVEFILE" | "BROWSE" | "COLOR" | "FONT"
+                        ) {
+                            self.advance(); // consume DISPLAY
+                            self.advance(); // consume sub-op
+                            let mut args = Vec::new();
+                            if sub == "COLOR" || sub == "FONT" {
+                                if self.peek() == &Token::To {
+                                    self.advance(); // consume TO
+                                }
+                                args.push(self.parse_expression()?);
+                            } else {
+                                // input string expressions, then `TO result`
+                                args.push(self.parse_expression()?);
+                                while self.peek() == &Token::Comma {
+                                    self.advance();
+                                    args.push(self.parse_expression()?);
+                                }
+                                if self.peek() == &Token::To {
+                                    self.advance(); // consume TO
+                                    args.push(self.parse_expression()?);
+                                }
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: format!("DISPLAY_{sub}"),
+                                args,
+                                line,
+                            }));
+                        }
+                    }
+                }
+
                 if matches!(name_upper.as_str(), "LSET" | "RSET") {
                     self.advance(); // consume LSET/RSET
                                     // LSET target$ = value  (and RSET)
@@ -4608,6 +4687,24 @@ impl Parser {
                         line,
                     }));
                 }
+                // RESOURCE SAVE FILE resname$, filename$ (batch 118 wiring fix)
+                if name_upper == "RESOURCE"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SAVE")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase() == "FILE")
+                {
+                    self.advance(); // RESOURCE
+                    self.advance(); // SAVE
+                    self.advance(); // FILE
+                    let rn = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let fn_ = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "RESOURCE_SAVE_FILE".to_string(),
+                        args: vec![rn, fn_],
+                        line,
+                    }));
+                }
                 // PLAY WAVE "file.wav" — two-word statement
                 if name_upper == "PLAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "WAVE")
@@ -4622,6 +4719,24 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "PLAY WAVE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // PLAY SOUND freq&, dur& - two-word statement (batch 118 wiring fix)
+                if name_upper == "PLAY"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SOUND")
+                {
+                    self.advance(); // consume PLAY
+                    self.advance(); // consume SOUND
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "PLAY SOUND".to_string(),
                         args,
                         line,
                     }));
@@ -6162,6 +6277,7 @@ impl Parser {
             Token::Open => "OPEN".to_string(),
             Token::On => "ON".to_string(),
             Token::Dword => "DWORD".to_string(),
+            Token::End => "END".to_string(),
             _ => String::new(),
         }
     }

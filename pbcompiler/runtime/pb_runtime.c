@@ -203,6 +203,7 @@ __declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name, 
 __declspec(dllimport) int __stdcall GetTextExtentPoint32A(void* hdc, const char* str, int count, void* size);
 __declspec(dllimport) unsigned int __stdcall SetPixel(void* hdc, int x, int y, unsigned int color);
 __declspec(dllimport) unsigned long __stdcall SetTextColor(void* hdc, unsigned long color);
+__declspec(dllimport) int __stdcall SetBkMode(void* hdc, int mode);
 __declspec(dllimport) unsigned int __stdcall SetTextAlign(void* hdc, unsigned int fmode);
 __declspec(dllimport) int __stdcall TextOutA(void* hdc, int x, int y, const char* str, int count);
 typedef struct { int x; int y; } pb_pt;
@@ -4707,6 +4708,23 @@ int pb_graphic_color(unsigned long fore, unsigned long back) {
     g_gr_back = back;
     return 1;
 }
+
+int pb_graphic_print_str(const char* s) {
+    /* GRAPHIC PRINT - draw text on the attached graphic bitmap DC (batch 118) */
+    if (!g_gr_dc) return 0;
+    if (!s) s = "";
+    int len = (int)strlen(s);
+    SetTextColor(g_gr_dc, (unsigned long)(unsigned int)g_gr_fore);
+    SetBkMode(g_gr_dc, 1); /* TRANSPARENT */
+    if (g_gr_font) SelectObject(g_gr_dc, g_gr_font);
+    pb_pt pt; pt.x = 0; pt.y = 0;
+    GetCurrentPositionEx(g_gr_dc, (void*)&pt);
+    int ok = TextOutA(g_gr_dc, pt.x, pt.y, s, len);
+    long sz[2]; sz[0] = 0; sz[1] = 0;
+    if (GetTextExtentPoint32A(g_gr_dc, s, len, (void*)sz)) MoveToEx(g_gr_dc, pt.x + sz[0], pt.y, 0);
+    return ok ? 1 : 0;
+}
+
 int pb_graphic_get_pixel(int x, int y, unsigned long* out) {
     if (!g_gr_dc || !g_gr_bmp) return 0;
     int w = 0, h = 0;
@@ -4985,6 +5003,14 @@ int pb_xprint_set_color(long c) {
     xp_ensure_pen();
     if (g_xp_dc) SetTextColor(g_xp_dc, (unsigned long)(unsigned int)c);
     return 1;
+}
+
+/* XPRINT COLOR r[, g[, b]] - RGB component form (batch 118) */
+int pb_xprint_set_color_rgb(int rv, int gv, int bv) {
+    if (rv < 0) rv = 0; if (gv < 0) gv = 0; if (bv < 0) bv = 0;
+    if (rv > 255) rv = 255; if (gv > 255) gv = 255; if (bv > 255) bv = 255;
+    long c = (long)(((unsigned)rv & 0xFF) | (((unsigned)gv & 0xFF) << 8) | (((unsigned)bv & 0xFF) << 16));
+    return pb_xprint_set_color(c);
 }
 
 int pb_xprint_get_color(long* c) {

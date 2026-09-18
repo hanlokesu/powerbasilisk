@@ -1944,6 +1944,12 @@ impl Compiler {
             .declare_function("pb_xprint_style", &IrType::I32, &[IrType::I32], false);
         self.module
             .declare_function("pb_xprint_set_color", &IrType::I32, &[IrType::I32], false);
+        self.module.declare_function(
+            "pb_xprint_set_color_rgb",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
         self.module
             .declare_function("pb_xprint_get_color", &IrType::I32, &[IrType::Ptr], false);
         self.module.declare_function(
@@ -2450,6 +2456,8 @@ impl Compiler {
             &[IrType::I32, IrType::I32],
             false,
         );
+        self.module
+            .declare_function("pb_graphic_print_str", &IrType::I32, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_graphic_get_pixel",
             &IrType::I32,
@@ -5333,6 +5341,7 @@ impl Compiler {
                 let f2 = self.convert_value(fb, &fore, &IrType::I32, &PbType::Long);
                 let b2 = self.convert_value(fb, &back, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_color", &[f2, b2]);
+                return Ok(());
             }
 
             "MENU_NEW_BAR" | "MENU_NEW_POPUP" => {
@@ -5543,6 +5552,29 @@ impl Compiler {
                 let v = self.compile_expr(fb, &call.args[0])?;
                 let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_xprint_set_color", &[iv]);
+            }
+            "XPRINT_COLOR" => {
+                // XPRINT COLOR fore& (packed COLORREF) OR XPRINT COLOR r, g[, b]
+                if call.args.len() == 1 {
+                    let v = self.compile_expr(fb, &call.args[0])?;
+                    let iv = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                    fb.call_void("pb_xprint_set_color", &[iv]);
+                } else {
+                    let mut cv = Vec::new();
+                    for k in 0..3 {
+                        if let Some(a) = call.args.get(k) {
+                            let v = self.compile_expr(fb, a)?;
+                            cv.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                        } else {
+                            cv.push(fb.const_i32(0));
+                        }
+                    }
+                    fb.call_void(
+                        "pb_xprint_set_color_rgb",
+                        &[cv[0].clone(), cv[1].clone(), cv[2].clone()],
+                    );
+                }
+                return Ok(());
             }
             "XPRINT_GET_COLOR" => {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
@@ -5958,6 +5990,7 @@ impl Compiler {
                 let r1 = self.compile_expr(fb, &call.args[1])?;
                 let p1 = self.convert_value(fb, &r1, &IrType::Ptr, &PbType::String);
                 fb.call_void("pb_resource_save_file", &[p0, p1]);
+                return Ok(());
             }
             "XPRINT_GET_PAPERS" => {
                 if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
@@ -6090,47 +6123,67 @@ impl Compiler {
                     );
                 }
             }
-            "DISPLAY_OPENFILE" => {
-                let t0 = self.compile_expr(fb, &call.args[0])?;
-                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
-                let t1 = self.compile_expr(fb, &call.args[1])?;
-                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
-                let t2 = self.compile_expr(fb, &call.args[2])?;
-                let pt2 = self.convert_value(fb, &t2, &IrType::Ptr, &PbType::String);
-                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
-                    fb.call_void("pb_display_openfile", &[pt0, pt1, pt2, p]);
-                }
-            }
-            "DISPLAY_SAVEFILE" => {
-                let t0 = self.compile_expr(fb, &call.args[0])?;
-                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
-                let t1 = self.compile_expr(fb, &call.args[1])?;
-                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
-                let t2 = self.compile_expr(fb, &call.args[2])?;
-                let pt2 = self.convert_value(fb, &t2, &IrType::Ptr, &PbType::String);
-                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
-                    fb.call_void("pb_display_savefile", &[pt0, pt1, pt2, p]);
+            "DISPLAY_OPENFILE" | "DISPLAY_SAVEFILE" => {
+                // Result is always the LAST arg; filter/initial-dir are optional
+                // and default to empty strings (supports: `DISPLAY OPENFILE title TO s`).
+                let n = call.args.len();
+                if n >= 2 {
+                    let t0 = self.compile_expr(fb, &call.args[0])?;
+                    let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
+                    let pt1 = if n >= 3 {
+                        let v = self.compile_expr(fb, &call.args[1])?;
+                        self.convert_value(fb, &v, &IrType::Ptr, &PbType::String)
+                    } else {
+                        Val::new(self.empty_string_name.clone(), IrType::Ptr)
+                    };
+                    let pt2 = if n >= 4 {
+                        let v = self.compile_expr(fb, &call.args[2])?;
+                        self.convert_value(fb, &v, &IrType::Ptr, &PbType::String)
+                    } else {
+                        Val::new(self.empty_string_name.clone(), IrType::Ptr)
+                    };
+                    if let Some((rp, _, _)) = self.lvalue_ptr(fb, &call.args[n - 1]) {
+                        let sym = if name == "DISPLAY_OPENFILE" {
+                            "pb_display_openfile"
+                        } else {
+                            "pb_display_savefile"
+                        };
+                        fb.call_void(sym, &[pt0, pt1, pt2, rp]);
+                    }
                 }
             }
             "DISPLAY_COLOR" => {
-                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
-                    fb.call_void("pb_display_color", &[p]);
+                if let Some(a) = call.args.first() {
+                    if let Some((p, _, _)) = self.lvalue_ptr(fb, a) {
+                        fb.call_void("pb_display_color", &[p]);
+                    }
                 }
             }
             "DISPLAY_FONT" => {
-                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
-                    fb.call_void("pb_display_font", &[p]);
+                if let Some(a) = call.args.first() {
+                    if let Some((p, _, _)) = self.lvalue_ptr(fb, a) {
+                        fb.call_void("pb_display_font", &[p]);
+                    }
                 }
             }
             "DISPLAY_BROWSE" => {
-                let t0 = self.compile_expr(fb, &call.args[0])?;
-                let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
-                let t1 = self.compile_expr(fb, &call.args[1])?;
-                let pt1 = self.convert_value(fb, &t1, &IrType::Ptr, &PbType::String);
-                if let Some((p, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                    fb.call_void("pb_display_browse", &[pt0, pt1, p]);
+                // `DISPLAY BROWSE title TO s` or `DISPLAY BROWSE title, initialdir TO s`.
+                let n = call.args.len();
+                if n >= 2 {
+                    let t0 = self.compile_expr(fb, &call.args[0])?;
+                    let pt0 = self.convert_value(fb, &t0, &IrType::Ptr, &PbType::String);
+                    let pt1 = if n >= 3 {
+                        let v = self.compile_expr(fb, &call.args[1])?;
+                        self.convert_value(fb, &v, &IrType::Ptr, &PbType::String)
+                    } else {
+                        Val::new(self.empty_string_name.clone(), IrType::Ptr)
+                    };
+                    if let Some((rp, _, _)) = self.lvalue_ptr(fb, &call.args[n - 1]) {
+                        fb.call_void("pb_display_browse", &[pt0, pt1, rp]);
+                    }
                 }
             }
+
             "ARRAY_REDIM_INCR" => {
                 let a0 = self.compile_expr(fb, &call.args[0])?;
                 let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
@@ -6536,6 +6589,21 @@ impl Compiler {
                 if ptrs.len() == 2 {
                     fb.call_void(f, &[ptrs[0].clone(), ptrs[1].clone()]);
                 }
+            }
+            "GRAPHIC_PRINT" => {
+                if call.args.is_empty() {
+                    fb.call_void(
+                        "pb_graphic_print_str",
+                        &[Val::new(self.empty_string_name.clone(), IrType::Ptr)],
+                    );
+                } else {
+                    for arg in &call.args {
+                        let v = self.compile_expr(fb, arg)?;
+                        let s = self.convert_value(fb, &v, &IrType::Ptr, &PbType::String);
+                        fb.call_void("pb_graphic_print_str", &[s]);
+                    }
+                }
+                return Ok(());
             }
             "GRAPHIC_COLOR" => {
                 // args: fore& [, back&]
@@ -8506,7 +8574,16 @@ impl Compiler {
         // Without this guard, arms that emit IR without a bare `return Ok(())`
         // fall through to the unimplemented report below (false positives,
         // batches 51-63).
-        if name.starts_with("GRAPHIC_") || name.starts_with("MENU_") {
+        // Parser sometimes emits family names with spaces ("FONT NEW",
+        // "GRAPHIC SET FIXED"); normalize before the handled-family guard.
+        let fam = name.replace(' ', "_");
+        if fam.starts_with("GRAPHIC_")
+            || fam.starts_with("MENU_")
+            || fam.starts_with("XPRINT_")
+            || fam.starts_with("DISPLAY_")
+            || fam.starts_with("FONT_")
+            || fam.starts_with("IMAGELIST_")
+        {
             return Ok(());
         }
 
@@ -11929,9 +12006,7 @@ impl Compiler {
     fn builtin_join(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
         /* JOIN$(array(), delimiter$) */
         if args.len() != 2 {
-            return Err(PbError::runtime(
-                "JOIN$: expected (array(), delimiter$)",
-            ));
+            return Err(PbError::runtime("JOIN$: expected (array(), delimiter$)"));
         }
         let arr_ptr = self.compile_expr(fb, &args[0])?;
         let delim = self.compile_expr(fb, &args[1])?;
@@ -11943,14 +12018,16 @@ impl Compiler {
     fn builtin_inputbox(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
         /* INPUTBOX$(prompt$, [title$], [default$]) - console fallback */
         if args.is_empty() {
-            return Err(PbError::runtime(
-                "INPUTBOX$: expected prompt$",
-            ));
+            return Err(PbError::runtime("INPUTBOX$: expected prompt$"));
         }
         let prompt = self.compile_expr(fb, &args[0])?;
         let prompt_ptr = self.convert_value(fb, &prompt, &IrType::Ptr, &PbType::String);
         /* Use console input: prompt, has_prompt=1, no_newline=0 */
-        Ok(fb.call(&IrType::Ptr, "pb_input_console", &[prompt_ptr, fb.const_i32(1), fb.const_i32(0)]))
+        Ok(fb.call(
+            &IrType::Ptr,
+            "pb_input_console",
+            &[prompt_ptr, fb.const_i32(1), fb.const_i32(0)],
+        ))
     }
 
     fn builtin_threadid(&mut self, fb: &mut FunctionBuilder) -> PbResult<Val> {

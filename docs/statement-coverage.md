@@ -1,1076 +1,942 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 102 (v0.1.96)** — 2026-09-17. All statements and functions through batch 102 are reflected in this matrix.
+> **Last updated from batch 118 (v0.1.118)** — 2026-09-18. All statements and functions through batch 118 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
-- Official **statement-class** keywords total: **494**
-
-- Official function-class: 190 (CURDIR$ / ISFILE among them —both implemented)
-
-- Generated: 2026-09-15 (batch 86: TRUNC) (batch 85: FLOOR) (batch 84: REMAIN$) (batch 83: RETAIN$) (batch 82: REMOVE$) (batch 81: INPUT/LINE INPUT console) (batch 80: OOP completion —0 NOT_IMPL milestone) (batch 79: OOP foundation) (batch 37-78: see README changelog) (batch 36: MKE$) (batch 35: REGEXPR/REGREPL) (batch 34: PROFILE) (batch 33: CALLSTK) (batch 31: FIELD / RANDOM) (batch 25: ON ERROR / RESUME / REGISTER) (audited: FOR/NEXT, SELECT CASE, LET, MID$, VAL, ASC, PARSE, FUNCTION, IF/END IF verified live)
+- Rows in this matrix: **918** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
+- **772** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
+- **11** documented keywords still proposed / not yet implemented; **135** Tier-3 DDT GUI items deferred.
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented + Established | 884 | Real codegen output (401 Implemented + 426 Established) (Win32 calls / runtime helpers / control flow) |
-| 🚧 Tier-3 DDT | 129 | DDT GUI framework, high effort, deferred to a future update |
-| ⬜ Proposed (not yet implemented) | 32 | 46 Proposed Improvement + 32 Proposed New, no codegen evidence yet |
+| ✅ Implemented (this fork) | 600 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Established (upstream/core) | 172 | Available from upstream benstopics/powerbasilisk or core language |
+| ✅ **Total available** | **772** | Implemented + Established |
+| 🔲 Proposed (not yet implemented) | 11 | Documented upstream, no codegen evidence yet |
+| 🛠 Tier-3 DDT (deferred) | 135 | DDT GUI / window-callback framework, high effort, deferred |
 
-## ✅ All keywords (916, including 453 Implemented + 431 Established + 32 Proposed)
+## All keywords (918 rows)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
-| #ALIGN METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #BLOAT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #BREAK METASTATEMENT | STATEMENT | PB/CC only | Established |
-| #COM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #COMPILE METASTATEMENT | STATEMENT | PB/Win only | Established |
-| #COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #CONSOLE METASTATEMENT | STATEMENT | PB/CC only | Established |
-|#DEBUG BOUNDS METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-|#DEBUG DISPLAY METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented ||#DEBUG ERROR METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented ||#DEBUG NUMERIC METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #INCLUDE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #MESSAGES METASTATEMENT | STATEMENT | PB/Win only | Established |
-| #OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-|#OPTION METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #PBFORMS METASTATEMENT | STATEMENT | PB/Win only | Established |
-| #REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-|#RESOURCE METASTATEMENT|STATEMENT|PB/Win + PB/CC| Implemented || #STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| #UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | Established |
-| ABS | FUNCTION | LLVM intrinsic | Implemented |
-| ACCEL ATTACH | STATEMENT | PB/Win only | Established |
-| ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | Implemented |
-| ACOS | FUNCTION | LLVM intrinsic | Implemented |
-| ACOSH | FUNCTION | LLVM intrinsic | Implemented |
-|ARRAY ADD|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY ARRAYIX|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY ASSIGN|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY COPY|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY DELETE|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY INSERT|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY REDIM DECR|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY REDIM INCR|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY REVERSE|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY SCAN|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY SELECT|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY SHUFFLE|STATEMENT|PB/Win + PB/CC| Implemented |
-| ARRAY SORT | STATEMENT | PB/Win + PB/CC | Established |
-|ARRAY SWAP|STATEMENT|PB/Win + PB/CC| Implemented |
-|ARRAY TAGARRAY|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY TAGARRAY ERASE|STATEMENT|PB/Win + PB/CC| Implemented ||ARRAY UNIQUE|STATEMENT|PB/Win + PB/CC| Implemented |
-| ARRAY_REDIM_DECR | FUNCTION | codegen builtin | Implemented |
-| ARRAY_REDIM_INCR | FUNCTION | codegen builtin | Implemented |
-| ARRAY_SELECT | FUNCTION | codegen builtin | Implemented |
-| ARRAY_TAGARRAY | FUNCTION | codegen builtin | Implemented |
-| ARRAY_TAGARRAY_ERASE | FUNCTION | codegen builtin | Implemented |
-| ASC | STATEMENT | PB/Win + PB/CC | Established |
-| ASIN | FUNCTION | LLVM intrinsic | Implemented |
-| ASINH | FUNCTION | LLVM intrinsic | Implemented |
-| ASM | STATEMENT | PB/Win + PB/CC | Established |
-| ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | Established |
-| ATANH | FUNCTION | LLVM intrinsic | Implemented |
-| ATN | FUNCTION | LLVM intrinsic | Implemented |
-| ATN2 | FUNCTION | codegen builtin | Implemented |
-| BEEP | STATEMENT | PB/Win + PB/CC | Established |
-| BGR | FUNCTION | codegen builtin | Implemented |
-| BIN | FUNCTION | codegen builtin | Implemented |
-| BIN$ | FUNCTION | Win32 | Implemented |
-| BIT | STATEMENT | PB/Win + PB/CC | Established |
-| BIT CALC | STATEMENT | PB/Win + PB/CC | Established |
-| BITS | FUNCTION | codegen builtin | Implemented |
-| BITS$ | FUNCTION | Win32 | Implemented |
-| BITSE | FUNCTION | codegen builtin (lvalue test-and-set) | Implemented |
-| BUILD | FUNCTION | codegen builtin | Implemented |
-| BUILD$ | FUNCTION | Win32 | Implemented |
-| BYTE | FUNCTION | codegen builtin | Implemented |
-| CALL | STATEMENT | PB/Win + PB/CC | Established |
-| CALL DWORD | STATEMENT | PB/Win + PB/CC | Established |
-| CALLSTK | STATEMENT | PB/Win + PB/CC | Established |
-| CALLSTK$ | FUNCTION | Win32 | Implemented |
-| CALLSTKCOUNT | FUNCTION | codegen builtin | Implemented |
-| CBOOL | FUNCTION | codegen builtin | Implemented |
-| CBRT | FUNCTION | C runtime (MSVCRT) | Implemented |
-| CBYTE | FUNCTION | codegen builtin | Implemented |
-| CDBL | FUNCTION | codegen builtin | Implemented |
-| CDWORD | FUNCTION | codegen builtin | Implemented |
-| CEIL | FUNCTION | LLVM intrinsic | Implemented |
-| CFLT | FUNCTION | codegen builtin | Implemented |
-| CHDIR | STATEMENT | PB/Win + PB/CC | Established |
-| CHDRIVE | STATEMENT | PB/Win + PB/CC | Established |
-| CHOOSE | FUNCTION | codegen builtin | Implemented |
-| CHR | FUNCTION | codegen builtin | Implemented |
-| CHR$ | FUNCTION | Win32 | Implemented |
-| CHRBYTES | FUNCTION | codegen builtin | Implemented |
-| CHRTOOEM | FUNCTION | codegen builtin | Implemented |
-| CHRTOOEM$ | FUNCTION | Win32 | Implemented |
-| CHRTOUTF8 | FUNCTION | codegen builtin | Implemented |
-| CHRTOUTF8$ | FUNCTION | Win32 | Implemented |
-| CLASS/END CLASS | BLOCK | PB/Win + PB/CC | Established |
-| CLIP | FUNCTION | codegen builtin | Implemented |
-| CLIP$ | FUNCTION | Win32 | Implemented |
-| CLIPBOARD | STATEMENT | PB/Win + PB/CC | Established |
-|CLOSE|STATEMENT|PB/Win + PB/CC| Implemented || CLS | STATEMENT | PB/CC only | Established |
-| CODEPTR | FUNCTION | codegen builtin | Implemented |
-| COLOR | STATEMENT | PB/CC only | Established |
-| COMBOBOX | STATEMENT | PB/Win only | Established |
-| COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
-| COMM OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| COMM PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| COMM RECV | STATEMENT | PB/Win + PB/CC | Established |
-| COMM RESET | STATEMENT | PB/Win + PB/CC | Established |
-| COMM SEND | STATEMENT | PB/Win + PB/CC | Established |
-| COMM SET | STATEMENT | PB/Win + PB/CC | Established |
-| COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | Established |
-| COMMAND | FUNCTION | codegen builtin | Implemented |
-| COMMAND$ | FUNCTION | Win32 | Implemented |
-| CONTROL ADD *CUSTOM CONTROL* | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL ADD BUTTON | STATEMENT | PB/Win only | Established |
-| CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | Established |
-| CONTROL ADD CHECKBOX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD COMBOBOX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD FRAME | STATEMENT | PB/Win only | Established |
-| CONTROL ADD GRAPHIC | STATEMENT | PB/Win only | Established |
-| CONTROL ADD HEADER | STATEMENT | PB/Win only | Established |
-| CONTROL ADD IMAGE | STATEMENT | PB/Win only | Established |
-| CONTROL ADD IMAGEX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD IMGBUTTON | STATEMENT | PB/Win only | Established |
-| CONTROL ADD IMGBUTTONX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD LABEL | STATEMENT | PB/Win only | Established |
-| CONTROL ADD LINE | STATEMENT | PB/Win only | Established |
-| CONTROL ADD LISTBOX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD LISTVIEW | STATEMENT | PB/Win only | Established |
-| CONTROL ADD OPTION | STATEMENT | PB/Win only | Established |
-| CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | Established |
-| CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | Established |
-| CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Established |
-| CONTROL ADD TAB | STATEMENT | PB/Win only | Established |
-| CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Established |
-| CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Established |
-| CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | Established |
-| CONTROL DISABLE | STATEMENT | PB/Win only | Established |
-| CONTROL ENABLE | STATEMENT | PB/Win only | Established |
-| CONTROL GET CHECK | STATEMENT | PB/Win only | Established |
-| CONTROL GET CLIENT | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL GET LOC | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL GET SIZE | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL GET TEXT | STATEMENT | PB/Win only | Established |
-| CONTROL GET USER | STATEMENT | PB/Win only | Established |
-| CONTROL HANDLE | STATEMENT | PB/Win only | Established |
-| CONTROL HIDE | STATEMENT | PB/Win only | Established |
-| CONTROL KILL | STATEMENT | PB/Win only | Established |
-| CONTROL NORMALIZE | STATEMENT | PB/Win only | Established |
-| CONTROL POST | STATEMENT | PB/Win only | Established |
-| CONTROL REDRAW | STATEMENT | PB/Win only | Established |
-| CONTROL SEND | STATEMENT | PB/Win only | Established |
-| CONTROL SET CHECK | STATEMENT | PB/Win only | Established |
-| CONTROL SET CLIENT | STATEMENT | PB/Win only | Established |
-| CONTROL SET COLOR | STATEMENT | PB/Win only | Established |
-| CONTROL SET FOCUS | STATEMENT | PB/Win only | Established |
-| CONTROL SET FONT | STATEMENT | PB/Win only | Established |
-| CONTROL SET IMAGE | STATEMENT | PB/Win only | Established |
-| CONTROL SET IMAGEX | STATEMENT | PB/Win only | Established |
-| CONTROL SET IMGBUTTON | STATEMENT | PB/Win only | Established |
-| CONTROL SET IMGBUTTONX | STATEMENT | PB/Win only | Established |
-| CONTROL SET LOC | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL SET OPTION | STATEMENT | PB/Win only | Established |
-| CONTROL SET SIZE | STATEMENT | PB/Win only | Proposed Improvement |
-| CONTROL SET TEXT | STATEMENT | PB/Win only | Established |
-| CONTROL SET USER | STATEMENT | PB/Win only | Established |
-| CONTROL SHOW STATE | STATEMENT | PB/Win only | Established |
-| CONTROL TRAXOMATIC | STATEMENT | PB/Win only | Proposed New |
-| COS | FUNCTION | LLVM intrinsic | Implemented |
-| COSH | FUNCTION | LLVM intrinsic | Implemented |
-| COT | FUNCTION | C runtime (MSVCRT) | Implemented |
-| COTH | FUNCTION | C runtime (MSVCRT) | Implemented |
-| CQUAD | FUNCTION | codegen builtin | Implemented |
-| CSC | FUNCTION | C runtime (MSVCRT) | Implemented |
-| CSCH | FUNCTION | C runtime (MSVCRT) | Implemented |
-| CSET | STATEMENT | PB/Win + PB/CC | Established |
-| CSET$ | FUNCTION | Win32 | Implemented |
-| CSNG | FUNCTION | codegen builtin | Implemented |
-| CSTR | FUNCTION | codegen builtin | Implemented |
-| CULNG | FUNCTION | codegen builtin | Implemented |
-| CURDIR | FUNCTION | codegen builtin | Implemented |
-| CURDIR$ | FUNCTION | Win32 | Implemented |
-| CVBYT | FUNCTION | codegen builtin | Implemented |
-| CVCUX | FUNCTION | codegen builtin | Implemented |
-| CVDWD | FUNCTION | codegen builtin | Implemented |
-| CVL | FUNCTION | codegen builtin | Implemented |
-| CVQ | FUNCTION | codegen builtin | Implemented |
-| CVW | FUNCTION | codegen builtin | Implemented |
-| CWORD | FUNCTION | codegen builtin | Implemented |
-| DATA | STATEMENT | PB/Win + PB/CC | Established |
-| DATACOUNT | FUNCTION | codegen builtin | Implemented |
-| DAYNAME | FUNCTION | codegen builtin | Implemented |
-| DAYNAME$ | FUNCTION | Win32 | Implemented |
-| DEC | FUNCTION | codegen builtin | Implemented |
-| DEC$ | FUNCTION | Win32 | Implemented |
-|DECLARE|STATEMENT|PB/Win + PB/CC| Implemented || DECR | STATEMENT | PB/Win + PB/CC | Established |
-| DESKTOP GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
-| DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | Established |
-|DESKTOP GET PPI|STATEMENT|PB/Win + PB/CC| Implemented |
-| DESKTOP GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| DIALOG DEFAULT FONT | STATEMENT | PB/Win only | Established |
-| DIALOG DISABLE | STATEMENT | PB/Win only | Established |
-| DIALOG DOEVENTS | STATEMENT | PB/Win only | Established |
-| DIALOG ENABLE | STATEMENT | PB/Win only | Established |
-| DIALOG END | STATEMENT | PB/Win only | Established |
-| DIALOG GET CLIENT | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG GET LOC | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG GET SIZE | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG GET TEXT | STATEMENT | PB/Win only | Established |
-| DIALOG GET USER | STATEMENT | PB/Win only | Established |
-| DIALOG HIDE | STATEMENT | PB/Win only | Established |
-| DIALOG MAXIMIZE | STATEMENT | PB/Win only | Established |
-| DIALOG MINIMIZE | STATEMENT | PB/Win only | Established |
-| DIALOG NEW | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG NONSTABLE | STATEMENT | PB/Win only | Established |
-| DIALOG NORMALIZE | STATEMENT | PB/Win only | Established |
-| DIALOG PIXELS | STATEMENT | PB/Win only | Established |
-| DIALOG POST | STATEMENT | PB/Win only | Established |
-| DIALOG REDRAW | STATEMENT | PB/Win only | Established |
-| DIALOG SEND | STATEMENT | PB/Win only | Established |
-| DIALOG SET CLIENT | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG SET COLOR | STATEMENT | PB/Win only | Established |
-| DIALOG SET ICON | STATEMENT | PB/Win only | Established |
-| DIALOG SET LOC | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG SET SIZE | STATEMENT | PB/Win only | Proposed Improvement |
-| DIALOG SET TEXT | STATEMENT | PB/Win only | Established |
-| DIALOG SET USER | STATEMENT | PB/Win only | Established |
-| DIALOG SHOW MODAL | STATEMENT | PB/Win only | Established |
-| DIALOG SHOW MODELESS | STATEMENT | PB/Win only | Established |
-| DIALOG SHOW STATE | STATEMENT | PB/Win only | Established |
-| DIALOG STABILIZE | STATEMENT | PB/Win only | Established |
-| DIALOG TRAXOMATIC | STATEMENT | PB/Win only | Proposed New |
-| DIALOG UNITS | STATEMENT | PB/Win only | Established |
-| DIALOG XLAT | STATEMENT | PB/Win only | Proposed New |
-|DIM|STATEMENT|PB/Win + PB/CC| Implemented || DIR | FUNCTION | codegen builtin | Implemented |
-|DIR FUNCTION AND|STATEMENT|PB/Win + PB/CC| Implemented || DIR$ | FUNCTION | Win32 | Implemented |
-| DISKFREE | FUNCTION | codegen builtin | Implemented |
-| DISKSIZE | FUNCTION | codegen builtin | Implemented |
-| DISPLAY BROWSE | STATEMENT | PB/Win only | Established |
-| DISPLAY COLOR | STATEMENT | PB/Win only | Established |
-| DISPLAY FONT | STATEMENT | PB/Win only | Established |
-| DISPLAY OPENFILE | STATEMENT | PB/Win only | Established |
-| DISPLAY SAVEFILE | STATEMENT | PB/Win only | Established |
-| DISPLAY_BROWSE | FUNCTION | codegen builtin | Implemented |
-| DISPLAY_COLOR | FUNCTION | codegen builtin | Implemented |
-| DISPLAY_FONT | FUNCTION | codegen builtin | Implemented |
-| DISPLAY_OPENFILE | FUNCTION | codegen builtin | Implemented |
-| DISPLAY_SAVEFILE | FUNCTION | codegen builtin | Implemented |
-| DOUBLE | FUNCTION | codegen builtin | Implemented |
-| END | STATEMENT | PB/Win + PB/CC | Established |
-| EQV | FUNCTION | PB/Win + PB/CC | Implemented |
-| ENVIRON | STATEMENT | PB/Win + PB/CC | Established |
-| ENVIRON$ | FUNCTION | Win32 | Implemented |
-| EOF | FUNCTION | codegen builtin | Implemented |
-| ERASE | STATEMENT | PB/Win + PB/CC | Established |
-| ERF | FUNCTION | C runtime (MSVCRT) | Implemented |
-| ERL | FUNCTION | codegen builtin | Implemented |
-| ERL$ | FUNCTION | Win32 | Implemented |
-| ERR | FUNCTION | codegen builtin | Implemented |
-| ERRCLEAR | FUNCTION | codegen builtin | Implemented |
-| ERROR | STATEMENT | PB/Win + PB/CC | Established |
-| ERROR$ | FUNCTION | Win32 | Implemented |
-| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Established |
-| EVENTS | STATEMENT | PB/Win + PB/CC | Established |
-| EXE | FUNCTION | codegen builtin | Implemented |
-| EXIST | FUNCTION | codegen builtin | Implemented |
-| EXIT | STATEMENT | PB/Win + PB/CC | Established |
-| EXP | FUNCTION | LLVM intrinsic | Implemented |
-| EXP10 | FUNCTION | LLVM intrinsic | Implemented |
-| EXP2 | FUNCTION | LLVM intrinsic | Implemented |
-| EXPM1 | FUNCTION | C runtime (MSVCRT) | Implemented |
-| EXTRACT | FUNCTION | codegen builtin | Implemented |
-| EXTRACT$ | FUNCTION | Win32 | Implemented |
-| FIELD | STATEMENT | PB/Win + PB/CC | Established |
-| FILEATTR | FUNCTION | codegen builtin | Implemented |
-| FILECOPY | STATEMENT | PB/Win + PB/CC | Established |
-| FILENAME | FUNCTION | codegen builtin | Implemented |
-| FILENAME$ | FUNCTION | Win32 | Implemented |
-| FILESCAN | STATEMENT | PB/Win + PB/CC | Established |
-| FIX | FUNCTION | codegen builtin | Implemented |
-| FLOOR | FUNCTION | LLVM intrinsic | Implemented |
-| FLUSH | STATEMENT | PB/Win + PB/CC | Established |
-| FONT END | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| FONT NEW | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| FONT_END | FUNCTION | codegen builtin | Implemented |
-| FONT_NEW | FUNCTION | codegen builtin | Implemented |
-| FOR / NEXT | STATEMENT | PB/Win + PB/CC | Established |
-| FORMAT | FUNCTION | codegen builtin | Implemented |
-| FORMAT$ | FUNCTION | Win32 | Implemented |
-| FRAC | FUNCTION | codegen builtin | Implemented |
-| FRE | FUNCTION | codegen builtin | Implemented |
-| FREEFILE | FUNCTION | codegen builtin | Implemented |
-| FUNCNAME$ | FUNCTION | codegen builtin (current_fn_name) | Implemented |
-| FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | Established |
-|GET|STATEMENT|PB/Win + PB/CC| Implemented |
-|GET$|STATEMENT|PB/Win + PB/CC| Implemented |
-|GET$$|STATEMENT|PB/Win + PB/CC| Implemented |
-| GETATTR | FUNCTION | codegen builtin | Implemented |
-| GET_STR | FUNCTION | codegen builtin | Implemented |
-| GET_WSTR | FUNCTION | codegen builtin | Implemented |
-| GLOBAL | STATEMENT | PB/Win + PB/CC | Established |
-| GLOBALMEM | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC ARC | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC ATTACH | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC BITMAP CAPTURE | STATEMENT | PB/Win + PB/CC | Proposed New |
-| GRAPHIC BITMAP END | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC BITMAP LOAD | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC BITMAP NEW | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC BOX | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC CELL | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC CLEAR | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC COLOR | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC COPY | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC DETACH | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC ELLIPSE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET BITS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET CANVAS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET CAPTION | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET CLIENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC GET CLIP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET DC | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET LINES | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET LOC | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC GET MIX | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET POS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET PPI | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET SCALE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET SCROLLTEXT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET SIZE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| GRAPHIC GET VIEW | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC GET WRAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC INKEY$ | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC INPUT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC INPUT FLUSH | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC INSTAT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC LINE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC LINE INPUT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC PAINT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC PIE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC POLYGON | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC REDRAW | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SAVE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SCALE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET AUTOSIZE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC SET BITS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET CAPTION | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET CLIENT | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC SET CLIP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET FIXED | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET FOCUS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET FONT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET LOC | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC SET MIX | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET POS | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET SCROLLTEXT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET SIZE | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC SET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| GRAPHIC SET VIEW | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET VIRTUAL | STATEMENT | PB/Win + PB/CC | Proposed Improvement |
-| GRAPHIC SET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SET WRAP | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC SPLIT | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC STRETCH | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC STYLE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC TEXT SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WAITKEY$ | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WIDTH | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW CLICK | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW END | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW HIDE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW MINIMIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW NONSTABLE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW NORMALIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | Established |
-| GRAPHIC_ARC | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_ATTACH | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_BITMAP_END | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_BITMAP_LOAD | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_BITMAP_NEW | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_CELL | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_CHR_SIZE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_CIRCLE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_CLEAR | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_COLOR | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_COPY | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_DETACH | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_ELLIPSE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_BITS | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_CAPTION | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_CLIP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_DC | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_LINES | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_LOC | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_MIX | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_PIXEL | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_POS | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_PPI | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_SCALE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_SIZE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_STRETCHMODE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_TEXTALIGN | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_VIEW | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_WORDWRAP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_GET_WRAP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_LINE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_PAINT | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_PIE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_POLYGON | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_POLYLINE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SAVE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SCALE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SCALE_PIXELS | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_AUTOSIZE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_BITS | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_CAPTION | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_CLIP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_FIXED | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_FONT | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_MIX | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_PIXEL | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_POS | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_SIZE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_STRETCHMODE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_TEXTALIGN | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_VIEW | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_VIRTUAL | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_WORDWRAP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_SET_WRAP | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_STYLE | FUNCTION | codegen builtin | Implemented |
-| GRAPHIC_TEXT_SIZE | FUNCTION | codegen builtin | Implemented |
-| HEADER | STATEMENT | PB/Win only | Established |
-| HEADER_CTRL | FUNCTION | codegen builtin | Implemented |
-| HEX | FUNCTION | codegen builtin | Implemented |
-| HEX$ | FUNCTION | Win32 | Implemented |
-| HI | FUNCTION | Win32 | Implemented |
-| HIWRD | FUNCTION | codegen builtin | Implemented |
-| HOST ADDR | STATEMENT | PB/Win + PB/CC | Established |
-| HOST NAME | STATEMENT | PB/Win + PB/CC | Established |
-| HYPOT | FUNCTION | C runtime (MSVCRT) | Implemented |
-| IF | STATEMENT | PB/Win + PB/CC | Established |
-| IF/END IF | BLOCK | PB/Win + PB/CC | Established |
-| IIF | FUNCTION | codegen builtin | Implemented |
-| IMAGELIST | STATEMENT | PB/Win only | Established |
-| IMAGELIST_COUNT | FUNCTION | codegen builtin | Implemented |
-| IMAGELIST_KILL | FUNCTION | codegen builtin | Implemented |
-| IMAGELIST_NEW | FUNCTION | codegen builtin | Implemented |
-| IMP | FUNCTION | PB/Win + PB/CC | Implemented |
-| IMPORT | STATEMENT | PB/Win + PB/CC | Established |
-| INCR | STATEMENT | PB/Win + PB/CC | Established |
-| INPUT FLUSH | STATEMENT | PB/CC only | Established |
-|INPUT#|STATEMENT|PB/CC only| Implemented || INSTANCE | STATEMENT | PB/Win + PB/CC | Established |
-| INSTR | FUNCTION | codegen builtin | Implemented |
-| INT | FUNCTION | codegen builtin | Implemented |
-| INTEGER | FUNCTION | codegen builtin | Implemented |
-| INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | Established |
-| INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | Established |
-| ISEVEN | FUNCTION | codegen builtin | Implemented |
-| ISFALSE | FUNCTION | codegen builtin | Implemented |
-| ISFILE | FUNCTION | codegen builtin | Implemented |
-| ISFOLDER | FUNCTION | codegen builtin | Implemented |
-|ISINFINITE|STATEMENT|PB/Win + PB/CC| Implemented |
-|ISNORMAL|STATEMENT|PB/Win + PB/CC| Implemented |
-| ISODD | FUNCTION | codegen builtin | Implemented |
-| ISTRUE | FUNCTION | codegen builtin | Implemented |
-| ISWIN | FUNCTION | Win32 (IsWindow/GetDlgItem) | Implemented |
-| ITERATE | STATEMENT | PB/Win + PB/CC | Established |
-| JOIN$ | FUNCTION | Win32 | Implemented |
-| KILL | STATEMENT | PB/Win + PB/CC | Established |
-| LCASE | FUNCTION | codegen builtin | Implemented |
-| LCASE$ | FUNCTION | Win32 | Implemented |
-| LEFT | FUNCTION | codegen builtin | Implemented |
-| LEFT$ | FUNCTION | Win32 | Implemented |
-| LEN | FUNCTION | codegen builtin | Implemented |
-| LET | STATEMENT | PB/Win + PB/CC | Established |
-| LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Established |
-| LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
-| LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Established |
-|LINE INPUT#|STATEMENT|PB/Win + PB/CC| Implemented || LISTBOX | STATEMENT | PB/Win only | Established |
-| LISTVIEW | STATEMENT | PB/Win only | Established |
-| LO | FUNCTION | codegen builtin | Implemented |
-| LOC | FUNCTION | Win32 | Implemented |
-| LOCAL | STATEMENT | PB/Win + PB/CC | Established |
-| LOCK | STATEMENT | PB/Win + PB/CC | Established |
-| LOF | FUNCTION | Win32 | Implemented |
-| LOG | FUNCTION | LLVM intrinsic | Implemented |
-| LOG10 | FUNCTION | LLVM intrinsic | Implemented |
-| LOG1P | FUNCTION | C runtime (MSVCRT) | Implemented |
-| LOG2 | FUNCTION | LLVM intrinsic | Implemented |
-| LONG | FUNCTION | codegen builtin | Implemented |
-| LOWRD | FUNCTION | codegen builtin | Implemented |
-| LPRINT | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT FLUSH | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | Established |
-| LPRINT$ | FUNCTION | Win32 | Implemented |
-| LSET | STATEMENT | PB/Win + PB/CC | Established |
-| LSET$ | FUNCTION | Win32 | Implemented |
-| LTRIM | FUNCTION | codegen builtin | Implemented |
-| LTRIM$ | FUNCTION | Win32 | Implemented |
-| MACRO/END MACRO | BLOCK | PB/Win + PB/CC | Established |
-| MAK | FUNCTION | codegen builtin | Implemented |
-| MAT | STATEMENT | PB/Win + PB/CC | Established |
-| MAX | FUNCTION | codegen builtin | Implemented |
-| MCASE$ | FUNCTION | runtime pb_mcase_string | Implemented |
-| MEMORY | STATEMENT | PB/Win + PB/CC | Established |
-| MEMORY_FILL | FUNCTION | codegen builtin | Implemented |
-| MEMORY_FILLS | FUNCTION | codegen builtin | Implemented |
-| MENU ADD POPUP | STATEMENT | PB/Win only | Established |
-| MENU ADD STRING | STATEMENT | PB/Win only | Established |
-| MENU ATTACH | STATEMENT | PB/Win only | Established |
-| MENU CONTEXT | STATEMENT | PB/Win only | Established |
-| MENU DELETE | STATEMENT | PB/Win only | Established |
-| MENU DRAW BAR | STATEMENT | PB/Win only | Established |
-| MENU GET STATE | STATEMENT | PB/Win only | Established |
-| MENU GET TEXT | STATEMENT | PB/Win only | Established |
-| MENU NEW BAR | STATEMENT | PB/Win only | Established |
-| MENU NEW POPUP | STATEMENT | PB/Win only | Established |
-| MENU SET STATE | STATEMENT | PB/Win only | Established |
-| MENU SET TEXT | STATEMENT | PB/Win only | Established |
-| MENU_ADD_POPUP | FUNCTION | codegen builtin | Implemented |
-| MENU_ADD_STRING | FUNCTION | codegen builtin | Implemented |
-| MENU_DELETE | FUNCTION | codegen builtin | Implemented |
-| MENU_GET_STATE | FUNCTION | codegen builtin | Implemented |
-| MENU_GET_TEXT | FUNCTION | codegen builtin | Implemented |
-| MENU_NEW_POPUP | FUNCTION | codegen builtin | Implemented |
-| MENU_SET_STATE | FUNCTION | codegen builtin | Implemented |
-| MENU_SET_TEXT | FUNCTION | codegen builtin | Implemented |
-| METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| METRICS | FUNCTION | Win32 | Implemented |
-| MID | FUNCTION | codegen builtin | Implemented |
-| MID$ | STATEMENT | PB/Win + PB/CC | Established |
-| MIN | FUNCTION | codegen builtin | Implemented |
-| MKBYT | FUNCTION | codegen builtin | Implemented |
-| MKBYT$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKCUR$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKCUX | FUNCTION | codegen builtin | Implemented |
-| MKCUX$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKD$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKDIR | STATEMENT | PB/Win + PB/CC | Established |
-| MKDWD | FUNCTION | codegen builtin | Implemented |
-| MKDWD$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKE | FUNCTION | codegen builtin | Implemented |
-| MKE$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKI$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKL$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKQ$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKS | FUNCTION | codegen builtin | Implemented |
-| MKS$ | STATEMENT | PB/Win + PB/CC | Established |
-| MKWRD | FUNCTION | codegen builtin | Implemented |
-| MKWRD$ | STATEMENT | PB/Win + PB/CC | Established |
-| MOD | FUNCTION | codegen builtin | Implemented |
-| MONTHNAME | FUNCTION | codegen builtin | Implemented |
-| MONTHNAME$ | FUNCTION | Win32 | Implemented |
-| MOUSEPTR | STATEMENT | PB/CC only | Established |
-| MSGBOX | STATEMENT | PB/Win only | Established |
-| NAME | STATEMENT | PB/Win + PB/CC | Established |
-| NUL$ | FUNCTION | Win32 | Implemented |
-| OBJECT | STATEMENT | PB/Win + PB/CC | Established |
-| OCT | FUNCTION | codegen builtin | Implemented |
-| OCT$ | FUNCTION | Win32 | Implemented |
-| OEMTOCHR | FUNCTION | codegen builtin | Implemented |
-| OEMTOCHR$ | FUNCTION | Win32 | Implemented |
-|ON CALL|STATEMENT|PB/Win + PB/CC| Implemented || ON ERROR | STATEMENT | PB/Win + PB/CC | Established |
-|ON GOSUB|STATEMENT|PB/Win + PB/CC| Implemented ||ON GOTO|STATEMENT|PB/Win + PB/CC| Implemented ||OPEN|STATEMENT|PB/Win + PB/CC| Implemented || OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | Established |
-| PARSE | STATEMENT | PB/Win + PB/CC | Established |
-| PARSE$ | FUNCTION | Win32 | Implemented |
-| PARSECOUNT | FUNCTION | codegen builtin | Implemented |
-| PATHNAME | FUNCTION | codegen builtin | Implemented |
-| PATHNAME$ | FUNCTION | Win32 | Implemented |
-| PATHSCAN | FUNCTION | codegen builtin | Implemented |
-| PATHSCAN$ | FUNCTION | Win32 | Implemented |
-| PEEK | FUNCTION | codegen builtin | Implemented |
-| PLAY | FUNCTION | Win32 | Implemented |
-|PLAY SOUND|STATEMENT|PB/Win + PB/CC| Implemented |
-| PLAY WAVE | STATEMENT | PB/Win + PB/CC | Established |
-| POKE | FUNCTION | codegen builtin | Implemented |
-| PREFIX | BLOCK | PB/Win + PB/CC | Established |
-| PRINT# | STATEMENT | PB/Win + PB/CC | Established |
-| PRINTER$ | FUNCTION | Win32 | Implemented |
-| PRINTERCOUNT | FUNCTION | codegen builtin | Implemented |
-| PROCESS GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| PROFILE | STATEMENT | PB/Win + PB/CC | Established |
-| PROGRESSBAR | STATEMENT | PB/Win only | Established |
-|PUT|STATEMENT|PB/Win + PB/CC| Implemented |
-|PUT$|STATEMENT|PB/Win + PB/CC| Implemented |
-|PUT$$|STATEMENT|PB/Win + PB/CC| Implemented |
-| PUT_STR | FUNCTION | codegen builtin | Implemented |
-| PUT_WSTR | FUNCTION | codegen builtin | Implemented |
-| QUAD | FUNCTION | codegen builtin | Implemented |
-| RAISEEVENT | STATEMENT | PB/Win + PB/CC | Established |
-| RANDOMIZE | STATEMENT | PB/Win + PB/CC | Established |
-| READ | FUNCTION | codegen builtin | Implemented |
-| READ$ | FUNCTION | Win32 | Implemented |
-|REDIM|STATEMENT|PB/Win + PB/CC| Implemented || REGEXPR | STATEMENT | PB/Win + PB/CC | Established |
-| REGISTER | STATEMENT | PB/Win + PB/CC | Established |
-| REGREPL | STATEMENT | PB/Win + PB/CC | Established |
-| REM | STATEMENT | PB/Win + PB/CC | Established |
-| REMAIN | FUNCTION | codegen builtin | Implemented |
-| REMAIN$ | FUNCTION | Win32 | Implemented |
-| REMOVE | FUNCTION | codegen builtin | Implemented |
-| REMOVE$ | FUNCTION | Win32 | Implemented |
-| REPEAT | FUNCTION | codegen builtin | Implemented |
-| REPEAT$ | FUNCTION | Win32 | Implemented |
-| REPLACE | STATEMENT | PB/Win + PB/CC | Established |
-| RESET | STATEMENT | PB/Win + PB/CC | Established |
-|RESOURCE SAVE FILE|STATEMENT|PB/Win + PB/CC| Implemented || RESOURCE$ | FUNCTION | Win32 | Implemented |
-| RESOURCE_SAVE_FILE | FUNCTION | codegen builtin | Implemented |
-| RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| RETAIN | FUNCTION | codegen builtin | Implemented |
-| RETAIN$ | FUNCTION | Win32 | Implemented |
-| RETURN | STATEMENT | PB/Win + PB/CC | Established |
-| RGB | FUNCTION | Win32 | Implemented |
-| RIGHT | FUNCTION | codegen builtin | Implemented |
-| RIGHT$ | FUNCTION | Win32 | Implemented |
-| RMDIR | STATEMENT | PB/Win + PB/CC | Established |
-| RND | FUNCTION | codegen builtin | Implemented |
-| ROTATE | STATEMENT | PB/Win + PB/CC | Established |
-| ROUND | FUNCTION | LLVM intrinsic | Implemented |
-| RSET | STATEMENT | PB/Win + PB/CC | Established |
-| RSET$ | FUNCTION | Win32 | Implemented |
-| RTRIM | FUNCTION | codegen builtin | Implemented |
-| RTRIM$ | FUNCTION | Win32 | Implemented |
-| SCROLLBAR | STATEMENT | PB/Win only | Established |
-| SEC | FUNCTION | C runtime (MSVCRT) | Implemented |
-| SECH | FUNCTION | C runtime (MSVCRT) | Implemented |
-|SEEK|STATEMENT|PB/Win + PB/CC| Implemented |
-| SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | Established |
-| SETATTR | STATEMENT | PB/Win + PB/CC | Established |
-|SETEOF|STATEMENT|PB/Win + PB/CC| Implemented |
-| SGN | FUNCTION | codegen builtin | Implemented |
-| SHELL | STATEMENT | PB/Win + PB/CC | Established |
-| SHIFT | STATEMENT | PB/Win + PB/CC | Established |
-| SHRINK | FUNCTION | codegen builtin | Implemented |
-| SHRINK$ | FUNCTION | Win32 | Implemented |
-| SIN | FUNCTION | LLVM intrinsic | Implemented |
-| SINGLE | FUNCTION | codegen builtin | Implemented |
-| SINH | FUNCTION | LLVM intrinsic | Implemented |
-| SIZEOF | FUNCTION | codegen builtin | Implemented |
-| SLEEP | STATEMENT | PB/Win + PB/CC | Established |
-| SPACE | FUNCTION | codegen builtin | Implemented |
-| SPACE$ | FUNCTION | Win32 | Implemented |
-| SPLIT | STATEMENT | PB/Win + PB/CC | Established |
-| SQR | FUNCTION | LLVM intrinsic | Implemented |
-| STATIC | STATEMENT | PB/Win + PB/CC | Established |
-| STATUSBAR | STATEMENT | PB/Win + PB/CC | Established |
-| STR | FUNCTION | codegen builtin | Implemented |
-| STR$ | FUNCTION | Win32 | Implemented |
-| STRDELETE | FUNCTION | codegen builtin | Implemented |
-| STRDELETE$ | FUNCTION | Win32 | Implemented |
-| STRING | FUNCTION | codegen builtin | Implemented |
-| STRINSERT | FUNCTION | codegen builtin | Implemented |
-| STRINSERT$ | FUNCTION | Win32 | Implemented |
-| STRPTR | FUNCTION | codegen builtin | Implemented |
-| STRREVERSE | FUNCTION | codegen builtin | Implemented |
-| STRREVERSE$ | FUNCTION | Win32 | Implemented |
-| SWAP | STATEMENT | PB/Win + PB/CC | Established |
-| SWITCH | FUNCTION | Win32 | Implemented |
-| SWITCH$ | FUNCTION | codegen builtin | Implemented |
-| TAB | STATEMENT | PB/Win only | Established |
-| TAB$ | FUNCTION | Win32 | Implemented |
-| TALLY | FUNCTION | codegen builtin | Implemented |
-| TAN | FUNCTION | LLVM intrinsic | Implemented |
-| TANH | FUNCTION | LLVM intrinsic | Implemented |
-| TCP ACCEPT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| TCP LINE INPUT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| TCP OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| TCP PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| TCP RECV | STATEMENT | PB/Win + PB/CC | Established |
-| TCP SEND | STATEMENT | PB/Win + PB/CC | Established |
-| TCP_NOTIFY | FUNCTION | codegen builtin | Implemented |
-| THREAD CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD CREATE | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD RESUME | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD STATUS | STATEMENT | PB/Win + PB/CC | Established |
-| THREAD SUSPEND | STATEMENT | PB/Win + PB/CC | Established |
-| THREADCOUNT | FUNCTION | codegen builtin | Implemented |
-| THREADID | FUNCTION | Win32 (GetCurrentThreadId) | Implemented |
-| THREADED | STATEMENT | PB/Win + PB/CC | Established |
-| TIMER | FUNCTION | codegen builtin | Implemented |
-| TIX | STATEMENT | PB/Win + PB/CC | Established |
-| TOOLBAR | STATEMENT | PB/Win only | Established |
-| TRACE | STATEMENT | PB/Win + PB/CC | Established |
-| TREEVIEW | STATEMENT | PB/Win only | Established |
-| TRIM | FUNCTION | codegen builtin | Implemented |
-| TRIM$ | FUNCTION | Win32 | Implemented |
-| TRUNC | FUNCTION | LLVM intrinsic | Implemented |
-| TRY/END TRY | BLOCK | PB/Win + PB/CC | Established |
-| TYPE SET | STATEMENT | PB/Win + PB/CC | Established |
-| TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
-| UCASE | FUNCTION | codegen builtin | Implemented |
-| UCASE$ | FUNCTION | Win32 | Implemented |
-| UCODE$ | FUNCTION | Win32 | Implemented |
-| UCODEPAGE | STATEMENT | PB/Win + PB/CC | Established |
-| UDP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Established |
-| UDP OPEN | STATEMENT | PB/Win + PB/CC | Established |
-| UDP RECV | STATEMENT | PB/Win + PB/CC | Established |
-| UDP SEND | STATEMENT | PB/Win + PB/CC | Established |
-| UDP_NOTIFY | FUNCTION | codegen builtin | Implemented |
-| UNLOCK | STATEMENT | PB/Win + PB/CC | Established |
-| UNWRAP | FUNCTION | codegen builtin | Implemented |
-| UNWRAP$ | FUNCTION | Win32 | Implemented |
-| USING | FUNCTION | codegen builtin | Implemented |
-| USING$ | FUNCTION | Win32 | Implemented |
-| UTF8TOCHR | FUNCTION | codegen builtin | Implemented |
-| UTF8TOCHR$ | FUNCTION | Win32 | Implemented |
-| VAL | STATEMENT | PB/Win + PB/CC | Established |
-| VARPTR | FUNCTION | codegen builtin | Implemented |
-| VERIFY | FUNCTION | codegen builtin | Implemented |
-| WAITKEY | FUNCTION | codegen builtin | Implemented |
-| WINDOW GET | STATEMENT | PB/Win only | Established |
-| WINDOW SET | STATEMENT | PB/Win only | Established |
-| WORD | FUNCTION | codegen builtin | Implemented |
-| WRAP | FUNCTION | codegen builtin | Implemented |
-| WRAP$ | FUNCTION | Win32 | Implemented |
-| WRITE | FUNCTION | codegen builtin | Implemented |
-|WRITE#|STATEMENT|PB/Win + PB/CC| Implemented || XPRINT ARC | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT BOX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CANCEL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CELL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT CLOSE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT COLOR | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT COPY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT ELLIPSE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET ATTACH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CANVAS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CLIENT | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET CLIP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET COPIES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET DC | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET LINES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET MIX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET POS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET PPI | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SCALE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT GET WRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT LINE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT PIE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT POLYGON | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT PRINT | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT RENDER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SCALE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET CLIP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COLLATE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COLORMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET COPIES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET DUPLEX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET FONT | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET MIX | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET ORIENTATION | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET OVERLAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PAGES | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET PIXEL | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET POS | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET QUALITY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET STRETCHMODE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET TEXTALIGN | STATEMENT | PB/Win + PB/CC | Proposed New |
-| XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET WORDWRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SET WRAP | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT STYLE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT TEXT SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT WIDTH | STATEMENT | PB/Win + PB/CC | Established |
-| XPRINT_ARC | FUNCTION | codegen builtin | Implemented |
-| XPRINT_ATTACH | FUNCTION | codegen builtin | Implemented |
-| XPRINT_BOX | FUNCTION | codegen builtin | Implemented |
-| XPRINT_CANCEL | FUNCTION | codegen builtin | Implemented |
-| XPRINT_CELL | FUNCTION | codegen builtin | Implemented |
-| XPRINT_CELL_SIZE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_CHR_SIZE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_CLOSE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_COPY | FUNCTION | codegen builtin | Implemented |
-| XPRINT_ELLIPSE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_FORMFEED | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_ATTACH | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_CANVAS | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_CLIENT | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_CLIP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_COLLATE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_COLOR | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_COLORMODE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_COPIES | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_DC | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_DUPLEX | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_LINES | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_MARGIN | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_MIX | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_ORIENTATION | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_OVERLAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_PAGES | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_PAPER | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_PAPERS | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_PIXEL | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_POS | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_PPI | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_QUALITY | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_SCALE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_SELECTION | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_SIZE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_STRETCHMODE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_TEXTALIGN | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_TRAY | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_TRAYS | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_WORDWRAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_GET_WRAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_IMAGELIST | FUNCTION | codegen builtin | Implemented |
-| XPRINT_LINE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_PIE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_POLYGON | FUNCTION | codegen builtin | Implemented |
-| XPRINT_POLYLINE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_PREVIEW | FUNCTION | codegen builtin | Implemented |
-| XPRINT_PRINT | FUNCTION | codegen builtin | Implemented |
-| XPRINT_RENDER | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SCALE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_CLIP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_COLLATE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_COLOR | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_COLORMODE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_COPIES | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_DUPLEX | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_FONT | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_MIX | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_ORIENTATION | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_OVERLAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_PAGES | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_PAPER | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_PIXEL | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_POS | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_QUALITY | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_STRETCHMODE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_TEXTALIGN | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_TRAY | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_WORDWRAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SET_WRAP | FUNCTION | codegen builtin | Implemented |
-| XPRINT_SPLIT | FUNCTION | codegen builtin | Implemented |
-| XPRINT_STRETCH | FUNCTION | codegen builtin | Implemented |
-| XPRINT_STYLE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_TEXT_SIZE | FUNCTION | codegen builtin | Implemented |
-| XPRINT_WIDTH | FUNCTION | codegen builtin | Implemented |
-
-## 🚧 Tier-3 DDT (129, deferred to next update)
-
-| Keyword | Official kind |
-|---------|---------------|
-| ACCEL ATTACH | STATEMENT |
-| COMBOBOX | STATEMENT |
-| CONTROL ADD *CUSTOM CONTROL* | STATEMENT |
-| CONTROL ADD BUTTON | STATEMENT |
-| CONTROL ADD CHECK3STATE | STATEMENT |
-| CONTROL ADD CHECKBOX | STATEMENT |
-| CONTROL ADD COMBOBOX | STATEMENT |
-| CONTROL ADD FRAME | STATEMENT |
-| CONTROL ADD GRAPHIC | STATEMENT |
-| CONTROL ADD HEADER | STATEMENT |
-| CONTROL ADD IMAGE | STATEMENT |
-| CONTROL ADD IMAGEX | STATEMENT |
-| CONTROL ADD IMGBUTTON | STATEMENT |
-| CONTROL ADD IMGBUTTONX | STATEMENT |
-| CONTROL ADD LABEL | STATEMENT |
-| CONTROL ADD LINE | STATEMENT |
-| CONTROL ADD LISTBOX | STATEMENT |
-| CONTROL ADD LISTVIEW | STATEMENT |
-| CONTROL ADD OPTION | STATEMENT |
-| CONTROL ADD PROGRESSBAR | STATEMENT |
-| CONTROL ADD SCROLLBAR | STATEMENT |
-| CONTROL ADD STATUSBAR | STATEMENT |
-| CONTROL ADD TAB | STATEMENT |
-| CONTROL ADD TEXTBOX | STATEMENT |
-| CONTROL ADD TOOLBAR | STATEMENT |
-| CONTROL ADD TREEVIEW | STATEMENT |
-| CONTROL DISABLE | STATEMENT |
-| CONTROL ENABLE | STATEMENT |
-| CONTROL GET CHECK | STATEMENT |
-| CONTROL GET CLIENT | STATEMENT |
-| CONTROL GET LOC | STATEMENT |
-| CONTROL GET SIZE | STATEMENT |
-| CONTROL GET TEXT | STATEMENT |
-| CONTROL GET USER | STATEMENT |
-| CONTROL HANDLE | STATEMENT |
-| CONTROL HIDE | STATEMENT |
-| CONTROL KILL | STATEMENT |
-| CONTROL NORMALIZE | STATEMENT |
-| CONTROL POST | STATEMENT |
-| CONTROL REDRAW | STATEMENT |
-| CONTROL SEND | STATEMENT |
-| CONTROL SET CHECK | STATEMENT |
-| CONTROL SET CLIENT | STATEMENT |
-| CONTROL SET COLOR | STATEMENT |
-| CONTROL SET FOCUS | STATEMENT |
-| CONTROL SET FONT | STATEMENT |
-| CONTROL SET IMAGE | STATEMENT |
-| CONTROL SET IMAGEX | STATEMENT |
-| CONTROL SET IMGBUTTON | STATEMENT |
-| CONTROL SET IMGBUTTONX | STATEMENT |
-| CONTROL SET LOC | STATEMENT |
-| CONTROL SET OPTION | STATEMENT |
-| CONTROL SET SIZE | STATEMENT |
-| CONTROL SET TEXT | STATEMENT |
-| CONTROL SET USER | STATEMENT |
-| CONTROL SHOW STATE | STATEMENT |
-| CONTROL TRAXOMATIC | STATEMENT |
-| DIALOG DEFAULT FONT | STATEMENT |
-| DIALOG DISABLE | STATEMENT |
-| DIALOG ENABLE | STATEMENT |
-| DIALOG END | STATEMENT |
-| DIALOG GET CLIENT | STATEMENT |
-| DIALOG GET LOC | STATEMENT |
-| DIALOG GET SIZE | STATEMENT |
-| DIALOG GET TEXT | STATEMENT |
-| DIALOG GET USER | STATEMENT |
-| DIALOG HIDE | STATEMENT |
-| DIALOG MAXIMIZE | STATEMENT |
-| DIALOG MINIMIZE | STATEMENT |
-| DIALOG NEW | STATEMENT |
-| DIALOG NONSTABLE | STATEMENT |
-| DIALOG NORMALIZE | STATEMENT |
-| DIALOG PIXELS | STATEMENT |
-| DIALOG POST | STATEMENT |
-| DIALOG REDRAW | STATEMENT |
-| DIALOG SEND | STATEMENT |
-| DIALOG SET CLIENT | STATEMENT |
-| DIALOG SET COLOR | STATEMENT |
-| DIALOG SET ICON | STATEMENT |
-| DIALOG SET LOC | STATEMENT |
-| DIALOG SET SIZE | STATEMENT |
-| DIALOG SET TEXT | STATEMENT |
-| DIALOG SET USER | STATEMENT |
-| DIALOG SHOW MODAL | STATEMENT |
-| DIALOG SHOW MODELESS | STATEMENT |
-| DIALOG SHOW STATE | STATEMENT |
-| DIALOG STABILIZE | STATEMENT |
-| DIALOG TRAXOMATIC | STATEMENT |
-| DIALOG UNITS | STATEMENT |
-| DIALOG XLAT | STATEMENT |
-| GRAPHIC BITMAP CAPTURE | STATEMENT |
-| GRAPHIC BITMAP LOAD | STATEMENT |
-| GRAPHIC CELL | STATEMENT |
-| GRAPHIC CELL SIZE | STATEMENT |
-| GRAPHIC CHR SIZE | STATEMENT |
-| GRAPHIC COLOR | STATEMENT |
-| GRAPHIC COPY | STATEMENT |
-| GRAPHIC GET CANVAS | STATEMENT |
-| GRAPHIC GET CLIENT | STATEMENT |
-| GRAPHIC GET DC | STATEMENT |
-| GRAPHIC GET LOC | STATEMENT |
-| GRAPHIC GET MIX | STATEMENT |
-| GRAPHIC GET OVERLAP | STATEMENT |
-| GRAPHIC GET PIXEL | STATEMENT |
-| GRAPHIC GET SCROLLTEXT | STATEMENT |
-| GRAPHIC IMAGELIST | STATEMENT |
-| GRAPHIC INKEY$ | STATEMENT |
-| GRAPHIC INPUT | STATEMENT |
-| GRAPHIC INPUT FLUSH | STATEMENT |
-| GRAPHIC INSTAT | STATEMENT |
-| GRAPHIC LINE INPUT | STATEMENT |
-| GRAPHIC POLYGON | STATEMENT |
-| GRAPHIC PRINT | STATEMENT |
-| GRAPHIC REDRAW | STATEMENT |
-| GRAPHIC RENDER | STATEMENT |
-| GRAPHIC SAVE | STATEMENT |
-| GRAPHIC SET CLIENT | STATEMENT |
-| GRAPHIC SET FOCUS | STATEMENT |
-| GRAPHIC SET LOC | STATEMENT |
-| GRAPHIC SET MIX | STATEMENT |
-| GRAPHIC SET OVERLAP | STATEMENT |
-| GRAPHIC SET SCROLLTEXT | STATEMENT |
-| GRAPHIC SPLIT | STATEMENT |
-| GRAPHIC STRETCH | STATEMENT |
-| GRAPHIC STYLE | STATEMENT |
-| GRAPHIC WAITKEY$ | STATEMENT |
-| GRAPHIC WIDTH | STATEMENT |
-| GRAPHIC WINDOW | STATEMENT |
-| GRAPHIC WINDOW CLICK | STATEMENT |
-| GRAPHIC WINDOW END | STATEMENT |
-| GRAPHIC WINDOW HIDE | STATEMENT |
-| GRAPHIC WINDOW MINIMIZE | STATEMENT |
-| GRAPHIC WINDOW NONSTABLE | STATEMENT |
-| GRAPHIC WINDOW NORMALIZE | STATEMENT |
-| GRAPHIC WINDOW STABILIZE | STATEMENT |
-| LISTBOX | STATEMENT |
-| LISTVIEW | STATEMENT |
-| MENU ATTACH | STATEMENT |
-| MENU CONTEXT | STATEMENT |
-| MENU DRAW BAR | STATEMENT |
-| SCROLLBAR | STATEMENT |
-| STATUSBAR | STATEMENT |
-| TAB | STATEMENT |
-| TOOLBAR | STATEMENT |
-| TREEVIEW | STATEMENT |
-
-## ⬜ Not implemented (0, alphabetical)
-
-| Keyword | Official kind | Platform | Status |
-|---------|---------------|----------|--------|
-
-
-
-
-
-
-## Files
-
-- `docs/statement-coverage.md` —this readable summary
-- `docs/statement-coverage.csv` —all rows with per-keyword status (Keyword, Kind, Platform, Status)
-
-## Method
-
-1. Parse `keyword-index.md` from the official docs package (735 keywords, one line per keyword).
-2. Keep statement-class keywords (STATEMENT / BLOCK / KEYWORD / DIRECTIVE) = 504 (494 STATEMENT + 10 BLOCK).
-3. Grep `codegen.rs` for the runtime helpers / Win32 API calls / compile_* functions each keyword maps to.
-4. Classify: IMPLEMENTED (real codegen evidence) / TIER3_DDT (GUI framework, deferred) / NOT_IMPL (no evidence).
+| #ALIGN METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #BLOAT METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #BREAK METASTATEMENT | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| #COM METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #COMPILE METASTATEMENT | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| #COMPILER METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #CONSOLE METASTATEMENT | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| #DEBUG BOUNDS METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #DEBUG CODE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #DEBUG DISPLAY METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #DEBUG ERROR METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #DEBUG NUMERIC METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #DEBUG PRINT METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #DIM METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #EXPORT METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #IF/#ELSEIF/#ELSE/#ENDIF METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #INCLUDE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #LINK METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #MESSAGES METASTATEMENT | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| #OPTIMIZE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #OPTION METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #PAGE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #PBFORMS METASTATEMENT | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| #REGISTER METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #RESOURCE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| #STACK METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #TOOLS METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| #UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ABS | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ACCEL ATTACH | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | ✅ Implemented (this fork) |
+| ACOS | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ACOSH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ARRAY ADD | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY ARRAYIX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY ASSIGN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY COPY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY DELETE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY INSERT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY REDIM DECR | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY REDIM INCR | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY REVERSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY SCAN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY SELECT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY SORT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ARRAY SWAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| ARRAY UNIQUE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ARRAY_REDIM_DECR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ARRAY_REDIM_INCR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ARRAY_SELECT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ARRAY_TAGARRAY | FUNCTION | codegen builtin | 🔲 Proposed (not yet implemented) |
+| ARRAY_TAGARRAY_ERASE | FUNCTION | codegen builtin | 🔲 Proposed (not yet implemented) |
+| ASC | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ASIN | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ASINH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ASM | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ASMDATA / END ASMDATA | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ATANH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ATN | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| ATN2 | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| BEEP | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| BGR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| BIN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| BIN$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| BIT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| BIT CALC | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| BITS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| BITS$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| BITSE | FUNCTION | codegen builtin (lvalue test-and-set) | ✅ Implemented (this fork) |
+| BUILD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| BUILD$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| BYTE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CALL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CALL DWORD | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CALLSTK | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CALLSTK$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CALLSTKCOUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CBOOL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CBRT | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| CBYTE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CDBL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CDWORD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CEIL | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| CFLT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHDIR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CHDRIVE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CHOOSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CHRBYTES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHRTOOEM | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHRTOOEM$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CHRTOUTF8 | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CHRTOUTF8$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CLASS/END CLASS | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CLIP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CLIP$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CLIPBOARD | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| CLS | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| CODEPTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| COLOR | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| COMBOBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| COMM CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM LINE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM OPEN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM PRINT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM RECV | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM RESET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM SEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM SET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| COMMAND | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| COMMAND$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CONTROL ADD *CUSTOM CONTROL* | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD BUTTON | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD CHECKBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD COMBOBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD FRAME | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD GRAPHIC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD HEADER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD IMAGE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD IMAGEX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD IMGBUTTON | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD IMGBUTTONX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD LABEL | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD LINE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD LISTBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD LISTVIEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD OPTION | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD TAB | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL DISABLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL ENABLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET CHECK | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET CLIENT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET LOC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET SIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET TEXT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL GET USER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL HANDLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL HIDE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL KILL | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL NORMALIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL POST | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL REDRAW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SEND | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET CHECK | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET CLIENT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET COLOR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET FOCUS | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET FONT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET IMAGE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET IMAGEX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET IMGBUTTON | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET IMGBUTTONX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET LOC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET OPTION | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET SIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET TEXT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SET USER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL SHOW STATE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| CONTROL TRAXOMATIC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| COS | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| COSH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| COT | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| COTH | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| CQUAD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CSC | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| CSCH | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| CSET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| CSET$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CSNG | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CULNG | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CURDIR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CURDIR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| CVBYT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CVCUX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CVDWD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CVL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CVQ | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CVW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| CWORD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DATA | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DATACOUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DAYNAME | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DAYNAME$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| DEC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DEC$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| DECLARE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| DECR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DESKTOP GET CLIENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DESKTOP GET PPI | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| DESKTOP GET SIZE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DIALOG DEFAULT FONT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG DISABLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG DOEVENTS | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG ENABLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG END | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG GET CLIENT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG GET LOC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG GET SIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG GET TEXT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG GET USER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG HIDE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG MAXIMIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG MINIMIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG NEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG NONSTABLE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG NORMALIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG PIXELS | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG POST | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG REDRAW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SEND | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET CLIENT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET COLOR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET ICON | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET LOC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET SIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET TEXT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SET USER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SHOW MODAL | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SHOW MODELESS | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG SHOW STATE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG STABILIZE | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG TRAXOMATIC | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG UNITS | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIALOG XLAT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| DIM | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| DIR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DIR$ | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| DISKFREE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISKSIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISPLAY BROWSE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| DISPLAY COLOR | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| DISPLAY FONT | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| DISPLAY OPENFILE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| DISPLAY SAVEFILE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| DISPLAY_BROWSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISPLAY_COLOR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISPLAY_FONT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISPLAY_OPENFILE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DISPLAY_SAVEFILE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| DOUBLE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| END | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ENVIRON | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ENVIRON$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| EOF | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| EQV | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ERASE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ERF | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| ERL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ERL$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| ERR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ERRCLEAR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ERROR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ERROR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| EVENTS | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| EXE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| EXIST | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| EXIT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| EXP | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| EXP10 | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| EXP2 | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| EXPM1 | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| EXTRACT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| EXTRACT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| FIELD | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| FILEATTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FILECOPY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| FILENAME | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FILENAME$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| FILESCAN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| FIX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FLOOR | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| FLUSH | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| FONT END | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| FONT NEW | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| FONT_END | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FONT_NEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FOR / NEXT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| FORMAT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FORMAT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| FRAC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FRE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FREEFILE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| FUNCNAME$ | FUNCTION | codegen builtin (current_fn_name) | ✅ Implemented (this fork) |
+| FUNCTION / END FUNCTION | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| GET | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GET$ | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GET$$ | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GETATTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GET_STR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GET_WSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GLOBAL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| GLOBALMEM | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| GRAPHIC ARC | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC ATTACH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC BITMAP CAPTURE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC BITMAP END | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC BITMAP LOAD | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC BITMAP NEW | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC BOX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC CELL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC CELL SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC CHR SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC CLEAR | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC COLOR | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC COPY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC DETACH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC ELLIPSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET BITS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET CANVAS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET CAPTION | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET CLIENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET CLIP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET DC | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET LINES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET LOC | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET MIX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET OVERLAP | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC GET PIXEL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET POS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET PPI | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET SCALE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET SCROLLTEXT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC GET SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET VIEW | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET WORDWRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC GET WRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC IMAGELIST | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC INKEY$ | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC INPUT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC INPUT FLUSH | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC INSTAT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC LINE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC LINE INPUT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC PAINT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC PIE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC POLYGON | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC POLYLINE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC PRINT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC REDRAW | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC RENDER | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SAVE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SCALE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET AUTOSIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET BITS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET CAPTION | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET CLIENT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SET CLIP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET FIXED | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET FOCUS | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SET FONT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET LOC | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SET MIX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET OVERLAP | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SET PIXEL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET POS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET SCROLLTEXT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC SET SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET STRETCHMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET TEXTALIGN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET VIEW | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET VIRTUAL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET WORDWRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SET WRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC SPLIT | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC STRETCH | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC STYLE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC TEXT SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC WAITKEY$ | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WIDTH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| GRAPHIC WINDOW | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW CLICK | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW END | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW HIDE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW MINIMIZE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW NONSTABLE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW NORMALIZE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| GRAPHIC_ARC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_ATTACH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_BITMAP_END | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_BITMAP_LOAD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_BITMAP_NEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_CELL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_CHR_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_CIRCLE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_CLEAR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_COLOR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_COPY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_DETACH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_ELLIPSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_BITS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_CAPTION | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_CLIP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_DC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_LINES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_LOC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_MIX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_PIXEL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_POS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_PPI | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_SCALE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_STRETCHMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_TEXTALIGN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_VIEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_WORDWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_GET_WRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_LINE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_PAINT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_PIE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_POLYGON | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_POLYLINE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SAVE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SCALE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SCALE_PIXELS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_AUTOSIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_BITS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_CAPTION | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_CLIP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_FIXED | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_FONT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_MIX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_PIXEL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_POS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_STRETCHMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_TEXTALIGN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_VIEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_VIRTUAL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_WORDWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_SET_WRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_STYLE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| GRAPHIC_TEXT_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| HEADER | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| HEADER_CTRL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| HEX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| HEX$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| HI | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| HIWRD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| HOST ADDR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| HOST NAME | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| HYPOT | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| IF | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| IF/END IF | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| IIF | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| IMAGELIST | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| IMAGELIST_COUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| IMAGELIST_KILL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| IMAGELIST_NEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| IMP | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| IMPORT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| INCR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| INPUT FLUSH | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| INPUT# | STATEMENT | PB/CC only | ✅ Implemented (this fork) |
+| INSTANCE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| INSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| INT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| INTEGER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| INTERFACE / END INTERFACE (DIRECT) | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| INTERFACE/END INTERFACE (IDBIND) | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ISEVEN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISFALSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISFILE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISFOLDER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISINFINITE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ISNORMAL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ISODD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISTRUE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ISWIN | FUNCTION | Win32 (IsWindow/GetDlgItem) | ✅ Implemented (this fork) |
+| ITERATE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| JOIN$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| KILL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LCASE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LCASE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LEFT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LEFT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LEN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| LINE INPUT# | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| LISTBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| LISTVIEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| LO | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LOC | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LOCAL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LOCK | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LOF | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LOG | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| LOG10 | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| LOG1P | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| LOG2 | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| LONG | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LOWRD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LPRINT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LPRINT ATTACH | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LPRINT CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LPRINT FLUSH | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LPRINT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LSET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| LSET$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| LTRIM | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| LTRIM$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| MACRO/END MACRO | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MAK | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MAT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MAX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MCASE$ | FUNCTION | runtime pb_mcase_string | ✅ Implemented (this fork) |
+| MEMORY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MEMORY_FILL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MEMORY_FILLS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU ADD POPUP | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU ADD STRING | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU ATTACH | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| MENU CONTEXT | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| MENU DELETE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU DRAW BAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| MENU GET STATE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU GET TEXT | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU NEW BAR | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU NEW POPUP | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU SET STATE | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU SET TEXT | STATEMENT | PB/Win only | ✅ Implemented (this fork) |
+| MENU_ADD_POPUP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_ADD_STRING | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_DELETE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_GET_STATE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_GET_TEXT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_NEW_POPUP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_SET_STATE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MENU_SET_TEXT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| METRICS | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| MID | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MID$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MIN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKBYT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKBYT$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKCUR$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKCUX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKCUX$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKD$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKDIR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKDWD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKDWD$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKE$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKI$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKL$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKQ$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKS$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MKWRD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MKWRD$ | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| MOD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MONTHNAME | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| MONTHNAME$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| MOUSEPTR | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
+| MSGBOX | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| NAME | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| NUL$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| OBJECT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| OCT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| OCT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| OEMTOCHR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| OEMTOCHR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| ON CALL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ON ERROR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ON GOSUB | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| ON GOTO | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| OPEN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| OPTION EXPLICIT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PARSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PARSE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| PARSECOUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PATHNAME | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PATHNAME$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| PATHSCAN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PATHSCAN$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| PEEK | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PLAY | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| PLAY SOUND | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| PLAY WAVE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| POKE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PREFIX | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PRINT# | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PRINTER$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| PRINTERCOUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PROCESS GET PRIORITY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PROFILE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| PROGRESSBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| PUT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| PUT$ | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| PUT$$ | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| PUT_STR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| PUT_WSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| QUAD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| RAISEEVENT | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| RANDOMIZE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| READ | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| READ$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| REDIM | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| REGEXPR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| REGISTER | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| REGREPL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| REM | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| REMAIN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| REMAIN$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| REMOVE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| REMOVE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| REPEAT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| REPEAT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| REPLACE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RESET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RESOURCE SAVE FILE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| RESOURCE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| RESOURCE_SAVE_FILE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| RESUME | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RETAIN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| RETAIN$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| RETURN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RGB | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| RIGHT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| RIGHT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| RMDIR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RND | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| ROTATE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ROUND | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| RSET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| RSET$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| RTRIM | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| RTRIM$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| SCROLLBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| SEC | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| SECH | FUNCTION | C runtime (MSVCRT) | ✅ Implemented (this fork) |
+| SEEK | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| SELECT CASE/END SELECT | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SETATTR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SETEOF | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| SGN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| SHELL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SHIFT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SHRINK | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| SHRINK$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| SIN | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| SINGLE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| SINH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| SIZEOF | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| SLEEP | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SPACE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| SPACE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| SPLIT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SQR | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| STATIC | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| STATUSBAR | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| STR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| STRDELETE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STRDELETE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| STRING | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STRINSERT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STRINSERT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| STRPTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STRREVERSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| STRREVERSE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| SWAP | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| SWITCH | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| SWITCH$ | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| TAB | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| TAB$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| TALLY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| TAN | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| TANH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| TCP ACCEPT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP LINE INPUT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP NOTIFY | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| TCP OPEN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP PRINT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP RECV | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP SEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TCP_NOTIFY | FUNCTION | codegen builtin | 🛠 Tier-3 DDT (deferred) |
+| THREAD CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD CREATE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD GET PRIORITY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD RESUME | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD SET PRIORITY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD STATUS | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREAD SUSPEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREADCOUNT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| THREADED | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| THREADID | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| TIMER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| TIX | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TOOLBAR | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| TRACE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TREEVIEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| TRIM | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| TRIM$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| TRUNC | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
+| TRY/END TRY | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TYPE SET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| TYPE/END TYPE | BLOCK | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UCASE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| UCASE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| UCODE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| UCODEPAGE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UDP CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UDP NOTIFY | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| UDP OPEN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UDP RECV | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UDP SEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UDP_NOTIFY | FUNCTION | codegen builtin | 🛠 Tier-3 DDT (deferred) |
+| UNLOCK | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| UNWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| UNWRAP$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| USING | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| USING$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| UTF8TOCHR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| UTF8TOCHR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| VAL | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| VARPTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| VERIFY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WAITKEY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WINDOW GET | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| WINDOW SET | STATEMENT | PB/Win only | ✅ Established (upstream/core) |
+| WORD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WRAP$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
+| WRITE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WRITE# | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT ARC | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT ATTACH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT BOX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT CANCEL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT CELL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT CELL SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT CHR SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT COLOR | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT COPY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT ELLIPSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT FORMFEED | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET ATTACH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET CANVAS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET CLIENT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET CLIP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET COLLATE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET COLORMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET COPIES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET DC | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET DUPLEX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET LINES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET MARGIN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET MIX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET ORIENTATION | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET OVERLAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET PAGES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET PAPER | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET PAPERS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET PIXEL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET POS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET PPI | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET QUALITY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET SCALE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET SELECTION | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET STRETCHMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET TEXTALIGN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET TRAY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET TRAYS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET WORDWRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT GET WRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT IMAGELIST | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT LINE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT PIE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT POLYGON | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT POLYLINE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT PREVIEW | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT PRINT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT RENDER | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SCALE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET CLIP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET COLLATE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET COLORMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET COPIES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET DUPLEX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET FONT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET MIX | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET ORIENTATION | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET OVERLAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET PAGES | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET PAPER | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET PIXEL | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET POS | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET QUALITY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET STRETCHMODE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET TEXTALIGN | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET TRAY | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET WORDWRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SET WRAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT SPLIT | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT STRETCH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT STYLE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT TEXT SIZE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT WIDTH | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| XPRINT_ARC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_ATTACH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_BOX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_CANCEL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_CELL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_CELL_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_CHR_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_CLOSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_COPY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_ELLIPSE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_FORMFEED | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_ATTACH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_CANVAS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_CLIENT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_CLIP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_COLLATE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_COLOR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_COLORMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_COPIES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_DC | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_DUPLEX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_LINES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_MARGIN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_MIX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_ORIENTATION | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_OVERLAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_PAGES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_PAPER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_PAPERS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_PIXEL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_POS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_PPI | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_QUALITY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_SCALE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_SELECTION | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_STRETCHMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_TEXTALIGN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_TRAY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_TRAYS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_WORDWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_GET_WRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_IMAGELIST | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_LINE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_PIE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_POLYGON | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_POLYLINE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_PREVIEW | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_PRINT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_RENDER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SCALE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_CLIP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_COLLATE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_COLOR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_COLORMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_COPIES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_DUPLEX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_FONT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_MIX | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_ORIENTATION | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_OVERLAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_PAGES | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_PAPER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_PIXEL | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_POS | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_QUALITY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_STRETCHMODE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_TEXTALIGN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_TRAY | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_WORDWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SET_WRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_SPLIT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_STRETCH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_STYLE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_TEXT_SIZE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_WIDTH | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| AND | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| NOT | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| OR | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| XOR | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| DEF | OPERATOR | PB/Win + PB/CC | 🔲 Proposed new (not yet implemented) |
+| DIR CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| NUL | FUNCTION | PB/Win + PB/CC | ✅ Established (upstream/core) |
+| ACODE | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| FUNCNAME | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| MCASE | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |
+| COMM LINE INPUT | STATEMENT | PB/Win | ✅ Implemented (this fork) |
+| GRAPHIC_PRINT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| XPRINT_COLOR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
+| WAITKEY$ | FUNCTION | PB/CC + console | ✅ Implemented (this fork) |
