@@ -251,10 +251,10 @@ DISPLAY FONT,STATEMENT,PB/Win only,Established
 DISPLAY OPENFILE,STATEMENT,PB/Win only,Established
 DISPLAY SAVEFILE,STATEMENT,PB/Win only,Established
 DISPLAY_BROWSE,FUNCTION,codegen builtin,Implemented
-DISPLAY_COLOR,FUNCTION,codegen builtin,Proposed Improvement
-DISPLAY_FONT,FUNCTION,codegen builtin,Proposed Improvement
+DISPLAY_COLOR,FUNCTION,codegen builtin,Implemented
+DISPLAY_FONT,FUNCTION,codegen builtin,Implemented
 DISPLAY_OPENFILE,FUNCTION,codegen builtin,Implemented
-DISPLAY_SAVEFILE,FUNCTION,codegen builtin,Proposed Improvement
+DISPLAY_SAVEFILE,FUNCTION,codegen builtin,Implemented
 DOUBLE,FUNCTION,codegen builtin,Implemented
 END,STATEMENT,PB/Win + PB/CC,Established
 ENVIRON,STATEMENT,PB/Win + PB/CC,Established

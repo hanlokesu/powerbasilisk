@@ -36,6 +36,72 @@ __declspec(dllimport) void* __stdcall LockResource(void* hResData);
 #define RT_RCDATA MAKEINTRESOURCE(10)
 #define MAKEINTRESOURCEA(i) ((const char*)((unsigned long long)(i)))
 #define RT_RCDATA MAKEINTRESOURCEA(10)
+
+/* === Common dialog API declarations (comdlg32.dll) === */
+#define MAX_PATH 260
+
+typedef struct {
+    unsigned long lStructSize;
+    void* hwndOwner;
+    void* hInstance;
+    const char* lpstrFilter;
+    char* lpstrCustomFilter;
+    unsigned long nMaxCustFilter;
+    unsigned long nFilterIndex;
+    char* lpstrFile;
+    unsigned long nMaxFile;
+    char* lpstrFileTitle;
+    unsigned long nMaxFileTitle;
+    const char* lpstrInitialDir;
+    const char* lpstrTitle;
+    unsigned long Flags;
+    unsigned short nFileOffset;
+    unsigned short nFileExtension;
+    const char* lpstrDefExt;
+    void* lCustData;
+    void* lpfnHook;
+    const char* lpTemplateName;
+} OPENFILENAMEA;
+
+typedef struct {
+    unsigned long lStructSize;
+    void* hwndOwner;
+    void* hInstance;
+    unsigned long rgbResult;
+    unsigned char* lpCustColors;
+    unsigned long Flags;
+    void* lCustData;
+    void* lpfnHook;
+    const char* lpTemplateName;
+} CHOOSECOLORA;
+
+typedef struct {
+    unsigned long lStructSize;
+    void* hwndOwner;
+    void* hDC;
+    char* lpLogFont;
+    int iPointSize;
+    unsigned long Flags;
+    unsigned long rgbColors;
+    void* lCustData;
+    void* lpfnHook;
+    const char* lpTemplateName;
+    void* hInstance;
+    char* lpszStyle;
+    unsigned short nFontType;
+    int nSizeMin;
+    int nSizeMax;
+} CHOOSEFONTA;
+
+__declspec(dllimport) int __stdcall GetSaveFileNameA(OPENFILENAMEA* lpofn);
+__declspec(dllimport) int __stdcall ChooseColorA(CHOOSECOLORA* lpcc);
+__declspec(dllimport) int __stdcall ChooseFontA(CHOOSEFONTA* lpcf);
+
+#define OFN_OVERWRITEPROMPT 0x00000002
+#define CC_RGBINIT 0x00000001
+#define CF_SCREENFONTS 0x00000001
+#define CF_INITTOLOGFONTSTRUCT 0x00000040
+
 __declspec(dllimport) int __stdcall EnableMenuItem(void* h, unsigned int id, unsigned int f);
 __declspec(dllimport) int __stdcall CheckMenuItem(void* h, unsigned int id, unsigned int f);
 __declspec(dllimport) int __stdcall GetMenuStringA(void* h, unsigned int id, char* buf, int max, unsigned int f);
@@ -5206,11 +5272,56 @@ int pb_display_openfile(const char* title, const char* filter, const char* initi
     return 0;
 }
 int pb_display_savefile(const char* title, const char* filter, const char* initialdir, char** out) {
-    if (out) *out = SysAllocStringByteLen("", 0);
+    if (!out) return 0;
+    char file_buf[MAX_PATH] = {0};
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.lpstrFilter = filter ? filter : "All Files\0*.*\0";
+    ofn.lpstrFile = file_buf;
+    ofn.nMaxFile = MAX_PATH;
+    ofn.lpstrInitialDir = initialdir;
+    ofn.lpstrTitle = title;
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+    if (GetSaveFileNameA(&ofn)) {
+        *out = SysAllocStringByteLen(file_buf, (unsigned int)strlen(file_buf));
+        return 1;
+    }
+    *out = SysAllocStringByteLen("", 0);
     return 0;
 }
-int pb_display_color(long* out_color) { if (out_color) *out_color = 0; return 0; } /* noop: return black */
-int pb_display_font(char** out_font) { if (out_font) *out_font = SysAllocStringByteLen("", 0); return 0; } /* noop */
+int pb_display_color(long* out_color) {
+    if (!out_color) return 0;
+    static unsigned char cust_colors[16] = {0};
+    CHOOSECOLORA cc = {0};
+    cc.lStructSize = sizeof(CHOOSECOLORA);
+    cc.rgbResult = *out_color;
+    cc.lpCustColors = cust_colors;
+    cc.Flags = CC_RGBINIT;
+    if (ChooseColorA(&cc)) {
+        *out_color = cc.rgbResult;
+        return 1;
+    }
+    return 0;
+}
+int pb_display_font(char** out_font) {
+    if (!out_font) {
+        *out_font = SysAllocStringByteLen("", 0);
+        return 0;
+    }
+    static char logfont[256] = {0};
+    CHOOSEFONTA cf = {0};
+    cf.lStructSize = sizeof(CHOOSEFONTA);
+    cf.lpLogFont = logfont;
+    cf.Flags = CF_SCREENFONTS | CF_INITTOLOGFONTSTRUCT;
+    if (ChooseFontA(&cf)) {
+        /* Return face name from LOGFONTA (lfFaceName at offset 28) */
+        char* face = logfont + 28;
+        *out_font = SysAllocStringByteLen(face, (unsigned int)strlen(face));
+        return 1;
+    }
+    *out_font = SysAllocStringByteLen("", 0);
+    return 0;
+}
 int pb_display_browse(const char* title, const char* initialdir, char** out) {
     if (out) *out = SysAllocStringByteLen("", 0);
     return 0;
