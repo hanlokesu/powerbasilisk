@@ -10753,6 +10753,7 @@ impl Compiler {
             "THREADCOUNT" => Some(self.builtin_count0(fb, "pb_thread_count")),
             "LBOUND" => Some(Ok(fb.const_i32(1))), /* PB default lower bound = 1 */
             "UBOUND" => Some(Ok(fb.const_i32(0))), /* TODO: track array dimensions */
+            "JOIN$" => Some(self.builtin_join(fb, args)),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -11922,6 +11923,20 @@ impl Compiler {
 
     fn builtin_count0(&mut self, fb: &mut FunctionBuilder, fname: &str) -> PbResult<Val> {
         Ok(fb.call(&IrType::I64, fname, &[]))
+    }
+
+    fn builtin_join(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        /* JOIN$(array(), delimiter$) */
+        if args.len() != 2 {
+            return Err(PbError::runtime(
+                "JOIN$: expected (array(), delimiter$)",
+            ));
+        }
+        let arr_ptr = self.compile_expr(fb, &args[0])?;
+        let delim = self.compile_expr(fb, &args[1])?;
+        let delim_ptr = self.convert_value(fb, &delim, &IrType::Ptr, &PbType::String);
+        let arr_ptr = self.convert_value(fb, &arr_ptr, &IrType::Ptr, &PbType::String);
+        Ok(fb.call(&IrType::Ptr, "pb_join", &[arr_ptr, delim_ptr]))
     }
 
     fn builtin_threadid(&mut self, fb: &mut FunctionBuilder) -> PbResult<Val> {

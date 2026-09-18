@@ -5732,3 +5732,37 @@ long long pb_thread_count(void) {
     }
     return n;
 }
+
+
+/* === JOIN$: concatenate string array with delimiter === */
+char* pb_join(char** arr, const char* delim) {
+    if (!arr || !delim) return SysAllocStringByteLen("", 0);
+
+    /* First pass: calculate total length */
+    size_t total = 0;
+    int count = 0;
+    for (int i = 0; arr[i] != NULL; i++) {
+        if (i > 0) total += strlen(delim);
+        total += strlen(arr[i]);
+        count++;
+    }
+
+    if (count == 0) return SysAllocStringByteLen("", 0);
+
+    /* Allocate result */
+    char* result = SysAllocStringByteLen(NULL, (unsigned int)total);
+    if (!result) return SysAllocStringByteLen("", 0);
+
+    /* Second pass: concatenate */
+    char* p = result;
+    for (int i = 0; i < count; i++) {
+        if (i > 0) {
+            strcpy(p, delim);
+            p += strlen(delim);
+        }
+        strcpy(p, arr[i]);
+        p += strlen(arr[i]);
+    }
+
+    return result;
+}
