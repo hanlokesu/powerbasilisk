@@ -334,9 +334,9 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **309 keywords newly implemented by this fork** - not present in upstream `benstopics/powerbasilisk` at all, all verified via live compilation and testing. For the record: upstream itself shipped only **~68** core statements/builtins (last commit 2026-02-18); the rest of the 481-keyword feature set is this fork's work.
+> **~413 keywords implemented by this fork** (the 481 available keywords minus the ~68 real statements upstream itself wrote). Of these, **309 are brand-new** (not present in upstream at all); the remaining ~104 complete statements upstream only half-supported. All verified via live compilation and testing. The grid below lists the 309 brand-new keywords alphabetically.
 
-**All 309 keywords implemented by this fork (alphabetical):**
+**The 309 brand-new keywords implemented by this fork (alphabetical; ~413 fork total including ~104 completions):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
