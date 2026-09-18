@@ -417,6 +417,22 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.117 (2026-09-18) — Batch 117: Docs sync (16 items already implemented but marked Proposed)
+
+Cleanup pass: scanned runtime pb_runtime.c and found 16 keywords that already had real implementations but were incorrectly marked as "Proposed" in the coverage CSV. Updated CSV + MD to reflect reality:
+
+**Fixed status (Proposed → Implemented):**
+- RESOURCE SAVE FILE
+- FONT NEW / FONT END (statement + function forms)
+- GRAPHIC GET CLIENT / GET LOC / GET SIZE
+- GRAPHIC SET AUTOSIZE / SET SIZE / SET VIRTUAL
+- GRAPHIC GET TEXTALIGN / SET TEXTALIGN
+- XPRINT GET TEXTALIGN / SET TEXTALIGN / XPRINT_STRETCH
+- HEADER CTRL
+
+Coverage: 468 implemented / 429 established / 18 proposed (all GUI Tier-3).
+
+
 ### v0.1.116 (2026-09-18) — Batch 116: DISPLAY OPENFILE + BROWSE
 
 Replaced 2 more stubs with real Win32 common dialogs:
