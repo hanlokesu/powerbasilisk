@@ -242,7 +242,6 @@ DIALOG XLAT,STATEMENT,PB/Win only,Proposed New
 DIM,STATEMENT,PB/Win + PB/CC,Implemented
 DIR,FUNCTION,codegen builtin,Implemented
 DIR$,FUNCTION,PB/Win + PB/CC,Implemented
-DIR$,FUNCTION,Win32,Implemented
 DISKFREE,FUNCTION,codegen builtin,Implemented
 DISKSIZE,FUNCTION,codegen builtin,Implemented
 DISPLAY BROWSE,STATEMENT,PB/Win only,Established
