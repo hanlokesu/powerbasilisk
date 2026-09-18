@@ -636,7 +636,7 @@ REPEAT,FUNCTION,codegen builtin,Implemented
 REPEAT$,FUNCTION,Win32,Implemented
 REPLACE,STATEMENT,PB/Win + PB/CC,Established
 RESET,STATEMENT,PB/Win + PB/CC,Established
-RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Implemented
 RESOURCE$,FUNCTION,Win32,Implemented
 RESOURCE_SAVE_FILE,FUNCTION,codegen builtin,Proposed Improvement
 RESUME,STATEMENT,PB/Win + PB/CC,Established

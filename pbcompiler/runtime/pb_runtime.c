@@ -28,6 +28,14 @@ __declspec(dllimport) unsigned long __stdcall GetFileAttributesA(const char* lpF
 __declspec(dllimport) int __stdcall CharToOemA(const char* lpszSrc, char* lpszDst);
 __declspec(dllimport) int __stdcall OemToCharA(const char* lpszSrc, char* lpszDst);
 __declspec(dllimport) unsigned int __stdcall GetMenuState(void* h, unsigned int id, unsigned int f);
+__declspec(dllimport) void* __stdcall GetModuleHandleA(const char* lpModuleName);
+__declspec(dllimport) void* __stdcall FindResourceA(void* hModule, const char* lpName, const char* lpType);
+__declspec(dllimport) unsigned long __stdcall SizeofResource(void* hModule, void* hResInfo);
+__declspec(dllimport) void* __stdcall LoadResource(void* hModule, void* hResInfo);
+__declspec(dllimport) void* __stdcall LockResource(void* hResData);
+#define RT_RCDATA MAKEINTRESOURCE(10)
+#define MAKEINTRESOURCEA(i) ((const char*)((unsigned long long)(i)))
+#define RT_RCDATA MAKEINTRESOURCEA(10)
 __declspec(dllimport) int __stdcall EnableMenuItem(void* h, unsigned int id, unsigned int f);
 __declspec(dllimport) int __stdcall CheckMenuItem(void* h, unsigned int id, unsigned int f);
 __declspec(dllimport) int __stdcall GetMenuStringA(void* h, unsigned int id, char* buf, int max, unsigned int f);
@@ -5111,10 +5119,30 @@ int pb_xprint_set_tray(int v) { g_xp_tray = v; return 1; }
 int pb_xprint_get_tray(long* out) { if (!out) return 0; *out = g_xp_tray; return 1; }
 int pb_resource_save_file(const char* resname, const char* filename) {
     if (!resname || !filename) return 0;
+
+    /* Real resource extraction via Win32 API */
+    void* hMod = GetModuleHandleA(NULL);
+    if (!hMod) return 0;
+
+    /* Find the resource (RCDATA type = user-defined resource) */
+    void* hRes = FindResourceA(hMod, resname, RT_RCDATA);
+    if (!hRes) return 0;
+
+    unsigned long size = SizeofResource(hMod, hRes);
+    if (size == 0) return 0;
+
+    void* hData = LoadResource(hMod, hRes);
+    if (!hData) return 0;
+
+    void* pData = LockResource(hData);
+    if (!pData) return 0;
+
+    /* Write to file */
     FILE* f = fopen(filename, "wb");
     if (!f) return 0;
-    /* placeholder: write empty file; real resource extraction needs FindResource */
+    fwrite(pData, 1, size, f);
     fclose(f);
+
     return 1;
 }
 /* === Batch 76: remaining XPRINT statements (completes XPRINT family) === */
