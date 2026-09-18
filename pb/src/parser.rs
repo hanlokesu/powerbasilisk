@@ -4868,7 +4868,9 @@ impl Parser {
                     };
                     self.advance(); // consume operator
                     args.push(self.parse_expression()?); // value
-                    self.expect(&Token::Comma)?;
+                    if self.peek() == &Token::Comma {
+                        self.advance(); // optional comma before TO
+                    }
                     if self.peek() == &Token::To {
                         self.advance(); // consume TO
                     }
@@ -5120,7 +5122,8 @@ impl Parser {
                 }
                 // ARRAY SELECT arr(), start, end
                 if name_upper == "ARRAY"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SELECT")
+                    && (matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SELECT")
+                        || matches!(self.peek_at(1), Some(&Token::Select)))
                 {
                     self.advance();
                     self.advance();
@@ -5165,11 +5168,18 @@ impl Parser {
 
                 // ARRAY REDIM INCR arr(), n / ARRAY REDIM DECR arr(), n
                 if name_upper == "ARRAY"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "REDIM")
+                    && (matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "REDIM")
+                        || matches!(self.peek_at(1), Some(&Token::Redim)))
                 {
                     self.advance(); // ARRAY
                     self.advance(); // REDIM
-                    let is_incr = if let Token::Identifier(w) = self.peek() {
+                    let is_incr = if matches!(*self.peek(), Token::Incr) {
+                        self.advance();
+                        true
+                    } else if matches!(*self.peek(), Token::Decr) {
+                        self.advance();
+                        false
+                    } else if let Token::Identifier(w) = self.peek() {
                         let up = w.to_uppercase();
                         self.advance();
                         up == "INCR"

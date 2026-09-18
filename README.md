@@ -404,6 +404,14 @@ exit code 0:
 | XPRINT STRETCH | XPRINT STYLE | XPRINT TEXT SIZE | XPRINT WIDTH |  |
 
 ## Changelog
+### v0.1.119 (2026-09-18) - Batch 119: fix parser silently dropping ARRAY SCAN / SELECT / REDIM INCR/DECR
+
+- **Root cause**: `SELECT`, `REDIM`, `INCR`, `DECR` are reserved keyword tokens in the lexer, but the parser guards for `ARRAY SELECT` / `ARRAY REDIM INCR/DECR` only accepted `Token::Identifier(...)`. The guards were always false, so the whole statement was silently dropped - zero LLVM IR, not even reported in `*.unimplemented.log`.
+- **ARRAY SCAN arr(), OP expr [TO var]** now emits a real `pb_array_scan_num` call. Verified: `= 33 -> index 3`, `<> 33 -> index 1`. The optional comma before `TO` is now accepted (PB allows `= 30 TO i`).
+- **ARRAY SELECT arr(), start, end** now emits `pb_array_select` (sets the global selection range used by later array operations).
+- **ARRAY REDIM INCR/DECR arr(), n** now emits `pb_array_redim_incr/decr`. Full dynamic-array reallocation is still not modeled (fixed arrays only; the runtime reports the requested new size) - honest limitation noted.
+- Tests: examples/batch119_test.bas (4/4), official regression 14/14 ALL PASS, fmt + clippy clean.
+
 
 ### v0.1.118 (2026-09-18) — Batch 118: half-finished wiring completion
 
