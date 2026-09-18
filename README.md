@@ -438,6 +438,19 @@ exit code 0:
 
 ## Changelog
 
+### v0.1.103 (2026-09-18) — Tier-2 non-GUI complete! Batch 103-108 summary
+
+**All Tier-2 non-GUI statements now verified.** 25 items moved from "Proposed" to "Implemented" across 6 batches:
+
+- **Batch 103 (v0.1.98)**: #DEBUG BOUNDS/DISPLAY/ERROR/NUMERIC, #OPTION, #RESOURCE — preprocessor accepts all #-directives.
+- **Batch 104 (v0.1.99)**: CLOSE, INPUT#, LINE INPUT#, OPEN, WRITE# — core file I/O verified working.
+- **Batch 105 (v0.1.100)**: ON GOTO, ON GOSUB, ON CALL — control flow dispatch tables verified.
+- **Batch 106 (v0.1.101)**: ARRAY REDIM DECR/INCR, ARRAY SCAN, ARRAY SELECT, ARRAY TAGARRAY, ARRAY TAGARRAY ERASE — array operations verified.
+- **Batch 107 (v0.1.102)**: DECLARE, DIM, REDIM — declaration statements verified.
+- **Batch 108 (v0.1.103)**: DIR FUNCTION AND, RESOURCE SAVE FILE — last two Tier-2 items.
+
+**Coverage**: 874 implemented / 129 Tier-3 DDT / 31 proposed (all Tier-3 GUI).
+
 ### v0.1.97 (2026-09-17) — Examples file rename to 3-digit format + docs sync fix
 
 - **Examples renamed**: all `batchXX_test.bas` → `batch0XX_test.bas` (1-2 digit) and `batch0X_test.bas` → `batch00X_test.bas` (1 digit), now that we passed 100 batches. 101 files renamed via `git mv` (history preserved).
