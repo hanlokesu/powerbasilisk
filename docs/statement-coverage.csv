@@ -241,7 +241,7 @@ DIALOG UNITS,STATEMENT,PB/Win only,Established
 DIALOG XLAT,STATEMENT,PB/Win only,Proposed New
 DIM,STATEMENT,PB/Win + PB/CC,Implemented
 DIR,FUNCTION,codegen builtin,Implemented
-DIR FUNCTION AND,STATEMENT,PB/Win + PB/CC,Implemented
+DIR$,FUNCTION,PB/Win + PB/CC,Implemented
 DIR$,FUNCTION,Win32,Implemented
 DISKFREE,FUNCTION,codegen builtin,Implemented
 DISKSIZE,FUNCTION,codegen builtin,Implemented
@@ -915,3 +915,4 @@ ACODE,FUNCTION,PB/Win + PB/CC,Implemented
 FUNCNAME,FUNCTION,PB/Win + PB/CC,Implemented
 MCASE,FUNCTION,PB/Win + PB/CC,Implemented
 COMM LINE INPUT,STATEMENT,PB/Win,Implemented
+RESOURCE SAVE FILE,STATEMENT,PB/Win,Implemented
