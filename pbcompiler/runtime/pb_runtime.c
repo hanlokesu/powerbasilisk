@@ -5311,7 +5311,13 @@ int pb_udp_notify(int socket, int eventmask) {
 }
 
 /* PROGRESSBAR: Win32 progress bar control (comctl32) */
-__declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, unsigned long long lParam);
+/* lParam is 32-bit on i686 (must match _SendMessageA@16), 64-bit on x64. */
+#if defined(_WIN64)
+typedef unsigned long long pb_lparam_t;
+#else
+typedef unsigned int pb_lparam_t;
+#endif
+__declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, pb_lparam_t lParam);
 
 #define PBM_SETRANGE 0x0401
 #define PBM_SETPOS   0x0402
