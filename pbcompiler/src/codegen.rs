@@ -10754,6 +10754,7 @@ impl Compiler {
             "LBOUND" => Some(Ok(fb.const_i32(1))), /* PB default lower bound = 1 */
             "UBOUND" => Some(Ok(fb.const_i32(0))), /* TODO: track array dimensions */
             "JOIN$" => Some(self.builtin_join(fb, args)),
+            "INPUTBOX$" => Some(self.builtin_inputbox(fb, args)),
             "RND" => Some(self.builtin_rnd(fb, args)),
             "ROUND" => Some(self.builtin_round(fb, args)),
             // String builtins
@@ -11937,6 +11938,19 @@ impl Compiler {
         let delim_ptr = self.convert_value(fb, &delim, &IrType::Ptr, &PbType::String);
         let arr_ptr = self.convert_value(fb, &arr_ptr, &IrType::Ptr, &PbType::String);
         Ok(fb.call(&IrType::Ptr, "pb_join", &[arr_ptr, delim_ptr]))
+    }
+
+    fn builtin_inputbox(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        /* INPUTBOX$(prompt$, [title$], [default$]) - console fallback */
+        if args.is_empty() {
+            return Err(PbError::runtime(
+                "INPUTBOX$: expected prompt$",
+            ));
+        }
+        let prompt = self.compile_expr(fb, &args[0])?;
+        let prompt_ptr = self.convert_value(fb, &prompt, &IrType::Ptr, &PbType::String);
+        /* Use console input: prompt, has_prompt=1, no_newline=0 */
+        Ok(fb.call(&IrType::Ptr, "pb_input_console", &[prompt_ptr, fb.const_i32(1), fb.const_i32(0)]))
     }
 
     fn builtin_threadid(&mut self, fb: &mut FunctionBuilder) -> PbResult<Val> {
