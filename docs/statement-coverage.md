@@ -4,6 +4,8 @@
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
+> **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. Upstream itself shipped only ~68 core statements/builtins (last commit 2026-02-18); nearly everything else here is this fork's work.
+
 - Rows in this matrix: **918** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
 - **772** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
 - **11** documented keywords still proposed / not yet implemented; **135** Tier-3 DDT GUI items deferred.
