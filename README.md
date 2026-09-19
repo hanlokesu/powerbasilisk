@@ -261,7 +261,7 @@ exit code 0:
 > Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
 > Updated through batch 137 (v0.2.010). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
-**All 491 keywords currently available for use (alphabetical):
+**All 491 keywords currently available for use (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
