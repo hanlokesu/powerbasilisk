@@ -5947,3 +5947,12 @@ void* pb_control_add_combobox(void* parent, long id, int x, int y, int w, int h)
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
 }
+
+void* pb_control_add_listbox(void* parent, long id, int x, int y, int w, int h) {
+    /* LBS_NOTIFY=0x1, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000,
+       WS_BORDER=0x800000, WS_VSCROLL=0x200000, WS_TABSTOP=0x10000 */
+    unsigned long style = 0x1 | 0x40000000 | 0x10000000 | 0x800000 | 0x200000 | 0x10000;
+    return CreateWindowExA(0, "LISTBOX", "", style,
+                            x, y, w, h, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}

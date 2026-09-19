@@ -1,0 +1,10 @@
+# Batch 134: ListBox
+#CONSOLE OFF
+FUNCTION PBMAIN() AS LONG
+    LOCAL hWnd AS LONG
+    LOCAL hLb AS LONG
+    WINDOW "Batch 134: ListBox", 100, 100, 400, 300 TO hWnd
+    CONTROL ADD LISTBOX, hWnd, 101, 20, 20, 200, 200 TO hLb
+    MSGBOX "ListBox created"
+    pb_message_loop
+END FUNCTION

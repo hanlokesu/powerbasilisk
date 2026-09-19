@@ -1660,6 +1660,19 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_control_add_listbox",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_type_set",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
@@ -7473,6 +7486,27 @@ impl Compiler {
                     let hcv = self.compile_expr(fb, hc)?;
                     let cstr = self.compile_str_payload(fb, tx)?;
                     fb.call_void("pb_control_set_text", &[hcv, cstr]);
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_LISTBOX" => {
+                if call.args.len() >= 7 {
+                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_listbox",
+                        &[hwnd, id, x, y, w, h],
+                    );
+                    if let Some(t) = call.args.get(6) {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
+                            fb.store(&hc, &ptr);
+                        }
+                    }
                 }
                 return Ok(());
             }
