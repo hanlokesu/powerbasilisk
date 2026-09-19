@@ -5215,7 +5215,7 @@ impl Parser {
                 // CONTROL ADD RADIOBUTTON, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="RADIOBUTTON")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="RADIOBUTTON" || w.to_uppercase()=="OPTION")
                 {
                     self.advance();
                     self.advance();
@@ -5246,7 +5246,7 @@ impl Parser {
                 // CONTROL ADD GROUPBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="GROUPBOX")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="GROUPBOX" || w.to_uppercase()=="FRAME")
                 {
                     self.advance();
                     self.advance();
