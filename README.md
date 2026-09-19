@@ -252,13 +252,15 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 
 > Summary:
-> - **481** official PowerBASIC statement/function keywords currently available for use
->   - **432** implemented or completed by this fork
+> - **491** official PowerBASIC statement/function keywords currently available for use
+>   - **442** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
-> - **130** DDT/GUI-class keywords deferred (Tier 3)
+> - **120** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
 >
-> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table). Updated through batch 123 (v0.1.123). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
+> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
+> (2026-09-19: +10 Tier-3 DDT GUI controls from batch 128-137 — WINDOW, CONTROL ADD BUTTON/EDITBOX/COMBOBOX/LISTBOX/CHECKBOX/RADIOBUTTON/GROUPBOX, CONTROL GET/SET TEXT, `?` abbreviation. First v0.2.x release.)
+> Updated through batch 137 (v0.2.010). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
 **All 481 keywords currently available for use (alphabetical):**
 
