@@ -768,6 +768,10 @@ impl Parser {
                 self.advance();
                 Ok(PbType::Long) // OBJECT = COM object pointer (simplified as LONG)
             }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("WSTRING") => {
+                self.advance();
+                Ok(PbType::String) // WSTRING = STRING alias (UTF-16 not yet modeled)
+            }
             Token::Integer => {
                 self.advance();
                 Ok(PbType::Integer)
@@ -4869,8 +4873,12 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    self.expect(&Token::To)?;
-                    let target = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_BUTTON".to_string(),
@@ -4900,8 +4908,12 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    self.expect(&Token::To)?;
-                    let target = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_EDITBOX".to_string(),
@@ -5311,8 +5323,12 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    self.expect(&Token::To)?;
-                    let target = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_LABEL".to_string(),
@@ -5366,12 +5382,25 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
+                    // Optional style, exstyle: after h, either comma (style) or To
+                    let style = if matches!(self.peek(), Token::Comma) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::IntegerLit(0)
+                    };
+                    let exstyle = if matches!(self.peek(), Token::Comma) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::IntegerLit(0)
+                    };
                     self.expect(&Token::To)?;
                     let target = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "DIALOG_NEW".to_string(),
-                        args: vec![parent, title, x, y, w, h, target],
+                        args: vec![parent, title, x, y, w, h, style, exstyle, target],
                         line,
                     }));
                 }
@@ -6681,6 +6710,12 @@ impl Parser {
         let line = self.current_line();
         self.advance(); // SELECT
         self.expect(&Token::Case)?;
+        // Optional AS LONG / AS QUAD type specifier
+        if matches!(self.peek(), Token::As) {
+            self.advance(); // AS
+                            // Skip the type keyword (LONG, QUAD, SINGLE, etc.)
+            self.advance();
+        }
         let expr = self.parse_expression()?;
         self.consume_to_eol();
         self.skip_eol();

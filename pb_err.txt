@@ -1,0 +1,7 @@
+﻿cargo :     Finished `release` profile [optimized] target(s) in 0.04s
+At line:3 char:1
++ cargo build --release -p pb 2> pb_err.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (    Finished `r...get(s) in 0.04s:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

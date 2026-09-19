@@ -7660,7 +7660,10 @@ impl Compiler {
                 if call.args.len() >= 3 {
                     let hdlg = self.compile_expr(fb, &call.args[0])?;
                     let cid = self.compile_expr(fb, &call.args[1])?;
-                    let hdlg64 = fb.inttoptr(&hdlg);
+                    let hdlg64 = match hdlg.ty {
+                        IrType::Ptr => hdlg,
+                        _ => fb.inttoptr(&hdlg),
+                    };
                     let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
                     let bp = fb.gep_byte(&buf, &fb.const_i32(0));
                     fb.call_void(
@@ -7841,15 +7844,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_NEW" => {
-                if call.args.len() >= 7 {
+                if call.args.len() >= 9 {
                     let _parent = self.compile_expr(fb, &call.args[0])?;
                     let title = self.compile_expr(fb, &call.args[1])?;
                     let x = self.compile_expr(fb, &call.args[2])?;
                     let y = self.compile_expr(fb, &call.args[3])?;
                     let w = self.compile_expr(fb, &call.args[4])?;
                     let h = self.compile_expr(fb, &call.args[5])?;
+                    let _style = self.compile_expr(fb, &call.args[6])?;
+                    let _exstyle = self.compile_expr(fb, &call.args[7])?;
                     let hc = fb.call(&IrType::Ptr, "pb_window_new", &[title, x, y, w, h]);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[8]) {
                         let hc_i = fb.ptrtoint64(&hc);
                         fb.store(&hc_i, &ptr);
                     }
