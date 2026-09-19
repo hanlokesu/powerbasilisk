@@ -5380,9 +5380,7 @@ impl Parser {
                     }));
                 }
                 // DIALOG END hDlg, result
-                if name_upper == "DIALOG"
-                    && self.peek_at(1) == Some(&Token::End)
-                {
+                if name_upper == "DIALOG" && self.peek_at(1) == Some(&Token::End) {
                     self.advance();
                     self.advance();
                     let hd = self.parse_expression()?;
