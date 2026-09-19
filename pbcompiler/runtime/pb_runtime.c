@@ -5866,8 +5866,38 @@ char* pb_join(char** arr, const char* delim) {
 }
 
 /* Tier-3 DDT GUI #1: WINDOW title$, x, y, w, h TO hWnd& */
+/* Callback table: control HWND -> C function pointer (PB SUB address) */
+#define PB_MAX_CALLBACKS 64
+static void* pb_cb_hwnd[PB_MAX_CALLBACKS];
+static void* pb_cb_fns[PB_MAX_CALLBACKS];
+static int    pb_cb_count = 0;
+
+void pb_register_callback_hwnd(void* hwnd, void* fn) {
+    for (int i = 0; i < pb_cb_count; i++) {
+        if (pb_cb_hwnd[i] == hwnd) { pb_cb_fns[i] = fn; return; }
+    }
+    if (pb_cb_count < PB_MAX_CALLBACKS) {
+        pb_cb_hwnd[pb_cb_count] = hwnd;
+        pb_cb_fns[pb_cb_count] = fn;
+        pb_cb_count++;
+    }
+}
+
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
     if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
+    if (Msg == 0x0111) /* WM_COMMAND */ {
+        unsigned int code = (unsigned int)(wParam >> 16);
+        void* hwnd_from = (void*)lParam;
+        if (code == 0 /* BN_CLICKED */) {
+            for (int i = 0; i < pb_cb_count; i++) {
+                if (pb_cb_hwnd[i] == hwnd_from) {
+                    void (*fn)(void) = (void(*)(void))pb_cb_fns[i];
+                    fn();
+                    return 0;
+                }
+            }
+        }
+    }
     return DefWindowProcA(hWnd, Msg, wParam, lParam);
 }
 

@@ -4774,6 +4774,17 @@ impl Parser {
                         line,
                     }));
                 }
+                // MESSAGE LOOP — run Windows message pump
+                if name_upper == "MESSAGE" && self.peek_at(1) == Some(&Token::Loop) {
+                    self.advance();
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "PB_MESSAGE_LOOP".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
                 // WINDOW SET TEXT hwnd, text$ / WINDOW GET TEXT hwnd TO var$
                 if name_upper == "WINDOW"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SET")
@@ -4955,6 +4966,22 @@ impl Parser {
                             }
                         }
                     }
+                }
+                // CONTROL CMD hCtrl, subname  (Tier-3 DDT GUI event dispatch)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="CMD")
+                {
+                    self.advance(); // CONTROL
+                    self.advance(); // CMD
+                    let hctrl = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let subname = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_CMD".to_string(),
+                        args: vec![hctrl, subname],
+                        line,
+                    }));
                 }
                 // CONTROL ADD COMBOBOX, hWnd, id, x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"

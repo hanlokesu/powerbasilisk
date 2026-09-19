@@ -1689,8 +1689,21 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
-        for n in ["pb_control_show","pb_control_hide","pb_control_enable","pb_control_disable","pb_control_focus"] {
-            self.module.declare_function(n, &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_register_callback_hwnd",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        for n in [
+            "pb_control_show",
+            "pb_control_hide",
+            "pb_control_enable",
+            "pb_control_disable",
+            "pb_control_focus",
+        ] {
+            self.module
+                .declare_function(n, &IrType::Void, &[IrType::Ptr], false);
         }
         self.module.declare_function(
             "pb_control_add_listbox",
@@ -7569,6 +7582,22 @@ impl Compiler {
                 if let Some(hc) = call.args.first() {
                     let v = self.compile_expr(fb, hc)?;
                     fb.call_void("pb_control_focus", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_CMD" => {
+                if call.args.len() >= 2 {
+                    let hctrl = self.compile_expr(fb, &call.args[0])?;
+                    if let Expr::Variable(name) = &call.args[1] {
+                        let upper = name.to_uppercase();
+                        let fi = self.functions.get(&upper).or_else(|| self.subs.get(&upper));
+                        if let Some(fi) = fi {
+                            let fn_ptr = Val::new(format!("@{}", fi.ir_name), IrType::Ptr);
+                            fb.call_void("pb_register_callback_hwnd", &[hctrl, fn_ptr]);
+                        } else {
+                            eprintln!("warning: CONTROL CMD: unknown sub '{}'", upper);
+                        }
+                    }
                 }
                 return Ok(());
             }
