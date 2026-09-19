@@ -1714,6 +1714,20 @@ impl Compiler {
             ],
             false,
         );
+        self.module.declare_function("pb_debug_dump", &IrType::Void, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function(
+            "pb_control_add_hscrollbar",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
         self.module.declare_function(
             "pb_control_set_pos",
             &IrType::Void,
@@ -7651,7 +7665,8 @@ impl Compiler {
                         &[parent, id, x, y, w, h],
                     );
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
-                        fb.store(&hc, &ptr);
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
                     }
                 }
                 return Ok(());
@@ -7670,7 +7685,8 @@ impl Compiler {
                         &[parent, id, x, y, w, h],
                     );
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
-                        fb.store(&hc, &ptr);
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
                     }
                 }
                 return Ok(());
