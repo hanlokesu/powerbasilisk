@@ -6084,3 +6084,14 @@ void pb_control_set_pos(void* hctrl, long pos) {
 long long pb_control_get_pos(void* hctrl) {
     return (long long)SendMessageA(hctrl, SBM_GETPOS, 0, 0);
 }
+
+/* CONTROL ADD HSCROLLBAR - horizontal scrollbar */
+void* pb_control_add_hscrollbar(void* parent, long id, int x, int y, int w, int ht) {
+    /* SBS_HORZ=0, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000, WS_TABSTOP=0x10000 */
+    unsigned long style = 0 | 0x40000000 | 0x10000000 | 0x10000;
+    void* hbar = CreateWindowExA(0, "SCROLLBAR", "", style,
+                            x, y, w, ht, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+    SendMessageA(hbar, 0x00F4 /* SBM_SETRANGE32 */, 0, 100);
+    return hbar;
+}

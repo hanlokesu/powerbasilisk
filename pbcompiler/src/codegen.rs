@@ -7637,6 +7637,25 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "CONTROL_ADD_HSCROLLBAR" => {
+                if call.args.len() >= 7 {
+                    let parent = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_hscrollbar",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        fb.store(&hc, &ptr);
+                    }
+                }
+                return Ok(());
+            }
             "CONTROL_ADD_SCROLLBAR" => {
                 if call.args.len() >= 7 {
                     let parent = self.compile_expr(fb, &call.args[0])?;
