@@ -5162,6 +5162,29 @@ impl Parser {
                     self.advance();
                     let arr = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
+                    // op form: = <> < > <= >= expr TO var
+                    let op_code = match self.peek() {
+                        Token::Eq => Some(0),
+                        Token::Neq => Some(1),
+                        Token::Lt => Some(2),
+                        Token::Gt => Some(3),
+                        Token::Lte => Some(4),
+                        Token::Gte => Some(5),
+                        _ => None,
+                    };
+                    if let Some(op) = op_code {
+                        self.advance(); // consume op
+                        let val = self.parse_expression()?;
+                        self.expect(&Token::To)?;
+                        let dst = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "ARRAY_SELECT_OP".to_string(),
+                            args: vec![arr, Expr::IntegerLit(op), val, dst],
+                            line,
+                        }));
+                    }
+                    // range form: start, end
                     let start = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let end = self.parse_expression()?;

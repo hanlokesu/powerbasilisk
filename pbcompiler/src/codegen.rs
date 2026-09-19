@@ -6097,6 +6097,24 @@ impl Compiler {
                 let ia2 = self.convert_value(fb, &a2, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_array_select", &[pa0, ia1, ia2, fb.const_i32(0)]);
             }
+            "ARRAY_SELECT_OP" => {
+                // ARRAY SELECT arr(), > 25, TO idx -> use scan runtime
+                let a0 = self.compile_expr(fb, &call.args[0])?;
+                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
+                let opv = self.compile_expr(fb, &call.args[1])?;
+                let opi = self.convert_value(fb, &opv, &IrType::I32, &PbType::Long);
+                let val = self.compile_expr(fb, &call.args[2])?;
+                let v64 = self.to_i64(fb, &val);
+                let idx = fb.call(&IrType::I64, "pb_array_scan_num", &[pa0, fb.const_i32(4), v64, opi]);
+                // store relative index into dst
+                let dst_expr = &call.args[3];
+                if let Expr::Variable(dn) = dst_expr {
+                    if let Some(info) = self.symbols.lookup(&normalize_name(dn)) {
+                        let ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
+                        fb.store(&idx, &ptr);
+                    }
+                }
+            }
             "ARRAY_TAGARRAY" => {
                 let a0 = self.compile_expr(fb, &call.args[0])?;
                 let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
