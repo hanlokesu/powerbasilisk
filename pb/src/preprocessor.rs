@@ -215,7 +215,7 @@ impl Preprocessor {
 
             // Batch 129: ? at line start -> PRINT (console) or MSGBOX (#CONSOLE OFF)
             let replaced: Option<String> = if trimmed_full.starts_with('?') {
-                let rest = trimmed_full[1..].trim_start();
+                let rest = trimmed_full.strip_prefix('?').unwrap().trim_start();
                 if console_off {
                     Some(format!("MSGBOX {}", rest))
                 } else {
@@ -336,7 +336,7 @@ impl Preprocessor {
                 if t.starts_with('?') {
                     let indent_len = emitted_text.len() - t.len();
                     let indent = &emitted_text[..indent_len];
-                    let rest = t[1..].trim_start();
+                    let rest = t.strip_prefix('?').unwrap().trim_start();
                     let replacement = if console_off {
                         format!("MSGBOX {}", rest)
                     } else {

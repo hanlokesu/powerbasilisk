@@ -7488,7 +7488,8 @@ impl Compiler {
                     let bp = fb.gep_byte(&buf, &fb.const_i32(0));
                     fb.call_void("pb_control_get_text", &[hcv, bp.clone(), fb.const_i32(256)]);
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, tgt) {
-                        let len = fb.call(&IrType::I32, "pb_str_cstr_len", &[bp.clone()]);
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
                         let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
                         fb.store(&bstr, &ptr);
                     }
