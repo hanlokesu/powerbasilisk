@@ -1607,6 +1607,20 @@ impl Compiler {
         self.module
             .declare_function("pb_message_loop", &IrType::Void, &[], false);
         self.module.declare_function(
+            "pb_control_add_button",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_type_set",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
@@ -7326,6 +7340,29 @@ impl Compiler {
                     if let Some(target) = call.args.get(5) {
                         if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
                             fb.store(&hwnd, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_BUTTON" => {
+                // CONTROL ADD BUTTON, hWnd, id, text$, x, y, w, h TO hCtrl&
+                if call.args.len() >= 8 {
+                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let hctrl = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_button",
+                        &[hwnd, id, text, x, y, w, h],
+                    );
+                    if let Some(target) = call.args.get(7) {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
+                            fb.store(&hctrl, &ptr);
                         }
                     }
                 }

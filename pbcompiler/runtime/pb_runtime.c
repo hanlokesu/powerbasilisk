@@ -5894,3 +5894,19 @@ void pb_message_loop(void) {
         DispatchMessageA(msg);
     }
 }
+
+/* Tier-3 DDT GUI #2: CONTROL ADD BUTTON */
+__declspec(dllimport) void* __stdcall CreateWindowExA(
+    unsigned long, const char*, const char*, unsigned long,
+    int, int, int, int, void*, void*, void*, void*);
+
+void* pb_control_add_button(void* parent, long id, const char* text,
+                            int x, int y, int w, int h) {
+    /* BS_DEFPUSHBUTTON = 0x01, WS_CHILD = 0x40000000,
+       WS_VISIBLE = 0x10000000, WS_TABSTOP = 0x10000 */
+    unsigned long style = 0x01 | 0x40000000 | 0x10000000 | 0x10000;
+    return CreateWindowExA(0, "BUTTON", text, style,
+                            x, y, w, h, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
