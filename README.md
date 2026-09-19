@@ -334,7 +334,7 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **432 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **444 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 | Keyword | Keyword | Keyword | Keyword | Keyword |
@@ -488,7 +488,7 @@ exit code 0:
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
 
 - **Table 1** - 481 official keywords available to users.
-- **Table 2** - 432 keywords implemented or completed by this fork.
+- **Table 2** - 444 keywords implemented or completed by this fork.
 - **Table 3** - 66 core statement/function keywords originally from upstream `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
