@@ -467,6 +467,17 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+
+### v0.1.125 (2026-09-19) — Batch 125-127: parser warning cleanup + LET keyword + ARRAY SELECT op form
+
+Parser-only fixes (no new keywords). Coverage unchanged: 481 available / 129 Tier-3 / 0 proposed.
+
+- **LET keyword real assignment** — `LET obj2 = expr` was silently dropped; now parses as a normal assignment (batch 125).
+- **win32api.inc stub** — examples referencing `#INCLUDE "win32api.inc"` no longer warn (batch 125).
+- **PROGRESSBAR / HEADER accepted** — GUI controls now parse cleanly (batch 125).
+- **GRAPHIC GET PIXEL (x,y) TO var** — parser tolerant of token position (batch 126).
+- **ARRAY SELECT arr(), op expr TO idx** — relational operators (`= <> < > <= >=`) now parse; reuses pb_array_scan_num (batch 127).
+- Verified: examples/batch106_test.bas outputs "First >25 at index: 4".
 ### v0.1.124 (2026-09-19) - Parser warning fixes: LET* peek + ARRAY SELECT comparison form
 
 - **LET *ptr = expr** - the `peek()` returned the current token (LET), not the next (`*`); switched to `peek_at(1)==Star` so the pointer-deref branch is actually taken. The "Unexpected token: Star" parse warning is gone.
