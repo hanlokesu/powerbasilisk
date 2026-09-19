@@ -467,6 +467,13 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.1.124 (2026-09-19) - Parser warning fixes: LET* peek + ARRAY SELECT comparison form
+
+- **LET *ptr = expr** - the `peek()` returned the current token (LET), not the next (`*`); switched to `peek_at(1)==Star` so the pointer-deref branch is actually taken. The "Unexpected token: Star" parse warning is gone.
+- **ARRAY SELECT arr(), OP expr, TO var** - previously only the two-numeric `start,end` range form was parsed; the comparison form (`= <> < > <= >=`) was added, mirroring ARRAY SCAN. Verified: `ARRAY SELECT arr(), > 25, TO idx` reports index 4 correctly.
+- No new keywords; these are pure parser correctness fixes. Coverage unchanged: 481 available / 130 Tier-3 / 0 proposed.
+- Tests: examples 139/139, official 5/5, fmt + clippy clean.
+
 ### v0.1.123 (2026-09-19) - Batch 123: DEF inline expansion (real, not just accepted)
 
 - **DEF fnName(params) = expr** - now actually inlines at parse time: module-level DEF declarations are stored in a `HashMap<String,(Vec<String>,Expr)>` and every `fnName(args)` call site substitutes the parameter expressions into the function body before codegen. Recursive AST substitution covers Variable/Unary/Binary/FunctionCall/ArrayAccess/TypeMember/Negate/Varptr/ByvalOverride.
