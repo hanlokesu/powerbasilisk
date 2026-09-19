@@ -1,3 +1,6 @@
+' Tier-3 DDT: BUTTON + EDITBOX - show/hide/enable/disable
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

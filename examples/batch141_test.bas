@@ -1,3 +1,6 @@
+' Tier-3 DDT: SCROLLBAR - vertical/horizontal scrollbar
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

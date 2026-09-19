@@ -1,3 +1,6 @@
+' Tier-3 DDT: DIALOG NEW + DIALOG SHOW MODAL
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

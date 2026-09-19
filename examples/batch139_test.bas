@@ -1,3 +1,6 @@
+' Tier-3 DDT: BUTTON - button click action
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

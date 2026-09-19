@@ -1,3 +1,6 @@
+' Tier-3 DDT: WINDOW NEW - basic window creation
+' Auto-generated: PowerBasilisk fork batch test
+
 FUNCTION PBMAIN() AS LONG
     LOCAL h AS QUAD
     MSGBOX "Batch 128: Tests WINDOW statement - creates a native Win32 window.", 0, "Test: WINDOW"

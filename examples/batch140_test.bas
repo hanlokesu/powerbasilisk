@@ -1,3 +1,6 @@
+' Tier-3 DDT: BUTTON + CHECKBOX - control state change
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

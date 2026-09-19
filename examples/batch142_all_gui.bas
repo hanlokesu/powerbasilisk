@@ -1,3 +1,6 @@
+' Tier-3 DDT: ALL GUI controls combined demo
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

@@ -1,3 +1,6 @@
+' Tier-3 DDT: MENU NEW BAR/POPUP/ADD STRING
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

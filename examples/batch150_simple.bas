@@ -1,3 +1,6 @@
+' Tier-3 DDT: CONTROL GET TEXT simple test
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

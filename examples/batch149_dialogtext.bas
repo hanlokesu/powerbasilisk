@@ -1,3 +1,6 @@
+' Tier-3 DDT: DIALOG text display
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 #COMPILE EXE
 

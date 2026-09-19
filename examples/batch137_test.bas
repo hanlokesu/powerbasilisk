@@ -1,3 +1,6 @@
+' Tier-3 DDT: CHECKBOX + GROUPBOX - grouped checkboxes
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 FUNCTION PBMAIN() AS LONG
     LOCAL hWnd AS QUAD

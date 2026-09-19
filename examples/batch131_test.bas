@@ -1,3 +1,6 @@
+' Tier-3 DDT: BUTTON + EDITBOX - enable/disable controls
+' Auto-generated: PowerBasilisk fork batch test
+
 #CONSOLE OFF
 FUNCTION PBMAIN() AS LONG
     LOCAL hWnd AS QUAD
