@@ -6109,6 +6109,10 @@ impl Compiler {
                 let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
                 fb.call_void("pb_array_tagarray_erase", &[pa0, fb.const_i32(0)]);
             }
+            // Accepted but no-op until GUI / OOP runtime (batch 121)
+            "ACCEL_ATTACH" | "EVENT_SOURCE" | "EVENTS" | "RAISEEVENT" | "INSTANCE" => {
+                // intentionally empty: parsed and accepted, no codegen yet
+            }
             "XPRINT_GET_MARGIN" => {
                 let mut ps = Vec::new();
                 for i in 0..4 {
@@ -8583,6 +8587,14 @@ impl Compiler {
             || fam.starts_with("DISPLAY_")
             || fam.starts_with("FONT_")
             || fam.starts_with("IMAGELIST_")
+            || fam.starts_with("ARRAY_")
+            || fam.starts_with("TCP_")
+            || fam.starts_with("UDP_")
+            || fam == "ACCEL_ATTACH"
+            || fam == "EVENT_SOURCE"
+            || fam == "EVENTS"
+            || fam == "RAISEEVENT"
+            || fam == "INSTANCE"
         {
             return Ok(());
         }

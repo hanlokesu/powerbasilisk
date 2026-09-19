@@ -1,7 +1,7 @@
-# Last updated from batch 119 (v0.1.119) - 2026-09-18,,, 
+# Last updated from batch 121 (v0.1.121) - 2026-09-19,,, 
 # Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT "implemented by upstream"). Upstream benstopics shipped only ~68 core statements; the rest is this fork.,,,
 Keyword,Kind,Platform,Status
-#ALIGN METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
+Keyword,Kind,Platform,Status
 #BLOAT METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #BREAK METASTATEMENT,STATEMENT,PB/CC only,Established
 #COM METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
@@ -31,7 +31,7 @@ Keyword,Kind,Platform,Status
 #UNIQUE METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 #UTILITY METASTATEMENT,STATEMENT,PB/Win + PB/CC,Established
 ABS,FUNCTION,LLVM intrinsic,Implemented
-ACCEL ATTACH,STATEMENT,PB/Win only,Tier-3 DDT
+ACCEL ATTACH,STATEMENT,PB/Win only,Implemented
 ACODE$,FUNCTION,codegen builtin (ANSI passthrough),Implemented
 ACOS,FUNCTION,LLVM intrinsic,Implemented
 ACOSH,FUNCTION,LLVM intrinsic,Implemented
@@ -49,14 +49,14 @@ ARRAY SELECT,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY SHUFFLE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY SORT,STATEMENT,PB/Win + PB/CC,Established
 ARRAY SWAP,STATEMENT,PB/Win + PB/CC,Implemented
-ARRAY TAGARRAY,STATEMENT,PB/Win + PB/CC,Proposed Improvement
-ARRAY TAGARRAY ERASE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+ARRAY TAGARRAY,STATEMENT,PB/Win + PB/CC,Implemented
+ARRAY TAGARRAY ERASE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY UNIQUE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY_REDIM_DECR,FUNCTION,codegen builtin,Implemented
 ARRAY_REDIM_INCR,FUNCTION,codegen builtin,Implemented
 ARRAY_SELECT,FUNCTION,codegen builtin,Implemented
-ARRAY_TAGARRAY,FUNCTION,codegen builtin,Proposed Improvement
-ARRAY_TAGARRAY_ERASE,FUNCTION,codegen builtin,Proposed Improvement
+ARRAY_TAGARRAY,FUNCTION,codegen builtin,Implemented
+ARRAY_TAGARRAY_ERASE,FUNCTION,codegen builtin,Implemented
 ASC,STATEMENT,PB/Win + PB/CC,Established
 ASIN,FUNCTION,LLVM intrinsic,Implemented
 ASINH,FUNCTION,LLVM intrinsic,Implemented
@@ -270,8 +270,8 @@ ERR,FUNCTION,codegen builtin,Implemented
 ERRCLEAR,FUNCTION,codegen builtin,Implemented
 ERROR,STATEMENT,PB/Win + PB/CC,Established
 ERROR$,FUNCTION,Win32,Implemented
-EVENT SOURCE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
-EVENTS,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+EVENT SOURCE,STATEMENT,PB/Win + PB/CC,Implemented
+EVENTS,STATEMENT,PB/Win + PB/CC,Implemented
 EXE,FUNCTION,codegen builtin,Implemented
 EXIST,FUNCTION,codegen builtin,Implemented
 EXIT,STATEMENT,PB/Win + PB/CC,Established
@@ -474,7 +474,7 @@ IMPORT,STATEMENT,PB/Win + PB/CC,Established
 INCR,STATEMENT,PB/Win + PB/CC,Established
 INPUT FLUSH,STATEMENT,PB/CC only,Established
 INPUT#,STATEMENT,PB/CC only,Implemented
-INSTANCE,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+INSTANCE,STATEMENT,PB/Win + PB/CC,Implemented
 INSTR,FUNCTION,codegen builtin,Implemented
 INT,FUNCTION,codegen builtin,Implemented
 INTEGER,FUNCTION,codegen builtin,Implemented
@@ -620,7 +620,7 @@ PUT$$,STATEMENT,PB/Win + PB/CC,Implemented
 PUT_STR,FUNCTION,codegen builtin,Implemented
 PUT_WSTR,FUNCTION,codegen builtin,Implemented
 QUAD,FUNCTION,codegen builtin,Implemented
-RAISEEVENT,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+RAISEEVENT,STATEMENT,PB/Win + PB/CC,Implemented
 RANDOMIZE,STATEMENT,PB/Win + PB/CC,Established
 READ,FUNCTION,codegen builtin,Implemented
 READ$,FUNCTION,Win32,Implemented
@@ -699,12 +699,12 @@ TANH,FUNCTION,LLVM intrinsic,Implemented
 TCP ACCEPT,STATEMENT,PB/Win + PB/CC,Established
 TCP CLOSE,STATEMENT,PB/Win + PB/CC,Established
 TCP LINE INPUT,STATEMENT,PB/Win + PB/CC,Established
-TCP NOTIFY,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
+TCP NOTIFY,STATEMENT,PB/Win + PB/CC,Implemented
 TCP OPEN,STATEMENT,PB/Win + PB/CC,Established
 TCP PRINT,STATEMENT,PB/Win + PB/CC,Established
 TCP RECV,STATEMENT,PB/Win + PB/CC,Established
 TCP SEND,STATEMENT,PB/Win + PB/CC,Established
-TCP_NOTIFY,FUNCTION,codegen builtin,Tier-3 DDT
+TCP_NOTIFY,FUNCTION,codegen builtin,Implemented
 THREAD CLOSE,STATEMENT,PB/Win + PB/CC,Established
 THREAD CREATE,STATEMENT,PB/Win + PB/CC,Established
 THREAD GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
@@ -731,11 +731,11 @@ UCASE$,FUNCTION,Win32,Implemented
 UCODE$,FUNCTION,Win32,Implemented
 UCODEPAGE,STATEMENT,PB/Win + PB/CC,Established
 UDP CLOSE,STATEMENT,PB/Win + PB/CC,Established
-UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
+UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Implemented
 UDP OPEN,STATEMENT,PB/Win + PB/CC,Established
 UDP RECV,STATEMENT,PB/Win + PB/CC,Established
 UDP SEND,STATEMENT,PB/Win + PB/CC,Established
-UDP_NOTIFY,FUNCTION,codegen builtin,Tier-3 DDT
+UDP_NOTIFY,FUNCTION,codegen builtin,Implemented
 UNLOCK,STATEMENT,PB/Win + PB/CC,Established
 UNWRAP,FUNCTION,codegen builtin,Implemented
 UNWRAP$,FUNCTION,Win32,Implemented

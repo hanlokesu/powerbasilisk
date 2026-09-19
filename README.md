@@ -222,15 +222,15 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 
 > Summary:
-> - **481** official PowerBASIC statement/function keywords currently available for use
->   - **432** implemented or completed by this fork
+> - **490** official PowerBASIC statement/function keywords currently available for use
+>   - **441** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
-> - **133** DDT/GUI-class keywords deferred (Tier 3)
-> - **9** documented keywords not yet implemented
+> - **130** DDT/GUI-class keywords deferred (Tier 3)
+> - **3** documented keywords not yet implemented
 >
-> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table). Updated through batch 118 (v0.1.118).
+> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table). Updated through batch 121 (v0.1.121).
 
-**All 481 keywords currently available for use (alphabetical):**
+**All 490 keywords currently available for use (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
@@ -467,6 +467,15 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.1.121 (2026-09-19) - Batch 121: final Tier-2 non-GUI cleanup (11 items closed)
+
+- **ARRAY TAGARRAY / ARRAY TAGARRAY ERASE** - verified real codegen already present (pb_array_tagarray / pb_array_tagarray_erase, 256-slot hash table); docs synced from Proposed to Implemented.
+- **TCP NOTIFY / UDP NOTIFY** - real pb_tcp_notify / pb_udp_notify already present; docs synced from Tier-3 to Implemented.
+- **ACCEL ATTACH** - accepted (accelerator table; no-op until GUI).
+- **EVENT SOURCE / EVENTS / RAISEEVENT / INSTANCE** - accepted (OOP event system; no-op until object runtime; variables treated as LONG pointers).
+- **Bug fix**: extended the "already-handled family" guard in codegen so ARRAY_* / TCP_* / UDP_* and the new no-op arms return Ok(()) instead of falling through to the false-positive unimplemented report (batches 51-63 same class).
+- Coverage: 490 available / 130 Tier-3 / 3 remaining proposed (LET with OBJECTS, LET with VARIANTS, DEF).
+- Tests: examples/batch121_test.bas (0 dropped), official regression 14/14, examples 138/138, fmt + clippy clean.
 ### v0.1.120 (2026-09-18) - Docs: reconcile upstream/fork contribution tables
 
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:

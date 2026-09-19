@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 119 (v0.1.119)** — 2026-09-18. All statements and functions through batch 119 are reflected in this matrix.
+> **Last updated from batch 121 (v0.1.121)** — 2026-09-19. All statements and functions through batch 121 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -8,17 +8,17 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Rows in this matrix: **918** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
 - **772** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
-- **11** documented keywords still proposed / not yet implemented; **135** Tier-3 DDT GUI items deferred.
+- **3** documented keywords still proposed / not yet implemented; **130** Tier-3 DDT GUI items deferred.
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 600 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
-| ✅ Established (upstream/core) | 172 | Available from upstream benstopics/powerbasilisk or core language |
-| ✅ **Total available** | **772** | Implemented + Established |
-| 🔲 Proposed (not yet implemented) | 11 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 135 | DDT GUI / window-callback framework, high effort, deferred |
+| ✅ Implemented (this fork) | 613 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Established (upstream/core) | 171 | Available from upstream benstopics/powerbasilisk or core language |
+| ✅ **Total available** | **784** | Implemented + Established |
+| 🔲 Proposed (not yet implemented) | 3 | Documented upstream, no codegen evidence yet |
+| 🛠 Tier-3 DDT (deferred) | 130 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (918 rows)
 
@@ -54,7 +54,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | #UNIQUE METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | #UTILITY METASTATEMENT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | ABS | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
-| ACCEL ATTACH | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
+| ACCEL ATTACH | STATEMENT | PB/Win only | Implemented |
 | ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | ✅ Implemented (this fork) |
 | ACOS | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
 | ACOSH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
@@ -72,14 +72,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
 | ARRAY SORT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | ARRAY SWAP | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
-| ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
-| ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| ARRAY TAGARRAY | STATEMENT | PB/Win + PB/CC | Implemented |
+| ARRAY TAGARRAY ERASE | STATEMENT | PB/Win + PB/CC | Implemented |
 | ARRAY UNIQUE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
 | ARRAY_REDIM_DECR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | ARRAY_REDIM_INCR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | ARRAY_SELECT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
-| ARRAY_TAGARRAY | FUNCTION | codegen builtin | 🔲 Proposed (not yet implemented) |
-| ARRAY_TAGARRAY_ERASE | FUNCTION | codegen builtin | 🔲 Proposed (not yet implemented) |
+| ARRAY_TAGARRAY | FUNCTION | codegen builtin | Implemented |
+| ARRAY_TAGARRAY_ERASE | FUNCTION | codegen builtin | Implemented |
 | ASC | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | ASIN | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
 | ASINH | FUNCTION | LLVM intrinsic | ✅ Implemented (this fork) |
@@ -293,8 +293,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ERRCLEAR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | ERROR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | ERROR$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
-| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
-| EVENTS | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Implemented |
+| EVENTS | STATEMENT | PB/Win + PB/CC | Implemented |
 | EXE | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | EXIST | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | EXIT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
@@ -497,7 +497,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | INCR | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | INPUT FLUSH | STATEMENT | PB/CC only | ✅ Established (upstream/core) |
 | INPUT# | STATEMENT | PB/CC only | ✅ Implemented (this fork) |
-| INSTANCE | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| INSTANCE | STATEMENT | PB/Win + PB/CC | Implemented |
 | INSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | INT | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | INTEGER | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
@@ -643,7 +643,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | PUT_STR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | PUT_WSTR | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | QUAD | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
-| RAISEEVENT | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| RAISEEVENT | STATEMENT | PB/Win + PB/CC | Implemented |
 | RANDOMIZE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | READ | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | READ$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
@@ -722,12 +722,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TCP ACCEPT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | TCP CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | TCP LINE INPUT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| TCP NOTIFY | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| TCP NOTIFY | STATEMENT | PB/Win + PB/CC | Implemented |
 | TCP OPEN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | TCP PRINT | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | TCP RECV | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | TCP SEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| TCP_NOTIFY | FUNCTION | codegen builtin | 🛠 Tier-3 DDT (deferred) |
+| TCP_NOTIFY | FUNCTION | codegen builtin | Implemented |
 | THREAD CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | THREAD CREATE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | THREAD GET PRIORITY | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
@@ -754,11 +754,11 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | UCODE$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
 | UCODEPAGE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | UDP CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| UDP NOTIFY | STATEMENT | PB/Win + PB/CC | 🛠 Tier-3 DDT (deferred) |
+| UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Implemented |
 | UDP OPEN | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | UDP RECV | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | UDP SEND | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| UDP_NOTIFY | FUNCTION | codegen builtin | 🛠 Tier-3 DDT (deferred) |
+| UDP_NOTIFY | FUNCTION | codegen builtin | Implemented |
 | UNLOCK | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | UNWRAP | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | UNWRAP$ | FUNCTION | Win32 | ✅ Implemented (this fork) |

@@ -5166,6 +5166,93 @@ impl Parser {
                     }));
                 }
 
+                // ACCEL ATTACH hDlg, id() — accelerator table (accepted; no-op until GUI)
+                if name_upper == "ACCEL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "ATTACH")
+                {
+                    self.advance();
+                    self.advance();
+                    let mut args = Vec::new();
+                    if self.peek() != &Token::Eol {
+                        args.push(self.parse_expression()?);
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "ACCEL_ATTACH".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // TCP NOTIFY ... / UDP NOTIFY ... — async notify window (accepted; no-op)
+                if (name_upper == "TCP" || name_upper == "UDP")
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "NOTIFY")
+                {
+                    let kw = name_upper.clone();
+                    self.advance();
+                    self.advance();
+                    let mut args = Vec::new();
+                    if self.peek() != &Token::Eol {
+                        args.push(self.parse_expression()?);
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: format!("{}_NOTIFY", kw),
+                        args,
+                        line,
+                    }));
+                }
+                // EVENT SOURCE id — accepted; no-op until OOP runtime
+                if name_upper == "EVENT"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SOURCE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "EVENT_SOURCE".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+                // EVENTS ... — accepted; no-op
+                if name_upper == "EVENTS" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "EVENTS".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+                // RAISEEVENT name[(args)] — accepted; no-op
+                if name_upper == "RAISEEVENT" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "RAISEEVENT".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+                // INSTANCE var AS ClassName — accepted; no-op (treated as LONG pointer)
+                if name_upper == "INSTANCE" {
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "INSTANCE".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+
                 // ARRAY REDIM INCR arr(), n / ARRAY REDIM DECR arr(), n
                 if name_upper == "ARRAY"
                     && (matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "REDIM")
