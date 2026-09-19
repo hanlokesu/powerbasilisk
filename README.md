@@ -47,6 +47,25 @@ silently dropped during code generation.
 > expressions. Programs built this way ran but did nothing. This branch wires
 > them to real Win32 / CRT calls and is verified against running executables.
 
+### `?` shorthand (batch 129)
+
+The `?` symbol at the start of a line is a shorthand for `PRINT` in console
+programs and `MSGBOX` in GUI programs, matching PBCC / PBWin behavior:
+
+| Source directive | `? "text"` compiles to |
+|------------------|------------------------|
+| (default — no directive) | `PRINT "text"` |
+| `#CONSOLE ON` | `PRINT "text"` |
+| `#CONSOLE OFF` | `MSGBOX "text"` |
+| `#INCLUDE "win32api.inc"` or `"windows.inc"` | `MSGBOX "text"` (auto-detected) |
+| `#COMPILE EXE` / `DLL` / `SLL` | not used to decide (present in both PBCC and PBWin) |
+
+```basic
+? "Hello"           ' default -> PRINT to console
+#CONSOLE OFF
+? "Hello"           ' -> MSGBOX popup
+```
+
 ### Diagnostics: know when your code is silently dropped
 Upstream would compile a `.bas` that uses an unimplemented statement, produce
 a working `.exe`, and never tell you that whole lines of your code did
