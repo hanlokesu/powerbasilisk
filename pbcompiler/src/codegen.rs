@@ -1592,8 +1592,20 @@ impl Compiler {
             .declare_function("pb_console_set_title", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_console_get_title", &IrType::Ptr, &[], false);
-        self.module.declare_function("pb_window_new", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
-        self.module.declare_function("pb_message_loop", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_window_new",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module
+            .declare_function("pb_message_loop", &IrType::Void, &[], false);
         self.module.declare_function(
             "pb_type_set",
             &IrType::Void,

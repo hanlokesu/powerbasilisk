@@ -87,6 +87,7 @@ impl Preprocessor {
         let mut i = 0;
         let mut if_stack: Vec<bool> = Vec::new(); // stack of "are we in an active block?"
         let mut prefix: Option<String> = None; // active PREFIX "source code" (batch 26)
+        let mut console_off = false; // #CONSOLE OFF -> ? becomes MSGBOX (batch 129)
 
         while i < raw_lines.len() {
             let line_num = i + 1;
@@ -194,6 +195,37 @@ impl Preprocessor {
 
             let upper_full = trimmed_full.to_uppercase();
 
+            // Batch 129: #CONSOLE OFF detection
+            if upper_full.starts_with("#CONSOLE OFF") {
+                console_off = true;
+                i += 1;
+                continue;
+            }
+            if upper_full.starts_with("#CONSOLE ON") {
+                console_off = false;
+                i += 1;
+                continue;
+            }
+            // #INCLUDE "win32api.inc" / "windows.inc" implies PBWin GUI
+            if upper_full.starts_with("#INCLUDE")
+                && (upper_full.contains("WIN32API") || upper_full.contains("WINDOWS"))
+            {
+                console_off = true;
+            }
+
+            // Batch 129: ? at line start -> PRINT (console) or MSGBOX (#CONSOLE OFF)
+            let replaced: Option<String> = if trimmed_full.starts_with('?') {
+                let rest = trimmed_full[1..].trim_start();
+                if console_off {
+                    Some(format!("MSGBOX {}", rest))
+                } else {
+                    Some(format!("PRINT {}", rest))
+                }
+            } else {
+                None
+            };
+            let trimmed_full: &str = replaced.as_deref().unwrap_or(trimmed_full);
+
             // MACRO / END MACRO (batch 27): collect definitions, skip their lines
             if upper_full.starts_with("MACRO") {
                 i = self.collect_macro(&raw_lines, i, trimmed_full);
@@ -298,6 +330,21 @@ impl Preprocessor {
             // Regular line — emit it (prepend active PREFIX source code, batch 26)
             let expanded = self.expand_macros(trimmed_full, &full_line);
             let mut emitted_text = expanded;
+            // Batch 129: ? at line start -> PRINT (console) or MSGBOX (#CONSOLE OFF)
+            {
+                let t = emitted_text.trim_start();
+                if t.starts_with('?') {
+                    let indent_len = emitted_text.len() - t.len();
+                    let indent = &emitted_text[..indent_len];
+                    let rest = t[1..].trim_start();
+                    let replacement = if console_off {
+                        format!("MSGBOX {}", rest)
+                    } else {
+                        format!("PRINT {}", rest)
+                    };
+                    emitted_text = format!("{}{}", indent, replacement);
+                }
+            }
             if let Some(p) = &prefix {
                 emitted_text = format!("{}{}", p, emitted_text);
             }
