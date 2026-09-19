@@ -1808,6 +1808,12 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_dialog_menu",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_control_get_text_by_id",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
@@ -7913,6 +7919,16 @@ impl Compiler {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let result = self.compile_expr(fb, &call.args[1])?;
                     fb.call_void("pb_dialog_end", &[hd, result]);
+                }
+                return Ok(());
+            }
+            "DIALOG_MENU" => {
+                if call.args.len() >= 2 {
+                    let hdlg = self.compile_expr(fb, &call.args[0])?;
+                    let hmenu = self.compile_expr(fb, &call.args[1])?;
+                    let hdlg64 = fb.inttoptr(&hdlg);
+                    let hmenu64 = fb.inttoptr(&hmenu);
+                    fb.call_void("pb_dialog_menu", &[hdlg64, hmenu64]);
                 }
                 return Ok(());
             }

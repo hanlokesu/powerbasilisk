@@ -5509,6 +5509,22 @@ impl Parser {
                         line,
                     }));
                 }
+                // DIALOG MENU hDlg, hMenu
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="MENU")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hm = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_MENU".to_string(),
+                        args: vec![hd, hm],
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))

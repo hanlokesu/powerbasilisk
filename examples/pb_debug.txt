@@ -1,0 +1,16 @@
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=0000000001AC102E hMenu=0000000051DE1125 r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=0000000001A210A2 hMenu=0000000032611157 r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=0000000001881142 hMenu=00000000253211EB r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=0000000001E0113E hMenu=0000000002210426 r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=00000000022C10EC hMenu=000000006F5E0DE5 r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_dialog_menu hDlg=0000000000271188 hMenu=0000000033F30D41 r=1
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_window_new title=Batch 145: MENU + DIALOG
+pb_window_new title=Batch 145: MENU + DIALOG

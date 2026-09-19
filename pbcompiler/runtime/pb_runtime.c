@@ -171,6 +171,10 @@ __declspec(dllimport) void* __stdcall CreatePopupMenu(void);
 __declspec(dllimport) int __stdcall AppendMenuA(void* hMenu, unsigned int uFlags, uintptr_t uIDNewItem, const char* lpNewItem);
 __declspec(dllimport) int __stdcall DeleteMenu(void* hMenu, unsigned int uPosition, unsigned int uFlags);
 __declspec(dllimport) int __stdcall DestroyMenu(void* hMenu);
+__declspec(dllimport) int __stdcall SetMenu(void* hWnd, void* hMenu);
+__declspec(dllimport) int __stdcall DrawMenuBar(void* hWnd);
+__declspec(dllimport) int __stdcall InvalidateRect(void* hWnd, const void* lpRect, int bErase);
+__declspec(dllimport) int __stdcall UpdateWindow(void* hWnd);
 __declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
 __declspec(dllimport) void* __stdcall CreateDIBSection(void* hdc, const void* pbmi, unsigned int usage, void** ppvBits, void* hSection, unsigned long offset);
 __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
@@ -5592,6 +5596,13 @@ int pb_menu_add_popup(long long h, long long hSub, int id) {
 }
 int pb_menu_delete(long long h, int pos) {
     return DeleteMenu((void*)(intptr_t)h, (unsigned int)pos, 0x0400) ? 1 : 0; /* MF_BYPOSITION */
+}
+int pb_dialog_menu(void* hDlg, void* hMenu) {
+    SetMenu(hDlg, hMenu);
+    DrawMenuBar(hDlg);
+    InvalidateRect(hDlg, 0, 1);
+    UpdateWindow(hDlg);
+    return 1;
 }
 
 /* MENU GET STATE / SET STATE / GET TEXT / SET TEXT (batch 62) */
