@@ -1778,6 +1778,9 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_dialog_set_text",
+            &IrType::Void, &[IrType::Ptr, IrType::Ptr], false);
+        self.module.declare_function(
             "pb_dialog_end",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32],
@@ -7838,6 +7841,15 @@ impl Compiler {
                             eprintln!("warning: DIALOG SHOW MODAL: unknown sub '{}'", upper);
                         }
                     }
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_TEXT" => {
+                if call.args.len() >= 2 {
+                    let hdlg = self.compile_expr(fb, &call.args[0])?;
+                    let text = self.compile_expr(fb, &call.args[1])?;
+                    let hdlg64 = fb.inttoptr(&hdlg);
+                    fb.call_void("pb_dialog_set_text", &[hdlg64, text]);
                 }
                 return Ok(());
             }
