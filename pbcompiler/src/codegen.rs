@@ -1715,6 +1715,19 @@ impl Compiler {
             false,
         );
         self.module.declare_function("pb_debug_dump", &IrType::Void, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function("pb_control_add_label", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
+        self.module.declare_function("pb_control_add_progressbar", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
+        self.module.declare_function("pb_progress_set_range", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::I32], false);
+        self.module.declare_function("pb_progress_set_pos", &IrType::Void, &[IrType::Ptr, IrType::I32], false);
+        self.module.declare_function("pb_get_cb_msg", &IrType::I32, &[], false);
+        self.module.declare_function("pb_get_cb_hwnd", &IrType::Ptr, &[], false);
+        self.module.declare_function("pb_get_cb_ctl", &IrType::I32, &[], false);
+        self.module.declare_function("pb_get_cb_ctlmsg", &IrType::I32, &[], false);
+        self.module.declare_function("pb_get_cb_wparam", &IrType::I64, &[], false);
+        self.module.declare_function("pb_get_cb_lparam", &IrType::I64, &[], false);
+        self.module.declare_function("pb_register_dialog_cb", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function("pb_dialog_end", &IrType::Void, &[IrType::Ptr, IrType::I32], false);
+        self.module.declare_function("pb_control_get_text_by_id", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32], false);
         self.module.declare_function(
             "pb_control_add_hscrollbar",
             &IrType::Ptr,
@@ -7691,6 +7704,47 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "CONTROL_ADD_LABEL" => {
+                if call.args.len() >= 8 {
+                    let parent = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_label",
+                        &[parent, id, text, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[7]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_PROGRESSBAR" => {
+                if call.args.len() >= 7 {
+                    let parent = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_progressbar",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
             "CONTROL_SET_POS" => {
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
@@ -11409,6 +11463,12 @@ impl Compiler {
             "USING" => Some(self.builtin_using(fb, args)),
             // File I/O builtins
             "FREEFILE" => Some(Ok(fb.call(&IrType::I32, "pb_freefile", &[]))),
+            "PB_GET_CB_MSG" => Some(Ok(fb.call(&IrType::I32, "pb_get_cb_msg", &[]))),
+            "PB_GET_CB_HNDL" => Some(Ok(fb.call(&IrType::Ptr, "pb_get_cb_hwnd", &[]))),
+            "PB_GET_CB_CTL" => Some(Ok(fb.call(&IrType::I32, "pb_get_cb_ctl", &[]))),
+            "PB_GET_CB_CTLMSG" => Some(Ok(fb.call(&IrType::I32, "pb_get_cb_ctlmsg", &[]))),
+            "PB_GET_CB_WPARAM" => Some(Ok(fb.call(&IrType::I64, "pb_get_cb_wparam", &[]))),
+            "PB_GET_CB_LPARAM" => Some(Ok(fb.call(&IrType::I64, "pb_get_cb_lparam", &[]))),
             "FRE" => Some(Ok(fb.call(&IrType::I64, "pb_fre", &[]))),
             "EOF" => {
                 let filenum = self.compile_expr(fb, &args[0]);

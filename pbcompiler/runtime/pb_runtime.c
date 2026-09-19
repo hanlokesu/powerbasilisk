@@ -5976,6 +5976,7 @@ typedef struct {
 } pb_msg_t;
 
 void* pb_window_new(const char* title, int x, int y, int w, int h) {
+    __declspec(dllimport) void __stdcall InitCommonControls(void); InitCommonControls();
     static int registered = 0;
     if (!registered) {
         pb_wndclassex_t wc;
@@ -6122,6 +6123,31 @@ void* pb_control_add_scrollbar(void* parent, long id, int x, int y, int w, int h
     SendMessageA(hbar, 0x00F4 /* SBM_SETRANGE */, 0, 100);
     return hbar;
 }
+
+/* CONTROL ADD LABEL */
+void* pb_control_add_label(void* parent, long id, const char* text, int x, int y, int w, int ht) {
+    unsigned long style = 0x50000000 | 0x40000000 | 0x10000000;
+    return CreateWindowExA(0, "STATIC", text, style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD PROGRESSBAR */
+void* pb_control_add_progressbar(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x00000000 | 0x40000000 | 0x10000000;
+    return CreateWindowExA(0, "msctls_progress32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* PROGRESSBAR SET RANGE/POS */
+void pb_progress_set_range(void* h, int lo, int hi) {
+    SendMessageA(h, 0x0401, (unsigned long long)lo, (unsigned long long)hi);
+}
+void pb_progress_set_pos(void* h, int pos) {
+    SendMessageA(h, 0x00F3, (unsigned long long)pos, 0);
+}
+
 #define SBM_SETPOS 0x00E0
 #define SBM_GETPOS 0x00E1
 void pb_control_set_pos(void* hctrl, long pos) {

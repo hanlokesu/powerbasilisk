@@ -5270,6 +5270,62 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD LABEL, hWnd, id, "text", x, y, w, h TO hCtrl&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LABEL")
+                {
+                    self.advance(); self.advance(); self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_LABEL".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD PROGRESSBAR, hWnd, id, x, y, w, h TO hCtrl&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="PROGRESSBAR")
+                {
+                    self.advance(); self.advance(); self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_PROGRESSBAR".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
@@ -8127,6 +8183,26 @@ impl Parser {
     }
 
     fn parse_primary(&mut self) -> PbResult<Expr> {
+        // CB.MSG / CB.HNDL / CB.CTL / CB.CTLMSG / CB.WPARAM / CB.LPARAM
+        if let Token::Identifier(w) = self.peek() {
+            if w.to_uppercase() == "CB" && self.peek_at(1) == Some(&Token::Dot) {
+                if let Some(Token::Identifier(field)) = self.peek_at(2) {
+                    let fn_name = match field.to_uppercase().as_str() {
+                        "MSG" => "PB_GET_CB_MSG",
+                        "HNDL" => "PB_GET_CB_HNDL",
+                        "CTL" => "PB_GET_CB_CTL",
+                        "CTLMSG" => "PB_GET_CB_CTLMSG",
+                        "WPARAM" => "PB_GET_CB_WPARAM",
+                        "LPARAM" => "PB_GET_CB_LPARAM",
+                        _ => "",
+                    };
+                    if !fn_name.is_empty() {
+                        self.advance(); self.advance(); self.advance();
+                        return Ok(Expr::FunctionCall(fn_name.to_string(), Vec::new()));
+                    }
+                }
+            }
+        }
         match self.peek().clone() {
             Token::IntegerLiteral(n) => {
                 self.advance();
