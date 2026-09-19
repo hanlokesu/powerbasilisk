@@ -5322,6 +5322,7 @@ typedef unsigned long long pb_lparam_t;
 typedef unsigned int pb_lparam_t;
 #endif
 __declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, pb_lparam_t lParam);
+__declspec(dllimport) void* __stdcall GetDlgItem(void* hDlg, int nId);
 __declspec(dllimport) unsigned long __stdcall RegisterClassExA(const void* lpwcx);
 __declspec(dllimport) void* __stdcall CreateWindowExA(unsigned long dwExStyle, const char* lpClassName, const char* lpWindowName, unsigned long dwStyle, int x, int y, int nWidth, int nHeight, void* hWndParent, void* hMenu, void* hInstance, void* lpParam);
 __declspec(dllimport) int __stdcall ShowWindow(void* hWnd, int nCmdShow);
@@ -5881,6 +5882,51 @@ void pb_register_callback_hwnd(void* hwnd, void* fn) {
         pb_cb_fns[pb_cb_count] = fn;
         pb_cb_count++;
     }
+}
+
+
+/* Forward declaration */
+void* pb_control_add_button(void* parent, long id, const char* text, int x, int y, int w, int h);
+
+/* === DIALOG model: CB.* context variables === */
+static unsigned int cb_msg = 0;
+static void*        cb_hwnd = 0;
+static unsigned int cb_ctl = 0;
+static unsigned int cb_ctlmsg = 0;
+static unsigned long long cb_wparam = 0;
+static unsigned long long cb_lparam = 0;
+/* Dialog callback function (CB.MSG etc. are visible inside it) */
+static void* pb_dialog_cb = 0;
+/* Modal dialog: when DIALOG END is called, set this */
+static int pb_modal_result = 0;
+static int pb_modal_done = 0;
+
+unsigned int pb_get_cb_msg(void) { return cb_msg; }
+void*        pb_get_cb_hwnd(void) { return cb_hwnd; }
+unsigned int pb_get_cb_ctl(void) { return cb_ctl; }
+unsigned int pb_get_cb_ctlmsg(void) { return cb_ctlmsg; }
+unsigned long long pb_get_cb_wparam(void) { return cb_wparam; }
+unsigned long long pb_get_cb_lparam(void) { return cb_lparam; }
+
+void pb_register_dialog_cb(void* fn) { pb_dialog_cb = fn; }
+void pb_dialog_end(void* hWnd, int result) {
+    pb_modal_result = result;
+    pb_modal_done = 1;
+    DestroyWindow(hWnd);
+}
+
+/* CONTROL GET TEXT by dialog handle + control ID */
+void pb_control_get_text_by_id(void* hDlg, long id, void* buf, long bufsize) {
+    void* hCtrl = GetDlgItem(hDlg, id);
+    if (hCtrl) {
+        SendMessageA(hCtrl, 0x000D /* WM_GETTEXT */, (unsigned long long)bufsize, (unsigned long long)buf);
+    }
+}
+
+/* CONTROL ADD BUTTON with CALL callback - register BN_CLICKED callback */
+void pb_control_add_button_with_cb(void* parent, long id, const char* text, int x, int y, int w, int h, void* fn) {
+    void* hBtn = pb_control_add_button(parent, id, text, x, y, w, h);
+    if (fn) pb_register_callback_hwnd(hBtn, fn);
 }
 
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
