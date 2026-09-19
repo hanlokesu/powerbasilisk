@@ -5275,7 +5275,9 @@ impl Parser {
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
                     && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LABEL")
                 {
-                    self.advance(); self.advance(); self.advance();
+                    self.advance();
+                    self.advance();
+                    self.advance();
                     self.expect(&Token::Comma)?;
                     let hwnd = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
@@ -5304,7 +5306,9 @@ impl Parser {
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
                     && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="PROGRESSBAR")
                 {
-                    self.advance(); self.advance(); self.advance();
+                    self.advance();
+                    self.advance();
+                    self.advance();
                     self.expect(&Token::Comma)?;
                     let hwnd = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
@@ -5330,7 +5334,8 @@ impl Parser {
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="NEW")
                 {
-                    self.advance(); self.advance();
+                    self.advance();
+                    self.advance();
                     self.expect(&Token::Comma)?;
                     let parent = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
@@ -5356,13 +5361,18 @@ impl Parser {
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
                 {
-                    self.advance(); self.advance();
+                    self.advance();
+                    self.advance();
                     // skip MODAL
-                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="MODAL") { self.advance(); }
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="MODAL") {
+                        self.advance();
+                    }
                     let hd = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     // skip CALL
-                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="CALL") { self.advance(); }
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="CALL") {
+                        self.advance();
+                    }
                     let proc = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
@@ -5375,7 +5385,8 @@ impl Parser {
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="END")
                 {
-                    self.advance(); self.advance();
+                    self.advance();
+                    self.advance();
                     let hd = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let result = self.parse_expression()?;
@@ -8257,7 +8268,9 @@ impl Parser {
                         _ => "",
                     };
                     if !fn_name.is_empty() {
-                        self.advance(); self.advance(); self.advance();
+                        self.advance();
+                        self.advance();
+                        self.advance();
                         return Ok(Expr::FunctionCall(fn_name.to_string(), Vec::new()));
                     }
                 }

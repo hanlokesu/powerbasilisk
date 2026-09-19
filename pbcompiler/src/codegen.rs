@@ -1714,21 +1714,83 @@ impl Compiler {
             ],
             false,
         );
-        self.module.declare_function("pb_debug_dump", &IrType::Void, &[IrType::Ptr, IrType::I64], false);
-        self.module.declare_function("pb_control_add_label", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
-        self.module.declare_function("pb_control_add_progressbar", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
-        self.module.declare_function("pb_progress_set_range", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::I32], false);
-        self.module.declare_function("pb_progress_set_pos", &IrType::Void, &[IrType::Ptr, IrType::I32], false);
-        self.module.declare_function("pb_get_cb_msg", &IrType::I32, &[], false);
-        self.module.declare_function("pb_get_cb_hwnd", &IrType::Ptr, &[], false);
-        self.module.declare_function("pb_get_cb_ctl", &IrType::I32, &[], false);
-        self.module.declare_function("pb_get_cb_ctlmsg", &IrType::I32, &[], false);
-        self.module.declare_function("pb_get_cb_wparam", &IrType::I64, &[], false);
-        self.module.declare_function("pb_get_cb_lparam", &IrType::I64, &[], false);
-        self.module.declare_function("pb_register_dialog_cb", &IrType::Void, &[IrType::Ptr], false);
-        self.module.declare_function("pb_dialog_end", &IrType::Void, &[IrType::Ptr, IrType::I32], false);
-        self.module.declare_function("pb_control_get_text_by_id", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32], false);
-        self.module.declare_function("pb_message_loop", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_debug_dump",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_label",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_progressbar",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progress_set_range",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progress_set_pos",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_get_cb_msg", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_get_cb_hwnd", &IrType::Ptr, &[], false);
+        self.module
+            .declare_function("pb_get_cb_ctl", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_get_cb_ctlmsg", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_get_cb_wparam", &IrType::I64, &[], false);
+        self.module
+            .declare_function("pb_get_cb_lparam", &IrType::I64, &[], false);
+        self.module.declare_function(
+            "pb_register_dialog_cb",
+            &IrType::Void,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_end",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_get_text_by_id",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_message_loop", &IrType::Void, &[], false);
         self.module.declare_function(
             "pb_control_add_hscrollbar",
             &IrType::Ptr,
