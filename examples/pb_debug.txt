@@ -1,9 +1,0 @@
-pb_window_new title=Batch 150: SCROLLBAR
-pb_window_new title=Batch 150: SCROLLBAR
-pb_window_new title=Batch 150: SCROLLBAR
-pb_window_new title=Batch 150: SCROLLBAR
-pb_window_new title=Batch 151: CONTROL SET TEXT
-pb_window_new title=Batch 152: CONTROL STATE
-pb_window_new title=Batch 153: CONTROL GET TEXT
-pb_window_new title=Batch 154: CHECKBOX STATE
-pb_window_new title=Batch 155: REDRAW
