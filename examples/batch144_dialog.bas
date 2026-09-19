@@ -3,23 +3,9 @@
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL g_hBtn AS QUAD
-GLOBAL g_hText AS QUAD
-
-CALLBACK FUNCTION DlgProc()
-    IF CB.MSG = 2 THEN
-        DIALOG END g_hDlg, 0
-    END IF
-    IF CB.MSG = 273 THEN
-        IF CB.CTL = 100 THEN
-            MSGBOX "Button clicked!"
-            DIALOG END g_hDlg, 1
-        END IF
-    END IF
-END FUNCTION
 
 FUNCTION PBMAIN() AS LONG
-    DIALOG NEW 0, "DIALOG Test", 100, 100, 300, 200 TO g_hDlg
+    DIALOG NEW 0, "Test", 100, 100, 300, 200 TO g_hDlg
     CONTROL ADD BUTTON, g_hDlg, 100, "OK", 100, 60, 80, 30 TO g_hBtn
-    CONTROL ADD TEXTBOX, g_hDlg, 101, "Hello", 50, 20, 200, 25 TO g_hText
-    DIALOG SHOW MODAL g_hDlg CALL DlgProc
+    MSGBOX "Dialog created"
 END FUNCTION

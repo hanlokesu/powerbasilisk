@@ -7827,10 +7827,17 @@ impl Compiler {
             "DIALOG_SHOW_MODAL" => {
                 if call.args.len() >= 2 {
                     let _hd = self.compile_expr(fb, &call.args[0])?;
-                    let proc = self.compile_expr(fb, &call.args[1])?;
-                    fb.call(&IrType::Void, "pb_register_dialog_cb", &[proc]);
-                    // Run message loop
-                    fb.call(&IrType::Void, "pb_message_loop", &[]);
+                    if let Expr::Variable(name) = &call.args[1] {
+                        let upper = name.to_uppercase();
+                        let fi = self.functions.get(&upper).or_else(|| self.subs.get(&upper));
+                        if let Some(fi) = fi {
+                            let fn_ptr = Val::new(format!("@{}", fi.ir_name), IrType::Ptr);
+                            fb.call(&IrType::Void, "pb_register_dialog_cb", &[fn_ptr]);
+                            fb.call(&IrType::Void, "pb_message_loop", &[]);
+                        } else {
+                            eprintln!("warning: DIALOG SHOW MODAL: unknown sub '{}'", upper);
+                        }
+                    }
                 }
                 return Ok(());
             }

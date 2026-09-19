@@ -4877,7 +4877,7 @@ impl Parser {
                 // CONTROL ADD EDITBOX, hWnd, id, "text", x, y, w, h TO hCtrl&  (Tier-3 DDT GUI #3)
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="EDITBOX")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="EDITBOX" || w.to_uppercase()=="TEXTBOX")
                 {
                     self.advance();
                     self.advance();
@@ -5336,7 +5336,6 @@ impl Parser {
                 {
                     self.advance();
                     self.advance();
-                    self.expect(&Token::Comma)?;
                     let parent = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let title = self.parse_expression()?;
@@ -5368,9 +5367,8 @@ impl Parser {
                         self.advance();
                     }
                     let hd = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    // skip CALL
-                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="CALL") {
+                    // skip CALL (Token::Call)
+                    if self.peek() == &Token::Call {
                         self.advance();
                     }
                     let proc = self.parse_expression()?;
@@ -5383,7 +5381,7 @@ impl Parser {
                 }
                 // DIALOG END hDlg, result
                 if name_upper == "DIALOG"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="END")
+                    && self.peek_at(1) == Some(&Token::End)
                 {
                     self.advance();
                     self.advance();
