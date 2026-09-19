@@ -222,15 +222,15 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 
 > Summary:
-> - **493** official PowerBASIC statement/function keywords currently available for use
->   - **444** implemented or completed by this fork
+> - **481** official PowerBASIC statement/function keywords currently available for use
+>   - **432** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
 > - **130** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
 >
-> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table). Updated through batch 122 (v0.1.122). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
+> Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table). Updated through batch 123 (v0.1.123). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
-**All 493 keywords currently available for use (alphabetical):**
+**All 481 keywords currently available for use (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
@@ -334,7 +334,7 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **444 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **432 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 | Keyword | Keyword | Keyword | Keyword | Keyword |
@@ -472,14 +472,14 @@ exit code 0:
 - **DEF fnName(params) = expr** - now actually inlines at parse time: module-level DEF declarations are stored in a `HashMap<String,(Vec<String>,Expr)>` and every `fnName(args)` call site substitutes the parameter expressions into the function body before codegen. Recursive AST substitution covers Variable/Unary/Binary/FunctionCall/ArrayAccess/TypeMember/Negate/Varptr/ByvalOverride.
 - **LET *ptr = obj / variant** - pointer dereference assignment accepted and compiled cleanly (0 dropped).
 - Verified: `DEF fnSqr(x)=x*x` -> fnSqr(5)=25, fnSqr(9)=81; `DEF fnAvg(x,y)=(x+y)/2` with variables a,b=20,10 -> 15.
-- Coverage: 493 available / 130 Tier-3 / 0 proposed.
+- Coverage: 481 available / 130 Tier-3 / 0 proposed.
 - Tests: examples/batch122_test.bas (0 dropped), official 5/5, examples 139/139, fmt + clippy clean.
 ### v0.1.122 (2026-09-19) - Batch 122: LET with OBJECTS/VARIANTS + DEF (0 proposed remaining)
 
 - **LET *ptr = obj** / **LET *ptr = variant** - object/variant pointer dereference assign accepted (no-op until object runtime; treated as pointer store).
 - **DEF fnName(params) = expr** - single-line function declaration accepted (inline substitution deferred; currently consumes the line cleanly).
 - **MILESTONE**: all non-Tier-3 official PB keywords are now parsed and either emit real code or are explicitly accepted. Only Tier-3 DDT GUI (130 items) remains deferred.
-- Coverage: 493 available / 130 Tier-3 / 0 proposed.
+- Coverage: 481 available / 130 Tier-3 / 0 proposed.
 - Tests: examples/batch122_test.bas (0 dropped), official 14/14, examples 139/139, fmt + clippy clean.
 ### v0.1.121 (2026-09-19) - Batch 121: final Tier-2 non-GUI cleanup (11 items closed)
 
@@ -495,7 +495,7 @@ exit code 0:
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
 
 - **Table 1** - 481 official keywords available to users.
-- **Table 2** - 444 keywords implemented or completed by this fork.
+- **Table 2** - 432 keywords implemented or completed by this fork.
 - **Table 3** - 66 core statement/function keywords originally from upstream `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
