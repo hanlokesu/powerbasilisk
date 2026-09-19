@@ -3988,6 +3988,10 @@ impl Parser {
                             }
                         }
                         let mut args = Vec::new();
+                        // First arg: hMenu (before first comma)
+                        if !self.at_eol_or_eof() {
+                            args.push(self.parse_expression()?);
+                        }
                         while self.peek() == &Token::Comma {
                             self.advance();
                             args.push(self.parse_expression()?);
