@@ -5886,6 +5886,17 @@ void pb_register_callback_hwnd(void* hwnd, void* fn) {
 
 
 /* Forward declaration */
+
+/* Convert dialog units to pixels (matching PBWin DDT) */
+static void pb_dlu_to_px(int *x, int *y, int *w, int *h) {
+    /* 8pt MS Shell Dlg: avg char width ~6px, height ~13px */
+    int dx = 7, dy = 14;
+    *x = (*x * dx) / 4;
+    *y = (*y * dy) / 8;
+    *w = (*w * dx) / 4;
+    *h = (*h * dy) / 8;
+}
+
 void* pb_control_add_button(void* parent, long id, const char* text, int x, int y, int w, int h);
 
 /* === DIALOG model: CB.* context variables === */
@@ -5932,17 +5943,17 @@ void pb_control_add_button_with_cb(void* parent, long id, const char* text, int 
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
     if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
     if (Msg == 0x0111) /* WM_COMMAND */ {
-        unsigned int code = (unsigned int)(wParam >> 16);
-        void* hwnd_from = (void*)lParam;
-        if (code == 0 /* BN_CLICKED */) {
-            for (int i = 0; i < pb_cb_count; i++) {
-                if (pb_cb_hwnd[i] == hwnd_from) {
-                    void (*fn)(void) = (void(*)(void))pb_cb_fns[i];
-                    fn();
-                    return 0;
-                }
-            }
+        cb_msg = Msg;
+        cb_hwnd = hWnd;
+        cb_ctl = (unsigned int)(wParam & 0xFFFF);
+        cb_ctlmsg = (unsigned int)(wParam >> 16);
+        cb_wparam = wParam;
+        cb_lparam = lParam;
+        if (pb_dialog_cb) {
+            void (*fn)(void) = (void(*)(void))pb_dialog_cb;
+            fn();
         }
+        return 0;
     }
     return DefWindowProcA(hWnd, Msg, wParam, lParam);
 }
@@ -5976,6 +5987,7 @@ typedef struct {
 } pb_msg_t;
 
 void* pb_window_new(const char* title, int x, int y, int w, int h) {
+    { FILE* f = fopen("pb_debug.txt", "a"); if (f) { fprintf(f, "pb_window_new title=%s\n", title ? title : "(null)"); fclose(f); } }
     __declspec(dllimport) void __stdcall InitCommonControls(void); InitCommonControls();
     static int registered = 0;
     if (!registered) {
@@ -5990,9 +6002,17 @@ void* pb_window_new(const char* title, int x, int y, int w, int h) {
         unsigned long rc = RegisterClassExA(&wc);
         registered = 1;
     }
+    __declspec(dllimport) unsigned long __stdcall GetDialogBaseUnits(void);
+    unsigned long _bu = GetDialogBaseUnits();
+    int dluX = _bu & 0xFFFF;
+    int dluY = (_bu >> 16) & 0xFFFF;
+    int px = (x * dluX) / 4;
+    int py = (y * dluY) / 8;
+    int pw = (w * dluX) / 4;
+    int ph = (h * dluY) / 8;
     void* hwnd = CreateWindowExA(0, "PBWIN_CLASS", title,
         0x00CF0000 | 0x10000000,
-        x, y, w, h, 0, 0, GetModuleHandleA(0), 0);
+        px, py, pw, ph, 0, 0, GetModuleHandleA(0), 0);
     if (hwnd) {
         ShowWindow(hwnd, 5);
         UpdateWindow(hwnd);
@@ -6015,8 +6035,7 @@ __declspec(dllimport) void* __stdcall CreateWindowExA(
 
 void* pb_control_add_button(void* parent, long id, const char* text,
                             int x, int y, int w, int h) {
-    /* BS_DEFPUSHBUTTON = 0x01, WS_CHILD = 0x40000000,
-       WS_VISIBLE = 0x10000000, WS_TABSTOP = 0x10000 */
+    pb_dlu_to_px(&x, &y, &w, &h);
     unsigned long style = 0x01 | 0x40000000 | 0x10000000 | 0x10000;
     return CreateWindowExA(0, "BUTTON", text, style,
                             x, y, w, h, parent,
@@ -6026,12 +6045,12 @@ void* pb_control_add_button(void* parent, long id, const char* text,
 
 void* pb_control_add_editbox(void* parent, long id, const char* text,
                               int x, int y, int w, int h) {
-    /* ES_AUTOHSCROLL=0x80, ES_MULTILINE=0x4, WS_CHILD=0x40000000,
-       WS_VISIBLE=0x10000000, WS_BORDER=0x800000, WS_TABSTOP=0x10000 */
-    unsigned long style = 0x80 | 0x4 | 0x40000000 | 0x10000000 | 0x800000 | 0x10000;
-    return CreateWindowExA(0, "EDIT", text, style,
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x80 | 0x40000000 | 0x10000000 | 0x800000 | 0x10000;
+    void* hEdit = CreateWindowExA(0, "EDIT", text, style,
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
+    return hEdit;
 }
 
 /* Tier-3 DDT: CONTROL GET/SET TEXT */
@@ -6126,7 +6145,10 @@ void* pb_control_add_scrollbar(void* parent, long id, int x, int y, int w, int h
 
 /* CONTROL ADD LABEL */
 void* pb_control_add_label(void* parent, long id, const char* text, int x, int y, int w, int ht) {
-    unsigned long style = 0x50000000 | 0x40000000 | 0x10000000;
+    /* SS_LEFT=0, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000 */
+    unsigned long style = 0x40000000 | 0x10000000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    ht = 16; /* single-line label height, vertically centered with 24px edit */
     return CreateWindowExA(0, "STATIC", text, style,
                            x, y, w, ht, parent,
                            (void*)(long long)id, GetModuleHandleA(0), 0);
@@ -6135,6 +6157,7 @@ void* pb_control_add_label(void* parent, long id, const char* text, int x, int y
 /* CONTROL ADD PROGRESSBAR */
 void* pb_control_add_progressbar(void* parent, long id, int x, int y, int w, int ht) {
     unsigned long style = 0x00000000 | 0x40000000 | 0x10000000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
     return CreateWindowExA(0, "msctls_progress32", "", style,
                            x, y, w, ht, parent,
                            (void*)(long long)id, GetModuleHandleA(0), 0);

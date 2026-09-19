@@ -7589,7 +7589,10 @@ impl Compiler {
             "CONTROL_ADD_BUTTON" => {
                 // CONTROL ADD BUTTON, hWnd, id, text$, x, y, w, h TO hCtrl&
                 if call.args.len() >= 8 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let text = self.compile_expr(fb, &call.args[2])?;
                     let x = self.compile_expr(fb, &call.args[3])?;
@@ -7615,7 +7618,10 @@ impl Compiler {
             }
             "CONTROL_ADD_EDITBOX" => {
                 if call.args.len() >= 8 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let text = self.compile_expr(fb, &call.args[2])?;
                     let x = self.compile_expr(fb, &call.args[3])?;
@@ -7637,7 +7643,10 @@ impl Compiler {
             }
             "CONTROL_ADD_COMBOBOX" => {
                 if call.args.len() >= 7 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let x = self.compile_expr(fb, &call.args[2])?;
                     let y = self.compile_expr(fb, &call.args[3])?;
@@ -7933,7 +7942,10 @@ impl Compiler {
             }
             "CONTROL_ADD_LISTBOX" => {
                 if call.args.len() >= 7 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let x = self.compile_expr(fb, &call.args[2])?;
                     let y = self.compile_expr(fb, &call.args[3])?;
@@ -7954,7 +7966,10 @@ impl Compiler {
             }
             "CONTROL_ADD_CHECKBOX" => {
                 if call.args.len() >= 8 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let text = self.compile_expr(fb, &call.args[2])?;
                     let x = self.compile_expr(fb, &call.args[3])?;
@@ -7976,7 +7991,10 @@ impl Compiler {
             }
             "CONTROL_ADD_RADIOBUTTON" => {
                 if call.args.len() >= 8 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let text = self.compile_expr(fb, &call.args[2])?;
                     let x = self.compile_expr(fb, &call.args[3])?;
@@ -7998,7 +8016,10 @@ impl Compiler {
             }
             "CONTROL_ADD_GROUPBOX" => {
                 if call.args.len() >= 8 {
-                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let text = self.compile_expr(fb, &call.args[2])?;
                     let x = self.compile_expr(fb, &call.args[3])?;

@@ -5375,9 +5375,18 @@ impl Parser {
                     self.expect(&Token::Comma)?;
                     let title = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
-                    let x = self.parse_expression()?;
+                    // x: empty if comma immediately follows (,,)
+                    let x = if matches!(self.peek(), Token::Comma) {
+                        Expr::IntegerLit(0)
+                    } else {
+                        self.parse_expression()?
+                    };
                     self.expect(&Token::Comma)?;
-                    let y = self.parse_expression()?;
+                    let y = if matches!(self.peek(), Token::Comma) {
+                        Expr::IntegerLit(0)
+                    } else {
+                        self.parse_expression()?
+                    };
                     self.expect(&Token::Comma)?;
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
