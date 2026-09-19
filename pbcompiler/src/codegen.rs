@@ -1695,6 +1695,12 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        self.module
+            .declare_function("pb_control_check", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_control_uncheck", &IrType::Void, &[IrType::Ptr], false);
+        self.module
+            .declare_function("pb_control_get_check", &IrType::I64, &[IrType::Ptr], false);
         for n in [
             "pb_control_show",
             "pb_control_hide",
@@ -7582,6 +7588,31 @@ impl Compiler {
                 if let Some(hc) = call.args.first() {
                     let v = self.compile_expr(fb, hc)?;
                     fb.call_void("pb_control_focus", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_CHECK" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_check", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_UNCHECK" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_uncheck", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_CHECK" => {
+                if call.args.len() >= 2 {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let val = fb.call(&IrType::I64, "pb_control_get_check", &[hc]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.store(&val32, &ptr);
+                    }
                 }
                 return Ok(());
             }

@@ -6013,6 +6013,15 @@ void pb_control_enable(void* hctrl) { EnableWindow(hctrl, 1); }
 void pb_control_disable(void* hctrl) { EnableWindow(hctrl, 0); }
 void pb_control_focus(void* hctrl) { SetFocus(hctrl); }
 
+/* CONTROL CHECK / UNCHECK / GET CHECK (uses existing SendMessageA decl at line 5324) */
+#define BM_SETCHECK 0x00F1
+#define BM_GETCHECK 0x00F0
+#define BST_CHECKED 1
+
+void pb_control_check(void* hctrl) { SendMessageA(hctrl, BM_SETCHECK, BST_CHECKED, 0); }
+void pb_control_uncheck(void* hctrl) { SendMessageA(hctrl, BM_SETCHECK, 0, 0); }
+long long pb_control_get_check(void* hctrl) { return (long long)SendMessageA(hctrl, BM_GETCHECK, 0, 0); }
+
 void* pb_control_add_combobox(void* parent, long id, int x, int y, int w, int h) {
     /* CBS_DROPDOWNLIST=0x3, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000,
        WS_BORDER=0x800000, WS_VSCROLL=0x200000, WS_TABSTOP=0x10000 */

@@ -4967,6 +4967,46 @@ impl Parser {
                         }
                     }
                 }
+                // CONTROL CHECK/UNCHECK hCtrl&  (Tier-3 DDT GUI)
+                if name_upper == "CONTROL" {
+                    if let Some(Token::Identifier(w)) = self.peek_at(1) {
+                        let op = w.to_uppercase();
+                        let mapping = [
+                            ("CHECK", "CONTROL_CHECK", false),
+                            ("UNCHECK", "CONTROL_UNCHECK", false),
+                        ];
+                        for (kw, arm, _is_get) in mapping {
+                            if op == kw {
+                                self.advance();
+                                self.advance();
+                                let hctrl = self.parse_expression()?;
+                                self.consume_to_eol();
+                                return Ok(Statement::Call(CallStmt {
+                                    name: arm.to_string(),
+                                    args: vec![hctrl],
+                                    line,
+                                }));
+                            }
+                        }
+                        // CONTROL GET CHECK hCtrl& TO var&
+                        if op == "GET"
+                            && matches!(self.peek_at(2), Some(Token::Identifier(w2)) if w2.to_uppercase()=="CHECK")
+                        {
+                            self.advance(); // CONTROL
+                            self.advance(); // GET
+                            self.advance(); // CHECK
+                            let hctrl = self.parse_expression()?;
+                            self.expect(&Token::To)?;
+                            let target = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "CONTROL_GET_CHECK".to_string(),
+                                args: vec![hctrl, target],
+                                line,
+                            }));
+                        }
+                    }
+                }
                 // CONTROL CMD hCtrl, subname  (Tier-3 DDT GUI event dispatch)
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="CMD")
