@@ -5326,6 +5326,66 @@ impl Parser {
                         line,
                     }));
                 }
+                // DIALOG NEW hParent, "title", x, y, w, h TO hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="NEW")
+                {
+                    self.advance(); self.advance();
+                    self.expect(&Token::Comma)?;
+                    let parent = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let title = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_NEW".to_string(),
+                        args: vec![parent, title, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // DIALOG SHOW MODAL hDlg CALL proc
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
+                {
+                    self.advance(); self.advance();
+                    // skip MODAL
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="MODAL") { self.advance(); }
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    // skip CALL
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="CALL") { self.advance(); }
+                    let proc = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SHOW_MODAL".to_string(),
+                        args: vec![hd, proc],
+                        line,
+                    }));
+                }
+                // DIALOG END hDlg, result
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="END")
+                {
+                    self.advance(); self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let result = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_END".to_string(),
+                        args: vec![hd, result],
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))

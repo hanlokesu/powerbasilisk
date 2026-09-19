@@ -1728,6 +1728,7 @@ impl Compiler {
         self.module.declare_function("pb_register_dialog_cb", &IrType::Void, &[IrType::Ptr], false);
         self.module.declare_function("pb_dialog_end", &IrType::Void, &[IrType::Ptr, IrType::I32], false);
         self.module.declare_function("pb_control_get_text_by_id", &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32], false);
+        self.module.declare_function("pb_message_loop", &IrType::Void, &[], false);
         self.module.declare_function(
             "pb_control_add_hscrollbar",
             &IrType::Ptr,
@@ -7742,6 +7743,40 @@ impl Compiler {
                         let hc_i = fb.ptrtoint64(&hc);
                         fb.store(&hc_i, &ptr);
                     }
+                }
+                return Ok(());
+            }
+            "DIALOG_NEW" => {
+                if call.args.len() >= 7 {
+                    let _parent = self.compile_expr(fb, &call.args[0])?;
+                    let title = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(&IrType::Ptr, "pb_window_new", &[title, x, y, w, h]);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SHOW_MODAL" => {
+                if call.args.len() >= 2 {
+                    let _hd = self.compile_expr(fb, &call.args[0])?;
+                    let proc = self.compile_expr(fb, &call.args[1])?;
+                    fb.call(&IrType::Void, "pb_register_dialog_cb", &[proc]);
+                    // Run message loop
+                    fb.call(&IrType::Void, "pb_message_loop", &[]);
+                }
+                return Ok(());
+            }
+            "DIALOG_END" => {
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let result = self.compile_expr(fb, &call.args[1])?;
+                    fb.call(&IrType::Void, "pb_dialog_end", &[hd, result]);
                 }
                 return Ok(());
             }
