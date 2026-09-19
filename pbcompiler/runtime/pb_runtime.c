@@ -6060,6 +6060,10 @@ __declspec(dllimport) int __stdcall SetWindowTextA(void*, const char*);
 __declspec(dllimport) int __stdcall EnableWindow(void*, int);
 __declspec(dllimport) void* __stdcall SetFocus(void*);
 
+void pb_dialog_set_text(void* hDlg, const char* text) {
+    SetWindowTextA(hDlg, text);
+}
+
 void pb_control_get_text(void* hctrl, char* out, int outlen) {
     int n = GetWindowTextLengthA(hctrl);
     if (n < outlen - 1) {
