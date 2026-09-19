@@ -5318,6 +5318,16 @@ typedef unsigned long long pb_lparam_t;
 typedef unsigned int pb_lparam_t;
 #endif
 __declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, pb_lparam_t lParam);
+__declspec(dllimport) unsigned long __stdcall RegisterClassExA(const void* lpwcx);
+__declspec(dllimport) void* __stdcall CreateWindowExA(unsigned long dwExStyle, const char* lpClassName, const char* lpWindowName, unsigned long dwStyle, int x, int y, int nWidth, int nHeight, void* hWndParent, void* hMenu, void* hInstance, void* lpParam);
+__declspec(dllimport) int __stdcall ShowWindow(void* hWnd, int nCmdShow);
+__declspec(dllimport) int __stdcall UpdateWindow(void* hWnd);
+__declspec(dllimport) long __stdcall DefWindowProcA(void* hWnd, unsigned int Msg, unsigned int wParam, unsigned long long lParam);
+__declspec(dllimport) int __stdcall GetMessageA(void* lpMsg, void* hWnd, unsigned int wMsgFilterMin, unsigned int wMsgFilterMax);
+__declspec(dllimport) int __stdcall TranslateMessage(const void* lpMsg);
+__declspec(dllimport) unsigned long __stdcall DispatchMessageA(const void* lpMsg);
+__declspec(dllimport) int __stdcall DestroyWindow(void* hWnd);
+__declspec(dllimport) void __stdcall PostQuitMessage(int nExitCode);
 
 #define PBM_SETRANGE 0x0401
 #define PBM_SETPOS   0x0402
@@ -5845,4 +5855,42 @@ char* pb_join(char** arr, const char* delim) {
     }
 
     return result;
+}
+
+/* Tier-3 DDT GUI #1: WINDOW title$, x, y, w, h TO hWnd& */
+static long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned int wParam, unsigned long long lParam) {
+    if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
+    return DefWindowProcA(hWnd, Msg, wParam, lParam);
+}
+
+void* pb_window_new(const char* title, int x, int y, int w, int h) {
+    static int registered = 0;
+    if (!registered) {
+        /* WNDCLASSEXA = 48 bytes on x64: cbSize(4), style(4), lpfnWndProc(8), cbClsExtra(4), cbWndExtra(4), hInstance(8), hIcon(8), hCursor(8), hbrBackground(8), lpszMenuName(8), lpszClassName(8), hIconSm(8) */
+        unsigned char wc[48]; memset(wc, 0, sizeof(wc));
+        *(unsigned int*)(wc+0) = 48;
+        *(void**)(wc+8) = (void*)pb_wndproc;
+        *(void**)(wc+24) = GetModuleHandleA(0);
+        *(void**)(wc+32) = (void*)32512; /* IDC_ARROW */
+        *(void**)(wc+36) = (void*)1; /* COLOR_WINDOW+1 */
+        *(char**)(wc+40) = "PBWIN_CLASS";
+        RegisterClassExA(wc);
+        registered = 1;
+    }
+    void* hwnd = CreateWindowExA(0, "PBWIN_CLASS", title,
+        0x00CF0000 /* WS_OVERLAPPEDWINDOW */,
+        x, y, w, h, 0, 0, GetModuleHandleA(0), 0);
+    if (hwnd) {
+        ShowWindow(hwnd, 1); /* SW_SHOWNORMAL */
+        UpdateWindow(hwnd);
+    }
+    return hwnd;
+}
+
+void pb_message_loop(void) {
+    unsigned char msg[48]; /* MSG struct */
+    while (GetMessageA(msg, 0, 0, 0) > 0) {
+        TranslateMessage(msg);
+        DispatchMessageA(msg);
+    }
 }

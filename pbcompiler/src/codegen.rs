@@ -1592,6 +1592,8 @@ impl Compiler {
             .declare_function("pb_console_set_title", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_console_get_title", &IrType::Ptr, &[], false);
+        self.module.declare_function("pb_window_new", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32], false);
+        self.module.declare_function("pb_message_loop", &IrType::Void, &[], false);
         self.module.declare_function(
             "pb_type_set",
             &IrType::Void,
@@ -7296,6 +7298,23 @@ impl Compiler {
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
                         let title = fb.call(&IrType::Ptr, "pb_console_get_title", &[]);
                         fb.store(&title, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "WINDOW_NEW" => {
+                // WINDOW title$, x, y, w, h TO hWnd&
+                if let Some(title) = call.args.first() {
+                    let tv = self.compile_expr(fb, title)?;
+                    let xv = self.compile_expr(fb, &call.args[1])?;
+                    let yv = self.compile_expr(fb, &call.args[2])?;
+                    let wv = self.compile_expr(fb, &call.args[3])?;
+                    let hv = self.compile_expr(fb, &call.args[4])?;
+                    let hwnd = fb.call(&IrType::Ptr, "pb_window_new", &[tv, xv, yv, wv, hv]);
+                    if let Some(target) = call.args.get(5) {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
+                            fb.store(&hwnd, &ptr);
+                        }
                     }
                 }
                 return Ok(());

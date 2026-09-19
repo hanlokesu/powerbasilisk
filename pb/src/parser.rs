@@ -4809,6 +4809,29 @@ impl Parser {
                         line,
                     }));
                 }
+                // WINDOW title$, x, y, w, h TO hWnd&  (Tier-3 DDT GUI #1)
+                if name_upper == "WINDOW"
+                    && !matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET" || w.to_uppercase()=="GET")
+                {
+                    self.advance(); // consume WINDOW
+                    let title = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "WINDOW_NEW".to_string(),
+                        args: vec![title, x, y, w, h, target],
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
