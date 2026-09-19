@@ -5326,7 +5326,11 @@ __declspec(dllimport) unsigned long __stdcall RegisterClassExA(const void* lpwcx
 __declspec(dllimport) void* __stdcall CreateWindowExA(unsigned long dwExStyle, const char* lpClassName, const char* lpWindowName, unsigned long dwStyle, int x, int y, int nWidth, int nHeight, void* hWndParent, void* hMenu, void* hInstance, void* lpParam);
 __declspec(dllimport) int __stdcall ShowWindow(void* hWnd, int nCmdShow);
 __declspec(dllimport) int __stdcall UpdateWindow(void* hWnd);
+#ifdef _WIN64
 __declspec(dllimport) long long __stdcall DefWindowProcA(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam);
+#else
+__declspec(dllimport) long long __stdcall DefWindowProcA(void* hWnd, unsigned int Msg, unsigned int wParam, unsigned int lParam);
+#endif
 __declspec(dllimport) int __stdcall GetMessageA(void* lpMsg, void* hWnd, unsigned int wMsgFilterMin, unsigned int wMsgFilterMax);
 __declspec(dllimport) int __stdcall TranslateMessage(const void* lpMsg);
 __declspec(dllimport) unsigned long __stdcall DispatchMessageA(const void* lpMsg);
