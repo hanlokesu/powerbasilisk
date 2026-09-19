@@ -5279,7 +5279,7 @@ impl Parser {
                     }));
                 }
                 // LET *ptr = obj / LET *ptr = variant — object/variant pointer assign (accepted; no-op)
-                if name_upper == "LET" && self.peek() == &Token::Star {
+                if name_upper == "LET" && self.peek_at(1) == Some(&Token::Star) {
                     self.advance(); // consume LET
                     self.advance(); // consume *
                     self.consume_to_eol();
