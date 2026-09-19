@@ -5953,7 +5953,7 @@ void pb_control_add_button_with_cb(void* parent, long id, const char* text, int 
 
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
     if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
-    if (Msg == 0x0111) /* WM_COMMAND */ {
+        if (Msg == 0x0111) /* WM_COMMAND */ {
         cb_msg = Msg;
         cb_hwnd = hWnd;
         cb_ctl = (unsigned int)(wParam & 0xFFFF);
@@ -5966,7 +5966,11 @@ static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned lon
         }
         return 0;
     }
-    return DefWindowProcA(hWnd, Msg, wParam, lParam);
+    __try {
+        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+    } __except(EXCEPTION_EXECUTE_HANDLER) {
+        return 0;
+    }
 }
 
 /* x64 WNDCLASSEXA layout (80 bytes) */

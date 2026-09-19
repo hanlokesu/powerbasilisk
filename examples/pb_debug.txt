@@ -1,6 +1,4 @@
-pb_window_new title=Label + Progress
-pb_window_new title=Test
-pb_window_new title=Test
-pb_window_new title=Batch 149: BEFORE
-pb_window_new title=Batch 149: BEFORE
+pb_window_new title=Batch 150: SCROLLBAR
+pb_window_new title=Batch 150: SCROLLBAR
+pb_window_new title=Batch 150: SCROLLBAR
 pb_window_new title=Batch 150: SCROLLBAR
