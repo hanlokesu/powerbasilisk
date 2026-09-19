@@ -1678,6 +1678,9 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_control_get_text_by_id",
+            &IrType::Void, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32], false);
+        self.module.declare_function(
             "pb_control_get_text",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
@@ -7643,6 +7646,22 @@ impl Compiler {
                         if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
                             fb.store(&hc, &ptr);
                         }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_TEXT_ID" => {
+                if call.args.len() >= 3 {
+                    let hdlg = self.compile_expr(fb, &call.args[0])?;
+                    let cid = self.compile_expr(fb, &call.args[1])?;
+                    let hdlg64 = fb.inttoptr(&hdlg);
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void("pb_control_get_text_by_id", &[hdlg64, cid, bp.clone(), fb.const_i32(256)]);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let len = fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
                     }
                 }
                 return Ok(());

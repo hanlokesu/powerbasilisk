@@ -1,0 +1,9 @@
+﻿cargo :    Compiling pbcompiler v0.1.1 
+(C:\Users\HANLO\Doubao\chats\2026-09-05\new-chat\powerbasilisk_test\pbsrc\pbcompiler)
+At line:5 char:1
++ cargo build --release -p pbcompiler 2> build_err.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (   Compiling pb...src\pbcompiler):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    Finished `release` profile [optimized] target(s) in 28.85s

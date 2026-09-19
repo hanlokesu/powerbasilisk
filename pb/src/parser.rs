@@ -4909,7 +4909,7 @@ impl Parser {
                         line,
                     }));
                 }
-                // CONTROL GET TEXT hCtrl TO var$  (Tier-3 DDT GUI)
+                // CONTROL GET TEXT hCtrl TO var$  OR  CONTROL GET TEXT hDlg, id TO var$  (Tier-3 DDT GUI)
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
                     && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TEXT")
@@ -4917,15 +4917,30 @@ impl Parser {
                     self.advance();
                     self.advance();
                     self.advance();
-                    let hctrl = self.parse_expression()?;
-                    self.expect(&Token::To)?;
-                    let target = self.parse_expression()?;
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "CONTROL_GET_TEXT".to_string(),
-                        args: vec![hctrl, target],
-                        line,
-                    }));
+                    let first = self.parse_expression()?;
+                    if matches!(self.peek(), Token::Comma) {
+                        // By-ID form: CONTROL GET TEXT hDlg, id TO var$
+                        self.advance(); // comma
+                        let id = self.parse_expression()?;
+                        self.expect(&Token::To)?;
+                        let target = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "CONTROL_GET_TEXT_ID".to_string(),
+                            args: vec![first, id, target],
+                            line,
+                        }));
+                    } else {
+                        // By-handle form: CONTROL GET TEXT hCtrl TO var$
+                        self.expect(&Token::To)?;
+                        let target = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "CONTROL_GET_TEXT".to_string(),
+                            args: vec![first, target],
+                            line,
+                        }));
+                    }
                 }
                 // CONTROL SET TEXT hCtrl, "text"  (Tier-3 DDT GUI)
                 if name_upper == "CONTROL"
