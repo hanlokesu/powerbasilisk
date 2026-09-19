@@ -62,6 +62,14 @@ programs and `MSGBOX` in GUI programs, matching PBCC / PBWin behavior:
 
 > **Default is `#CONSOLE ON`** — `?` prints to stdout unless you explicitly set
 > `#CONSOLE OFF` or include a Win32 GUI header.
+>
+> **Subsystem behavior:**
+> - `#CONSOLE ON` (default): the exe is linked as a **console** subsystem app,
+>   so a CMD window appears at startup and `PRINT`/`?` output goes there.
+> - `#CONSOLE OFF`: the exe is linked as a **Windows GUI** subsystem app (no CMD
+>   window). `MSGBOX`/`?` pop up dialogs. `PRINT` output is written to
+>   `pb_debug.log` in the current directory (so you can still see debug output
+>   without a console window).
 
 ```basic
 ? "Hello"           ' default -> PRINT to console
