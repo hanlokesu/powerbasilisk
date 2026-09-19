@@ -1621,6 +1621,45 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_control_add_editbox",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_combobox",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_get_text",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_set_text",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_type_set",
             &IrType::Void,
             &[IrType::Ptr, IrType::Ptr, IrType::I32],
@@ -7418,14 +7457,12 @@ impl Compiler {
             "CONTROL_GET_TEXT" => {
                 if let (Some(hc), Some(tgt)) = (call.args.first(), call.args.get(1)) {
                     let hcv = self.compile_expr(fb, hc)?;
-                    let buf = fb.array_alloca(&IrType::I8, 256, 4);
-                    fb.call_void(
-                        "pb_control_get_text",
-                        &[hcv, buf, fb.const_int(IrType::I32, 256, 0)],
-                    );
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void("pb_control_get_text", &[hcv, bp.clone(), fb.const_i32(256)]);
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, tgt) {
-                        let len = fb.call(&IrType::I32, "pb_str_cstr_len", &[buf]);
-                        let bstr = self.make_bstr(fb, buf, len)?;
+                        let len = fb.call(&IrType::I32, "pb_str_cstr_len", &[bp.clone()]);
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
                         fb.store(&bstr, &ptr);
                     }
                 }
