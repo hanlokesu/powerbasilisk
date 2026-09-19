@@ -1,0 +1,12 @@
+# Batch 137: GroupBox
+#CONSOLE OFF
+FUNCTION PBMAIN() AS LONG
+    LOCAL hWnd AS QUAD
+    LOCAL hG AS QUAD
+    WINDOW "Batch 137: GroupBox", 200, 200, 500, 400 TO hWnd
+    CONTROL ADD GROUPBOX, hWnd, 201, "Options", 20, 20, 440, 200 TO hG
+    CONTROL ADD CHECKBOX, hWnd, 101, "Option A", 50, 60, 380, 30
+    CONTROL ADD CHECKBOX, hWnd, 102, "Option B", 50, 100, 380, 30
+    CONTROL ADD CHECKBOX, hWnd, 103, "Option C", 50, 140, 380, 30
+    pb_message_loop
+END FUNCTION
