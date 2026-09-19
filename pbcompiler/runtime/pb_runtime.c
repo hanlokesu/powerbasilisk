@@ -5968,7 +5968,7 @@ static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned lon
     }
     __try {
         return DefWindowProcA(hWnd, Msg, wParam, lParam);
-    } __except(EXCEPTION_EXECUTE_HANDLER) {
+    } __except(1) {
         return 0;
     }
 }
