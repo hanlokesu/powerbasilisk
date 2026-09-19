@@ -1377,6 +1377,8 @@ impl Compiler {
         self.module
             .declare_function("pb_str_len", &IrType::I32, &[IrType::Ptr], false);
         self.module
+            .declare_function("pb_str_cstr_len", &IrType::I32, &[IrType::Ptr], false);
+        self.module
             .declare_function("pb_bstr_free", &IrType::Void, &[IrType::Ptr], false);
         self.module.declare_function(
             "pb_str_concat",

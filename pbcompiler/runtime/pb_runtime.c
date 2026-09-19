@@ -426,6 +426,10 @@ void pb_install_crash_handler(void) {
 #endif
 }
 
+int pb_str_cstr_len(const char* s) {
+    return (int)strlen(s);
+}
+
 /* Public BSTR allocation wrapper — called from LLVM IR codegen (cdecl) */
 char* pb_bstr_alloc(const char* src, unsigned int len) {
 #ifdef _WIN32
