@@ -5961,6 +5961,8 @@ void* pb_control_add_editbox(void* parent, long id, const char* text,
 __declspec(dllimport) int __stdcall GetWindowTextA(void*, char*, int);
 __declspec(dllimport) int __stdcall GetWindowTextLengthA(void*);
 __declspec(dllimport) int __stdcall SetWindowTextA(void*, const char*);
+__declspec(dllimport) int __stdcall EnableWindow(void*, int);
+__declspec(dllimport) void* __stdcall SetFocus(void*);
 
 void pb_control_get_text(void* hctrl, char* out, int outlen) {
     int n = GetWindowTextLengthA(hctrl);
@@ -5974,6 +5976,12 @@ void pb_control_get_text(void* hctrl, char* out, int outlen) {
 void pb_control_set_text(void* hctrl, const char* text) {
     SetWindowTextA(hctrl, text);
 }
+
+void pb_control_show(void* hctrl) { ShowWindow(hctrl, 5); }
+void pb_control_hide(void* hctrl) { ShowWindow(hctrl, 0); }
+void pb_control_enable(void* hctrl) { EnableWindow(hctrl, 1); }
+void pb_control_disable(void* hctrl) { EnableWindow(hctrl, 0); }
+void pb_control_focus(void* hctrl) { SetFocus(hctrl); }
 
 void* pb_control_add_combobox(void* parent, long id, int x, int y, int w, int h) {
     /* CBS_DROPDOWNLIST=0x3, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000,

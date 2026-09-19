@@ -1689,6 +1689,9 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        for n in ["pb_control_show","pb_control_hide","pb_control_enable","pb_control_disable","pb_control_focus"] {
+            self.module.declare_function(n, &IrType::Void, &[IrType::Ptr], false);
+        }
         self.module.declare_function(
             "pb_control_add_listbox",
             &IrType::Ptr,
@@ -7531,6 +7534,41 @@ impl Compiler {
                     let hcv = self.compile_expr(fb, hc)?;
                     let cstr = self.compile_str_payload(fb, tx)?;
                     fb.call_void("pb_control_set_text", &[hcv, cstr]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SHOW" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_show", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_HIDE" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_hide", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_ENABLE" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_enable", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_DISABLE" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_disable", &[v]);
+                }
+                return Ok(());
+            }
+            "CONTROL_FOCUS" => {
+                if let Some(hc) = call.args.first() {
+                    let v = self.compile_expr(fb, hc)?;
+                    fb.call_void("pb_control_focus", &[v]);
                 }
                 return Ok(());
             }

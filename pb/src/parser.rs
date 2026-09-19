@@ -4930,6 +4930,32 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL SHOW/HIDE/ENABLE/DISABLE/FOCUS hCtrl&  (Tier-3 DDT GUI)
+                if name_upper == "CONTROL" {
+                    if let Some(Token::Identifier(w)) = self.peek_at(1) {
+                        let op = w.to_uppercase();
+                        let mapping = [
+                            ("SHOW", "CONTROL_SHOW"),
+                            ("HIDE", "CONTROL_HIDE"),
+                            ("ENABLE", "CONTROL_ENABLE"),
+                            ("DISABLE", "CONTROL_DISABLE"),
+                            ("FOCUS", "CONTROL_FOCUS"),
+                        ];
+                        for (kw, arm) in mapping {
+                            if op == kw {
+                                self.advance();
+                                self.advance();
+                                let hctrl = self.parse_expression()?;
+                                self.consume_to_eol();
+                                return Ok(Statement::Call(CallStmt {
+                                    name: arm.to_string(),
+                                    args: vec![hctrl],
+                                    line,
+                                }));
+                            }
+                        }
+                    }
+                }
                 // CONTROL ADD COMBOBOX, hWnd, id, x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
