@@ -497,6 +497,24 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.010 (2026-09-19) — Tier-3 DDT GUI controls batch 128-137: WINDOW + 8 native Win32 controls
+
+First Tier-3 DDT GUI release. Moves from v0.1.x to v0.2.x for the GUI framework milestone.
+
+- **WINDOW "title", x, y, w, h TO hWnd** — creates a native Win32 overlapped window via CreateWindowExA (batch 128).
+- **`?` abbreviation** — `? "text"` = PRINT in console mode, MSGBOX in GUI mode (#CONSOLE OFF or #INCLUDE "win32api.inc") (batch 129).
+- **CONTROL ADD BUTTON** — push button, BS_PUSHBUTTON style (batch 130).
+- **CONTROL ADD EDITBOX** — single-line text input, ES_AUTOHSCROLL style (batch 131).
+- **CONTROL GET TEXT / CONTROL SET TEXT** — reads/writes control text via GetWindowTextA/SetWindowTextA (batch 132).
+- **CONTROL ADD COMBOBOX** — dropdown list (batch 133).
+- **CONTROL ADD LISTBOX** — list box (batch 134).
+- **CONTROL ADD CHECKBOX** — auto-check box, BS_AUTOCHECKBOX style (batch 135).
+- **CONTROL ADD RADIOBUTTON** — auto radio button, BS_AUTORADIOBUTTON style (batch 136).
+- **CONTROL ADD GROUPBOX** — group frame, BS_GROUPBOX style (batch 137).
+- **Fix**: all GUI examples use QUAD (8-byte) handles — LONG (4-byte) truncated HWND to 0 on x64 causing silent control creation failure.
+- **Fix**: added pb_str_cstr_len runtime helper for CONTROL GET TEXT.
+- Tests: examples/batch128_gui.exe through batch137_gui.exe — all verified visually.
+
 
 ### v0.1.125 (2026-09-19) — Batch 125-127: parser warning cleanup + LET keyword + ARRAY SELECT op form
 
