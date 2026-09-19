@@ -5278,6 +5278,23 @@ impl Parser {
                         line,
                     }));
                 }
+                // LET obj2 = expr (plain LET keyword) — consume LET, then normal assignment
+                if name_upper == "LET" && self.peek_at(1) != Some(&Token::Star) {
+                    self.advance(); // consume LET
+                    let primary = self.parse_primary()?;
+                    if self.peek() == &Token::Eq {
+                        self.advance();
+                        let value = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Assign(AssignStmt {
+                            target: primary,
+                            value,
+                            line,
+                        }));
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Noop("LET".to_string(), line));
+                }
                 // LET *ptr = obj / LET *ptr = variant — object/variant pointer assign (accepted; no-op)
                 if name_upper == "LET" && self.peek_at(1) == Some(&Token::Star) {
                     self.advance(); // consume LET
@@ -5592,6 +5609,8 @@ impl Parser {
                         | "LISTBOX"
                         | "TREEVIEW"
                         | "LISTVIEW"
+                        | "PROGRESSBAR"
+                        | "HEADER"
                 ) {
                     self.advance();
                     self.consume_to_eol();
