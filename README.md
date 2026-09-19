@@ -502,6 +502,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.012 (2026-09-19) — Batch 148-150: DIALOG model deepening
+
+- **DIALOG SET TEXT hDlg, "title"** — SetWindowTextA at runtime (batch 149).
+- **CONTROL GET TEXT hDlg, id TO var$** — GetDlgItemTextA by control ID (batch 150).
+- **COMBOBOX + LISTBOX with DIALOG** — verified working (batch 148).
+
+### v0.2.011 (2026-09-19) — Batch 144-147: DIALOG model + CALLBACK + MENU
+
+- **DIALOG NEW / SHOW MODAL / END** — native Win32 dialog model with modal message loop (batch 144).
+- **CALLBACK FUNCTION** — callback body parsing; CB.MSG / CB.HNDL / CB.CTL / CB.CTLMSG / WPARAM / LPARAM expressions (batch 144).
+- **MENU NEW BAR / POPUP / ADD STRING** — Win32 menu bar (batch 145, parser first-arg fix).
+- **FRAME = GROUPBOX alias, OPTION = RADIOBUTTON alias** (batch 146).
+- **Full GUI demo** with all controls (batch 147).
+
 ### v0.2.010 (2026-09-19) — Tier-3 DDT GUI controls batch 128-137: WINDOW + 8 native Win32 controls
 
 First Tier-3 DDT GUI release. Moves from v0.1.x to v0.2.x for the GUI framework milestone.
