@@ -54,11 +54,14 @@ programs and `MSGBOX` in GUI programs, matching PBCC / PBWin behavior:
 
 | Source directive | `? "text"` compiles to |
 |------------------|------------------------|
-| (default — no directive) | `PRINT "text"` |
+| **default (no directive)** | `PRINT "text"` (console — same as `#CONSOLE ON`) |
 | `#CONSOLE ON` | `PRINT "text"` |
 | `#CONSOLE OFF` | `MSGBOX "text"` |
 | `#INCLUDE "win32api.inc"` or `"windows.inc"` | `MSGBOX "text"` (auto-detected) |
 | `#COMPILE EXE` / `DLL` / `SLL` | not used to decide (present in both PBCC and PBWin) |
+
+> **Default is `#CONSOLE ON`** — `?` prints to stdout unless you explicitly set
+> `#CONSOLE OFF` or include a Win32 GUI header.
 
 ```basic
 ? "Hello"           ' default -> PRINT to console
