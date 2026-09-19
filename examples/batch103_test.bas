@@ -10,7 +10,7 @@ FUNCTION PBMAIN() AS LONG
     LOCAL msg AS STRING
     LOCAL waitk AS STRING
     msg = "All 6 #-directives accepted without error!"
-    MSGBOX msg, 0, "Batch 103"
+    PRINT "  MSGBOX skipped (headless): "; msg
     PRINT "Testing #-directives..."
     PRINT "  #DEBUG BOUNDS  - OK"
     PRINT "  #DEBUG DISPLAY - OK"

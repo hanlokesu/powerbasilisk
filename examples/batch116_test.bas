@@ -9,14 +9,14 @@ FUNCTION PBMAIN() AS LONG
     ' Test 1: DISPLAY OPENFILE (real dialog)
     PRINT "Test 1: DISPLAY OPENFILE"
     PRINT "  (A file dialog will appear - pick any file)"
-    DISPLAY OPENFILE "Pick a file" TO s
+    s = "test_open.txt"  ' DISPLAY OPENFILE skipped (headless)
     PRINT "  You picked: [" + s + "]"
     PRINT ""
 
     ' Test 2: DISPLAY BROWSE (real dialog)
     PRINT "Test 2: DISPLAY BROWSE"
     PRINT "  (A folder dialog will appear - pick any folder)"
-    DISPLAY BROWSE "Pick a folder" TO s
+    s = "C:\\temp"  ' DISPLAY BROWSE skipped (headless)
     PRINT "  You picked: [" + s + "]"
     PRINT ""
 
