@@ -5910,3 +5910,31 @@ void* pb_control_add_button(void* parent, long id, const char* text,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
 }
 
+
+void* pb_control_add_editbox(void* parent, long id, const char* text,
+                              int x, int y, int w, int h) {
+    /* ES_AUTOHSCROLL=0x80, ES_MULTILINE=0x4, WS_CHILD=0x40000000,
+       WS_VISIBLE=0x10000000, WS_BORDER=0x800000, WS_TABSTOP=0x10000 */
+    unsigned long style = 0x80 | 0x4 | 0x40000000 | 0x10000000 | 0x800000 | 0x10000;
+    return CreateWindowExA(0, "EDIT", text, style,
+                            x, y, w, h, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* Tier-3 DDT: CONTROL GET/SET TEXT */
+__declspec(dllimport) int __stdcall GetWindowTextA(void*, char*, int);
+__declspec(dllimport) int __stdcall GetWindowTextLengthA(void*);
+__declspec(dllimport) int __stdcall SetWindowTextA(void*, const char*);
+
+void pb_control_get_text(void* hctrl, char* out, int outlen) {
+    int n = GetWindowTextLengthA(hctrl);
+    if (n < outlen - 1) {
+        GetWindowTextA(hctrl, out, outlen);
+    } else {
+        out[0] = 0;
+    }
+}
+
+void pb_control_set_text(void* hctrl, const char* text) {
+    SetWindowTextA(hctrl, text);
+}
