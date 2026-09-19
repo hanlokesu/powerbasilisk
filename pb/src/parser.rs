@@ -5450,6 +5450,23 @@ impl Parser {
                         line,
                     }));
                 }
+                // DIALOG SET TEXT hDlg, "title"
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let txt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_TEXT".to_string(),
+                        args: vec![hd, txt],
+                        line,
+                    }));
+                }
                 // ARRAY COPY src(), dest() / ARRAY SWAP a(), b()
                 if name_upper == "ARRAY"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w))
