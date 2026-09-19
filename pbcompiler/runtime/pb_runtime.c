@@ -5994,3 +5994,11 @@ void* pb_control_add_checkbox(void* parent, long id, const char* text,
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
 }
+
+void* pb_control_add_radiobutton(void* parent, long id, const char* text,
+                                int x, int y, int w, int h) {
+    unsigned long style = 0x9 | 0x40000000 | 0x10000000 | 0x10000;
+    return CreateWindowExA(0, "BUTTON", text, style,
+                            x, y, w, h, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}
