@@ -1790,6 +1790,18 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_combobox_add",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listbox_add",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_dialog_end",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32],
@@ -7961,6 +7973,24 @@ impl Compiler {
                             fb.store(&hc, &ptr);
                         }
                     }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_ADD" => {
+                if call.args.len() >= 2 {
+                    let mut hc = self.compile_expr(fb, &call.args[0])?;
+                    if hc.ty != IrType::Ptr { hc = fb.inttoptr(&hc); }
+                    let txt = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_combobox_add", &[hc, txt]);
+                }
+                return Ok(());
+            }
+            "LISTBOX_ADD" => {
+                if call.args.len() >= 2 {
+                    let mut hl = self.compile_expr(fb, &call.args[0])?;
+                    if hl.ty != IrType::Ptr { hl = fb.inttoptr(&hl); }
+                    let txt = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_listbox_add", &[hl, txt]);
                 }
                 return Ok(());
             }

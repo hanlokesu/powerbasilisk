@@ -5163,6 +5163,11 @@ impl Parser {
                     self.expect(&Token::Comma)?;
                     let id = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
+                    // optional text (string literal)
+                    if matches!(self.peek(), Token::StringLiteral(_)) {
+                        self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                    }
                     let x = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let y = self.parse_expression()?;
@@ -5192,6 +5197,11 @@ impl Parser {
                     self.expect(&Token::Comma)?;
                     let id = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
+                    // optional text (string literal)
+                    if matches!(self.peek(), Token::StringLiteral(_)) {
+                        self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                    }
                     let x = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let y = self.parse_expression()?;
@@ -5205,6 +5215,38 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_LISTBOX".to_string(),
                         args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // COMBOBOX ADD hCombo, "text"
+                if name_upper == "COMBOBOX"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                {
+                    self.advance();
+                    self.advance();
+                    let hc = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let txt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "COMBOBOX_ADD".to_string(),
+                        args: vec![hc, txt],
+                        line,
+                    }));
+                }
+                // LISTBOX ADD hList, "text"
+                if name_upper == "LISTBOX"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                {
+                    self.advance();
+                    self.advance();
+                    let hl = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let txt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTBOX_ADD".to_string(),
+                        args: vec![hl, txt],
                         line,
                     }));
                 }
