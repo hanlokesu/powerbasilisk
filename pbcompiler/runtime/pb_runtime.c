@@ -6074,6 +6074,19 @@ __declspec(dllimport) void* __stdcall SetFocus(void*);
 void pb_dialog_set_text(void* hDlg, const char* text) {
     SetWindowTextA(hDlg, text);
 }
+typedef struct { int left; int top; int right; int bottom; } pb_rect_t;
+__declspec(dllimport) int __stdcall GetWindowRect(void* hWnd, pb_rect_t* lpRect);
+__declspec(dllimport) int __stdcall GetSystemMetrics(int nIndex);
+__declspec(dllimport) int __stdcall MoveWindow(void* hWnd, int X, int Y, int nWidth, int nHeight, int bRepaint);
+void pb_dialog_center(void* hDlg) {
+    pb_rect_t rc;
+    GetWindowRect(hDlg, &rc);
+    int w = rc.right - rc.left;
+    int h = rc.bottom - rc.top;
+    int sw = GetSystemMetrics(0);
+    int sh = GetSystemMetrics(1);
+    MoveWindow(hDlg, (sw - w) / 2, (sh - h) / 2, w, h, 1);
+}
 
 
 void pb_combobox_add(void* hCombo, const char* text) {
