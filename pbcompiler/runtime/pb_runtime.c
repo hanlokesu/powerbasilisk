@@ -6067,11 +6067,14 @@ void* pb_control_add_groupbox(void* parent, long id, const char* text,
 }
 
 /* CONTROL ADD SCROLLBAR */
-void* pb_control_add_scrollbar(void* parent, long id, int x, int y, int w, int h) {
+void* pb_control_add_scrollbar(void* parent, long id, int x, int y, int w, int ht) {
     unsigned long style = 1 | 0x40000000 | 0x10000000 | 0x10000;
-    return CreateWindowExA(0, "SCROLLBAR", "", style,
-                            x, y, w, h, parent,
+    void* hbar = CreateWindowExA(0, "SCROLLBAR", "", style,
+                            x, y, w, ht, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
+    /* Set default range 0-100 so scrollbar works immediately */
+    SendMessageA(hbar, 0x00F4 /* SBM_SETRANGE */, 0, 100);
+    return hbar;
 }
 #define SBM_SETPOS 0x00E0
 #define SBM_GETPOS 0x00E1
