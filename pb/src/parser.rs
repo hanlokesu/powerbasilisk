@@ -2661,8 +2661,15 @@ impl Parser {
                             }));
                         } else {
                             // GRAPHIC GET PIXEL (x,y) TO var&
-                            self.expect(&Token::Identifier("PIXEL".to_string()))?;
-                            self.expect(&Token::LParen)?;
+                            // sub already matched; consume PIXEL only if present
+                            if self.peek_plain_upper() == "PIXEL" {
+                                self.advance();
+                            }
+                            if self.peek() != &Token::LParen {
+                                self.consume_to_eol();
+                                return Ok(Statement::Noop("GRAPHIC_GET_PIXEL".to_string(), line));
+                            }
+                            self.advance(); // (
                             let x = self.parse_expression()?;
                             self.expect(&Token::Comma)?;
                             let y = self.parse_expression()?;
