@@ -1,4 +1,4 @@
-# Last updated from batch 121 (v0.1.121) - 2026-09-19,,, 
+# Last updated from batch 122 (v0.1.122) - 2026-09-19,,, 
 # Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT "implemented by upstream"). Upstream benstopics shipped only ~68 core statements; the rest is this fork.,,,
 Keyword,Kind,Platform,Status
 Keyword,Kind,Platform,Status
@@ -498,9 +498,9 @@ LEFT,FUNCTION,codegen builtin,Implemented
 LEFT$,FUNCTION,Win32,Implemented
 LEN,FUNCTION,codegen builtin,Implemented
 LET,STATEMENT,PB/Win + PB/CC,Established
-LET *(WITH OBJECTS)*,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+LET *(WITH OBJECTS)*,STATEMENT,PB/Win + PB/CC,Implemented
 LET *(WITH TYPES)*,STATEMENT,PB/Win + PB/CC,Established
-LET *(WITH VARIANTS)*,STATEMENT,PB/Win + PB/CC,Proposed Improvement
+LET *(WITH VARIANTS)*,STATEMENT,PB/Win + PB/CC,Implemented
 LINE INPUT#,STATEMENT,PB/Win + PB/CC,Implemented
 LISTBOX,STATEMENT,PB/Win only,Tier-3 DDT
 LISTVIEW,STATEMENT,PB/Win only,Tier-3 DDT
@@ -909,7 +909,7 @@ AND,OPERATOR,PB/Win + PB/CC,Established
 NOT,OPERATOR,PB/Win + PB/CC,Established
 OR,OPERATOR,PB/Win + PB/CC,Established
 XOR,OPERATOR,PB/Win + PB/CC,Established
-DEF,OPERATOR,PB/Win + PB/CC,Proposed New
+DEF,OPERATOR,PB/Win + PB/CC,Implemented
 DIR CLOSE,STATEMENT,PB/Win + PB/CC,Implemented
 NUL,FUNCTION,PB/Win + PB/CC,Established
 ACODE,FUNCTION,PB/Win + PB/CC,Implemented

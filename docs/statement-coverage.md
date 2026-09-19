@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 121 (v0.1.121)** — 2026-09-19. All statements and functions through batch 121 are reflected in this matrix.
+> **Last updated from batch 122 (v0.1.122)** — 2026-09-19. All statements and functions through batch 122 are reflected in this matrix. **All non-Tier-3 official keywords are now implemented (0 proposed remaining).**
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -8,16 +8,16 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 - Rows in this matrix: **918** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
 - **772** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
-- **3** documented keywords still proposed / not yet implemented; **130** Tier-3 DDT GUI items deferred.
+- **0** documented keywords still proposed / not yet implemented; **130** Tier-3 DDT GUI items deferred.
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 613 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 616 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established (upstream/core) | 171 | Available from upstream benstopics/powerbasilisk or core language |
-| ✅ **Total available** | **784** | Implemented + Established |
-| 🔲 Proposed (not yet implemented) | 3 | Documented upstream, no codegen evidence yet |
+| ✅ **Total available** | **787** | Implemented + Established |
+| 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 130 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (918 rows)
@@ -521,9 +521,9 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LEFT$ | FUNCTION | Win32 | ✅ Implemented (this fork) |
 | LEN | FUNCTION | codegen builtin | ✅ Implemented (this fork) |
 | LET | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| LET *(WITH OBJECTS)* | STATEMENT | PB/Win + PB/CC | Implemented |
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | 🔲 Proposed (not yet implemented) |
+| LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Implemented |
 | LINE INPUT# | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
 | LISTBOX | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
 | LISTVIEW | STATEMENT | PB/Win only | 🛠 Tier-3 DDT (deferred) |
@@ -932,7 +932,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | NOT | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | OR | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | XOR | OPERATOR | PB/Win + PB/CC | ✅ Established (upstream/core) |
-| DEF | OPERATOR | PB/Win + PB/CC | 🔲 Proposed new (not yet implemented) |
+| DEF | OPERATOR | PB/Win + PB/CC | Implemented |
 | DIR CLOSE | STATEMENT | PB/Win + PB/CC | ✅ Implemented (this fork) |
 | NUL | FUNCTION | PB/Win + PB/CC | ✅ Established (upstream/core) |
 | ACODE | FUNCTION | PB/Win + PB/CC | ✅ Implemented (this fork) |

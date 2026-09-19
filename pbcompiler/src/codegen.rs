@@ -8595,6 +8595,8 @@ impl Compiler {
             || fam == "EVENTS"
             || fam == "RAISEEVENT"
             || fam == "INSTANCE"
+            || fam == "LET_PTR"
+            || fam == "DEF_FN"
         {
             return Ok(());
         }

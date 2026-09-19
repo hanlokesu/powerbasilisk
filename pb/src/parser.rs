@@ -5252,6 +5252,27 @@ impl Parser {
                         line,
                     }));
                 }
+                // LET *ptr = obj / LET *ptr = variant — object/variant pointer assign (accepted; no-op)
+                if name_upper == "LET" && self.peek() == &Token::Star {
+                    self.advance(); // consume LET
+                    self.advance(); // consume *
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LET_PTR".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+                // DEF fnName(params) = expr — single-line function (accepted; inline later)
+                if name_upper == "DEF" {
+                    self.advance(); // consume DEF
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DEF_FN".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
 
                 // ARRAY REDIM INCR arr(), n / ARRAY REDIM DECR arr(), n
                 if name_upper == "ARRAY"
