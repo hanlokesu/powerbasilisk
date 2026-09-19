@@ -6105,7 +6105,11 @@ impl Compiler {
                 let opi = self.convert_value(fb, &opv, &IrType::I32, &PbType::Long);
                 let val = self.compile_expr(fb, &call.args[2])?;
                 let v64 = self.to_i64(fb, &val);
-                let idx = fb.call(&IrType::I64, "pb_array_scan_num", &[pa0, fb.const_i32(4), v64, opi]);
+                let idx = fb.call(
+                    &IrType::I64,
+                    "pb_array_scan_num",
+                    &[pa0, fb.const_i32(4), v64, opi],
+                );
                 // store relative index into dst
                 let dst_expr = &call.args[3];
                 if let Expr::Variable(dn) = dst_expr {
