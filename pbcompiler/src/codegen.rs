@@ -7368,6 +7368,77 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "PB_MESSAGE_LOOP" => {
+                fb.call_void("pb_message_loop", &[]);
+                return Ok(());
+            }
+            "CONTROL_ADD_EDITBOX" => {
+                if call.args.len() >= 8 {
+                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_editbox",
+                        &[hwnd, id, text, x, y, w, h],
+                    );
+                    if let Some(t) = call.args.get(7) {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
+                            fb.store(&hc, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_COMBOBOX" => {
+                if call.args.len() >= 7 {
+                    let hwnd = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_combobox",
+                        &[hwnd, id, x, y, w, h],
+                    );
+                    if let Some(t) = call.args.get(6) {
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
+                            fb.store(&hc, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_TEXT" => {
+                if let (Some(hc), Some(tgt)) = (call.args.first(), call.args.get(1)) {
+                    let hcv = self.compile_expr(fb, hc)?;
+                    let buf = fb.array_alloca(&IrType::I8, 256, 4);
+                    fb.call_void(
+                        "pb_control_get_text",
+                        &[hcv, buf, fb.const_int(IrType::I32, 256, 0)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, tgt) {
+                        let len = fb.call(&IrType::I32, "pb_str_cstr_len", &[buf]);
+                        let bstr = self.make_bstr(fb, buf, len)?;
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_TEXT" => {
+                if let (Some(hc), Some(tx)) = (call.args.first(), call.args.get(1)) {
+                    let hcv = self.compile_expr(fb, hc)?;
+                    let cstr = self.compile_str_payload(fb, tx)?;
+                    fb.call_void("pb_control_set_text", &[hcv, cstr]);
+                }
+                return Ok(());
+            }
             "TYPE SET" => {
                 // TYPE SET dest = src : copy bytes into a TYPE variable.
                 // src may be another TYPE variable or a STRING.
