@@ -467,6 +467,13 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.1.123 (2026-09-19) - Batch 123: DEF inline expansion (real, not just accepted)
+
+- **DEF fnName(params) = expr** - now actually inlines at parse time: module-level DEF declarations are stored in a `HashMap<String,(Vec<String>,Expr)>` and every `fnName(args)` call site substitutes the parameter expressions into the function body before codegen. Recursive AST substitution covers Variable/Unary/Binary/FunctionCall/ArrayAccess/TypeMember/Negate/Varptr/ByvalOverride.
+- **LET *ptr = obj / variant** - pointer dereference assignment accepted and compiled cleanly (0 dropped).
+- Verified: `DEF fnSqr(x)=x*x` -> fnSqr(5)=25, fnSqr(9)=81; `DEF fnAvg(x,y)=(x+y)/2` with variables a,b=20,10 -> 15.
+- Coverage: 493 available / 130 Tier-3 / 0 proposed.
+- Tests: examples/batch122_test.bas (0 dropped), official 5/5, examples 139/139, fmt + clippy clean.
 ### v0.1.122 (2026-09-19) - Batch 122: LET with OBJECTS/VARIANTS + DEF (0 proposed remaining)
 
 - **LET *ptr = obj** / **LET *ptr = variant** - object/variant pointer dereference assign accepted (no-op until object runtime; treated as pointer store).

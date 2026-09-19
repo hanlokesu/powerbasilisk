@@ -1,6 +1,7 @@
 use crate::ast::*;
 use crate::error::{PbError, PbResult};
 use crate::token::{Located, Token};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum BodyEnd {
@@ -20,11 +21,16 @@ enum BodyEnd {
 pub struct Parser {
     tokens: Vec<Located>,
     pos: usize,
+    def_funcs: HashMap<String, (Vec<String>, Expr)>,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<Located>) -> Self {
-        Parser { tokens, pos: 0 }
+        Parser {
+            tokens,
+            pos: 0,
+            def_funcs: HashMap::new(),
+        }
     }
 
     fn peek(&self) -> &Token {
@@ -162,7 +168,6 @@ impl Parser {
         if self.at_end() {
             return Ok(None);
         }
-
         let line = self.current_line();
 
         match self.peek().clone() {
@@ -333,6 +338,27 @@ impl Parser {
                 // EVENT SOURCE id | EVENTS eventname list — simplified noop
                 self.advance(); // consume EVENT
                 self.consume_to_eol();
+                Ok(None)
+            }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("DEF") => {
+                // DEF fnName(params) = expr — single-line function, stored for inline
+                self.advance(); // consume DEF
+                let fname = self.consume_identifier()?;
+                self.expect(&Token::LParen)?;
+                let mut params: Vec<String> = Vec::new();
+                if self.peek() != &Token::RParen {
+                    loop {
+                        params.push(self.consume_identifier()?);
+                        if self.peek() != &Token::Comma {
+                            break;
+                        }
+                        self.advance();
+                    }
+                }
+                self.expect(&Token::RParen)?;
+                self.expect(&Token::Eq)?;
+                let body = self.parse_expression()?;
+                self.def_funcs.insert(fname.to_uppercase(), (params, body));
                 Ok(None)
             }
             Token::HashIf => {
@@ -5263,10 +5289,25 @@ impl Parser {
                         line,
                     }));
                 }
-                // DEF fnName(params) = expr — single-line function (accepted; inline later)
+                // DEF fnName(params) = expr — single-line function, stored for inline expansion
                 if name_upper == "DEF" {
                     self.advance(); // consume DEF
-                    self.consume_to_eol();
+                    let fname = self.consume_identifier()?;
+                    self.expect(&Token::LParen)?;
+                    let mut params: Vec<String> = Vec::new();
+                    if self.peek() != &Token::RParen {
+                        loop {
+                            params.push(self.consume_identifier()?);
+                            if self.peek() != &Token::Comma {
+                                break;
+                            }
+                            self.advance();
+                        }
+                    }
+                    self.expect(&Token::RParen)?;
+                    self.expect(&Token::Eq)?;
+                    let body = self.parse_expression()?;
+                    self.def_funcs.insert(fname.to_uppercase(), (params, body));
                     return Ok(Statement::Call(CallStmt {
                         name: "DEF_FN".to_string(),
                         args: vec![],
@@ -7831,6 +7872,21 @@ impl Parser {
                 Ok(Expr::Varptr(Box::new(inner)))
             }
             Token::Identifier(name) => {
+                // DEF fn inline expansion: name(params) -> subst body
+                let def_key = name.to_uppercase();
+                if self.def_funcs.contains_key(&def_key) && self.peek_at(1) == Some(&Token::LParen)
+                {
+                    self.advance(); // consume name
+                    self.advance(); // consume (
+                    let args = if self.peek() == &Token::RParen {
+                        Vec::new()
+                    } else {
+                        self.parse_arg_list()?
+                    };
+                    self.expect(&Token::RParen)?;
+                    let (params, body) = self.def_funcs.get(&def_key).unwrap().clone();
+                    return Ok(subst_def_params(&body, &params, &args));
+                }
                 self.advance();
                 // Check for function call or array access
                 let mut expr = if self.peek() == &Token::LParen {
@@ -7971,4 +8027,43 @@ fn has_type_suffix(name: &str) -> bool {
         || name.ends_with("@@")
         || name.ends_with('@')
         || name.ends_with('$')
+}
+
+fn subst_def_params(e: &Expr, params: &[String], args: &[Expr]) -> Expr {
+    match e {
+        Expr::Variable(n) => {
+            if let Some(i) = params.iter().position(|p| p.eq_ignore_ascii_case(n)) {
+                args[i].clone()
+            } else {
+                Expr::Variable(n.clone())
+            }
+        }
+        Expr::UnaryOp(op, x) => {
+            Expr::UnaryOp(op.clone(), Box::new(subst_def_params(x, params, args)))
+        }
+        Expr::BinaryOp(op, a, b) => Expr::BinaryOp(
+            op.clone(),
+            Box::new(subst_def_params(a, params, args)),
+            Box::new(subst_def_params(b, params, args)),
+        ),
+        Expr::FunctionCall(n, xs) => Expr::FunctionCall(
+            n.clone(),
+            xs.iter()
+                .map(|x| subst_def_params(x, params, args))
+                .collect(),
+        ),
+        Expr::ArrayAccess(n, xs) => Expr::ArrayAccess(
+            n.clone(),
+            xs.iter()
+                .map(|x| subst_def_params(x, params, args))
+                .collect(),
+        ),
+        Expr::TypeMember(x, m) => {
+            Expr::TypeMember(Box::new(subst_def_params(x, params, args)), m.clone())
+        }
+        Expr::Negate(x) => Expr::Negate(Box::new(subst_def_params(x, params, args))),
+        Expr::Varptr(x) => Expr::Varptr(Box::new(subst_def_params(x, params, args))),
+        Expr::ByvalOverride(x) => Expr::ByvalOverride(Box::new(subst_def_params(x, params, args))),
+        _ => e.clone(),
+    }
 }
