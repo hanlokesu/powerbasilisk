@@ -6065,3 +6065,19 @@ void* pb_control_add_groupbox(void* parent, long id, const char* text,
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
 }
+
+/* CONTROL ADD SCROLLBAR */
+void* pb_control_add_scrollbar(void* parent, long id, int x, int y, int w, int h) {
+    unsigned long style = 1 | 0x40000000 | 0x10000000 | 0x10000;
+    return CreateWindowExA(0, "SCROLLBAR", "", style,
+                            x, y, w, h, parent,
+                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+#define SBM_SETPOS 0x00E0
+#define SBM_GETPOS 0x00E1
+void pb_control_set_pos(void* hctrl, long pos) {
+    SendMessageA(hctrl, SBM_SETPOS, (unsigned long long)pos, 0);
+}
+long long pb_control_get_pos(void* hctrl) {
+    return (long long)SendMessageA(hctrl, SBM_GETPOS, 0, 0);
+}

@@ -1701,6 +1701,27 @@ impl Compiler {
             .declare_function("pb_control_uncheck", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_control_get_check", &IrType::I64, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_control_add_scrollbar",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_set_pos",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module
+            .declare_function("pb_control_get_pos", &IrType::I64, &[IrType::Ptr], false);
         for n in [
             "pb_control_show",
             "pb_control_hide",
@@ -7609,6 +7630,45 @@ impl Compiler {
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let val = fb.call(&IrType::I64, "pb_control_get_check", &[hc]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        fb.store(&val32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_SCROLLBAR" => {
+                if call.args.len() >= 7 {
+                    let parent = self.compile_expr(fb, &call.args[0])?;
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_scrollbar",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        fb.store(&hc, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_POS" => {
+                if call.args.len() >= 2 {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let pos = self.compile_expr(fb, &call.args[1])?;
+                    let pos64 = fb.sext(&pos, &IrType::I64);
+                    fb.call_void("pb_control_set_pos", &[hc, pos64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_POS" => {
+                if call.args.len() >= 2 {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let val = fb.call(&IrType::I64, "pb_control_get_pos", &[hc]);
                     let val32 = fb.trunc(&val, &IrType::I32);
                     if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
                         fb.store(&val32, &ptr);

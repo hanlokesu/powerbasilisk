@@ -5023,6 +5023,73 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD SCROLLBAR, hWnd, id, x, y, w, h TO hCtrl&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="SCROLLBAR")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let parent = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_SCROLLBAR".to_string(),
+                        args: vec![parent, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL SET POS hCtrl, pos / CONTROL GET POS hCtrl TO var
+                if name_upper == "CONTROL" {
+                    if let Some(Token::Identifier(w)) = self.peek_at(1) {
+                        let op = w.to_uppercase();
+                        if op == "SET"
+                            && matches!(self.peek_at(2), Some(Token::Identifier(w2)) if w2.to_uppercase()=="POS")
+                        {
+                            self.advance();
+                            self.advance();
+                            self.advance();
+                            let hc = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let pos = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "CONTROL_SET_POS".to_string(),
+                                args: vec![hc, pos],
+                                line,
+                            }));
+                        }
+                        if op == "GET"
+                            && matches!(self.peek_at(2), Some(Token::Identifier(w2)) if w2.to_uppercase()=="POS")
+                        {
+                            self.advance();
+                            self.advance();
+                            self.advance();
+                            let hc = self.parse_expression()?;
+                            self.expect(&Token::To)?;
+                            let target = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "CONTROL_GET_POS".to_string(),
+                                args: vec![hc, target],
+                                line,
+                            }));
+                        }
+                    }
+                }
                 // CONTROL ADD COMBOBOX, hWnd, id, x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
