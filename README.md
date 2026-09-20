@@ -255,7 +255,7 @@ exit code 0:
 > - **491** official PowerBASIC statement/function keywords currently available for use
 >   - **460** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
-> - **120** DDT/GUI-class keywords deferred (Tier 3)
+> - **130** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
 >
 > Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
