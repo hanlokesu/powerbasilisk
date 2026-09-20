@@ -41,6 +41,7 @@ pub struct Preprocessor {
     constants: HashMap<String, i64>,
     included: HashSet<PathBuf>,
     macros: HashMap<String, MacroDef>,
+    pub resources: Vec<(u32, PathBuf)>,
 }
 
 impl Default for Preprocessor {
@@ -55,6 +56,7 @@ impl Preprocessor {
             constants: HashMap::new(),
             included: HashSet::new(),
             macros: HashMap::new(),
+            resources: Vec::new(),
         }
     }
 
@@ -283,7 +285,27 @@ impl Preprocessor {
                 continue;
             }
 
-            // #RESOURCE — skip (resource linking, accepted)
+            // DEBUG
+            // #RESOURCE ICON, id, "file.ico" — collect for post-link embedding
+            if upper_full.starts_with("#RESOURCE ICON") {
+                let rest = trimmed_full[14..].trim().trim_start_matches(",").trim();
+                // rest is like: 100, "Hello.ico"
+                let parts: Vec<&str> = rest.split(',').map(|s| s.trim()).collect();
+                if parts.len() >= 2 {
+                    if let Ok(id) = parts[0].parse::<u32>() {
+                        if let Some(icon_path) = extract_string(parts[1]) {
+                            let resolved = file.parent().unwrap_or(Path::new(".")).join(&icon_path);
+                            if resolved.exists() {
+                                self.resources.push((id, resolved));
+                            } else {
+                            }
+                        }
+                    }
+                }
+                i += 1;
+                continue;
+            }
+            // #RESOURCE — skip other resource directives (VERSIONINFO etc.)
             if upper_full.starts_with("#RESOURCE") {
                 i += 1;
                 continue;
@@ -516,6 +538,10 @@ impl Preprocessor {
 
     pub fn constants(&self) -> &HashMap<String, i64> {
         &self.constants
+    }
+
+    pub fn resources(&self) -> &[(u32, PathBuf)] {
+        &self.resources
     }
 }
 

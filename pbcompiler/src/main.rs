@@ -193,5 +193,54 @@ fn compile_file(
         t3.elapsed().as_secs_f64()
     );
 
+    // Phase 5: Embed resources (icons, etc.) into EXE
+    if opts.exe_mode && !preprocessor.resources().is_empty() {
+        // codegen writes .exe (replaces .obj extension)
+        let exe_path = output_path.with_extension("exe");
+        if exe_path.exists() {
+            embed_resources(&exe_path, preprocessor.resources());
+        } else {
+            eprintln!("[pbcompiler] Warning: EXE not found for resource embedding: {}", exe_path.display());
+        }
+    }
+
     Ok(())
+}
+
+/// Embed icon resources into the compiled EXE using Win32 UpdateResourceW.
+fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
+    use std::os::windows::process::CommandExt;
+    let mut script = String::new();
+    script.push_str("Add-Type -TypeDefinition @'\n");
+    script.push_str("using System;\n");
+    script.push_str("using System.Runtime.InteropServices;\n");
+    script.push_str("public class ResEm {\n");
+    script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr BeginUpdateResource(string p, bool b);\n");
+    script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true)] public static extern bool UpdateResource(IntPtr h, string t, string n, ushort l, byte[] d, uint cb);\n");
+    script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true)] public static extern bool EndUpdateResource(IntPtr h, bool d);\n");
+    script.push_str("}\n'@\n");
+    let exe_q = exe_path.to_string_lossy().replace('\'', "''");
+    script.push_str(&format!("$exe = '{}'\n", exe_q));
+    script.push_str("$h = [ResEm]::BeginUpdateResource($exe, $false)\n");
+    for (id, path) in resources {
+        let path_q = path.to_string_lossy().replace('\'', "''");
+        script.push_str(&format!("$data = [IO.File]::ReadAllBytes('{}')\n", path_q));
+        script.push_str(&format!("[void][ResEm]::UpdateResource($h, 'ICON', '{}', 0, $data, $data.Length)\n", id));
+    }
+    script.push_str("[void][ResEm]::EndUpdateResource($h, $false)\n");
+
+    match std::process::Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .creation_flags(0x08000000)
+        .output()
+    {
+        Ok(out) => {
+            if out.status.success() {
+                eprintln!("[pbcompiler] Embedded {} icon resource(s) into {}", resources.len(), exe_path.display());
+            } else {
+                eprintln!("[pbcompiler] Warning: icon embedding failed: {}", String::from_utf8_lossy(&out.stderr));
+            }
+        }
+        Err(e) => eprintln!("[pbcompiler] Warning: cannot run powershell for icon embedding: {}", e),
+    }
 }
