@@ -297,7 +297,6 @@ impl Preprocessor {
                             let resolved = file.parent().unwrap_or(Path::new(".")).join(&icon_path);
                             if resolved.exists() {
                                 self.resources.push((id, resolved));
-                            } else {
                             }
                         }
                     }

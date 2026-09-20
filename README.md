@@ -253,13 +253,13 @@ exit code 0:
 
 > Summary:
 > - **491** official PowerBASIC statement/function keywords currently available for use
->   - **442** implemented or completed by this fork
+>   - **460** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
 > - **120** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
 >
 > Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
-> Updated through batch 137 (v0.2.010). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
+> Updated through batch 155 (v0.2.014). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
 **All 491 keywords currently available for use (alphabetical):**
 
@@ -367,7 +367,7 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **442 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **460 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 | Keyword | Keyword | Keyword | Keyword | Keyword |
@@ -460,7 +460,10 @@ exit code 0:
 | XPRINT SET ORIENTATION | XPRINT SET OVERLAP | XPRINT SET PAGES | XPRINT SET PAPER | XPRINT SET PIXEL |
 | XPRINT SET POS | XPRINT SET QUALITY | XPRINT SET STRETCHMODE | XPRINT SET TEXTALIGN | XPRINT SET TRAY |
 | XPRINT SET WORDWRAP | XPRINT SET WRAP | XPRINT SPLIT | XPRINT STRETCH | XPRINT STYLE |
-| XPRINT TEXT SIZE | XPRINT WIDTH |  |  |  |
+| XPRINT TEXT SIZE | XPRINT WIDTH | #RESOURCE ICON | CALLBACK FUNCTION | CHECKBOX GET CHECK |
+| COMBOBOX ADD | CONTROL ADD LABEL | CONTROL ADD PROGRESSBAR | CONTROL ADD SCROLLBAR | CONTROL DISABLE |
+| CONTROL ENABLE | CONTROL HIDE | CONTROL SHOW | DIALOG CENTER | DIALOG END |
+| DIALOG NEW | DIALOG REDRAW | DIALOG SET TEXT | DIALOG SHOW MODAL | LISTBOX ADD |
 
 
 
@@ -502,6 +505,24 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.014 (2026-09-20) — #RESOURCE ICON embedding
+
+- **#RESOURCE ICON, id, "file.ico"** — embeds an icon into the compiled EXE via Win32 UpdateResource (BeginUpdateResourceW/UpdateResourceW/EndUpdateResourceW). Resolves icon path relative to the .bas file. Verified: Explorer shows the custom icon.
+
+### v0.2.013 (2026-09-20) — Batch 146-155: DDT GUI deepening
+
+- **DIALOG NEW / SHOW MODAL ... CALL / END** — native Win32 modal dialog with message loop (batch 144).
+- **CALLBACK FUNCTION** — CB.MSG / CB.HNDL / CB.CTL / CB.CTLMSG / WPARAM / LPARAM (batch 144).
+- **MENU NEW BAR / POPUP / ADD STRING** — Win32 menu bar (batch 145).
+- **CONTROL ADD LABEL / PROGRESSBAR** — static label + progress bar with InitCommonControlsEx (batch 147).
+- **DIALOG CENTER** — centers dialog on screen (batch 149).
+- **DIALOG SET TEXT** — SetWindowTextA at runtime (batch 149).
+- **CONTROL ADD SCROLLBAR** — vertical + horizontal scroll bars (batch 150; click-crash known issue).
+- **CONTROL SHOW / HIDE / ENABLE / DISABLE** — ShowWindow + EnableWindow (batch 152).
+- **COMBOBOX ADD / LISTBOX ADD** — CB_ADDSTRING / LB_ADDSTRING (batch 148).
+- **CHECKBOX GET CHECK** — sends BM_GETCHECK to read checkbox state (batch 154).
+- **DIALOG REDRAW** — InvalidateRect + UpdateWindow (batch 155).
+
 ### v0.2.012 (2026-09-19) — Batch 148-150: DIALOG model deepening
 
 - **DIALOG SET TEXT hDlg, "title"** — SetWindowTextA at runtime (batch 149).
@@ -580,7 +601,7 @@ Parser-only fixes (no new keywords). Coverage unchanged: 481 available / 129 Tie
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
 
 - **Table 1** - 481 official keywords available to users.
-- **Table 2** - 432 keywords implemented or completed by this fork.
+- **Table 2** - 460 keywords implemented or completed by this fork.
 - **Table 3** - 66 core statement/function keywords originally from upstream `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).

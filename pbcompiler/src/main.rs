@@ -200,7 +200,10 @@ fn compile_file(
         if exe_path.exists() {
             embed_resources(&exe_path, preprocessor.resources());
         } else {
-            eprintln!("[pbcompiler] Warning: EXE not found for resource embedding: {}", exe_path.display());
+            eprintln!(
+                "[pbcompiler] Warning: EXE not found for resource embedding: {}",
+                exe_path.display()
+            );
         }
     }
 
@@ -225,7 +228,10 @@ fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
     for (id, path) in resources {
         let path_q = path.to_string_lossy().replace('\'', "''");
         script.push_str(&format!("$data = [IO.File]::ReadAllBytes('{}')\n", path_q));
-        script.push_str(&format!("[void][ResEm]::UpdateResource($h, 'ICON', '{}', 0, $data, $data.Length)\n", id));
+        script.push_str(&format!(
+            "[void][ResEm]::UpdateResource($h, 'ICON', '{}', 0, $data, $data.Length)\n",
+            id
+        ));
     }
     script.push_str("[void][ResEm]::EndUpdateResource($h, $false)\n");
 
@@ -236,11 +242,21 @@ fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
     {
         Ok(out) => {
             if out.status.success() {
-                eprintln!("[pbcompiler] Embedded {} icon resource(s) into {}", resources.len(), exe_path.display());
+                eprintln!(
+                    "[pbcompiler] Embedded {} icon resource(s) into {}",
+                    resources.len(),
+                    exe_path.display()
+                );
             } else {
-                eprintln!("[pbcompiler] Warning: icon embedding failed: {}", String::from_utf8_lossy(&out.stderr));
+                eprintln!(
+                    "[pbcompiler] Warning: icon embedding failed: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
             }
         }
-        Err(e) => eprintln!("[pbcompiler] Warning: cannot run powershell for icon embedding: {}", e),
+        Err(e) => eprintln!(
+            "[pbcompiler] Warning: cannot run powershell for icon embedding: {}",
+            e
+        ),
     }
 }
