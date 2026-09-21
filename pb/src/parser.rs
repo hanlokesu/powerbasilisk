@@ -151,7 +151,7 @@ impl Parser {
                 Ok(Some(item)) => items.push(item),
                 Ok(None) => {} // consumed but no item (e.g., comment)
                 Err(e) => {
-                    eprintln!("Parse error: {}", e);
+                    eprintln!("Error: Parse error: {}", e);
                     self.error_count += 1;
                     self.consume_to_eol();
                 }
@@ -371,7 +371,7 @@ impl Parser {
             }
             Token::Identifier(name) => {
                 eprintln!(
-                    "Parse error at line {}: unrecognized statement/keyword: `{}`",
+                    "Error: Parse error at line {}: unrecognized statement/keyword: `{}`",
                     line, name
                 );
                 self.error_count += 1;
@@ -380,7 +380,7 @@ impl Parser {
             }
             Token::IntegerLiteral(n) => {
                 eprintln!(
-                    "Parse error at line {}: unexpected number at top level: {}",
+                    "Error: Parse error at line {}: unexpected number at top level: {}",
                     line, n
                 );
                 self.error_count += 1;
@@ -389,7 +389,7 @@ impl Parser {
             }
             Token::FloatLiteral(f) => {
                 eprintln!(
-                    "Parse error at line {}: unexpected number at top level: {}",
+                    "Error: Parse error at line {}: unexpected number at top level: {}",
                     line, f
                 );
                 self.error_count += 1;
@@ -398,7 +398,7 @@ impl Parser {
             }
             Token::StringLiteral(s) => {
                 eprintln!(
-                    "Parse error at line {}: unexpected string at top level: `{}`",
+                    "Error: Parse error at line {}: unexpected string at top level: `{}`",
                     line, s
                 );
                 self.error_count += 1;
@@ -1309,7 +1309,7 @@ impl Parser {
             match self.parse_statement() {
                 Ok(stmt) => stmts.push(stmt),
                 Err(e) => {
-                    eprintln!("Parse error: {}", e);
+                    eprintln!("Error: Parse error: {}", e);
                     self.error_count += 1;
                     self.consume_to_eol();
                 }
