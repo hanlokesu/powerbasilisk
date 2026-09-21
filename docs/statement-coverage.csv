@@ -52,11 +52,6 @@ ARRAY SWAP,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY TAGARRAY,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY TAGARRAY ERASE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY UNIQUE,STATEMENT,PB/Win + PB/CC,Implemented
-ARRAY_REDIM_DECR,FUNCTION,codegen builtin,Implemented
-ARRAY_REDIM_INCR,FUNCTION,codegen builtin,Implemented
-ARRAY_SELECT,FUNCTION,codegen builtin,Implemented
-ARRAY_TAGARRAY,FUNCTION,codegen builtin,Implemented
-ARRAY_TAGARRAY_ERASE,FUNCTION,codegen builtin,Implemented
 ASC,STATEMENT,PB/Win + PB/CC,Established
 ASIN,FUNCTION,LLVM intrinsic,Implemented
 ASINH,FUNCTION,LLVM intrinsic,Implemented
@@ -251,11 +246,6 @@ DISPLAY COLOR,STATEMENT,PB/Win only,Implemented
 DISPLAY FONT,STATEMENT,PB/Win only,Implemented
 DISPLAY OPENFILE,STATEMENT,PB/Win only,Implemented
 DISPLAY SAVEFILE,STATEMENT,PB/Win only,Implemented
-DISPLAY_BROWSE,FUNCTION,codegen builtin,Implemented
-DISPLAY_COLOR,FUNCTION,codegen builtin,Implemented
-DISPLAY_FONT,FUNCTION,codegen builtin,Implemented
-DISPLAY_OPENFILE,FUNCTION,codegen builtin,Implemented
-DISPLAY_SAVEFILE,FUNCTION,codegen builtin,Implemented
 DOUBLE,FUNCTION,codegen builtin,Implemented
 END,STATEMENT,PB/Win + PB/CC,Established
 ENVIRON,STATEMENT,PB/Win + PB/CC,Established
@@ -292,8 +282,6 @@ FLOOR,FUNCTION,LLVM intrinsic,Implemented
 FLUSH,STATEMENT,PB/Win + PB/CC,Established
 FONT END,STATEMENT,PB/Win + PB/CC,Implemented
 FONT NEW,STATEMENT,PB/Win + PB/CC,Implemented
-FONT_END,FUNCTION,codegen builtin,Implemented
-FONT_NEW,FUNCTION,codegen builtin,Implemented
 FOR / NEXT,STATEMENT,PB/Win + PB/CC,Established
 FORMAT,FUNCTION,codegen builtin,Implemented
 FORMAT$,FUNCTION,Win32,Implemented
@@ -397,62 +385,8 @@ GRAPHIC WINDOW MINIMIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC WINDOW NONSTABLE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC WINDOW NORMALIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC WINDOW STABILIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
-GRAPHIC_ARC,FUNCTION,codegen builtin,Implemented
-GRAPHIC_ATTACH,FUNCTION,codegen builtin,Implemented
-GRAPHIC_BITMAP_END,FUNCTION,codegen builtin,Implemented
-GRAPHIC_BITMAP_LOAD,FUNCTION,codegen builtin,Implemented
-GRAPHIC_BITMAP_NEW,FUNCTION,codegen builtin,Implemented
-GRAPHIC_CELL,FUNCTION,codegen builtin,Implemented
-GRAPHIC_CHR_SIZE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_CIRCLE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_CLEAR,FUNCTION,codegen builtin,Implemented
-GRAPHIC_COLOR,FUNCTION,codegen builtin,Implemented
-GRAPHIC_COPY,FUNCTION,codegen builtin,Implemented
-GRAPHIC_DETACH,FUNCTION,codegen builtin,Implemented
-GRAPHIC_ELLIPSE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_BITS,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_CAPTION,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_CLIP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_DC,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_LINES,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_LOC,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_MIX,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_PIXEL,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_POS,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_PPI,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_SCALE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_SIZE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_VIEW,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_WORDWRAP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_GET_WRAP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_LINE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_PAINT,FUNCTION,codegen builtin,Implemented
-GRAPHIC_PIE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_POLYGON,FUNCTION,codegen builtin,Implemented
-GRAPHIC_POLYLINE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SAVE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SCALE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_SCALE_PIXELS,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_AUTOSIZE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_BITS,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_CAPTION,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_CLIP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_FIXED,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_FONT,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_MIX,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_PIXEL,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_POS,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_SIZE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_VIEW,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_VIRTUAL,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_WORDWRAP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_SET_WRAP,FUNCTION,codegen builtin,Implemented
-GRAPHIC_STYLE,FUNCTION,codegen builtin,Implemented
-GRAPHIC_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
 HEADER,STATEMENT,PB/Win only,Tier-3 DDT
 HEADER_CTRL,FUNCTION,codegen builtin,Implemented
 HEX,FUNCTION,codegen builtin,Implemented
@@ -545,14 +479,6 @@ MENU NEW BAR,STATEMENT,PB/Win only,Implemented
 MENU NEW POPUP,STATEMENT,PB/Win only,Implemented
 MENU SET STATE,STATEMENT,PB/Win only,Implemented
 MENU SET TEXT,STATEMENT,PB/Win only,Implemented
-MENU_ADD_POPUP,FUNCTION,codegen builtin,Implemented
-MENU_ADD_STRING,FUNCTION,codegen builtin,Implemented
-MENU_DELETE,FUNCTION,codegen builtin,Implemented
-MENU_GET_STATE,FUNCTION,codegen builtin,Implemented
-MENU_GET_TEXT,FUNCTION,codegen builtin,Implemented
-MENU_NEW_POPUP,FUNCTION,codegen builtin,Implemented
-MENU_SET_STATE,FUNCTION,codegen builtin,Implemented
-MENU_SET_TEXT,FUNCTION,codegen builtin,Implemented
 METHOD / END METHOD,STATEMENT,PB/Win + PB/CC,Established
 METRICS,FUNCTION,Win32,Implemented
 MID,FUNCTION,codegen builtin,Implemented
@@ -639,7 +565,6 @@ REPLACE,STATEMENT,PB/Win + PB/CC,Established
 RESET,STATEMENT,PB/Win + PB/CC,Established
 RESOURCE SAVE FILE,STATEMENT,PB/Win + PB/CC,Implemented
 RESOURCE$,FUNCTION,Win32,Implemented
-RESOURCE_SAVE_FILE,FUNCTION,codegen builtin,Implemented
 RESUME,STATEMENT,PB/Win + PB/CC,Established
 RETAIN,FUNCTION,codegen builtin,Implemented
 RETAIN$,FUNCTION,Win32,Implemented
@@ -704,7 +629,6 @@ TCP OPEN,STATEMENT,PB/Win + PB/CC,Established
 TCP PRINT,STATEMENT,PB/Win + PB/CC,Established
 TCP RECV,STATEMENT,PB/Win + PB/CC,Established
 TCP SEND,STATEMENT,PB/Win + PB/CC,Established
-TCP_NOTIFY,FUNCTION,codegen builtin,Implemented
 THREAD CLOSE,STATEMENT,PB/Win + PB/CC,Established
 THREAD CREATE,STATEMENT,PB/Win + PB/CC,Established
 THREAD GET PRIORITY,STATEMENT,PB/Win + PB/CC,Established
@@ -735,7 +659,6 @@ UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Implemented
 UDP OPEN,STATEMENT,PB/Win + PB/CC,Established
 UDP RECV,STATEMENT,PB/Win + PB/CC,Established
 UDP SEND,STATEMENT,PB/Win + PB/CC,Established
-UDP_NOTIFY,FUNCTION,codegen builtin,Implemented
 UNLOCK,STATEMENT,PB/Win + PB/CC,Established
 UNWRAP,FUNCTION,codegen builtin,Implemented
 UNWRAP$,FUNCTION,Win32,Implemented
@@ -829,82 +752,8 @@ XPRINT STRETCH,STATEMENT,PB/Win + PB/CC,Implemented
 XPRINT STYLE,STATEMENT,PB/Win + PB/CC,Implemented
 XPRINT TEXT SIZE,STATEMENT,PB/Win + PB/CC,Implemented
 XPRINT WIDTH,STATEMENT,PB/Win + PB/CC,Implemented
-XPRINT_ARC,FUNCTION,codegen builtin,Implemented
-XPRINT_ATTACH,FUNCTION,codegen builtin,Implemented
-XPRINT_BOX,FUNCTION,codegen builtin,Implemented
-XPRINT_CANCEL,FUNCTION,codegen builtin,Implemented
-XPRINT_CELL,FUNCTION,codegen builtin,Implemented
-XPRINT_CELL_SIZE,FUNCTION,codegen builtin,Implemented
-XPRINT_CHR_SIZE,FUNCTION,codegen builtin,Implemented
-XPRINT_CLOSE,FUNCTION,codegen builtin,Implemented
-XPRINT_COPY,FUNCTION,codegen builtin,Implemented
-XPRINT_ELLIPSE,FUNCTION,codegen builtin,Implemented
-XPRINT_FORMFEED,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_ATTACH,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_CANVAS,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_CLIENT,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_CLIP,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_COLLATE,FUNCTION,codegen builtin,Implemented
 XPRINT_GET_COLOR,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_COLORMODE,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_COPIES,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_DC,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_DUPLEX,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_LINES,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_MARGIN,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_MIX,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_ORIENTATION,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_OVERLAP,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAGES,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAPER,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PAPERS,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PIXEL,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_POS,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_PPI,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_QUALITY,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_SCALE,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_SELECTION,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_SIZE,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TRAY,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_TRAYS,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_WORDWRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_GET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_IMAGELIST,FUNCTION,codegen builtin,Implemented
-XPRINT_LINE,FUNCTION,codegen builtin,Implemented
-XPRINT_PIE,FUNCTION,codegen builtin,Implemented
-XPRINT_POLYGON,FUNCTION,codegen builtin,Implemented
-XPRINT_POLYLINE,FUNCTION,codegen builtin,Implemented
-XPRINT_PREVIEW,FUNCTION,codegen builtin,Implemented
-XPRINT_PRINT,FUNCTION,codegen builtin,Implemented
-XPRINT_RENDER,FUNCTION,codegen builtin,Implemented
-XPRINT_SCALE,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_CLIP,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_COLLATE,FUNCTION,codegen builtin,Implemented
 XPRINT_SET_COLOR,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_COLORMODE,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_COPIES,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_DUPLEX,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_FONT,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_MIX,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_ORIENTATION,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_OVERLAP,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_PAGES,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_PAPER,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_PIXEL,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_POS,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_QUALITY,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_STRETCHMODE,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_TEXTALIGN,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_TRAY,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_WORDWRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_SET_WRAP,FUNCTION,codegen builtin,Implemented
-XPRINT_SPLIT,FUNCTION,codegen builtin,Implemented
-XPRINT_STRETCH,FUNCTION,codegen builtin,Implemented
-XPRINT_STYLE,FUNCTION,codegen builtin,Implemented
-XPRINT_TEXT_SIZE,FUNCTION,codegen builtin,Implemented
-XPRINT_WIDTH,FUNCTION,codegen builtin,Implemented
 AND,OPERATOR,PB/Win + PB/CC,Established
 NOT,OPERATOR,PB/Win + PB/CC,Established
 OR,OPERATOR,PB/Win + PB/CC,Established
@@ -916,6 +765,4 @@ ACODE,FUNCTION,PB/Win + PB/CC,Implemented
 FUNCNAME,FUNCTION,PB/Win + PB/CC,Implemented
 MCASE,FUNCTION,PB/Win + PB/CC,Implemented
 COMM LINE INPUT,STATEMENT,PB/Win,Implemented
-GRAPHIC_PRINT,FUNCTION,codegen builtin,Implemented
-XPRINT_COLOR,FUNCTION,codegen builtin,Implemented
 WAITKEY$,FUNCTION,PB/CC + console,Implemented
