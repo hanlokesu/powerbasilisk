@@ -304,12 +304,12 @@ fn embed_version_info(exe_path: &Path, vi: &pb::preprocessor::VersionInfo) {
     use std::os::windows::process::CommandExt;
 
     // Build the VS_VERSIONINFO binary blob in little-endian UTF-16
-    let mut buf: Vec<u8> = Vec::new();
-    let mut pos: usize = 0;
+    let _buf: Vec<u8> = Vec::new();
+    let _pos: usize = 0;
 
     // We'll compute lengths after building. Use a helper to push aligned UTF-16 strings.
     fn align_to_4(buf: &mut Vec<u8>) {
-        while buf.len() % 4 != 0 {
+        while !buf.len().is_multiple_of(4) {
             buf.push(0);
         }
     }
@@ -330,7 +330,7 @@ fn embed_version_info(exe_path: &Path, vi: &pb::preprocessor::VersionInfo) {
     // --- StringFileInfo block ---
     let mut sfi_buf: Vec<u8> = Vec::new();
     // String table header placeholder, fill later
-    let sfi_start = sfi_buf.len();
+    let _sfi_start = sfi_buf.len();
     push_u16(&mut sfi_buf, 0); // wLength placeholder
     push_u16(&mut sfi_buf, 0); // wValueLength
     push_u16(&mut sfi_buf, 1); // wType = text
@@ -339,7 +339,7 @@ fn embed_version_info(exe_path: &Path, vi: &pb::preprocessor::VersionInfo) {
 
     // String table
     let mut st_buf: Vec<u8> = Vec::new();
-    let st_start = st_buf.len();
+    let _st_start = st_buf.len();
     push_u16(&mut st_buf, 0);
     push_u16(&mut st_buf, 0);
     push_u16(&mut st_buf, 1);
@@ -410,11 +410,11 @@ fn embed_version_info(exe_path: &Path, vi: &pb::preprocessor::VersionInfo) {
     push_u32(&mut vi_buf, 0xFEEF04BD); // dwSignature
     push_u32(&mut vi_buf, 0x00010000); // dwStrucVersion
     let (a, b, c, d) = vi.file_version;
-    push_u32(&mut vi_buf, ((a as u32) << 16) | (b as u32)); // dwFileVersionMS
-    push_u32(&mut vi_buf, ((c as u32) << 16) | (d as u32)); // dwFileVersionLS
+    push_u32(&mut vi_buf, (a << 16) | b); // dwFileVersionMS
+    push_u32(&mut vi_buf, (c << 16) | d); // dwFileVersionLS
     let (pa, pb, pc, pd) = vi.product_version;
-    push_u32(&mut vi_buf, ((pa as u32) << 16) | (pb as u32)); // dwProductVersionMS
-    push_u32(&mut vi_buf, ((pc as u32) << 16) | (pd as u32)); // dwProductVersionLS
+    push_u32(&mut vi_buf, (pa << 16) | pb); // dwProductVersionMS
+    push_u32(&mut vi_buf, (pc << 16) | pd); // dwProductVersionLS
     push_u32(&mut vi_buf, 0x00000037); // dwFileFlagsMask
     push_u32(&mut vi_buf, 0x0); // dwFileFlags
     push_u32(&mut vi_buf, 0x40004); // dwFileOS = VOS_NT_WINDOWS32

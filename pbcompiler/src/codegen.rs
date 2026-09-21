@@ -849,6 +849,7 @@ struct Compiler {
 
     // Unimplemented-statement warnings collected during codegen (name / line)
     warnings: Vec<String>,
+    #[allow(dead_code)]
     xprint_dc: Option<String>,
 
     // String variables bound via FIELD dyn$ — their assignments must copy
@@ -3592,28 +3593,107 @@ impl Compiler {
         self.module.declare_dllimport(
             "CreateFileMappingA",
             &IrType::Ptr,
-            &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::Ptr],
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
         );
         self.module.declare_dllimport(
             "MapViewOfFile",
             &IrType::Ptr,
-            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
         );
-        self.module.declare_dllimport("UnmapViewOfFile", &IrType::I32, &[IrType::Ptr]);
-        self.module.declare_dllimport("CloseHandle", &IrType::I32, &[IrType::Ptr]);
-        self.module.declare_dllimport("GetFileSize", &IrType::I32, &[IrType::Ptr, IrType::Ptr]);
-        self.module.declare_dllimport("CreateDCA", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr]);
-        self.module.declare_dllimport("TextOutA", &IrType::I32, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr, IrType::I32]);
-        self.module.declare_dllimport("DeleteDC", &IrType::I32, &[IrType::Ptr]);
-        self.module.declare_dllimport("CreateFileA", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr]);
-        self.module.declare_dllimport("ReadFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
-        self.module.declare_dllimport("WriteFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
-        self.module.declare_dllimport("CreateThread", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr]);
-        self.module.declare_dllimport("SuspendThread", &IrType::I32, &[IrType::Ptr]);
-        self.module.declare_dllimport("ResumeThread", &IrType::I32, &[IrType::Ptr]);
-        self.module.declare_dllimport("LoadLibraryA", &IrType::Ptr, &[IrType::Ptr]);
-        self.module.declare_dllimport("GetProcAddress", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr]);
-        self.module.declare_dllimport("FreeLibrary", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("UnmapViewOfFile", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("CloseHandle", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("GetFileSize", &IrType::I32, &[IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport(
+            "CreateDCA",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+        );
+        self.module.declare_dllimport(
+            "TextOutA",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+        );
+        self.module
+            .declare_dllimport("DeleteDC", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport(
+            "CreateFileA",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+        );
+        self.module.declare_dllimport(
+            "ReadFile",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+        );
+        self.module.declare_dllimport(
+            "WriteFile",
+            &IrType::I32,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+        );
+        self.module.declare_dllimport(
+            "CreateThread",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+        );
+        self.module
+            .declare_dllimport("SuspendThread", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("ResumeThread", &IrType::I32, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("LoadLibraryA", &IrType::Ptr, &[IrType::Ptr]);
+        self.module
+            .declare_dllimport("GetProcAddress", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr]);
+        self.module
+            .declare_dllimport("FreeLibrary", &IrType::I32, &[IrType::Ptr]);
         self.module.declare_dllimport(
             "GetCurrentDirectoryA",
             &IrType::I32,
@@ -5844,109 +5924,6 @@ impl Compiler {
                     }
                 }
             }
-            "IMPORT ADDR" => {
-                // IMPORT ADDR ProcName$, LibName$ TO AddrVar&
-                // LoadLibraryA(libname) then GetProcAddress(handle, procname)
-                let procname = self.compile_expr(fb, &call.args[0])?;
-                let libname = self.compile_expr(fb, &call.args[1])?;
-                let h = fb.call(&IrType::Ptr, "LoadLibraryA", &[libname]);
-                let addr = fb.call(&IrType::Ptr, "GetProcAddress", &[h.clone(), procname]);
-                // Store addr to result var
-                if call.args.len() >= 3 {
-                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
-                    fb.store(&addr, &ptr);
-                }
-                // Optionally store handle
-                if call.args.len() >= 4 {
-                    let (ptr2, _) = self.compile_lvalue_ptr(fb, &call.args[3])?;
-                    fb.store(&h.clone(), &ptr2);
-                }
-                return Ok(());
-            }
-            "IMPORT CLOSE" => {
-                let h = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("FreeLibrary", &[h]);
-                return Ok(());
-            }
-            "THREAD CREATE" => {
-                // THREAD CREATE func TO id&
-                // args: [func, id]
-                let func = self.compile_expr(fb, &call.args[0])?;
-                if call.args.len() >= 2 {
-                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
-                    let null = Val::new("null".to_string(), IrType::Ptr);
-                    let tid = fb.alloca(&IrType::I32);
-                    let h = fb.call(&IrType::Ptr, "CreateThread",
-                        &[null.clone(), fb.const_i32(0), func, null.clone(), fb.const_i32(0), tid]);
-                    fb.store(&h, &ptr);
-                }
-                return Ok(());
-            }
-            "THREAD CLOSE" => {
-                let id = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("CloseHandle", &[id]);
-                return Ok(());
-            }
-            "THREAD SUSPEND" => {
-                let id = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("SuspendThread", &[id]);
-                return Ok(());
-            }
-            "THREAD RESUME" => {
-                let id = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("ResumeThread", &[id]);
-                return Ok(());
-            }
-            "COMM OPEN" => {
-                // COMM OPEN "COM1:" AS #1, BAUD 9600, ...
-                // args: [port, filenum, baud, parity$, data, stop]
-                let port = self.compile_expr(fb, &call.args[0])?;
-                let filenum = self.compile_expr(fb, &call.args[1])?;
-                let fn_i32 = self.to_i32(fb, &filenum);
-                let null = Val::new("null".to_string(), IrType::Ptr);
-                // CreateFileA(port, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL)
-                let h = fb.call(&IrType::Ptr, "CreateFileA",
-                    &[port, fb.const_i32(-1073741824), fb.const_i32(0), null.clone(), fb.const_i32(3), fb.const_i32(0), null]);
-                // Store handle in global comm_handle[filenum] - use a simple global var
-                // For now just store to a fixed location
-                let store_ptr = fb.alloca(&IrType::Ptr);
-                fb.store(&h, &store_ptr);
-                return Ok(());
-            }
-            "COMM PRINT" | "COMM SEND" => {
-                if call.args.len() >= 2 {
-                    let text = self.compile_expr(fb, &call.args[1])?;
-                    let sval = self.val_to_string(fb, &text);
-                    let len = fb.const_i32(sval.name.len() as i32);
-                    let n1 = Val::new("null".to_string(), IrType::Ptr);
-                    let n2 = Val::new("null".to_string(), IrType::Ptr);
-                    let n3 = Val::new("null".to_string(), IrType::Ptr);
-                    let n4 = Val::new("null".to_string(), IrType::Ptr);
-                    fb.call_void("WriteFile", &[n1, sval, len, n2, n3]);
-                }
-                return Ok(());
-            }
-            "COMM RECV" => {
-                if call.args.len() >= 3 {
-                    let bytes = self.compile_expr(fb, &call.args[1])?;
-                    let bytes_i32 = self.to_i32(fb, &bytes);
-                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
-                    let n1 = Val::new("null".to_string(), IrType::Ptr);
-                    let n2 = Val::new("null".to_string(), IrType::Ptr);
-                    let n3 = Val::new("null".to_string(), IrType::Ptr);
-                    fb.call_void("ReadFile", &[n1, ptr, bytes_i32, n2, n3]);
-                }
-                return Ok(());
-            }
-            "COMM CLOSE" => {
-                // COMM CLOSE [#]f - CloseHandle
-                if let Some(fnum) = call.args.first() {
-                    let filenum = self.compile_expr(fb, fnum)?;
-                    let null = Val::new("null".to_string(), IrType::Ptr);
-                    fb.call_void("CloseHandle", &[null]);
-                }
-                return Ok(());
-            }
             "XPRINT_ATTACH" => {
                 let p = self.compile_expr(fb, &call.args[0])?;
                 let j = if let Some(a1) = call.args.get(1) {
@@ -7323,103 +7300,6 @@ impl Compiler {
                     fb.store(&fb.const_i32(76), &g);
                     fb.br(&merge_lbl);
                     fb.label(&merge_lbl);
-                }
-                return Ok(());
-            }
-                        "XPRINT_ATTACH" => {
-                // XPRINT ATTACH DEFAULT [, JobName$]
-                // Use GDI printer DC: CreateDCA("WINSPOOL", printer, NULL, NULL)
-                let printer = self.compile_expr(fb, &call.args[0])?;
-                let driver = Val::new(self.empty_string_name.clone(), IrType::Ptr);
-                let null = Val::new("null".to_string(), IrType::Ptr);
-                let hdc = fb.call(&IrType::Ptr, "CreateDCA",
-                    &[driver, printer, null.clone(), null.clone()]);
-                // Store printer DC in a global
-                self.xprint_dc = Some(hdc.name.clone());
-                return Ok(());
-            }
-            "XPRINT_PRINT" => {
-                // XPRINT PRINT text$ - TextOutA at current position
-                if let Some(ref dc_name) = self.xprint_dc {
-                    let dc = Val::new(dc_name.clone(), IrType::Ptr);
-                    for arg in &call.args {
-                        let val = self.compile_expr(fb, arg)?;
-                        let sval = self.val_to_string(fb, &val);
-                        let len = fb.const_i32(255);
-                        // Use TextOutA (ANSI)
-                        fb.call_void("TextOutA", &[dc.clone(), fb.const_i32(100), fb.const_i32(100), sval, len]);
-                    }
-                }
-                return Ok(());
-            }
-            "XPRINT_CLOSE" => {
-                // XPRINT CLOSE - DeleteDC
-                if let Some(ref dc_name) = self.xprint_dc {
-                    let dc = Val::new(dc_name.clone(), IrType::Ptr);
-                    fb.call_void("DeleteDC", &[dc]);
-                    self.xprint_dc = None;
-                }
-                return Ok(());
-            }
-            "XPRINT_FORMFEED" => {
-                // XPRINT FORMFEED - just a no-op for now
-                return Ok(());
-            }
-            "GLOBALMEM ALLOC" => {
-                let name = self.compile_expr(fb, &call.args[0])?;
-                let size = self.compile_expr(fb, &call.args[1])?;
-                let size_i64 = self.to_i64(fb, &size);
-                let null = Val::new("null".to_string(), IrType::Ptr);
-                let h = fb.call(&IrType::Ptr, "CreateFileMappingA",
-                    &[null.clone(), null.clone(), fb.const_i32(4), fb.const_i32(0), size_i64, name]);
-                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
-                fb.store(&h, &ptr);
-                return Ok(());
-            }
-            "GLOBALMEM FREE" => {
-                let h = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("CloseHandle", &[h]);
-                return Ok(());
-            }
-            "GLOBALMEM LOCK" => {
-                let h = self.compile_expr(fb, &call.args[0])?;
-                let view = fb.call(&IrType::Ptr, "MapViewOfFile",
-                    &[h, fb.const_i32(4), fb.const_i32(0), fb.const_i32(0), fb.const_i32(0)]);
-                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
-                fb.store(&view, &ptr);
-                return Ok(());
-            }
-            "GLOBALMEM UNLOCK" => {
-                let addr = self.compile_expr(fb, &call.args[0])?;
-                fb.call_void("UnmapViewOfFile", &[addr]);
-                return Ok(());
-            }
-            "GLOBALMEM SIZE" => {
-                let h = self.compile_expr(fb, &call.args[0])?;
-                let size = fb.call(&IrType::I32, "GetFileSize", &[h, fb.const_i32(0)]);
-                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
-                fb.store(&size, &ptr);
-                return Ok(());
-            }
-"TRACE NEW" => {
-                if let Some(fname_expr) = call.args.first() {
-                    let fname = self.compile_expr(fb, fname_expr)?;
-                    fb.call(&IrType::I32, "pb_open", &[fname, fb.const_i32(1), fb.const_i32(1)]);
-                }
-                return Ok(());
-            }
-            "TRACE PRINT" => {
-                if let Some(expr) = call.args.first() {
-                    let val = self.compile_expr(fb, expr)?;
-                    let sval = self.val_to_string(fb, &val);
-                    fb.call_void("pb_print_file", &[fb.const_i32(1), sval]);
-                    fb.call_void("pb_print_file_newline", &[fb.const_i32(1)]);
-                }
-                return Ok(());
-            }
-            "TRACE ON" | "TRACE OFF" | "TRACE CLOSE" => {
-                if call.name == "TRACE CLOSE" || call.name == "TRACE OFF" {
-                    fb.call_void("pb_close", &[fb.const_i32(1)]);
                 }
                 return Ok(());
             }

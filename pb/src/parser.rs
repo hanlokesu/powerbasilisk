@@ -7136,7 +7136,9 @@ impl Parser {
                 }))
             }
             "CLOSE" => {
-                if self.peek() == &Token::Hash { self.advance(); }
+                if self.peek() == &Token::Hash {
+                    self.advance();
+                }
                 let f = self.parse_expression()?;
                 self.consume_to_eol();
                 Ok(Statement::Call(CallStmt {

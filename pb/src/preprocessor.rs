@@ -340,7 +340,7 @@ impl Preprocessor {
                 continue;
             }
             if upper_full.starts_with("#RESOURCE STRINGINFO") {
-                let q: Vec<Option<String>> = [trimmed_full[19..].trim()]
+                let _q: Vec<Option<String>> = [trimmed_full[19..].trim()]
                     .iter()
                     .map(|s| extract_string(s))
                     .collect();
