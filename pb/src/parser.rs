@@ -7531,11 +7531,15 @@ impl Parser {
         }
         self.advance(); // consume op
         let mut args = vec![self.parse_expression()?];
-        if self.peek() == &Token::To {
-            self.advance(); // consume TO (reserved word)
-        }
-        if !matches!(self.peek(), Token::Eol | Token::Colon) {
-            args.push(self.parse_expression()?);
+        // Parse remaining comma-separated args
+        while self.peek() == &Token::Comma {
+            self.advance();
+            if self.peek() == &Token::To {
+                self.advance();
+            }
+            if !matches!(self.peek(), Token::Eol | Token::Colon) {
+                args.push(self.parse_expression()?);
+            }
         }
         self.consume_to_eol();
         Ok(Statement::Call(CallStmt {

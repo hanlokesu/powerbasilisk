@@ -3588,6 +3588,19 @@ impl Compiler {
             ],
         );
         self.module.declare_dllimport(
+            "CreateFileMappingA",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::Ptr],
+        );
+        self.module.declare_dllimport(
+            "MapViewOfFile",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+        );
+        self.module.declare_dllimport("UnmapViewOfFile", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport("CloseHandle", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport("GetFileSize", &IrType::I32, &[IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport(
             "GetCurrentDirectoryA",
             &IrType::I32,
             &[IrType::I32, IrType::Ptr],
@@ -7196,7 +7209,43 @@ impl Compiler {
                 }
                 return Ok(());
             }
-            "TRACE NEW" => {
+                        "GLOBALMEM ALLOC" => {
+                let name = self.compile_expr(fb, &call.args[0])?;
+                let size = self.compile_expr(fb, &call.args[1])?;
+                let size_i64 = self.to_i64(fb, &size);
+                let null = Val::new("null".to_string(), IrType::Ptr);
+                let h = fb.call(&IrType::Ptr, "CreateFileMappingA",
+                    &[null.clone(), null.clone(), fb.const_i32(4), fb.const_i32(0), size_i64, name]);
+                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
+                fb.store(&h, &ptr);
+                return Ok(());
+            }
+            "GLOBALMEM FREE" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("CloseHandle", &[h]);
+                return Ok(());
+            }
+            "GLOBALMEM LOCK" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let view = fb.call(&IrType::Ptr, "MapViewOfFile",
+                    &[h, fb.const_i32(4), fb.const_i32(0), fb.const_i32(0), fb.const_i32(0)]);
+                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                fb.store(&view, &ptr);
+                return Ok(());
+            }
+            "GLOBALMEM UNLOCK" => {
+                let addr = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("UnmapViewOfFile", &[addr]);
+                return Ok(());
+            }
+            "GLOBALMEM SIZE" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                let size = fb.call(&IrType::I32, "GetFileSize", &[h, fb.const_i32(0)]);
+                let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                fb.store(&size, &ptr);
+                return Ok(());
+            }
+"TRACE NEW" => {
                 if let Some(fname_expr) = call.args.first() {
                     let fname = self.compile_expr(fb, fname_expr)?;
                     fb.call(&IrType::I32, "pb_open", &[fname, fb.const_i32(1), fb.const_i32(1)]);
