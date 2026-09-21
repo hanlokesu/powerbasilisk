@@ -505,6 +505,17 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.015 (2026-09-21) — #RESOURCE VERSIONINFO + hard-fail diagnostics
+
+- **#RESOURCE VERSIONINFO** — embeds Win32 version information into the EXE (FILEVERSION/PRODUCTVERSION/STRINGINFO/VERSION$). Works alongside #RESOURCE ICON.
+- **Hard-fail on unknown statements** — unknown PB statements now produce `Error: unknown statement/function NAME on line N` with exit code 1, instead of silently compiling and producing a non-functional EXE.
+- **Hard-fail on unknown top-level tokens** — parser catch-all now reports `Parse error at line N: unrecognized statement/keyword` for unknown identifiers at top level.
+- **Missing PBMAIN detection** — if no FUNCTION PBMAIN exists, compiler reports `Error: No FUNCTION PBMAIN found` and suggests the closest match.
+- **CallStmt trailing token check** — extra tokens after a statement's arguments are now errors (e.g. `MSGBOX "hi"extra`).
+- **Cleanup** — removed duplicate Win32 arms that shadowed existing runtime implementations; clippy + fmt clean.
+
+- Tests: cargo test 5/5, fmt + clippy clean, official regression 15/15 ALL PASS.
+
 ### v0.2.014 (2026-09-20) — #RESOURCE ICON embedding
 
 - **#RESOURCE ICON, id, "file.ico"** — embeds an icon into the compiled EXE via Win32 UpdateResource (BeginUpdateResourceW/UpdateResourceW/EndUpdateResourceW). Resolves icon path relative to the .bas file. Verified: Explorer shows the custom icon.
