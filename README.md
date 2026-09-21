@@ -656,7 +656,7 @@ Documentation-only release, no code changes. The contribution tables under State
 
 - **Table 1** - 481 official keywords available to users.
 - **Table 2** - 457 keywords implemented or completed by this fork.
-- **Table 3** - 149 established keywords (mature in official PB docs; ~66 from upstream benstopics, rest from earlier fork work) `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
+- **Table 3** - 149 established keywords (mature in official PB docs; from upstream benstopics/powerbasilisk and earlier fork work, verified by its 14 official l*.bas tests, all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
 
