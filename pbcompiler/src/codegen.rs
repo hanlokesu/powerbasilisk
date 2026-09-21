@@ -849,6 +849,7 @@ struct Compiler {
 
     // Unimplemented-statement warnings collected during codegen (name / line)
     warnings: Vec<String>,
+    xprint_dc: Option<String>,
 
     // String variables bound via FIELD dyn$ — their assignments must copy
     // into a fresh mutable buffer (a plain store would point at a read-only
@@ -993,6 +994,7 @@ impl Compiler {
             debug_mode: false,
             pp_constants: HashMap::new(),
             warnings: Vec::new(),
+            xprint_dc: None,
             field_bound_strings: std::collections::HashSet::new(),
         }
     }
@@ -7209,7 +7211,46 @@ impl Compiler {
                 }
                 return Ok(());
             }
-                        "GLOBALMEM ALLOC" => {
+                        "XPRINT_ATTACH" => {
+                // XPRINT ATTACH DEFAULT [, JobName$]
+                // Use GDI printer DC: CreateDCA("WINSPOOL", printer, NULL, NULL)
+                let printer = self.compile_expr(fb, &call.args[0])?;
+                let driver = Val::new(self.empty_string_name.clone(), IrType::Ptr);
+                let null = Val::new("null".to_string(), IrType::Ptr);
+                let hdc = fb.call(&IrType::Ptr, "CreateDCA",
+                    &[driver, printer, null.clone(), null.clone()]);
+                // Store printer DC in a global
+                self.xprint_dc = Some(hdc.name.clone());
+                return Ok(());
+            }
+            "XPRINT_PRINT" => {
+                // XPRINT PRINT text$ - TextOutA at current position
+                if let Some(ref dc_name) = self.xprint_dc {
+                    let dc = Val::new(dc_name.clone(), IrType::Ptr);
+                    for arg in &call.args {
+                        let val = self.compile_expr(fb, arg)?;
+                        let sval = self.val_to_string(fb, &val);
+                        let len = fb.const_i32(255);
+                        // Use TextOutA (ANSI)
+                        fb.call_void("TextOutA", &[dc.clone(), fb.const_i32(100), fb.const_i32(100), sval, len]);
+                    }
+                }
+                return Ok(());
+            }
+            "XPRINT_CLOSE" => {
+                // XPRINT CLOSE - DeleteDC
+                if let Some(ref dc_name) = self.xprint_dc {
+                    let dc = Val::new(dc_name.clone(), IrType::Ptr);
+                    fb.call_void("DeleteDC", &[dc]);
+                    self.xprint_dc = None;
+                }
+                return Ok(());
+            }
+            "XPRINT_FORMFEED" => {
+                // XPRINT FORMFEED - just a no-op for now
+                return Ok(());
+            }
+            "GLOBALMEM ALLOC" => {
                 let name = self.compile_expr(fb, &call.args[0])?;
                 let size = self.compile_expr(fb, &call.args[1])?;
                 let size_i64 = self.to_i64(fb, &size);
