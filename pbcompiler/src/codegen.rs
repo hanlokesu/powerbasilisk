@@ -3608,6 +3608,12 @@ impl Compiler {
         self.module.declare_dllimport("CreateFileA", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr]);
         self.module.declare_dllimport("ReadFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
         self.module.declare_dllimport("WriteFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport("CreateThread", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr]);
+        self.module.declare_dllimport("SuspendThread", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport("ResumeThread", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport("LoadLibraryA", &IrType::Ptr, &[IrType::Ptr]);
+        self.module.declare_dllimport("GetProcAddress", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport("FreeLibrary", &IrType::I32, &[IrType::Ptr]);
         self.module.declare_dllimport(
             "GetCurrentDirectoryA",
             &IrType::I32,
@@ -5837,6 +5843,59 @@ impl Compiler {
                         fb.call_void("pb_graphic_get_ppi", &[xp, yp]);
                     }
                 }
+            }
+            "IMPORT ADDR" => {
+                // IMPORT ADDR ProcName$, LibName$ TO AddrVar&
+                // LoadLibraryA(libname) then GetProcAddress(handle, procname)
+                let procname = self.compile_expr(fb, &call.args[0])?;
+                let libname = self.compile_expr(fb, &call.args[1])?;
+                let h = fb.call(&IrType::Ptr, "LoadLibraryA", &[libname]);
+                let addr = fb.call(&IrType::Ptr, "GetProcAddress", &[h.clone(), procname]);
+                // Store addr to result var
+                if call.args.len() >= 3 {
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
+                    fb.store(&addr, &ptr);
+                }
+                // Optionally store handle
+                if call.args.len() >= 4 {
+                    let (ptr2, _) = self.compile_lvalue_ptr(fb, &call.args[3])?;
+                    fb.store(&h.clone(), &ptr2);
+                }
+                return Ok(());
+            }
+            "IMPORT CLOSE" => {
+                let h = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("FreeLibrary", &[h]);
+                return Ok(());
+            }
+            "THREAD CREATE" => {
+                // THREAD CREATE func TO id&
+                // args: [func, id]
+                let func = self.compile_expr(fb, &call.args[0])?;
+                if call.args.len() >= 2 {
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[1])?;
+                    let null = Val::new("null".to_string(), IrType::Ptr);
+                    let tid = fb.alloca(&IrType::I32);
+                    let h = fb.call(&IrType::Ptr, "CreateThread",
+                        &[null.clone(), fb.const_i32(0), func, null.clone(), fb.const_i32(0), tid]);
+                    fb.store(&h, &ptr);
+                }
+                return Ok(());
+            }
+            "THREAD CLOSE" => {
+                let id = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("CloseHandle", &[id]);
+                return Ok(());
+            }
+            "THREAD SUSPEND" => {
+                let id = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("SuspendThread", &[id]);
+                return Ok(());
+            }
+            "THREAD RESUME" => {
+                let id = self.compile_expr(fb, &call.args[0])?;
+                fb.call_void("ResumeThread", &[id]);
+                return Ok(());
             }
             "COMM OPEN" => {
                 // COMM OPEN "COM1:" AS #1, BAUD 9600, ...
