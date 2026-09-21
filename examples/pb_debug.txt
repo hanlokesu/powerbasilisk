@@ -1,2 +1,0 @@
-pb_window_new title=Test
-pb_window_new title=Test

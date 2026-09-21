@@ -9465,11 +9465,11 @@ impl Compiler {
             "Error: unknown statement/subroutine `{}` on line {} - not implemented",
             call.name, call.line
         );
-        return Err(pb::error::PbError::parser(
+        Err(pb::error::PbError::parser(
             format!("Unknown statement/subroutine: `{}`", call.name),
             None,
             call.line,
-        ));
+        ))
     }
 
     fn compile_call_args(
