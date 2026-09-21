@@ -22,6 +22,7 @@ pub struct Parser {
     tokens: Vec<Located>,
     pos: usize,
     def_funcs: HashMap<String, (Vec<String>, Expr)>,
+    pub error_count: usize,
 }
 
 impl Parser {
@@ -30,6 +31,7 @@ impl Parser {
             tokens,
             pos: 0,
             def_funcs: HashMap::new(),
+            error_count: 0,
         }
     }
 
@@ -149,7 +151,8 @@ impl Parser {
                 Ok(Some(item)) => items.push(item),
                 Ok(None) => {} // consumed but no item (e.g., comment)
                 Err(e) => {
-                    eprintln!("Parse warning: {}", e);
+                    eprintln!("Parse error: {}", e);
+                    self.error_count += 1;
                     self.consume_to_eol();
                 }
             }
@@ -366,8 +369,44 @@ impl Parser {
                 self.skip_conditional_block();
                 Ok(None)
             }
+            Token::Identifier(name) => {
+                eprintln!(
+                    "Parse error at line {}: unrecognized statement/keyword: `{}`",
+                    line, name
+                );
+                self.error_count += 1;
+                self.consume_to_eol();
+                Ok(None)
+            }
+            Token::IntegerLiteral(n) => {
+                eprintln!(
+                    "Parse error at line {}: unexpected number at top level: {}",
+                    line, n
+                );
+                self.error_count += 1;
+                self.consume_to_eol();
+                Ok(None)
+            }
+            Token::FloatLiteral(f) => {
+                eprintln!(
+                    "Parse error at line {}: unexpected number at top level: {}",
+                    line, f
+                );
+                self.error_count += 1;
+                self.consume_to_eol();
+                Ok(None)
+            }
+            Token::StringLiteral(s) => {
+                eprintln!(
+                    "Parse error at line {}: unexpected string at top level: `{}`",
+                    line, s
+                );
+                self.error_count += 1;
+                self.consume_to_eol();
+                Ok(None)
+            }
             _ => {
-                // Could be a top-level statement (before PBMAIN), skip it
+                // Other unknown tokens, skip silently
                 self.consume_to_eol();
                 Ok(None)
             }
@@ -1270,7 +1309,8 @@ impl Parser {
             match self.parse_statement() {
                 Ok(stmt) => stmts.push(stmt),
                 Err(e) => {
-                    eprintln!("Parse warning (body): {}", e);
+                    eprintln!("Parse error: {}", e);
+                    self.error_count += 1;
                     self.consume_to_eol();
                 }
             }
@@ -6499,6 +6539,11 @@ impl Parser {
                             e2
                         });
                     }
+                }
+                // Check for leftover tokens (syntax error like MSGBOX "text"hgkugyj)
+                if !matches!(self.peek(), Token::Eol | Token::Eof | Token::Colon) {
+                    let leftover = format!("Unexpected token after arguments: {:?}", self.peek());
+                    return Err(PbError::parser(leftover, None, line));
                 }
                 self.consume_to_eol();
                 Ok(Statement::Call(CallStmt {

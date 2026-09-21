@@ -178,6 +178,10 @@ fn compile_file(
         t2.elapsed().as_secs_f64()
     );
 
+    if parser.error_count > 0 {
+        return Err(pb::error::PbError::parser(format!("Build failed with {} parse error(s). Search for unexpected tokens in your .bas file.", parser.error_count), None, 0));
+    }
+
     if parse_only {
         eprintln!("[pbcompiler] Parse-only mode, skipping codegen");
         return Ok(());
@@ -211,6 +215,7 @@ fn compile_file(
 }
 
 /// Embed icon resources into the compiled EXE using Win32 UpdateResourceW.
+/// Properly splits .ico into RT_ICON (type 3) + RT_GROUP_ICON (type 14).
 fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
     use std::os::windows::process::CommandExt;
     let mut script = String::new();
@@ -219,19 +224,37 @@ fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
     script.push_str("using System.Runtime.InteropServices;\n");
     script.push_str("public class ResEm {\n");
     script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr BeginUpdateResource(string p, bool b);\n");
-    script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true)] public static extern bool UpdateResource(IntPtr h, string t, string n, ushort l, byte[] d, uint cb);\n");
+    script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true)] public static extern bool UpdateResource(IntPtr h, IntPtr t, IntPtr n, ushort l, byte[] d, uint cb);\n");
     script.push_str("  [DllImport(\"kernel32.dll\", SetLastError=true)] public static extern bool EndUpdateResource(IntPtr h, bool d);\n");
     script.push_str("}\n'@\n");
     let exe_q = exe_path.to_string_lossy().replace('\'', "''");
     script.push_str(&format!("$exe = '{}'\n", exe_q));
     script.push_str("$h = [ResEm]::BeginUpdateResource($exe, $false)\n");
+    script.push_str("$RT_ICON = [IntPtr]3\n");
+    script.push_str("$RT_GROUP_ICON = [IntPtr]14\n");
     for (id, path) in resources {
         let path_q = path.to_string_lossy().replace('\'', "''");
-        script.push_str(&format!("$data = [IO.File]::ReadAllBytes('{}')\n", path_q));
-        script.push_str(&format!(
-            "[void][ResEm]::UpdateResource($h, 'ICON', '{}', 0, $data, $data.Length)\n",
-            id
-        ));
+        script.push_str(&format!("$ico = [IO.File]::ReadAllBytes('{}')\n", path_q));
+        script.push_str("$count = [BitConverter]::ToUInt16($ico, 4)\n");
+        script.push_str(&format!("$grpId = [IntPtr]{}\n", id));
+        script.push_str("$grp = New-Object byte[] (6 + 14*$count)\n");
+        script.push_str("[Array]::Copy($ico, 0, $grp, 0, 6)\n");
+        script.push_str("for ($i = 0; $i -lt $count; $i++) {\n");
+        script.push_str("  $srcOff = 6 + $i * 16\n");
+        script.push_str("  $dstOff = 6 + $i * 14\n");
+        script.push_str("  [Array]::Copy($ico, $srcOff, $grp, $dstOff, 12)\n");
+        script.push_str("  $imgOff = [BitConverter]::ToUInt32($ico, $srcOff + 12)\n");
+        script.push_str("  $imgSize = [BitConverter]::ToUInt32($ico, $srcOff + 8)\n");
+        script.push_str("  $imgData = New-Object byte[] $imgSize\n");
+        script.push_str("  [Array]::Copy($ico, $imgOff, $imgData, 0, $imgSize)\n");
+        script.push_str(&format!("  $iconId = [IntPtr]({} + $i + 1)\n", id));
+        script.push_str("  [void][ResEm]::UpdateResource($h, $RT_ICON, $iconId, 0, $imgData, $imgData.Length)\n");
+        script.push_str("  $grp[$dstOff + 12] = [byte]($iconId.ToInt64() -band 0xFF)\n");
+        script.push_str("  $grp[$dstOff + 13] = [byte](($iconId.ToInt64() -shr 8) -band 0xFF)\n");
+        script.push_str("}\n");
+        script.push_str(
+            "[void][ResEm]::UpdateResource($h, $RT_GROUP_ICON, $grpId, 0, $grp, $grp.Length)\n",
+        );
     }
     script.push_str("[void][ResEm]::EndUpdateResource($h, $false)\n");
 

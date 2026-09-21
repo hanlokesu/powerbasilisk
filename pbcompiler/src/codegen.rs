@@ -419,6 +419,9 @@ fn link_exe(obj_paths: &[&Path], exe_path: &Path, opts: &CompileOptions) -> PbRe
     // Always link oleaut32 (needed by pb_runtime for BSTR/SysAllocString)
     args.push("-loleaut32".to_string());
 
+    // Use Windows GUI subsystem (no console window)
+    args.push("-Wl,/SUBSYSTEM:WINDOWS,/ENTRY:mainCRTStartup".to_string());
+
     // Link additional Windows libraries only when --lib-dir is provided
     if let Some(ref lib_dir) = opts.lib_dir {
         args.push(format!("-L{}", lib_dir));
@@ -3772,6 +3775,33 @@ impl Compiler {
             let ret = fb.call(&IrType::I32, &pbmain_ir_name, &[]);
             fb.ret(&ret);
             self.module.add_function_body(fb.finish());
+        } else {
+            // PBMAIN not found — suggest close function names
+            let close: Vec<&String> = self
+                .functions
+                .keys()
+                .filter(|k| {
+                    let u = k.to_uppercase();
+                    u.starts_with("PB") || u.contains("MAIN")
+                })
+                .collect();
+            if close.is_empty() {
+                eprintln!("Error: No FUNCTION PBMAIN found (entry point missing)");
+            } else {
+                eprintln!(
+                    "Error: No FUNCTION PBMAIN found. Did you mean: {} ?",
+                    close
+                        .iter()
+                        .map(|s| format!("FUNCTION {}", s))
+                        .collect::<Vec<_>>()
+                        .join(" or ")
+                );
+            }
+            return Err(PbError::parser(
+                "No FUNCTION PBMAIN entry point found",
+                None,
+                0,
+            ));
         }
 
         // In session mode, emit GetSession() export
@@ -9431,15 +9461,15 @@ impl Compiler {
             return Ok(());
         }
 
-        self.warnings.push(format!(
-
-            "line {}: statement `{}` has no codegen implementation - skipped (may produce an empty exe)",
-
-            call.line, call.name
-
+        eprintln!(
+            "Error: unknown statement/subroutine `{}` on line {} - not implemented",
+            call.name, call.line
+        );
+        return Err(pb::error::PbError::parser(
+            format!("Unknown statement/subroutine: `{}`", call.name),
+            None,
+            call.line,
         ));
-
-        Ok(())
     }
 
     fn compile_call_args(
