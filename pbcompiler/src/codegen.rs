@@ -7196,6 +7196,28 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "TRACE NEW" => {
+                if let Some(fname_expr) = call.args.first() {
+                    let fname = self.compile_expr(fb, fname_expr)?;
+                    fb.call(&IrType::I32, "pb_open", &[fname, fb.const_i32(1), fb.const_i32(1)]);
+                }
+                return Ok(());
+            }
+            "TRACE PRINT" => {
+                if let Some(expr) = call.args.first() {
+                    let val = self.compile_expr(fb, expr)?;
+                    let sval = self.val_to_string(fb, &val);
+                    fb.call_void("pb_print_file", &[fb.const_i32(1), sval]);
+                    fb.call_void("pb_print_file_newline", &[fb.const_i32(1)]);
+                }
+                return Ok(());
+            }
+            "TRACE ON" | "TRACE OFF" | "TRACE CLOSE" => {
+                if call.name == "TRACE CLOSE" || call.name == "TRACE OFF" {
+                    fb.call_void("pb_close", &[fb.const_i32(1)]);
+                }
+                return Ok(());
+            }
             "MSGBOX" => {
                 // MSGBOX text$ [, style& [, title$]] -> MessageBoxA(NULL, text, title, style)
                 if !call.args.is_empty() {
