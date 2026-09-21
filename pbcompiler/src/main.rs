@@ -206,12 +206,18 @@ fn compile_file(
         t3.elapsed().as_secs_f64()
     );
 
-    // Phase 5: Embed resources (icons, etc.) into EXE
-    if opts.exe_mode && !preprocessor.resources().is_empty() {
-        // codegen writes .exe (replaces .obj extension)
+    // Phase 5: Embed resources (icons, version info, etc.) into EXE
+    if opts.exe_mode {
         let exe_path = output_path.with_extension("exe");
         if exe_path.exists() {
-            embed_resources(&exe_path, preprocessor.resources());
+            let has_icons = !preprocessor.resources().is_empty();
+            let has_version = !preprocessor.version_info().strings.is_empty();
+            if has_icons {
+                embed_resources(&exe_path, preprocessor.resources());
+            }
+            if has_version {
+                embed_version_info(&exe_path, preprocessor.version_info());
+            }
         } else {
             eprintln!(
                 "[pbcompiler] Warning: EXE not found for resource embedding: {}",
@@ -291,4 +297,211 @@ fn embed_resources(exe_path: &Path, resources: &[(u32, std::path::PathBuf)]) {
             e
         ),
     }
+}
+
+/// Build and embed VS_VERSION_INFO resource into the EXE.
+fn embed_version_info(exe_path: &Path, vi: &pb::preprocessor::VersionInfo) {
+    use std::os::windows::process::CommandExt;
+
+    // Build the VS_VERSIONINFO binary blob in little-endian UTF-16
+    let mut buf: Vec<u8> = Vec::new();
+    let mut pos: usize = 0;
+
+    // We'll compute lengths after building. Use a helper to push aligned UTF-16 strings.
+    fn align_to_4(buf: &mut Vec<u8>) {
+        while buf.len() % 4 != 0 {
+            buf.push(0);
+        }
+    }
+    fn push_u16(buf: &mut Vec<u8>, v: u16) {
+        buf.extend_from_slice(&v.to_le_bytes());
+    }
+    fn push_u32(buf: &mut Vec<u8>, v: u32) {
+        buf.extend_from_slice(&v.to_le_bytes());
+    }
+    fn push_utf16(buf: &mut Vec<u8>, s: &str) {
+        for ch in s.encode_utf16() {
+            buf.extend_from_slice(&ch.to_le_bytes());
+        }
+        buf.push(0);
+        buf.push(0); // null terminator
+    }
+
+    // --- StringFileInfo block ---
+    let mut sfi_buf: Vec<u8> = Vec::new();
+    // String table header placeholder, fill later
+    let sfi_start = sfi_buf.len();
+    push_u16(&mut sfi_buf, 0); // wLength placeholder
+    push_u16(&mut sfi_buf, 0); // wValueLength
+    push_u16(&mut sfi_buf, 1); // wType = text
+    push_utf16(&mut sfi_buf, "StringFileInfo");
+    align_to_4(&mut sfi_buf);
+
+    // String table
+    let mut st_buf: Vec<u8> = Vec::new();
+    let st_start = st_buf.len();
+    push_u16(&mut st_buf, 0);
+    push_u16(&mut st_buf, 0);
+    push_u16(&mut st_buf, 1);
+    let lang_hex = format!("{:04X}{:04X}", vi.lang_id, vi.codepage);
+    push_utf16(&mut st_buf, &lang_hex);
+    align_to_4(&mut st_buf);
+
+    // String entries
+    for (key, val) in &vi.strings {
+        let mut se_buf: Vec<u8> = Vec::new();
+        push_u16(&mut se_buf, 0); // length placeholder
+        let val_w: Vec<u16> = val.encode_utf16().chain(std::iter::once(0)).collect();
+        push_u16(&mut se_buf, (val_w.len() * 2) as u16); // wValueLength in bytes
+        push_u16(&mut se_buf, 1); // wType = text
+        push_utf16(&mut se_buf, key);
+        align_to_4(&mut se_buf);
+        for w in &val_w {
+            se_buf.extend_from_slice(&w.to_le_bytes());
+        }
+        align_to_4(&mut se_buf);
+        // Fix length
+        let len = se_buf.len() as u16;
+        se_buf[0..2].copy_from_slice(&len.to_le_bytes());
+        st_buf.extend_from_slice(&se_buf);
+    }
+
+    // Fix string table length
+    let st_len = st_buf.len() as u16;
+    st_buf[0..2].copy_from_slice(&st_len.to_le_bytes());
+    sfi_buf.extend_from_slice(&st_buf);
+
+    // Fix SFI length
+    let sfi_len = sfi_buf.len() as u16;
+    sfi_buf[0..2].copy_from_slice(&sfi_len.to_le_bytes());
+
+    // --- VarFileInfo block ---
+    let mut vfi_buf: Vec<u8> = Vec::new();
+    push_u16(&mut vfi_buf, 0);
+    push_u16(&mut vfi_buf, 0);
+    push_u16(&mut vfi_buf, 0); // wType = binary
+    push_utf16(&mut vfi_buf, "VarFileInfo");
+    align_to_4(&mut vfi_buf);
+    // Var entry
+    let mut var_buf: Vec<u8> = Vec::new();
+    push_u16(&mut var_buf, 0);
+    push_u16(&mut var_buf, 4); // value length = 4 bytes
+    push_u16(&mut var_buf, 0); // binary
+    push_utf16(&mut var_buf, "Translation");
+    align_to_4(&mut var_buf);
+    push_u16(&mut var_buf, vi.lang_id);
+    push_u16(&mut var_buf, vi.codepage);
+    align_to_4(&mut var_buf);
+    let var_len = var_buf.len() as u16;
+    var_buf[0..2].copy_from_slice(&var_len.to_le_bytes());
+    vfi_buf.extend_from_slice(&var_buf);
+    let vfi_len = vfi_buf.len() as u16;
+    vfi_buf[0..2].copy_from_slice(&vfi_len.to_le_bytes());
+
+    // --- VS_VERSIONINFO top-level ---
+    let mut vi_buf: Vec<u8> = Vec::new();
+    push_u16(&mut vi_buf, 0); // total length placeholder
+    push_u16(&mut vi_buf, 52); // wValueLength = sizeof(VS_FIXEDFILEINFO)
+    push_u16(&mut vi_buf, 0); // wType = binary
+    push_utf16(&mut vi_buf, "VS_VERSION_INFO");
+    align_to_4(&mut vi_buf);
+
+    // VS_FIXEDFILEINFO (52 bytes)
+    push_u32(&mut vi_buf, 0xFEEF04BD); // dwSignature
+    push_u32(&mut vi_buf, 0x00010000); // dwStrucVersion
+    let (a, b, c, d) = vi.file_version;
+    push_u32(&mut vi_buf, ((a as u32) << 16) | (b as u32)); // dwFileVersionMS
+    push_u32(&mut vi_buf, ((c as u32) << 16) | (d as u32)); // dwFileVersionLS
+    let (pa, pb, pc, pd) = vi.product_version;
+    push_u32(&mut vi_buf, ((pa as u32) << 16) | (pb as u32)); // dwProductVersionMS
+    push_u32(&mut vi_buf, ((pc as u32) << 16) | (pd as u32)); // dwProductVersionLS
+    push_u32(&mut vi_buf, 0x00000037); // dwFileFlagsMask
+    push_u32(&mut vi_buf, 0x0); // dwFileFlags
+    push_u32(&mut vi_buf, 0x40004); // dwFileOS = VOS_NT_WINDOWS32
+    push_u32(&mut vi_buf, 0x1); // dwFileType = VFT_APP
+    push_u32(&mut vi_buf, 0x0); // dwFileSubtype
+    push_u32(&mut vi_buf, 0x0); // dwFileDateMS
+    push_u32(&mut vi_buf, 0x0); // dwFileDateLS
+
+    align_to_4(&mut vi_buf);
+    vi_buf.extend_from_slice(&sfi_buf);
+    vi_buf.extend_from_slice(&vfi_buf);
+
+    // Fix total length
+    let total_len = vi_buf.len() as u16;
+    vi_buf[0..2].copy_from_slice(&total_len.to_le_bytes());
+
+    // Embed via PowerShell UpdateResource
+    let b64 = base64_encode(&vi_buf);
+    let exe_q = exe_path.to_string_lossy().replace('\'', "''");
+    let script = format!(
+        r#"
+Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public class VerRes {{
+  [DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr BeginUpdateResource(string p, bool b);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool UpdateResource(IntPtr h, IntPtr t, IntPtr n, ushort l, byte[] d, uint cb);
+  [DllImport("kernel32.dll", SetLastError=true)] public static extern bool EndUpdateResource(IntPtr h, bool d);
+}}
+'@
+$exe = '{exe}'
+$b64 = '{data}'
+$bytes = [Convert]::FromBase64String($b64)
+$h = [VerRes]::BeginUpdateResource($exe, $false)
+if ($h -eq [IntPtr]::Zero) {{ Write-Error "BeginUpdateResource failed"; exit 1 }}
+$RT_VERSION = [IntPtr]16
+$RT_VERSION_NAME = [IntPtr]1
+[void][VerRes]::UpdateResource($h, $RT_VERSION, $RT_VERSION_NAME, 0, $bytes, $bytes.Length)
+[void][VerRes]::EndUpdateResource($h, $false)
+Write-Host "Version info embedded: $($bytes.Length) bytes"
+"#,
+        exe = exe_q,
+        data = b64
+    );
+
+    match std::process::Command::new("powershell")
+        .args(["-NoProfile", "-NonInteractive", "-Command", &script])
+        .creation_flags(0x08000000)
+        .output()
+    {
+        Ok(out) => {
+            if out.status.success() {
+                eprintln!(
+                    "[pbcompiler] Embedded VERSIONINFO into {}",
+                    exe_path.display()
+                );
+            } else {
+                eprintln!(
+                    "[pbcompiler] Warning: VERSIONINFO embed failed: {}",
+                    String::from_utf8_lossy(&out.stderr)
+                );
+            }
+        }
+        Err(e) => eprintln!("[pbcompiler] Warning: VERSIONINFO embed error: {e}"),
+    }
+}
+
+fn base64_encode(data: &[u8]) -> String {
+    const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = if chunk.len() > 1 { chunk[1] as u32 } else { 0 };
+        let b2 = if chunk.len() > 2 { chunk[2] as u32 } else { 0 };
+        let n = (b0 << 16) | (b1 << 8) | b2;
+        out.push(CHARS[(n >> 18) as usize & 63] as char);
+        out.push(CHARS[(n >> 12) as usize & 63] as char);
+        if chunk.len() > 1 {
+            out.push(CHARS[(n >> 6) as usize & 63] as char);
+        } else {
+            out.push('=');
+        }
+        if chunk.len() > 2 {
+            out.push(CHARS[n as usize & 63] as char);
+        } else {
+            out.push('=');
+        }
+    }
+    out
 }

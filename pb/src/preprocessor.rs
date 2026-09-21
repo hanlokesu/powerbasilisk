@@ -11,6 +11,16 @@ pub struct SourceLine {
     pub line_num: usize,
 }
 
+/// Collected #RESOURCE VERSIONINFO data
+#[derive(Debug, Clone, Default)]
+pub struct VersionInfo {
+    pub file_version: (u32, u32, u32, u32),
+    pub product_version: (u32, u32, u32, u32),
+    pub lang_id: u16,
+    pub codepage: u16,
+    pub strings: Vec<(String, String)>,
+}
+
 /// A MACRO definition (batch 27). Single-line macros have a 1-line body and
 /// expand anywhere in a line; multi-line macros expand at statement position.
 #[derive(Debug, Clone)]
@@ -42,6 +52,7 @@ pub struct Preprocessor {
     included: HashSet<PathBuf>,
     macros: HashMap<String, MacroDef>,
     pub resources: Vec<(u32, PathBuf)>,
+    pub version_info: VersionInfo,
 }
 
 impl Default for Preprocessor {
@@ -57,6 +68,7 @@ impl Preprocessor {
             included: HashSet::new(),
             macros: HashMap::new(),
             resources: Vec::new(),
+            version_info: VersionInfo::default(),
         }
     }
 
@@ -304,7 +316,63 @@ impl Preprocessor {
                 i += 1;
                 continue;
             }
-            // #RESOURCE — skip other resource directives (VERSIONINFO etc.)
+            // #RESOURCE VERSIONINFO / FILEVERSION / PRODUCTVERSION / STRINGINFO / VERSION$
+            if upper_full.starts_with("#RESOURCE FILEVERSION") {
+                let nums: Vec<u32> = trimmed_full[19..]
+                    .split(',')
+                    .filter_map(|x| x.trim().parse().ok())
+                    .collect();
+                if nums.len() >= 4 {
+                    self.version_info.file_version = (nums[0], nums[1], nums[2], nums[3]);
+                }
+                i += 1;
+                continue;
+            }
+            if upper_full.starts_with("#RESOURCE PRODUCTVERSION") {
+                let nums: Vec<u32> = trimmed_full[22..]
+                    .split(',')
+                    .filter_map(|x| x.trim().parse().ok())
+                    .collect();
+                if nums.len() >= 4 {
+                    self.version_info.product_version = (nums[0], nums[1], nums[2], nums[3]);
+                }
+                i += 1;
+                continue;
+            }
+            if upper_full.starts_with("#RESOURCE STRINGINFO") {
+                let q: Vec<Option<String>> = [trimmed_full[19..].trim()]
+                    .iter()
+                    .map(|s| extract_string(s))
+                    .collect();
+                // Parse two quoted strings: "0409", "04B0"
+                let mut strs: Vec<String> = Vec::new();
+                for part in trimmed_full[19..].split(',') {
+                    if let Some(v) = extract_string(part.trim()) {
+                        strs.push(v);
+                    }
+                }
+                if strs.len() >= 2 {
+                    self.version_info.lang_id = u16::from_str_radix(&strs[1], 16).unwrap_or(0x04B0);
+                    self.version_info.codepage =
+                        u16::from_str_radix(&strs[0], 16).unwrap_or(0x0409);
+                }
+                i += 1;
+                continue;
+            }
+            if upper_full.starts_with("#RESOURCE VERSION") && trimmed_full.contains("$") {
+                // #RESOURCE VERSION$ "Key", "Value"
+                let rest = trimmed_full[18..].trim();
+                let parts: Vec<&str> = rest.splitn(2, ',').map(|s| s.trim()).collect();
+                if parts.len() == 2 {
+                    if let (Some(k), Some(v)) = (extract_string(parts[0]), extract_string(parts[1]))
+                    {
+                        self.version_info.strings.push((k, v));
+                    }
+                }
+                i += 1;
+                continue;
+            }
+            // #RESOURCE VERSIONINFO (just a marker, skip)
             if upper_full.starts_with("#RESOURCE") {
                 i += 1;
                 continue;
@@ -541,6 +609,10 @@ impl Preprocessor {
 
     pub fn resources(&self) -> &[(u32, PathBuf)] {
         &self.resources
+    }
+
+    pub fn version_info(&self) -> &VersionInfo {
+        &self.version_info
     }
 }
 

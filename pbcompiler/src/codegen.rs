@@ -4702,11 +4702,32 @@ impl Compiler {
                 Ok(())
             }
             Statement::Noop(name, line) => {
-                self.warnings.push(format!(
-                    "line {}: statement `{}` parsed but NOT implemented (NOOP) - no code generated",
-                    line, name
-                ));
-                Ok(())
+                // Allow benign/intentional NOOPs (preprocessor artifacts, end markers)
+                let benign = matches!(
+                    name.as_str(),
+                    "END"
+                        | "REM"
+                        | "REM "
+                        | "'"
+                        | "LET"
+                        | "#INCLUDE"
+                        | "%CONSTANT"
+                        | "END (mismatched block)"
+                        | "<unknown token>"
+                );
+                if benign {
+                    Ok(())
+                } else {
+                    eprintln!(
+                        "Error: statement `{}` on line {} is NOT implemented - no code generated",
+                        name, line
+                    );
+                    Err(pb::error::PbError::parser(
+                        format!("Unimplemented statement: `{}`", name),
+                        None,
+                        *line,
+                    ))
+                }
             }
         }
     }
