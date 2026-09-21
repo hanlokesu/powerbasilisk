@@ -152,16 +152,25 @@ fn compile_file(
     );
 
     // Reassemble into single source string for lexing
+    // Build line map: combined_line (1-based) -> original file line
     let mut combined = String::new();
+    let mut line_map: Vec<usize> = Vec::new(); // index 0 = combined line 1
     for sl in &source_lines {
         combined.push_str(&sl.text);
         combined.push('\n');
+        line_map.push(sl.line_num);
     }
 
     // Phase 2: Lex
     let t1 = std::time::Instant::now();
     let mut lexer = Lexer::new(&combined, path.to_str());
-    let tokens = lexer.tokenize()?;
+    let mut tokens = lexer.tokenize()?;
+    // Remap token line numbers from preprocessed line to original file line
+    for tok in &mut tokens {
+        if tok.line > 0 && tok.line <= line_map.len() {
+            tok.line = line_map[tok.line - 1];
+        }
+    }
     eprintln!(
         "[pbcompiler] Lexed {} tokens ({:.1}s)",
         tokens.len(),
