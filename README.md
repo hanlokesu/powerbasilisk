@@ -252,8 +252,8 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 
 > Summary:
-> - **491** official PowerBASIC statement/function keywords currently available for use
->   - **460** implemented or completed by this fork
+> - **759** official PowerBASIC statement/function keywords currently available for use
+>   - **610** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
 > - **130** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
@@ -261,7 +261,7 @@ exit code 0:
 > Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
 > Updated through batch 155 (v0.2.014). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
-**All 491 keywords currently available for use (alphabetical):**
+**All 759 keywords currently available for use (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 | --- | --- | --- | --- | --- |
@@ -367,7 +367,7 @@ exit code 0:
 
 ## **Newly** implemented by this branch
 
-> **460 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **610 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 | Keyword | Keyword | Keyword | Keyword | Keyword |
@@ -612,8 +612,8 @@ Parser-only fixes (no new keywords). Coverage unchanged: 481 available / 129 Tie
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
 
 - **Table 1** - 481 official keywords available to users.
-- **Table 2** - 460 keywords implemented or completed by this fork.
-- **Table 3** - 66 core statement/function keywords originally from upstream `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
+- **Table 2** - 610 keywords implemented or completed by this fork.
+- **Table 3** - 149 established keywords (mature in official PB docs; ~66 from upstream benstopics, rest from earlier fork work) `benstopics/powerbasilisk`, verified by its 14 official l*.bas tests (all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
 

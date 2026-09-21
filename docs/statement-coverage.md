@@ -6,21 +6,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. Upstream itself shipped only ~68 core statements/builtins (last commit 2026-02-18); nearly everything else here is this fork's work.
 
-- Rows in this matrix: **918** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
-- **772** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
+- Rows in this matrix: **889** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
+- **759** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
 - **0** documented keywords still proposed / not yet implemented; **130** Tier-3 DDT GUI items deferred.
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 616 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
-| ✅ Established (upstream/core) | 171 | Available from upstream benstopics/powerbasilisk or core language |
-| ✅ **Total available** | **787** | Implemented + Established |
+| ✅ Implemented (this fork) | 610 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Established (upstream/core) | 149 | Available from upstream benstopics/powerbasilisk or core language |
+| ✅ **Total available** | **759** | Implemented + Established |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 130 | DDT GUI / window-callback framework, high effort, deferred |
 
-## All keywords (918 rows)
+## All keywords (889 rows)
 
 | Keyword | Kind | Platform | Status |
 | --- | --- | --- | --- |
