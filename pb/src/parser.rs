@@ -7135,6 +7135,16 @@ impl Parser {
                     line,
                 }))
             }
+            "CLOSE" => {
+                if self.peek() == &Token::Hash { self.advance(); }
+                let f = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "COMM CLOSE".to_string(),
+                    args: vec![f],
+                    line,
+                }))
+            }
             _ => {
                 self.consume_to_eol();
                 Ok(Statement::Noop(format!("COMM {op}"), line))

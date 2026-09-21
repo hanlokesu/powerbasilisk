@@ -1,0 +1,254 @@
+﻿cargo : warning: unused variable: `q`
+At line:4 char:1
++ cargo build --release 2>&1 > build_err.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: unused variable: `q`:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+   --> pb\src\preprocessor.rs:343:21
+    |
+343 |                 let q: Vec<Option<String>> = [trimmed_full[19..].trim()]
+    |                     ^ help: if this is intentional, prefix it with an underscore: `_q`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pb` (lib) generated 1 warning (run `cargo fix --lib -p pb` to apply 1 suggestion)
+   Compiling pbcompiler v0.1.1 (C:\Users\HANLO\Doubao\chats\2026-09-05\new-chat\powerbasilisk_test\pbsrc\pbcompiler)
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:7270:25
+     |
+5891 |             "XPRINT_ATTACH" => {
+     |             --------------- matches all the relevant values
+...
+7270 |                         "XPRINT_ATTACH" => {
+     |                         ^^^^^^^^^^^^^^^ no value can reach this
+     |
+     = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:7282:13
+     |
+6040 |             "XPRINT_PRINT" => {
+     |             -------------- matches all the relevant values
+...
+7282 |             "XPRINT_PRINT" => {
+     |             ^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:7296:13
+     |
+5900 |             "XPRINT_CLOSE" => {
+     |             -------------- matches all the relevant values
+...
+7296 |             "XPRINT_CLOSE" => {
+     |             ^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:7305:13
+     |
+5925 |             "XPRINT_FORMFEED" => {
+     |             ----------------- matches all the relevant values
+...
+7305 |             "XPRINT_FORMFEED" => {
+     |             ^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:8683:13
+     |
+7309 |             "GLOBALMEM ALLOC" => {
+     |             ----------------- matches all the relevant values
+...
+8683 |             "GLOBALMEM ALLOC" => {
+     |             ^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:8694:13
+     |
+7320 |             "GLOBALMEM FREE" => {
+     |             ---------------- matches all the relevant values
+...
+8694 |             "GLOBALMEM FREE" => {
+     |             ^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:8705:13
+     |
+7325 |             "GLOBALMEM LOCK" => {
+     |             ---------------- matches all the relevant values
+...
+8705 |             "GLOBALMEM LOCK" => {
+     |             ^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:8716:13
+     |
+7338 |             "GLOBALMEM SIZE" => {
+     |             ---------------- matches all the relevant values
+...
+8716 |             "GLOBALMEM SIZE" => {
+     |             ^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:8727:13
+     |
+7333 |             "GLOBALMEM UNLOCK" => {
+     |             ------------------ matches all the relevant values
+...
+8727 |             "GLOBALMEM UNLOCK" => {
+     |             ^^^^^^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9186:13
+     |
+5841 |             "COMM OPEN" => {
+     |             ----------- matches all the relevant values
+...
+9186 |             "COMM OPEN" => {
+     |             ^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9219:13
+     |
+5882 |             "COMM CLOSE" => {
+     |             ------------ matches all the relevant values
+...
+9219 |             "COMM CLOSE" => {
+     |             ^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9241:13
+     |
+5870 |             "COMM RECV" => {
+     |             ----------- matches all the relevant values
+...
+9241 |             "COMM RECV" => {
+     |             ^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9253:13
+     |
+5857 |             "COMM PRINT" | "COMM SEND" => {
+     |             -------------------------- matches all the relevant values
+...
+9253 |             "COMM SEND" => {
+     |             ^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9262:13
+     |
+5857 |             "COMM PRINT" | "COMM SEND" => {
+     |             -------------------------- matches all the relevant values
+...
+9262 |             "COMM PRINT" => {
+     |             ^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9413:13
+     |
+7345 | "TRACE NEW" => {
+     | ----------- matches all the relevant values
+...
+9413 |             "TRACE NEW" => {
+     |             ^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9420:13
+     |
+7361 |             "TRACE ON" | "TRACE OFF" | "TRACE CLOSE" => {
+     |             ---------------------------------------- matches all the relevant values
+...
+9420 |             "TRACE ON" => {
+     |             ^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9424:13
+     |
+7361 |             "TRACE ON" | "TRACE OFF" | "TRACE CLOSE" => {
+     |             ---------------------------------------- matches all the relevant values
+...
+9424 |             "TRACE OFF" => {
+     |             ^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9428:13
+     |
+7352 |             "TRACE PRINT" => {
+     |             ------------- matches all the relevant values
+...
+9428 |             "TRACE PRINT" => {
+     |             ^^^^^^^^^^^^^ no value can reach this
+
+warning: unreachable pattern
+    --> pbcompiler\src\codegen.rs:9444:13
+     |
+7361 |             "TRACE ON" | "TRACE OFF" | "TRACE CLOSE" => {
+     |             ---------------------------------------- matches all the relevant values
+...
+9444 |             "TRACE CLOSE" => {
+     |             ^^^^^^^^^^^^^ no value can reach this
+
+warning: unused variable: `fn_i32`
+    --> pbcompiler\src\codegen.rs:5846:21
+     |
+5846 |                 let fn_i32 = self.to_i32(fb, &filenum);
+     |                     ^^^^^^ help: if this is intentional, prefix it with an underscore: `_fn_i32`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `n4`
+    --> pbcompiler\src\codegen.rs:5865:25
+     |
+5865 |                     let n4 = Val::new("null".to_string(), IrType::Ptr);
+     |                         ^^ help: if this is intentional, prefix it with an underscore: `_n4`
+
+warning: unused variable: `filenum`
+    --> pbcompiler\src\codegen.rs:5885:25
+     |
+5885 |                     let filenum = self.compile_expr(fb, fnum)?;
+     |                         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_filenum`
+
+warning: variable does not need to be mutable
+   --> pbcompiler\src\main.rs:307:9
+    |
+307 |     let mut buf: Vec<u8> = Vec::new();
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> pbcompiler\src\main.rs:308:9
+    |
+308 |     let mut pos: usize = 0;
+    |         ----^^^
+    |         |
+    |         help: remove this `mut`
+
+warning: unused variable: `buf`
+   --> pbcompiler\src\main.rs:307:9
+    |
+307 |     let mut buf: Vec<u8> = Vec::new();
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_buf`
+
+warning: unused variable: `pos`
+   --> pbcompiler\src\main.rs:308:9
+    |
+308 |     let mut pos: usize = 0;
+    |         ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_pos`
+
+warning: unused variable: `sfi_start`
+   --> pbcompiler\src\main.rs:333:9
+    |
+333 |     let sfi_start = sfi_buf.len();
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_sfi_start`
+
+warning: unused variable: `st_start`
+   --> pbcompiler\src\main.rs:342:9
+    |
+342 |     let st_start = st_buf.len();
+    |         ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_st_start`
+
+warning: `pbcompiler` (bin "pbcompiler") generated 28 warnings (run `cargo fix --bin "pbcompiler" -p pbcompiler` to 
+apply 9 suggestions)
+    Finished `release` profile [optimized] target(s) in 27.04s

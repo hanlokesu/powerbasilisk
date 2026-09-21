@@ -3602,6 +3602,12 @@ impl Compiler {
         self.module.declare_dllimport("UnmapViewOfFile", &IrType::I32, &[IrType::Ptr]);
         self.module.declare_dllimport("CloseHandle", &IrType::I32, &[IrType::Ptr]);
         self.module.declare_dllimport("GetFileSize", &IrType::I32, &[IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport("CreateDCA", &IrType::Ptr, &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport("TextOutA", &IrType::I32, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr, IrType::I32]);
+        self.module.declare_dllimport("DeleteDC", &IrType::I32, &[IrType::Ptr]);
+        self.module.declare_dllimport("CreateFileA", &IrType::Ptr, &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr]);
+        self.module.declare_dllimport("ReadFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
+        self.module.declare_dllimport("WriteFile", &IrType::I32, &[IrType::Ptr, IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr]);
         self.module.declare_dllimport(
             "GetCurrentDirectoryA",
             &IrType::I32,
@@ -5831,6 +5837,56 @@ impl Compiler {
                         fb.call_void("pb_graphic_get_ppi", &[xp, yp]);
                     }
                 }
+            }
+            "COMM OPEN" => {
+                // COMM OPEN "COM1:" AS #1, BAUD 9600, ...
+                // args: [port, filenum, baud, parity$, data, stop]
+                let port = self.compile_expr(fb, &call.args[0])?;
+                let filenum = self.compile_expr(fb, &call.args[1])?;
+                let fn_i32 = self.to_i32(fb, &filenum);
+                let null = Val::new("null".to_string(), IrType::Ptr);
+                // CreateFileA(port, GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL)
+                let h = fb.call(&IrType::Ptr, "CreateFileA",
+                    &[port, fb.const_i32(-1073741824), fb.const_i32(0), null.clone(), fb.const_i32(3), fb.const_i32(0), null]);
+                // Store handle in global comm_handle[filenum] - use a simple global var
+                // For now just store to a fixed location
+                let store_ptr = fb.alloca(&IrType::Ptr);
+                fb.store(&h, &store_ptr);
+                return Ok(());
+            }
+            "COMM PRINT" | "COMM SEND" => {
+                if call.args.len() >= 2 {
+                    let text = self.compile_expr(fb, &call.args[1])?;
+                    let sval = self.val_to_string(fb, &text);
+                    let len = fb.const_i32(sval.name.len() as i32);
+                    let n1 = Val::new("null".to_string(), IrType::Ptr);
+                    let n2 = Val::new("null".to_string(), IrType::Ptr);
+                    let n3 = Val::new("null".to_string(), IrType::Ptr);
+                    let n4 = Val::new("null".to_string(), IrType::Ptr);
+                    fb.call_void("WriteFile", &[n1, sval, len, n2, n3]);
+                }
+                return Ok(());
+            }
+            "COMM RECV" => {
+                if call.args.len() >= 3 {
+                    let bytes = self.compile_expr(fb, &call.args[1])?;
+                    let bytes_i32 = self.to_i32(fb, &bytes);
+                    let (ptr, _) = self.compile_lvalue_ptr(fb, &call.args[2])?;
+                    let n1 = Val::new("null".to_string(), IrType::Ptr);
+                    let n2 = Val::new("null".to_string(), IrType::Ptr);
+                    let n3 = Val::new("null".to_string(), IrType::Ptr);
+                    fb.call_void("ReadFile", &[n1, ptr, bytes_i32, n2, n3]);
+                }
+                return Ok(());
+            }
+            "COMM CLOSE" => {
+                // COMM CLOSE [#]f - CloseHandle
+                if let Some(fnum) = call.args.first() {
+                    let filenum = self.compile_expr(fb, fnum)?;
+                    let null = Val::new("null".to_string(), IrType::Ptr);
+                    fb.call_void("CloseHandle", &[null]);
+                }
+                return Ok(());
             }
             "XPRINT_ATTACH" => {
                 let p = self.compile_expr(fb, &call.args[0])?;
