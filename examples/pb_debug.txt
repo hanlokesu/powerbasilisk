@@ -1,5 +1,0 @@
-pb_window_new title=Test DDT
-pb_window_new title=Test DDT
-pb_window_new title=Test DDT
-pb_window_new title=Test DDT
-pb_window_new title=Test DDT

@@ -1,22 +1,22 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 156 (v0.2.015)** — 2026-09-21. All statements through batch 156 are reflected in this matrix.
+> **Last updated from batch 157 (v0.2.016)** — 2026-09-22. All statements through batch 157 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. Upstream itself shipped only ~68 core statements/builtins (last commit 2026-02-18); nearly everything else here is this fork's work.
 
-- Rows in this matrix: **736** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
-- **606** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
-- **0** documented keywords still proposed / not yet implemented; **130** Tier-3 DDT GUI items deferred.
+- Rows in this matrix: **738** (10 BLOCK, 408 FUNCTION, 5 OPERATOR, 495 STATEMENT).
+- **613** keywords currently available (✅ Implemented by this fork + ✅ Established upstream/core).
+- **0** documented keywords still proposed / not yet implemented; **125** Tier-3 DDT GUI items deferred.
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 457 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 464 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established (upstream/core) | 149 | Available from upstream benstopics/powerbasilisk or core language |
-| ✅ **Total available** | **606** | Implemented + Established |
+| ✅ **Total available** | **613** | Implemented + Established |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 130 | DDT GUI / window-callback framework, high effort, deferred |
 

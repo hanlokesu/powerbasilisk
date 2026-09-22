@@ -252,8 +252,8 @@ exit code 0:
 > Full details: [statement-coverage.md](docs/statement-coverage.md) · raw data: [statement-coverage.csv](docs/statement-coverage.csv).
 
 > Summary:
-> - **606** official PowerBASIC statement/function keywords currently available for use
->   - **457** implemented or completed by this fork
+> - **613** official PowerBASIC statement/function keywords currently available for use
+>   - **464** implemented or completed by this fork
 >   - **66** core statement/function keywords originally from upstream `benstopics/powerbasilisk` (last commit 2026-02-18) - its proven control flow, operators, file I/O and basic math/string builtins, listed in the upstream table below (8 of them were later improved by this fork). The CSV label "Established" means *mature in the official PB docs*, not "implemented by upstream".
 > - **130** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
@@ -261,7 +261,7 @@ exit code 0:
 > Counts are deduplicated official keywords (internal codegen helper names are excluded; they appear in the full [statement-coverage.md](docs/statement-coverage.md) table).
 > Updated through batch 155 (v0.2.014). **MILESTONE: 0 non-Tier-3 official keywords remain unimplemented.**
 
-**All 606 keywords currently available for use (alphabetical):**
+**All 613 keywords currently available for use (alphabetical):**
 
 | Keyword | Keyword | Keyword | Keyword | Keyword |
 |---------|---------|---------|---------|---------|
@@ -389,7 +389,7 @@ exit code 0:
 | DIR | GRAPHIC STYLE | OCT | THREAD SUSPEND |  |
 ## **Newly** implemented by this branch
 
-> **457 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
+> **464 keywords implemented by this fork** (all the keywords this fork added or completed; upstream benstopics shipped only the core control-flow, operators and basic builtins). Verified via live compilation and testing. Listed alphabetically below.
 
 **The keywords implemented by this fork (alphabetical):**
 
@@ -548,6 +548,19 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.016 (2026-09-22) — DDT GUI batch 157
+
+- **DIALOG DOEVENTS** — non-blocking message pump (PeekMessage/DispatchMessage).
+- **DIALOG GET TEXT hDlg TO s$** — reads window title text (GetWindowTextA).
+- **DIALOG SHOW STATE hDlg, nCmdShow** — ShowWindow (1=normal, 2=minimized, 3=maximized).
+- **DIALOG CENTER hDlg** — centers window on screen (GetWindowRect + GetSystemMetrics + MoveWindow).
+- **CONTROL KILL hCtrl** — destroys a control (DestroyWindow).
+- **CONTROL SET CHECK hCtrl, state** — sets checkbox/radio state (BM_SETCHECK).
+- **CONTROL ADDSTRING hCtrl, "text"** — adds an item to a combobox (CB_ADDSTRING).
+- **Important**: x64 window handles must be declared `AS QUAD` (LONG truncates HWND pointers).
+
+- Tests: test_ddt.bas verified (EDITBOX+BUTTON+CHECKBOX+COMBOBOX+CENTER), fmt + clippy clean.
+
 ### v0.2.015 (2026-09-21) — #RESOURCE VERSIONINFO + hard-fail diagnostics
 
 - **#RESOURCE VERSIONINFO** — embeds Win32 version information into the EXE (FILEVERSION/PRODUCTVERSION/STRINGINFO/VERSION$). Works alongside #RESOURCE ICON.
@@ -655,7 +668,7 @@ Parser-only fixes (no new keywords). Coverage unchanged: 481 available / 129 Tie
 Documentation-only release, no code changes. The contribution tables under Statement/Function Support Matrix were recomputed and now self-close:
 
 - **Table 1** - 481 official keywords available to users.
-- **Table 2** - 457 keywords implemented or completed by this fork.
+- **Table 2** - 464 keywords implemented or completed by this fork.
 - **Table 3** - 149 established keywords (mature in official PB docs; from upstream benstopics/powerbasilisk and earlier fork work, 8 of which were later improved by this fork, verified by its 14 official l*.bas tests, all passing).
 - **Table 4 (new)** - the 8 upstream keywords this fork further completed/improved: CINT/CLNG (banker's rounding), CVD/CVS (binary read), LEN (BSTR prefix), OPEN (no truncate on BINARY), INPUT# (CSV quotes), CHR$ (multi-arg), RND (bare form), PRINT (immediate flush).
 - Fixed stale numbers (upstream was still labelled 27; table-2 heading said 454).
