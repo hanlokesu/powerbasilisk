@@ -1854,10 +1854,39 @@ impl Compiler {
             "pb_control_enable",
             "pb_control_disable",
             "pb_control_focus",
+            "pb_control_kill",
         ] {
             self.module
                 .declare_function(n, &IrType::Void, &[IrType::Ptr], false);
         }
+        self.module
+            .declare_function("pb_dialog_doevents", &IrType::Void, &[], false);
+        self.module.declare_function(
+            "pb_dialog_get_text",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_show_state",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_set_check",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_dialog_center", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_control_addstring",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module.declare_function(
             "pb_control_add_listbox",
             &IrType::Ptr,
@@ -8069,6 +8098,72 @@ impl Compiler {
                     let text = self.compile_expr(fb, &call.args[1])?;
                     let hdlg64 = fb.inttoptr(&hdlg);
                     fb.call_void("pb_dialog_set_text", &[hdlg64, text]);
+                }
+                return Ok(());
+            }
+            "DIALOG_DOEVENTS" => {
+                fb.call_void("pb_dialog_doevents", &[]);
+                return Ok(());
+            }
+            "DIALOG_GET_TEXT" => {
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_dialog_get_text",
+                        &[hdlg64, bp.clone(), fb.const_i64(256)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SHOW_STATE" => {
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let st = self.compile_expr(fb, &call.args[1])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    fb.call_void("pb_dialog_show_state", &[hdlg64, st]);
+                }
+                return Ok(());
+            }
+            "CONTROL_KILL" => {
+                if !call.args.is_empty() {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let hc64 = fb.inttoptr(&hc);
+                    fb.call_void("pb_control_kill", &[hc64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_CHECK" => {
+                if call.args.len() >= 2 {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let st = self.compile_expr(fb, &call.args[1])?;
+                    let hc64 = fb.inttoptr(&hc);
+                    fb.call_void("pb_control_set_check", &[hc64, st]);
+                }
+                return Ok(());
+            }
+            "DIALOG_CENTER" => {
+                if !call.args.is_empty() {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hd64 = fb.inttoptr(&hd);
+                    fb.call_void("pb_dialog_center", &[hd64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_ADDSTRING" => {
+                if call.args.len() >= 2 {
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let txt = self.compile_expr(fb, &call.args[1])?;
+                    let hc64 = fb.inttoptr(&hc);
+                    fb.call_void("pb_control_addstring", &[hc64, txt]);
                 }
                 return Ok(());
             }

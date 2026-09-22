@@ -5312,8 +5312,12 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    self.expect(&Token::To)?;
-                    let target = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_CHECKBOX".to_string(),
@@ -5549,7 +5553,117 @@ impl Parser {
                         line,
                     }));
                 }
-                // DIALOG MENU hDlg, hMenu
+                // DIALOG DOEVENTS - process pending messages non-blocking
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="DOEVENTS")
+                {
+                    self.advance();
+                    self.advance();
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_DOEVENTS".to_string(),
+                        args: vec![],
+                        line,
+                    }));
+                }
+                // DIALOG CENTER hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="CENTER")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_CENTER".to_string(),
+                        args: vec![hd],
+                        line,
+                    }));
+                }
+                // CONTROL ADDSTRING hCtrl, "text"
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADDSTRING")
+                {
+                    self.advance();
+                    self.advance();
+                    let hc = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let txt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADDSTRING".to_string(),
+                        args: vec![hc, txt],
+                        line,
+                    }));
+                }
+                // DIALOG GET TEXT hDlg TO var$
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TEXT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_GET_TEXT".to_string(),
+                        args: vec![hd, target],
+                        line,
+                    }));
+                }
+                // DIALOG SHOW STATE hDlg, nCmdShow (1=normal, 2=min, 3=max)
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="STATE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let state = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SHOW_STATE".to_string(),
+                        args: vec![hd, state],
+                        line,
+                    }));
+                }
+                // CONTROL KILL hCtrl
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="KILL")
+                {
+                    self.advance();
+                    self.advance();
+                    let hc = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_KILL".to_string(),
+                        args: vec![hc],
+                        line,
+                    }));
+                }
+                // CONTROL SET CHECK hCtrl, state
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="CHECK")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hc = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let st = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_CHECK".to_string(),
+                        args: vec![hc, st],
+                        line,
+                    }));
+                } // DIALOG MENU hDlg, hMenu
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="MENU")
                 {
@@ -6542,8 +6656,14 @@ impl Parser {
                 }
                 // Check for leftover tokens (syntax error like MSGBOX "text"hgkugyj)
                 if !matches!(self.peek(), Token::Eol | Token::Eof | Token::Colon) {
+                    let loc = self.peek_located();
                     let leftover = format!("Unexpected token after arguments: {:?}", self.peek());
-                    return Err(PbError::parser(leftover, None, line));
+                    return Err(PbError::parser_at(
+                        leftover,
+                        loc.file.as_deref(),
+                        loc.line,
+                        loc.col,
+                    ));
                 }
                 self.consume_to_eol();
                 Ok(Statement::Call(CallStmt {

@@ -49,6 +49,16 @@ impl PbError {
         }
     }
 
+    pub fn parser_at(msg: impl Into<String>, file: Option<&str>, line: usize, col: usize) -> Self {
+        PbError {
+            kind: ErrorKind::Parser,
+            message: msg.into(),
+            file: file.map(|s| s.to_string()),
+            line: Some(line),
+            col: Some(col),
+        }
+    }
+
     pub fn runtime(msg: impl Into<String>) -> Self {
         PbError {
             kind: ErrorKind::Runtime,

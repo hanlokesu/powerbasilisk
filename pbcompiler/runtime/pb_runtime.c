@@ -6096,6 +6096,9 @@ void pb_dialog_center(void* hDlg) {
 void pb_combobox_add(void* hCombo, const char* text) {
     SendMessageA(hCombo, 0x143, 0, (pb_lparam_t)text);
 }
+void pb_control_addstring(void* hCtrl, const char* text) {
+    SendMessageA(hCtrl, 0x0143 /* CB_ADDSTRING */, 0, (pb_lparam_t)text);
+}
 void pb_listbox_add(void* hList, const char* text) {
     SendMessageA(hList, 0x180, 0, (pb_lparam_t)text);
 }
@@ -6229,4 +6232,56 @@ void* pb_control_add_hscrollbar(void* parent, long id, int x, int y, int w, int 
                             (void*)(long long)id, GetModuleHandleA(0), 0);
     SendMessageA(hbar, 0x00F4 /* SBM_SETRANGE32 */, 0, 100);
     return hbar;
+}
+
+/* Additional Win32 declarations */
+__declspec(dllimport) long __stdcall PeekMessageA(void*, void*, unsigned long, unsigned long, unsigned long);
+__declspec(dllimport) int __stdcall GetClientRect(void*, void*);
+__declspec(dllimport) int __stdcall SetWindowPos(void*, void*, int, int, int, int, unsigned int);
+typedef struct { long left; long top; long right; long bottom; } RECT;
+
+/* DIALOG DOEVENTS - process pending messages non-blocking */
+void pb_dialog_doevents(void) {
+    pb_msg_t msg;
+    while (PeekMessageA(&msg, 0, 0, 0, 1 /* PM_REMOVE */)) {
+        if (msg.message == 0x0012 /* WM_QUIT */) {
+            PostQuitMessage(0);
+            break;
+        }
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+}
+
+/* DIALOG GET TEXT hDlg TO var$ */
+void pb_dialog_get_text(void* hDlg, char* buf, long bufsize) {
+    GetWindowTextA(hDlg, buf, (int)bufsize);
+}
+
+/* CONTROL KILL hCtrl - destroy a control */
+void pb_control_kill(void* hctrl) {
+    if (hctrl) DestroyWindow(hctrl);
+}
+
+/* DIALOG SHOW STATE: nCmdShow=1 normal, 2 min, 3 max */
+void pb_dialog_show_state(void* hDlg, int nCmdShow) {
+    ShowWindow(hDlg, nCmdShow);
+}
+
+/* CONTROL SET CHECK hCtrl, state */
+void pb_control_set_check(void* hctrl, int state) {
+    SendMessageA(hctrl, 0x00F1 /* BM_SETCHECK */, (unsigned long long)state, 0);
+}
+
+/* DIALOG GET SIZE */
+void pb_dialog_get_size(void* hDlg, long long* pw, long long* ph) {
+    RECT rc;
+    GetClientRect(hDlg, &rc);
+    if (pw) *pw = rc.right - rc.left;
+    if (ph) *ph = rc.bottom - rc.top;
+}
+
+/* DIALOG SET SIZE */
+void pb_dialog_set_size(void* hDlg, long long w, long long h) {
+    SetWindowPos(hDlg, 0, 0, 0, (int)w, (int)h, 0x0040);
 }
