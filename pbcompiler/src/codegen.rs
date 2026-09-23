@@ -1722,17 +1722,78 @@ impl Compiler {
             .declare_function("pb_control_uncheck", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_control_get_check", &IrType::I64, &[IrType::Ptr], false);
-        self.module.declare_function("pb_progressbar_set_range", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_set_pos", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_set_step", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_step", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_get_pos", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_get_lo", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
-        self.module.declare_function("pb_progressbar_get_hi", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
-        self.module.declare_function("pb_header_send", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_header_get_count", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
-        self.module.declare_function("pb_header_get_item", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
-        self.module.declare_function("pb_header_set_item", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
+        self.module.declare_function(
+            "pb_progressbar_set_range",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_set_pos",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_set_step",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_step",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_get_pos",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_get_lo",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_progressbar_get_hi",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_header_send",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+                IrType::I64,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_header_get_count",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_header_get_item",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_header_set_item",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
         self.module.declare_function(
             "pb_control_add_scrollbar",
             &IrType::Ptr,
@@ -3217,6 +3278,10 @@ impl Compiler {
             .declare_function("pb_mouseptr", &IrType::I32, &[IrType::I32], false);
         self.module
             .declare_function("pb_ucodepage", &IrType::I32, &[IrType::I32], false);
+        self.module
+            .declare_function("pb_ucode", &IrType::Ptr, &[IrType::Ptr, IrType::I32], false);
+        self.module
+            .declare_function("pb_acode", &IrType::Ptr, &[IrType::Ptr, IrType::I32], false);
         self.module
             .declare_function("pb_isinfinite", &IrType::I32, &[IrType::Double], false);
         self.module
@@ -12436,11 +12501,12 @@ impl Compiler {
                 Some(Ok(fb.const_i32(1)))
             }
             "ACODE" => {
-                // ACODE$(unicodestr [, codepage]) — convert Unicode to ANSI
-                // We only support ANSI strings, so return the input as-is
-                let s = self.compile_expr(fb, &args[0]);
-                Some(s)
+                Some(self.builtin_code_page(fb, args, "pb_acode", "ACODE$ requires 1 argument"))
             }
+            "UCODE" => {
+                Some(self.builtin_code_page(fb, args, "pb_ucode", "UCODE$ requires 1 argument"))
+            }
+            "METRICS" => Some(self.builtin_metrics(fb, args)),
             "FUNCNAME" => {
                 // FUNCNAME$ — returns the name of the current Sub/Function
                 let name = self.current_fn_name.clone().unwrap_or_default();
@@ -14110,6 +14176,40 @@ impl Compiler {
         let offset = fb.sub(&len, &n_i32);
         let src = fb.gep_byte(&s, &offset);
         Ok(fb.call(&IrType::Ptr, "pb_bstr_alloc", &[src, n_i32]))
+    }
+
+    /// UCODE$ / ACODE$ - the legacy ANSI <-> UNICODE byte-string pair.
+    /// Both take (string [, codepage]); an omitted codepage is passed as -1 so the
+    /// runtime falls back to the value recorded by UCODEPAGE (system ANSI by default).
+    fn builtin_code_page(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        args: &[Expr],
+        rt: &str,
+        missing: &str,
+    ) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime(missing));
+        }
+        let s = self.compile_expr(fb, &args[0])?;
+        let cp = if args.len() >= 2 {
+            let cv = self.compile_expr(fb, &args[1])?;
+            self.to_i32(fb, &cv)
+        } else {
+            fb.const_i32(-1)
+        };
+        Ok(fb.call(&IrType::Ptr, rt, &[s, cp]))
+    }
+
+    /// METRICS(metric) - Win32 GetSystemMetrics.  All dimensions are in pixels.
+    /// Dotted metric names were already folded into integer literals by the parser.
+    fn builtin_metrics(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {
+        if args.is_empty() {
+            return Err(PbError::runtime("METRICS requires 1 argument"));
+        }
+        let v = self.compile_expr(fb, &args[0])?;
+        let idx = self.to_i32(fb, &v);
+        Ok(fb.call(&IrType::I32, "GetSystemMetrics", &[idx]))
     }
 
     fn builtin_mid(&mut self, fb: &mut FunctionBuilder, args: &[Expr]) -> PbResult<Val> {

@@ -979,6 +979,58 @@ long pb_ucodepage(long cp) {
     return old;
 }
 
+/* UCODE$ / ACODE$ - the legacy byte-string ANSI <-> UNICODE pair.
+ * UCODE$ takes ANSI bytes and returns the WIDE UNICODE bytes inside a byte
+ * string, so the byte count doubles while the character count is unchanged.
+ * ACODE$ is the exact inverse.  A codepage of -1 means "use the codepage
+ * recorded by UCODEPAGE"; CP_ACP(0) and CP_OEMCP(1) are already valid Win32
+ * codepage constants, so the recorded value needs no translation.
+ * Lengths come from the BSTR prefix, not strlen: UTF-16LE ASCII has a 0x00
+ * second byte, so strlen would stop after the first character. */
+char* pb_ucode(const char* ansi, int codepage) {
+    int cp = codepage;
+    int alen, need, got;
+    short* wbuf;
+    char* out;
+    if (!ansi) ansi = "";
+    if (cp < 0) cp = (int)pb_ucodepage_cur;
+    alen = pb_str_len(ansi);
+    if (alen <= 0) return pb_bstr_alloc("", 0);
+    need = MultiByteToWideChar((unsigned int)cp, 0, ansi, alen, NULL, 0);
+    if (need <= 0) return pb_bstr_alloc("", 0);
+    wbuf = (short*)malloc(sizeof(short) * need);
+    if (!wbuf) return pb_bstr_alloc("", 0);
+    got = MultiByteToWideChar((unsigned int)cp, 0, ansi, alen, wbuf, need);
+    if (got <= 0) { free(wbuf); return pb_bstr_alloc("", 0); }
+    out = pb_bstr_alloc((const char*)wbuf,
+                        (unsigned int)(sizeof(short) * got));
+    free(wbuf);
+    return out;
+}
+
+char* pb_acode(const char* wide, int codepage) {
+    int cp = codepage;
+    int wchars, need, got;
+    char* buf;
+    char* out;
+    if (!wide) wide = "";
+    if (cp < 0) cp = (int)pb_ucodepage_cur;
+    /* two bytes per wide character */
+    wchars = pb_str_len(wide) / 2;
+    if (wchars <= 0) return pb_bstr_alloc("", 0);
+    need = WideCharToMultiByte((unsigned int)cp, 0, (const short*)wide, wchars,
+                               NULL, 0, NULL, NULL);
+    if (need <= 0) return pb_bstr_alloc("", 0);
+    buf = (char*)malloc(need + 1);
+    if (!buf) return pb_bstr_alloc("", 0);
+    got = WideCharToMultiByte((unsigned int)cp, 0, (const short*)wide, wchars,
+                              buf, need, NULL, NULL);
+    if (got < 0) got = 0;
+    out = pb_bstr_alloc(buf, (unsigned int)got);
+    free(buf);
+    return out;
+}
+
 /* Public BSTR free wrapper � called from LLVM IR codegen (cdecl) */
 void pb_bstr_free(char* bstr) {
 #ifdef _WIN32

@@ -295,11 +295,11 @@ impl Parser {
                 Ok(None)
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("METHOD") => {
-            // METHOD name [([args])] — treat as SUB (simplified OOP method).
-            // parse_sub_decl() consumes the leading keyword itself, so advancing
-            // here would swallow the method name (batch 159 fix).
-            let sd = self.parse_sub_decl()?;
-            Ok(Some(TopLevel::SubDecl(sd)))
+                // METHOD name [([args])] — treat as SUB (simplified OOP method).
+                // parse_sub_decl() consumes the leading keyword itself, so advancing
+                // here would swallow the method name (batch 159 fix).
+                let sd = self.parse_sub_decl()?;
+                Ok(Some(TopLevel::SubDecl(sd)))
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("INTERFACE") => {
                 // INTERFACE Name [DIRECT|IDBIND] ... END INTERFACE — OOP interface block (skip)
@@ -4356,18 +4356,18 @@ impl Parser {
                         } else {
                             let k2 = self.peek_plain_upper();
                             if k2 == "POPUP" || k2 == "STRING" {
+                                self.advance();
+                                kind = k2;
+                            }
+                        }
+                        // Official PB syntax separates the sub-keyword from the first argument
+                        // with a comma:  MENU ADD STRING, hMenu, txt$, id&, state&  and
+                        // MENU ADD POPUP, hMenu, txt$, hPopup, state&.
+                        // Accept it (and the comma-less form) alike.
+                        if matches!(self.peek(), Token::Comma) {
                             self.advance();
-                            kind = k2;
-                            }
-                            }
-                            // Official PB syntax separates the sub-keyword from the first argument
-                            // with a comma:  MENU ADD STRING, hMenu, txt$, id&, state&  and
-                            // MENU ADD POPUP, hMenu, txt$, hPopup, state&.
-                            // Accept it (and the comma-less form) alike.
-                            if matches!(self.peek(), Token::Comma) {
-                            self.advance();
-                            }
-                            let mut args = Vec::new();
+                        }
+                        let mut args = Vec::new();
                         // First arg: hMenu (before first comma)
                         if !self.at_eol_or_eof() {
                             args.push(self.parse_expression()?);
@@ -9081,6 +9081,30 @@ impl Parser {
                 }
             }
         }
+        // METRICS(Scroll.Horz) - the official metric names are dotted identifiers
+        // (Frame.Fixed.X has three segments).  Fold them to integer literals so the
+        // argument parses at all; a plain numeric expression is accepted as well.
+        if let Token::Identifier(w) = self.peek() {
+            let mut parts = vec![w.clone()];
+            let mut used = 1usize;
+            while parts.len() < 3 && self.peek_at(used) == Some(&Token::Dot) {
+                match self.peek_at(used + 1) {
+                    Some(Token::Identifier(next)) => {
+                        parts.push(next.clone());
+                        used += 2;
+                    }
+                    _ => break,
+                }
+            }
+            if parts.len() >= 2 {
+                if let Some(idx) = metric_index(&parts) {
+                    for _ in 0..used {
+                        self.advance();
+                    }
+                    return Ok(Expr::IntegerLit(idx));
+                }
+            }
+        }
         match self.peek().clone() {
             Token::IntegerLiteral(n) => {
                 self.advance();
@@ -9363,6 +9387,14 @@ impl Parser {
                     self.expect(&Token::RParen)?;
                     // Determine if this is a function call or array access
                     // We can't tell at parse time — interpreter will resolve
+                    // METRICS also accepts the single-word metric names
+                    // (Caption, Menubar) as bare identifiers; fold those to
+                    // their SM_ index here, where the callee name is known.
+                    let args = if name.eq_ignore_ascii_case("METRICS") {
+                        args.into_iter().map(fold_metric_name).collect()
+                    } else {
+                        args
+                    };
                     Expr::FunctionCall(name, args)
                 } else if name.eq_ignore_ascii_case("DATACOUNT")
                     || name.eq_ignore_ascii_case("THREADCOUNT")
@@ -9530,4 +9562,51 @@ fn subst_def_params(e: &Expr, params: &[String], args: &[Expr]) -> Expr {
         Expr::ByvalOverride(x) => Expr::ByvalOverride(Box::new(subst_def_params(x, params, args))),
         _ => e.clone(),
     }
+}
+/// Win32 `GetSystemMetrics` index for an official PowerBASIC `METRICS` metric
+/// name.  Dotted names arrive as several segments (`Scroll.Horz`,
+/// `Frame.Fixed.X`); the two single-word names (`Caption`, `Menubar`) arrive as
+/// one.  Every index below was read out of the Windows SDK `WinUser.h`
+/// (10.0.26100.0), including the aliases SM_CXFIXEDFRAME -> SM_CXDLGFRAME and
+/// SM_CXSIZEFRAME -> SM_CXFRAME.
+fn metric_index(parts: &[String]) -> Option<i64> {
+    let key = parts
+        .iter()
+        .map(|p| p.to_ascii_uppercase())
+        .collect::<Vec<_>>()
+        .join(".");
+    Some(match key.as_str() {
+        "BORDER.X" => 5,        // SM_CXBORDER
+        "BORDER.Y" => 6,        // SM_CYBORDER
+        "CAPTION" => 4,         // SM_CYCAPTION
+        "EDGE.X" => 45,         // SM_CXEDGE
+        "EDGE.Y" => 46,         // SM_CYEDGE
+        "FRAME.FIXED.X" => 7,   // SM_CXFIXEDFRAME = SM_CXDLGFRAME
+        "FRAME.FIXED.Y" => 8,   // SM_CYFIXEDFRAME = SM_CYDLGFRAME
+        "FRAME.RESIZE.X" => 32, // SM_CXSIZEFRAME = SM_CXFRAME
+        "FRAME.RESIZE.Y" => 33, // SM_CYSIZEFRAME = SM_CYFRAME
+        "ICON.X" => 11,         // SM_CXICON
+        "ICON.Y" => 12,         // SM_CYICON
+        "ICONSPACE.X" => 38,    // SM_CXICONSPACING
+        "ICONSPACE.Y" => 39,    // SM_CYICONSPACING
+        "MAXIMIZED.X" => 61,    // SM_CXMAXIMIZED
+        "MAXIMIZED.Y" => 62,    // SM_CYMAXIMIZED
+        "MENUBAR" => 15,        // SM_CYMENU
+        "MINIMUM.X" => 28,      // SM_CXMIN
+        "MINIMUM.Y" => 29,      // SM_CYMIN
+        "SCROLL.HORZ" => 3,     // SM_CYHSCROLL
+        "SCROLL.VERT" => 2,     // SM_CXVSCROLL
+        _ => return None,
+    })
+}
+
+/// `METRICS(Caption)` reaches the call site as a variable reference; turn a bare
+/// metric name into its index so codegen only ever sees an integer literal.
+fn fold_metric_name(e: Expr) -> Expr {
+    if let Expr::Variable(n) = &e {
+        if let Some(idx) = metric_index(std::slice::from_ref(n)) {
+            return Expr::IntegerLit(idx);
+        }
+    }
+    e
 }
