@@ -1760,6 +1760,145 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_control_add_listview",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_treeview",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_insert_column",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_insert_item",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_count",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_text",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_text",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_delete_item",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_reset",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_insert_item",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_get_count",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_get_text",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_delete",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_reset",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
             "pb_progress_set_range",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32, IrType::I32],
@@ -8054,6 +8193,258 @@ impl Compiler {
                         let hc_i = fb.ptrtoint64(&hc);
                         fb.store(&hc_i, &ptr);
                     }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_LISTVIEW" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_listview",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_TREEVIEW" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_treeview",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_INSERT_COLUMN" => {
+                if call.args.len() >= 6 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let width = self.compile_expr(fb, &call.args[4])?;
+                    let fmt = self.compile_expr(fb, &call.args[5])?;
+                    fb.call_void(
+                        "pb_listview_insert_column",
+                        &[hd, id, col, text, width, fmt],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTVIEW_INSERT_ITEM" => {
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let image = self.compile_expr(fb, &call.args[3])?;
+                    let text = self.compile_str_payload(fb, &call.args[4])?;
+                    fb.call_void("pb_listview_insert_item", &[hd, id, item, image, text]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_COUNT" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let n = fb.call(&IrType::I64, "pb_listview_get_count", &[hd, id]);
+                    let n32 = fb.trunc(&n, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&n32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_TEXT" => {
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let col = self.compile_expr(fb, &call.args[3])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_listview_get_text",
+                        &[hd, id, item, col, bp.clone(), fb.const_i32(256)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_TEXT" => {
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let col = self.compile_expr(fb, &call.args[3])?;
+                    let text = self.compile_str_payload(fb, &call.args[4])?;
+                    fb.call_void("pb_listview_set_text", &[hd, id, item, col, text]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_DELETE_ITEM" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_delete_item", &[hd, id, item]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_RESET" => {
+                if call.args.len() >= 2 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_listview_reset", &[hd, id]);
+                }
+                return Ok(());
+            }
+            "TREEVIEW_INSERT_ITEM" => {
+                if call.args.len() >= 8 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hparent = self.compile_expr(fb, &call.args[2])?;
+                    if hparent.ty != IrType::Ptr {
+                        hparent = fb.inttoptr(&hparent);
+                    }
+                    let mut hafter = self.compile_expr(fb, &call.args[3])?;
+                    if hafter.ty != IrType::Ptr {
+                        hafter = fb.inttoptr(&hafter);
+                    }
+                    let image = self.compile_expr(fb, &call.args[4])?;
+                    let simage = self.compile_expr(fb, &call.args[5])?;
+                    let text = self.compile_str_payload(fb, &call.args[6])?;
+                    let outp = fb.alloca(&IrType::Ptr);
+                    fb.call_void(
+                        "pb_treeview_insert_item",
+                        &[hd, id, hparent, hafter, image, simage, text, outp.clone()],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[7]) {
+                        let rv = fb.load(&IrType::Ptr, &outp);
+                        let rv_i = fb.ptrtoint64(&rv);
+                        fb.store(&rv_i, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TREEVIEW_GET_COUNT" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let n = fb.call(&IrType::I64, "pb_treeview_get_count", &[hd, id]);
+                    let n32 = fb.trunc(&n, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&n32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TREEVIEW_GET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hitem = self.compile_expr(fb, &call.args[2])?;
+                    if hitem.ty != IrType::Ptr {
+                        hitem = fb.inttoptr(&hitem);
+                    }
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_treeview_get_text",
+                        &[hd, id, hitem, bp.clone(), fb.const_i32(256)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TREEVIEW_DELETE" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hitem = self.compile_expr(fb, &call.args[2])?;
+                    if hitem.ty != IrType::Ptr {
+                        hitem = fb.inttoptr(&hitem);
+                    }
+                    fb.call_void("pb_treeview_delete", &[hd, id, hitem]);
+                }
+                return Ok(());
+            }
+            "TREEVIEW_RESET" => {
+                if call.args.len() >= 2 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_treeview_reset", &[hd, id]);
                 }
                 return Ok(());
             }

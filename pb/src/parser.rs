@@ -1463,6 +1463,285 @@ impl Parser {
         items
     }
 
+    /// LISTVIEW <sub-command> ...  -- batch 158 (common control, Tier-3 DDT GUI)
+    ///
+    /// Syntax per the official PowerBASIC documentation. Sub-commands
+    /// implemented here:
+    ///   LISTVIEW RESET          hDlg, id&
+    ///   LISTVIEW GET COUNT      hDlg, id& TO datav&
+    ///   LISTVIEW GET TEXT       hDlg, id&, item&, col& TO txtv$
+    ///   LISTVIEW SET TEXT       hDlg, id&, item&, col&, StrExpr
+    ///   LISTVIEW INSERT COLUMN  hDlg, id&, col&, StrExpr, ColWidth&, format&
+    ///   LISTVIEW INSERT ITEM    hDlg, id&, item&, image&, StrExpr
+    ///   LISTVIEW DELETE ITEM    hDlg, id&, item&
+    fn parse_listview_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume LISTVIEW
+        let sub = self.peek_plain_upper();
+        match sub.as_str() {
+            "RESET" => {
+                self.advance();
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "LISTVIEW_RESET".to_string(),
+                    args: vec![h, id],
+                    line,
+                }))
+            }
+            "GET" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "COUNT" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    if self.peek() == &Token::To {
+                        self.advance();
+                    }
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_GET_COUNT".to_string(),
+                        args: vec![h, id, target],
+                        line,
+                    }));
+                }
+                if what == "TEXT" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let item = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let col = self.parse_expression()?;
+                    if self.peek() == &Token::To {
+                        self.advance();
+                    }
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_GET_TEXT".to_string(),
+                        args: vec![h, id, item, col, target],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("LISTVIEW GET".to_string(), line))
+            }
+            "SET" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "TEXT" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let item = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let col = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_SET_TEXT".to_string(),
+                        args: vec![h, id, item, col, text],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("LISTVIEW SET".to_string(), line))
+            }
+            "INSERT" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "COLUMN" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let col = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let width = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let fmt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_INSERT_COLUMN".to_string(),
+                        args: vec![h, id, col, text, width, fmt],
+                        line,
+                    }));
+                }
+                if what == "ITEM" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let item = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_INSERT_ITEM".to_string(),
+                        args: vec![h, id, item, image, text],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("LISTVIEW INSERT".to_string(), line))
+            }
+            "DELETE" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "ITEM" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let item = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "LISTVIEW_DELETE_ITEM".to_string(),
+                        args: vec![h, id, item],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("LISTVIEW DELETE".to_string(), line))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop("LISTVIEW".to_string(), line))
+            }
+        }
+    }
+
+    /// TREEVIEW <sub-command> ...  -- batch 158 (common control, Tier-3 DDT GUI)
+    ///
+    /// Syntax per the official PowerBASIC documentation. Sub-commands
+    /// implemented here:
+    ///   TREEVIEW RESET        hDlg, id&
+    ///   TREEVIEW GET COUNT    hDlg, id& TO datav&
+    ///   TREEVIEW GET TEXT     hDlg, id&, hItem TO txtv$
+    ///   TREEVIEW INSERT ITEM  hDlg, id&, hPrnt, hIAftr, image&, simage&, txt$ TO hItem
+    ///   TREEVIEW DELETE       hDlg, id&, hItem
+    fn parse_treeview_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // consume TREEVIEW
+        let sub = self.peek_plain_upper();
+        match sub.as_str() {
+            "RESET" => {
+                self.advance();
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TREEVIEW_RESET".to_string(),
+                    args: vec![h, id],
+                    line,
+                }))
+            }
+            "GET" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "COUNT" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    if self.peek() == &Token::To {
+                        self.advance();
+                    }
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "TREEVIEW_GET_COUNT".to_string(),
+                        args: vec![h, id, target],
+                        line,
+                    }));
+                }
+                if what == "TEXT" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let item = self.parse_expression()?;
+                    if self.peek() == &Token::To {
+                        self.advance();
+                    }
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "TREEVIEW_GET_TEXT".to_string(),
+                        args: vec![h, id, item, target],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("TREEVIEW GET".to_string(), line))
+            }
+            "INSERT" => {
+                self.advance();
+                let what = self.peek_plain_upper();
+                self.advance();
+                if what == "ITEM" {
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hparent = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hafter = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let simage = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    if self.peek() == &Token::To {
+                        self.advance();
+                    }
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "TREEVIEW_INSERT_ITEM".to_string(),
+                        args: vec![h, id, hparent, hafter, image, simage, text, target],
+                        line,
+                    }));
+                }
+                self.consume_to_eol();
+                Ok(Statement::Noop("TREEVIEW INSERT".to_string(), line))
+            }
+            "DELETE" => {
+                self.advance();
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let item = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TREEVIEW_DELETE".to_string(),
+                    args: vec![h, id, item],
+                    line,
+                }))
+            }
+            _ => {
+                self.consume_to_eol();
+                Ok(Statement::Noop("TREEVIEW".to_string(), line))
+            }
+        }
+    }
+
     fn parse_statement(&mut self) -> PbResult<Statement> {
         self.skip_eol();
         let line = self.current_line();
@@ -5290,6 +5569,15 @@ impl Parser {
                         line,
                     }));
                 }
+
+                // LISTVIEW <sub-command> ...  (batch 158)
+                if name_upper == "LISTVIEW" {
+                    return self.parse_listview_statement(line);
+                }
+                // TREEVIEW <sub-command> ...  (batch 158)
+                if name_upper == "TREEVIEW" {
+                    return self.parse_treeview_statement(line);
+                }
                 // CONTROL ADD CHECKBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
@@ -5447,6 +5735,64 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_PROGRESSBAR".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD LISTVIEW, hWnd, id, x, y, w, h TO hCtrl&  (batch 158)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LISTVIEW")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_LISTVIEW".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD TREEVIEW, hWnd, id, x, y, w, h TO hCtrl&  (batch 158)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TREEVIEW")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_TREEVIEW".to_string(),
                         args: vec![hwnd, id, x, y, w, h, target],
                         line,
                     }));

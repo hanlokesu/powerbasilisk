@@ -2640,7 +2640,7 @@ int pb_get_wstring(int f, long long count, char** dest) {
         WideCharToMultiByte(PB_CP_ACP, 0, (const short*)buf, (int)wchars,
                             out, ansi_len, NULL, NULL);
     }
-    out[ansi_len] = '\\0';
+    out[ansi_len] = '\0';
     *dest = pb_bstr_alloc(out, (unsigned int)ansi_len);
     free(out);
     free(buf);
@@ -6002,7 +6002,6 @@ typedef struct {
 } pb_msg_t;
 
 void* pb_window_new(const char* title, int x, int y, int w, int h) {
-    { FILE* f = fopen("pb_debug.txt", "a"); if (f) { fprintf(f, "pb_window_new title=%s\n", title ? title : "(null)"); fclose(f); } }
     __declspec(dllimport) void __stdcall InitCommonControls(void); InitCommonControls();
     static int registered = 0;
     if (!registered) {
@@ -6284,4 +6283,315 @@ void pb_dialog_get_size(void* hDlg, long long* pw, long long* ph) {
 /* DIALOG SET SIZE */
 void pb_dialog_set_size(void* hDlg, long long w, long long h) {
     SetWindowPos(hDlg, 0, 0, 0, (int)w, (int)h, 0x0040);
+}
+
+/* ===================================================================
+   Batch 158 - LISTVIEW + TREEVIEW common controls
+   -------------------------------------------------------------------
+   Every message constant below was read out of the authoritative local
+   PowerBASIC include file:  C:\PBWin10\WinAPI\commctrl.inc
+   (not from memory).  Struct layouts are the documented x64 layouts.
+   =================================================================== */
+
+/* InitCommonControlsEx - registers the common control window classes.
+   The legacy InitCommonControls() only registers a few classes, so the
+   LISTVIEW / TREEVIEW classes must be requested explicitly. */
+typedef struct { unsigned long dwSize; unsigned long dwICC; } PB_ICC;
+__declspec(dllimport) int __stdcall InitCommonControlsEx(const PB_ICC*);
+
+#define PB_ICC_LISTVIEW_CLASSES 0x00000001
+#define PB_ICC_TREEVIEW_CLASSES 0x00000002
+#define PB_ICC_BAR_CLASSES      0x00000004
+
+static void pb_icc(unsigned long flags) {
+    PB_ICC icc;
+    icc.dwSize = (unsigned long)sizeof(icc);
+    icc.dwICC  = flags;
+    InitCommonControlsEx(&icc);
+}
+
+/* ---- ListView messages (commctrl.inc: LVM_FIRST = &H1000) ---- */
+#define PB_LVM_FIRST                  0x1000
+#define PB_LVM_GETITEMCOUNT           (PB_LVM_FIRST + 4)   /* 0x1004 */
+#define PB_LVM_INSERTITEMA            (PB_LVM_FIRST + 7)   /* 0x1007 */
+#define PB_LVM_DELETEITEM             (PB_LVM_FIRST + 8)   /* 0x1008 */
+#define PB_LVM_DELETEALLITEMS         (PB_LVM_FIRST + 9)   /* 0x1009 */
+#define PB_LVM_INSERTCOLUMNA          (PB_LVM_FIRST + 27)  /* 0x101B */
+#define PB_LVM_GETITEMTEXTA           (PB_LVM_FIRST + 45)  /* 0x102D */
+#define PB_LVM_SETITEMTEXTA           (PB_LVM_FIRST + 46)  /* 0x102E */
+#define PB_LVM_SETEXTENDEDLISTVIEWSTYLE (PB_LVM_FIRST + 54) /* 0x1036 */
+
+#define PB_LVIF_TEXT   0x0001
+#define PB_LVIF_IMAGE  0x0002
+#define PB_LVCF_FMT    0x0001
+#define PB_LVCF_WIDTH  0x0002
+#define PB_LVCF_TEXT   0x0004
+#define PB_LVCF_SUBITEM 0x0008
+#define PB_LVS_EX_FULLROWSELECT 0x20
+
+/* ---- TreeView messages (commctrl.inc: TV_FIRST = &H1100) ---- */
+#define PB_TV_FIRST          0x1100
+#define PB_TVM_INSERTITEMA   (PB_TV_FIRST + 0)   /* 0x1100 */
+#define PB_TVM_DELETEITEM    (PB_TV_FIRST + 1)   /* 0x1101 */
+#define PB_TVM_GETCOUNT      (PB_TV_FIRST + 5)   /* 0x1105 */
+#define PB_TVM_GETITEMA      (PB_TV_FIRST + 12)  /* 0x110C */
+
+#define PB_TVIF_TEXT           0x0001
+#define PB_TVIF_IMAGE          0x0002
+#define PB_TVIF_SELECTEDIMAGE  0x0020
+
+/* TreeView special handles. commctrl.inc declares these as
+   %TVI_ROOT = &HFFFF0000, i.e. (HTREEITEM)(LONG_PTR)-0x10000.
+   On x64 a handle is 64-bit, so the value must be SIGN-extended to
+   0xFFFFFFFFFFFF0000 - a zero-extended 0xFFFF0000 would not match. */
+#define PB_TVI_ROOT ((void*)(long long)(-0x10000))  /* -65536  */
+#define PB_TVI_LAST ((void*)(long long)(-0x0FFFE))  /* -65534  */
+
+/* Convenience: a caller that passes 0 for the parent/after slot means
+   "root level" / "append as last child" respectively. A caller that
+   passes the documented 0xFFFF0000 / 0xFFFFFFFE literals is mapped too. */
+static void* pb_tv_parent(void* v) {
+    unsigned long long u = (unsigned long long)v;
+    if (u == 0ULL || u == 0xFFFF0000ULL) return PB_TVI_ROOT;
+    return v;
+}
+static void* pb_tv_after(void* v) {
+    unsigned long long u = (unsigned long long)v;
+    if (u == 0ULL || u == 0xFFFFFFFEULL) return PB_TVI_LAST;
+    return v;
+}
+
+/* x64 LVCOLUMNA. Offsets: mask 0, fmt 4, cx 8, pszText 16,
+   cchTextMax 24, iSubItem 28, iImage 32, iOrder 36,
+   cxMin 40, cxDefault 44, cxIdeal 48 (size 56). */
+typedef struct {
+    unsigned int  mask;
+    int           fmt;
+    int           cx;
+    const char*   pszText;
+    int           cchTextMax;
+    int           iSubItem;
+    int           iImage;
+    int           iOrder;
+    int           cxMin;
+    int           cxDefault;
+    int           cxIdeal;
+} PB_LVCOLUMN;
+
+/* x64 LVITEMA. Offsets: mask 0, iItem 4, iSubItem 8, state 12,
+   stateMask 16, pszText 24, cchTextMax 32, iImage 36, lParam 40,
+   iIndent 48, iGroupId 52, cColumns 56, puColumns 64,
+   piColFmt 72, iGroup 80 (size 88). */
+typedef struct {
+    unsigned int  mask;
+    int           iItem;
+    int           iSubItem;
+    unsigned int  state;
+    unsigned int  stateMask;
+    const char*   pszText;
+    int           cchTextMax;
+    int           iImage;
+    long long     lParam;
+    int           iIndent;
+    int           iGroupId;
+    unsigned int  cColumns;
+    unsigned int* puColumns;
+    int*          piColFmt;
+    int           iGroup;
+} PB_LVITEM;
+
+/* x64 TVITEMA. Offsets: mask 0, hItem 8, state 16, stateMask 20,
+   pszText 24, cchTextMax 32, iImage 36, iSelectedImage 40,
+   cChildren 44, lParam 48 (size 56). */
+typedef struct {
+    unsigned int  mask;
+    void*         hItem;
+    unsigned int  state;
+    unsigned int  stateMask;
+    const char*   pszText;
+    int           cchTextMax;
+    int           iImage;
+    int           iSelectedImage;
+    int           cChildren;
+    long long     lParam;
+} PB_TVITEM;
+
+typedef struct {
+    void*      hParent;
+    void*      hInsertAfter;
+    PB_TVITEM  item;
+} PB_TVINSERTSTRUCT;
+
+/* ---------------- CONTROL ADD LISTVIEW ---------------- */
+void* pb_control_add_listview(void* parent, long id, int x, int y, int w, int ht) {
+    /* LVS_REPORT=1 | LVS_SHOWSELALWAYS=8 | WS_CHILD=0x40000000 |
+       WS_VISIBLE=0x10000000 | WS_BORDER=0x00800000 | WS_TABSTOP=0x00010000 */
+    unsigned long style = 0x1 | 0x8 | 0x40000000 | 0x10000000 | 0x00800000 | 0x00010000;
+    void* h;
+    pb_icc(PB_ICC_LISTVIEW_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    h = CreateWindowExA(0x00000200 /* WS_EX_CLIENTEDGE */, "SysListView32", "",
+                        style, x, y, w, ht, parent,
+                        (void*)(long long)id, GetModuleHandleA(0), 0);
+    if (h) {
+        SendMessageA(h, PB_LVM_SETEXTENDEDLISTVIEWSTYLE,
+                     PB_LVS_EX_FULLROWSELECT, PB_LVS_EX_FULLROWSELECT);
+    }
+    return h;
+}
+
+/* ---------------- CONTROL ADD TREEVIEW ---------------- */
+void* pb_control_add_treeview(void* parent, long id, int x, int y, int w, int ht) {
+    /* TVS_HASBUTTONS=1 | TVS_HASLINES=2 | TVS_LINESATROOT=4 |
+       TVS_SHOWSELALWAYS=0x20 | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP */
+    unsigned long style = 0x1 | 0x2 | 0x4 | 0x20
+                        | 0x40000000 | 0x10000000 | 0x00800000 | 0x00010000;
+    pb_icc(PB_ICC_TREEVIEW_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    return CreateWindowExA(0x00000200 /* WS_EX_CLIENTEDGE */, "SysTreeView32", "",
+                           style, x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* ---------------- LISTVIEW INSERT COLUMN ---------------- */
+void pb_listview_insert_column(void* hDlg, long id, int col, const char* text,
+                               int width, int fmt) {
+    PB_LVCOLUMN c;
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&c, 0, sizeof(c));
+    c.mask     = PB_LVCF_FMT | PB_LVCF_WIDTH | PB_LVCF_TEXT | PB_LVCF_SUBITEM;
+    c.fmt      = fmt;
+    c.cx       = width;
+    c.pszText  = (const char*)text;
+    c.iSubItem = col;
+    SendMessageA(h, PB_LVM_INSERTCOLUMNA, (unsigned int)col, (pb_lparam_t)&c);
+}
+
+/* ---------------- LISTVIEW INSERT ITEM ---------------- */
+void pb_listview_insert_item(void* hDlg, long id, int item, int image,
+                             const char* text) {
+    PB_LVITEM it;
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask     = PB_LVIF_TEXT | PB_LVIF_IMAGE;
+    it.iItem    = item;
+    it.iSubItem = 0;
+    it.pszText  = (const char*)text;
+    it.iImage   = image;
+    SendMessageA(h, PB_LVM_INSERTITEMA, 0, (pb_lparam_t)&it);
+}
+
+/* ---------------- LISTVIEW GET COUNT ---------------- */
+long long pb_listview_get_count(void* hDlg, long id) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h, PB_LVM_GETITEMCOUNT, 0, 0);
+}
+
+/* ---------------- LISTVIEW GET TEXT ---------------- */
+void pb_listview_get_text(void* hDlg, long id, int item, int col,
+                          char* out, int outlen) {
+    PB_LVITEM it;
+    void* h;
+    if (outlen > 0) out[0] = 0;
+    h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask       = PB_LVIF_TEXT;
+    it.iItem      = item;
+    it.iSubItem   = col;
+    it.pszText    = out;
+    it.cchTextMax = outlen;
+    SendMessageA(h, PB_LVM_GETITEMTEXTA, (unsigned int)item, (pb_lparam_t)&it);
+}
+
+/* ---------------- LISTVIEW SET TEXT ---------------- */
+void pb_listview_set_text(void* hDlg, long id, int item, int col,
+                          const char* text) {
+    PB_LVITEM it;
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask     = PB_LVIF_TEXT;
+    it.iItem    = item;
+    it.iSubItem = col;
+    it.pszText  = (const char*)text;
+    SendMessageA(h, PB_LVM_SETITEMTEXTA, (unsigned int)item, (pb_lparam_t)&it);
+}
+
+/* ---------------- LISTVIEW DELETE ITEM ---------------- */
+void pb_listview_delete_item(void* hDlg, long id, int item) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_DELETEITEM, (unsigned int)item, 0);
+}
+
+/* ---------------- LISTVIEW RESET ---------------- */
+void pb_listview_reset(void* hDlg, long id) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_DELETEALLITEMS, 0, 0);
+}
+
+/* ---------------- TREEVIEW INSERT ITEM ---------------- */
+void pb_treeview_insert_item(void* hDlg, long id, void* hParent, void* hAfter,
+                             int image, int simage, const char* text,
+                             void** out) {
+    PB_TVINSERTSTRUCT ins;
+    void* h;
+    void* r;
+    if (out) *out = 0;
+    h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&ins, 0, sizeof(ins));
+    ins.hParent      = pb_tv_parent(hParent);
+    ins.hInsertAfter = pb_tv_after(hAfter);
+    ins.item.mask          = PB_TVIF_TEXT | PB_TVIF_IMAGE | PB_TVIF_SELECTEDIMAGE;
+    ins.item.pszText       = (const char*)text;
+    ins.item.cchTextMax    = 0;
+    ins.item.iImage        = image;
+    ins.item.iSelectedImage = simage;
+    r = SendMessageA(h, PB_TVM_INSERTITEMA, 0, (pb_lparam_t)&ins);
+    if (out) *out = r;
+}
+
+/* ---------------- TREEVIEW GET COUNT ---------------- */
+long long pb_treeview_get_count(void* hDlg, long id) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h, PB_TVM_GETCOUNT, 0, 0);
+}
+
+/* ---------------- TREEVIEW GET TEXT ---------------- */
+void pb_treeview_get_text(void* hDlg, long id, void* hItem,
+                          char* out, int outlen) {
+    PB_TVITEM it;
+    void* h;
+    if (outlen > 0) out[0] = 0;
+    h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask       = PB_TVIF_TEXT;
+    it.hItem      = hItem;
+    it.pszText    = out;
+    it.cchTextMax = outlen;
+    SendMessageA(h, PB_TVM_GETITEMA, 0, (pb_lparam_t)&it);
+}
+
+/* ---------------- TREEVIEW DELETE ---------------- */
+void pb_treeview_delete(void* hDlg, long id, void* hItem) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_TVM_DELETEITEM, 0, (pb_lparam_t)hItem);
+}
+
+/* ---------------- TREEVIEW RESET ---------------- */
+/* commctrl.inc implements TreeView_DeleteAllItems as
+   SendMessage(hWnd, %TVM_DELETEITEM, 0, %TVI_ROOT). */
+void pb_treeview_reset(void* hDlg, long id) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_TVM_DELETEITEM, 0, (pb_lparam_t)PB_TVI_ROOT);
 }
