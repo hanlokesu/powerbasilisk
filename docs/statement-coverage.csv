@@ -1,5 +1,5 @@
-# Last updated from batch 158 (v0.2.017) - 2026-09-23,,,,
-"# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Upstream benstopics shipped only ~68 core statements; the rest is this fork.",,,
+# Last updated from batch 159 (v0.2.018) - 2026-09-23,,,,
+"# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
 ACCEL ATTACH,STATEMENT,PB/Win only,Implemented
@@ -16,7 +16,7 @@ ARRAY REDIM DECR,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY REDIM INCR,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY REVERSE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY SCAN,STATEMENT,PB/Win + PB/CC,Implemented
-ARRAY SELECT,STATEMENT,PB/Win + PB/CC,Implemented
+ARRAY SELECT,FORK EXTENSION,PB/Win + PB/CC,Implemented
 ARRAY SHUFFLE,STATEMENT,PB/Win + PB/CC,Implemented
 ARRAY SORT,STATEMENT,PB/Win + PB/CC,Established
 ARRAY SWAP,STATEMENT,PB/Win + PB/CC,Implemented
@@ -358,7 +358,7 @@ GRAPHIC WINDOW NORMALIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC WINDOW STABILIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC_CIRCLE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_SCALE_PIXELS,FUNCTION,codegen builtin,Implemented
-HEADER,STATEMENT,PB/Win only,Tier-3 DDT
+HEADER,STATEMENT,PB/Win only,Implemented
 HEADER_CTRL,FUNCTION,codegen builtin,Implemented
 HEX,FUNCTION,codegen builtin,Implemented
 HEX$,FUNCTION,Win32,Implemented
@@ -451,7 +451,7 @@ MENU NEW POPUP,STATEMENT,PB/Win only,Implemented
 MENU SET STATE,STATEMENT,PB/Win only,Implemented
 MENU SET TEXT,STATEMENT,PB/Win only,Implemented
 METHOD / END METHOD,STATEMENT,PB/Win + PB/CC,Established
-METRICS,FUNCTION,Win32,Implemented
+METRICS,FUNCTION,Win32,Not implemented
 MID,FUNCTION,codegen builtin,Implemented
 MID$,STATEMENT,PB/Win + PB/CC,Established
 MIN,FUNCTION,codegen builtin,Implemented
@@ -623,8 +623,8 @@ TYPE SET,STATEMENT,PB/Win + PB/CC,Established
 TYPE/END TYPE,BLOCK,PB/Win + PB/CC,Established
 UCASE,FUNCTION,codegen builtin,Implemented
 UCASE$,FUNCTION,Win32,Implemented
-UCODE$,FUNCTION,Win32,Implemented
-UCODEPAGE,STATEMENT,PB/Win + PB/CC,Established
+UCODE$,FUNCTION,Win32,Not implemented
+UCODEPAGE,STATEMENT,PB/Win + PB/CC,Implemented
 UDP CLOSE,STATEMENT,PB/Win + PB/CC,Established
 UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Implemented
 UDP OPEN,STATEMENT,PB/Win + PB/CC,Established

@@ -1,24 +1,26 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 158 (v0.2.017)** — 2026-09-23. All statements through batch 158 are reflected in this matrix.
+> **Last updated from batch 159 (v0.2.018)** — 2026-09-23. All statements through batch 159 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
-> **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. This matrix does not publish a count of upstream's own keyword set; it counts what this fork implements plus the official keywords that are long established.
+> **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **738** (10 BLOCK, 255 FUNCTION, 5 OPERATOR, 468 STATEMENT).
-- **635** keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still proposed / not yet implemented; **103** Tier-3 DDT GUI items deferred.
+- Rows in this matrix: **738** (10 BLOCK, 255 FUNCTION, 5 OPERATOR, 467 STATEMENT, 1 FORK EXTENSION).
+- **633** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **2** documented keywords still not implemented (METRICS, UCODE$); **102** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 486 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
-| ✅ Established | 149 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **635** | Implemented + Established |
+| ✅ Implemented (this fork) | 485 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
+| ✅ **Total available** | **633** | Implemented + Established |
+| ❌ Not implemented | 2 | Official PB keywords this fork does not implement yet (METRICS, UCODE$) |
+| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 103 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 102 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -41,7 +43,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ARRAY REDIM INCR | STATEMENT | PB/Win + PB/CC | Implemented |
 | ARRAY REVERSE | STATEMENT | PB/Win + PB/CC | Implemented |
 | ARRAY SCAN | STATEMENT | PB/Win + PB/CC | Implemented |
-| ARRAY SELECT | STATEMENT | PB/Win + PB/CC | Implemented |
+| ARRAY SELECT | FORK EXTENSION | PB/Win + PB/CC | Implemented |
 | ARRAY SHUFFLE | STATEMENT | PB/Win + PB/CC | Implemented |
 | ARRAY SORT | STATEMENT | PB/Win + PB/CC | Established |
 | ARRAY SWAP | STATEMENT | PB/Win + PB/CC | Implemented |
@@ -389,7 +391,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
 | GRAPHIC_CIRCLE | FUNCTION | codegen builtin | Implemented |
 | GRAPHIC_SCALE_PIXELS | FUNCTION | codegen builtin | Implemented |
-| HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
+| HEADER | STATEMENT | PB/Win only | Implemented |
 | HEADER_CTRL | FUNCTION | codegen builtin | Implemented |
 | HEX | FUNCTION | codegen builtin | Implemented |
 | HEX$ | FUNCTION | Win32 | Implemented |
@@ -483,7 +485,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MENU SET STATE | STATEMENT | PB/Win only | Implemented |
 | MENU SET TEXT | STATEMENT | PB/Win only | Implemented |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| METRICS | FUNCTION | Win32 | Implemented |
+| METRICS | FUNCTION | Win32 | Not implemented |
 | MID | FUNCTION | codegen builtin | Implemented |
 | MID$ | STATEMENT | PB/Win + PB/CC | Established |
 | MIN | FUNCTION | codegen builtin | Implemented |
@@ -658,8 +660,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
 | UCASE | FUNCTION | codegen builtin | Implemented |
 | UCASE$ | FUNCTION | Win32 | Implemented |
-| UCODE$ | FUNCTION | Win32 | Implemented |
-| UCODEPAGE | STATEMENT | PB/Win + PB/CC | Established |
+| UCODE$ | FUNCTION | Win32 | Not implemented |
+| UCODEPAGE | STATEMENT | PB/Win + PB/CC | Implemented |
 | UDP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Implemented |
 | UDP OPEN | STATEMENT | PB/Win + PB/CC | Established |
