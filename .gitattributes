@@ -1,0 +1,5 @@
+# Shell hooks and scripts must stay LF even though core.autocrlf=true on
+# Windows: git would otherwise rewrite them to CRLF on checkout and sh
+# refuses to run a script whose shebang line ends in CR.
+.githooks/** text eol=lf
+*.sh text eol=lf

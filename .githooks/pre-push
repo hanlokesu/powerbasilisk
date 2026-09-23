@@ -1,0 +1,23 @@
+#!/bin/sh
+# Pre-push gate: run the whole local CI mirror before anything leaves the
+# machine.
+#
+# Why: in CI a lint failure used to skip every later step, so the run page
+# showed no build and no test result at all (run 35871436482 on 2fd3b0d).
+# Catching it here keeps the remote run meaningful.
+#
+#   git push                 -> formatting check + the full mirror
+#   PBHOOK_FAST=1 git push   -> formatting check only (CI will do the rest)
+set -e
+
+. "$(dirname "$0")/ci-mirror.sh"
+
+pb_fmt_gate
+
+if [ "$PBHOOK_FAST" = "1" ]; then
+  echo "pre-push: PBHOOK_FAST=1 - skipping the full mirror, CI will run it"
+  exit 0
+fi
+
+echo "pre-push: running the full local CI mirror"
+pb_full_mirror
