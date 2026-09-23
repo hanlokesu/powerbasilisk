@@ -1,9 +1,9 @@
-# Last updated from batch 159 (v0.2.018) - 2026-09-23,,,,
+# Last updated from batch 160 (v0.2.019) - 2026-09-23,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
 ACCEL ATTACH,STATEMENT,PB/Win only,Implemented
-ACODE$,FUNCTION,codegen builtin (ANSI passthrough),Implemented
+ACODE$,FUNCTION,Win32,Implemented
 ACOS,FUNCTION,LLVM intrinsic,Implemented
 ACOSH,FUNCTION,LLVM intrinsic,Implemented
 ARRAY ADD,STATEMENT,PB/Win + PB/CC,Implemented
@@ -451,7 +451,7 @@ MENU NEW POPUP,STATEMENT,PB/Win only,Implemented
 MENU SET STATE,STATEMENT,PB/Win only,Implemented
 MENU SET TEXT,STATEMENT,PB/Win only,Implemented
 METHOD / END METHOD,STATEMENT,PB/Win + PB/CC,Established
-METRICS,FUNCTION,Win32,Not implemented
+METRICS,FUNCTION,Win32,Implemented
 MID,FUNCTION,codegen builtin,Implemented
 MID$,STATEMENT,PB/Win + PB/CC,Established
 MIN,FUNCTION,codegen builtin,Implemented
@@ -623,7 +623,7 @@ TYPE SET,STATEMENT,PB/Win + PB/CC,Established
 TYPE/END TYPE,BLOCK,PB/Win + PB/CC,Established
 UCASE,FUNCTION,codegen builtin,Implemented
 UCASE$,FUNCTION,Win32,Implemented
-UCODE$,FUNCTION,Win32,Not implemented
+UCODE$,FUNCTION,Win32,Implemented
 UCODEPAGE,STATEMENT,PB/Win + PB/CC,Implemented
 UDP CLOSE,STATEMENT,PB/Win + PB/CC,Established
 UDP NOTIFY,STATEMENT,PB/Win + PB/CC,Implemented

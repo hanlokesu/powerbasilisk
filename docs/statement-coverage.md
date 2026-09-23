@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 159 (v0.2.018)** — 2026-09-23. All statements through batch 159 are reflected in this matrix.
+> **Last updated from batch 160 (v0.2.019)** — 2026-09-23. All statements through batch 160 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **738** (10 BLOCK, 255 FUNCTION, 5 OPERATOR, 467 STATEMENT, 1 FORK EXTENSION).
-- **633** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **2** documented keywords still not implemented (METRICS, UCODE$); **102** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
+- **635** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **102** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 485 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 487 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **633** | Implemented + Established |
+| ✅ **Total available** | **635** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | ❌ Not implemented | 2 | Official PB keywords this fork does not implement yet (METRICS, UCODE$) |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
@@ -29,7 +31,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ABS | FUNCTION | LLVM intrinsic | Implemented |
 | ACCEL ATTACH | STATEMENT | PB/Win only | Implemented |
 | ACODE | FUNCTION | PB/Win + PB/CC | Implemented |
-| ACODE$ | FUNCTION | codegen builtin (ANSI passthrough) | Implemented |
+| ACODE$ | FUNCTION | Win32 | Implemented |
 | ACOS | FUNCTION | LLVM intrinsic | Implemented |
 | ACOSH | FUNCTION | LLVM intrinsic | Implemented |
 | AND | OPERATOR | PB/Win + PB/CC | Established |
@@ -485,7 +487,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MENU SET STATE | STATEMENT | PB/Win only | Implemented |
 | MENU SET TEXT | STATEMENT | PB/Win only | Implemented |
 | METHOD / END METHOD | STATEMENT | PB/Win + PB/CC | Established |
-| METRICS | FUNCTION | Win32 | Not implemented |
+| METRICS | FUNCTION | Win32 | Implemented |
 | MID | FUNCTION | codegen builtin | Implemented |
 | MID$ | STATEMENT | PB/Win + PB/CC | Established |
 | MIN | FUNCTION | codegen builtin | Implemented |
@@ -660,7 +662,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TYPE/END TYPE | BLOCK | PB/Win + PB/CC | Established |
 | UCASE | FUNCTION | codegen builtin | Implemented |
 | UCASE$ | FUNCTION | Win32 | Implemented |
-| UCODE$ | FUNCTION | Win32 | Not implemented |
+| UCODE$ | FUNCTION | Win32 | Implemented |
 | UCODEPAGE | STATEMENT | PB/Win + PB/CC | Implemented |
 | UDP CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | UDP NOTIFY | STATEMENT | PB/Win + PB/CC | Implemented |
