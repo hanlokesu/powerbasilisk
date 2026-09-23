@@ -12,10 +12,18 @@ FUNCTION PBMAIN() AS LONG
     UDP NOTIFY 2, 3
     PRINT "UDP NOTIFY: done"
 
-    PROGRESSBAR 0, 0, 50, 100
+    ' Official PROGRESSBAR syntax is PROGRESSBAR <GET|SET> <POS|RANGE> hDlg, id&, ...
+    ' There is no dialog in this console sample, so the calls resolve to no
+    ' control and return 0 - the point here is that they compile and link.
+    PROGRESSBAR SET RANGE 0, 101, 0, 100
+    PROGRESSBAR SET POS 0, 101, 50
+    PROGRESSBAR SET STEP 0, 101, 5
+    PROGRESSBAR STEP 0, 101
+    PROGRESSBAR STEP 0, 101, 2
     PRINT "PROGRESSBAR: done"
 
-    HEADER 0, 0, 1, "Column 1"
+    ' Official HEADER syntax is HEADER SEND hWin, ID&, Msg&, wParam&, lParam& [TO res&].
+    HEADER SEND 0, 102, &H1200, 0, 0
     PRINT "HEADER: done"
 
     ARRAY SELECT arr(0), 1, 5

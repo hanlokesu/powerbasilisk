@@ -19,7 +19,8 @@ DECLARE SUB SetFocus LIB "user32" ALIAS "SetFocus" (BYVAL hWnd AS DWORD)
 %BN_CLICKED = 0
 %VK_SHIFT = 16
 %MB_TASKMODAL = 8192
-$CRLF = CHR$(13) + CHR$(10)
+' $CRLF is a compiler built-in string equate (= CHR$(13,10)) - assigning to
+' a built-in equate is not valid PB, so the definition is not needed here.
 
 FUNCTION PBMAIN() AS LONG
     LOCAL hDlg AS QUAD

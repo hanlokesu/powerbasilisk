@@ -23,6 +23,9 @@ pub struct Parser {
     pos: usize,
     def_funcs: HashMap<String, (Vec<String>, Expr)>,
     pub error_count: usize,
+    /// Set when the source contains `OPTION EXPLICIT` (same effect as
+    /// `#DIM ALL`): every variable must be declared before it is used.
+    pub option_explicit: bool,
 }
 
 impl Parser {
@@ -32,6 +35,7 @@ impl Parser {
             pos: 0,
             def_funcs: HashMap::new(),
             error_count: 0,
+            option_explicit: false,
         }
     }
 
@@ -278,11 +282,24 @@ impl Parser {
                 }
                 Ok(None)
             }
+            Token::Identifier(w) if w.eq_ignore_ascii_case("OPTION") => {
+                // OPTION EXPLICIT — official PB statement with the same effect
+                // as #DIM ALL: all variables must be declared before use.
+                // Nothing is emitted here; codegen enforces it.
+                self.advance(); // consume OPTION
+                if self.peek_plain_upper() == "EXPLICIT" {
+                    self.advance();
+                    self.option_explicit = true;
+                }
+                self.consume_to_eol();
+                Ok(None)
+            }
             Token::Identifier(w) if w.eq_ignore_ascii_case("METHOD") => {
-                // METHOD name [([args])] — treat as SUB (simplified OOP method)
-                self.advance(); // consume METHOD
-                let sd = self.parse_sub_decl()?;
-                Ok(Some(TopLevel::SubDecl(sd)))
+            // METHOD name [([args])] — treat as SUB (simplified OOP method).
+            // parse_sub_decl() consumes the leading keyword itself, so advancing
+            // here would swallow the method name (batch 159 fix).
+            let sd = self.parse_sub_decl()?;
+            Ok(Some(TopLevel::SubDecl(sd)))
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("INTERFACE") => {
                 // INTERFACE Name [DIRECT|IDBIND] ... END INTERFACE — OOP interface block (skip)
@@ -2451,6 +2468,34 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "CLIENT" {
+                            // GRAPHIC GET CLIENT TO w&, h&
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_CLIENT".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "LOC" {
+                            // GRAPHIC GET LOC TO x&, y&
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_LOC".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
                         if sub == "CLIP" || sub == "VIEW" || sub == "LINES" || sub == "WRAP" {
                             // GRAPHIC GET CLIP TO w!, h! | GRAPHIC GET VIEW TO x!, y!
                             // GRAPHIC GET LINES TO n& | GRAPHIC GET WRAP TO w&  (batch 63)
@@ -2990,7 +3035,12 @@ impl Parser {
                             }
                             if self.peek() != &Token::LParen {
                                 self.consume_to_eol();
-                                return Ok(Statement::Noop("GRAPHIC_GET_PIXEL".to_string(), line));
+                                let gname = if sub.is_empty() {
+                                    "GRAPHIC GET".to_string()
+                                } else {
+                                    format!("GRAPHIC GET {}", sub)
+                                };
+                                return Ok(Statement::Noop(gname, line));
                             }
                             self.advance(); // (
                             let x = self.parse_expression()?;
@@ -3353,6 +3403,22 @@ impl Parser {
                     }
                     if xop == "CELL" {
                         self.advance();
+                        // XPRINT CELL SIZE TO w, h is the official form and must be tested
+                        // before the two-argument XPRINT CELL, otherwise SIZE is parsed as a
+                        // variable and the following TO raises "Expected Comma, got To".
+                        if self.peek_plain_upper() == "SIZE" {
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "XPRINT_CELL_SIZE".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
                         let x = self.parse_expression()?;
                         self.expect(&Token::Comma)?;
                         let y = self.parse_expression()?;
@@ -3485,22 +3551,6 @@ impl Parser {
                             args,
                             line,
                         }));
-                    }
-                    if xop == "CELL" {
-                        self.advance();
-                        if self.peek_plain_upper() == "SIZE" {
-                            self.advance();
-                            self.expect(&Token::To)?;
-                            let w = self.parse_expression()?;
-                            self.expect(&Token::Comma)?;
-                            let h = self.parse_expression()?;
-                            self.consume_to_eol();
-                            return Ok(Statement::Call(CallStmt {
-                                name: "XPRINT_CELL_SIZE".to_string(),
-                                args: vec![w, h],
-                                line,
-                            }));
-                        }
                     }
                     if xop == "CHR" {
                         self.advance();
@@ -4305,12 +4355,19 @@ impl Parser {
                             kind = "STRING".to_string();
                         } else {
                             let k2 = self.peek_plain_upper();
-                            if k2 == "POPUP" {
-                                self.advance();
-                                kind = "POPUP".to_string();
+                            if k2 == "POPUP" || k2 == "STRING" {
+                            self.advance();
+                            kind = k2;
                             }
-                        }
-                        let mut args = Vec::new();
+                            }
+                            // Official PB syntax separates the sub-keyword from the first argument
+                            // with a comma:  MENU ADD STRING, hMenu, txt$, id&, state&  and
+                            // MENU ADD POPUP, hMenu, txt$, hPopup, state&.
+                            // Accept it (and the comma-less form) alike.
+                            if matches!(self.peek(), Token::Comma) {
+                            self.advance();
+                            }
+                            let mut args = Vec::new();
                         // First arg: hMenu (before first comma)
                         if !self.at_eol_or_eof() {
                             args.push(self.parse_expression()?);
@@ -6391,6 +6448,11 @@ impl Parser {
                     if let Some(op) = op_code {
                         self.advance(); // consume op
                         let val = self.parse_expression()?;
+                        // The operator form is written both as `> 25 TO i` and `> 25, TO i`;
+                        // accept the comma when it is present.
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
                         self.expect(&Token::To)?;
                         let dst = self.parse_expression()?;
                         self.consume_to_eol();
@@ -6844,6 +6906,76 @@ impl Parser {
                 if name_upper == "IMPORT" {
                     return self.parse_import_statement(line);
                 }
+                // PROGRESSBAR / HEADER statements, official PB syntax.  These
+                // must be handled before the bare-control-name fallback below,
+                // which would otherwise swallow the whole line as a Noop and
+                // make codegen report the statement as unimplemented.
+                if name_upper == "PROGRESSBAR" || name_upper == "HEADER" {
+                    let head = name_upper.clone();
+                    // STEP is a keyword token, not an identifier (token.rs:214).
+                    let verb: Option<String> = if matches!(self.peek_at(1), Some(Token::Step)) {
+                        Some("STEP".to_string())
+                    } else if let Some(Token::Identifier(w)) = self.peek_at(1) {
+                        let u = w.to_uppercase();
+                        if u == "GET" || u == "SET" || u == "SEND" || u == "STEP" {
+                            Some(u)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+                    if let Some(verb) = verb {
+                        self.advance(); // PROGRESSBAR / HEADER
+                        self.advance(); // verb
+                        let want_noun = if head == "PROGRESSBAR" {
+                            verb != "STEP"
+                        } else {
+                            verb == "GET" || verb == "SET"
+                        };
+                        let mut noun = String::new();
+                        if want_noun {
+                            if matches!(self.peek(), Token::Step) {
+                                noun = "STEP".to_string();
+                                self.advance();
+                            } else if let Token::Identifier(w2) = self.peek() {
+                                let t = w2.to_uppercase();
+                                if t == "POS" || t == "RANGE" || t == "COUNT" || t == "ITEM" {
+                                    noun = t;
+                                    self.advance();
+                                }
+                            }
+                        }
+                        let mut args = Vec::new();
+                        args.push(self.parse_expression()?);
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        // PROGRESSBAR STEP hDlg, id& [, incramt&] - the increment
+                        // is optional, so default it to 0 for codegen.
+                        if head == "PROGRESSBAR" && verb == "STEP" && args.len() == 2 {
+                            args.push(Expr::IntegerLit(0));
+                        }
+                        self.consume_to_eol();
+                        let stmt_name = if noun.is_empty() {
+                            format!("{}_{}", head, verb)
+                        } else {
+                            format!("{}_{}_{}", head, verb, noun)
+                        };
+                        return Ok(Statement::Call(CallStmt {
+                            name: stmt_name,
+                            args,
+                            line,
+                        }));
+                    }
+                }
                 if matches!(
                     name_upper.as_str(),
                     "DIALOG"
@@ -6855,8 +6987,6 @@ impl Parser {
                         | "LISTBOX"
                         | "TREEVIEW"
                         | "LISTVIEW"
-                        | "PROGRESSBAR"
-                        | "HEADER"
                 ) {
                     self.advance();
                     self.consume_to_eol();
@@ -7735,6 +7865,18 @@ impl Parser {
         }
     }
 
+    /// Like `peek_plain_upper()`, but also reports the STRING keyword token as
+    /// the word "STRING".  The lexer emits Token::String_ for the word STRING
+    /// (it is a type keyword, not an identifier), so plain identifier matching
+    /// silently misses it - the cause of several batch 159 parser defects.
+    fn peek_ident_or_string_keyword(&self) -> Option<String> {
+        match self.peek() {
+            Token::Identifier(w) => Some(w.clone()),
+            Token::String_ => Some("STRING".to_string()),
+            _ => None,
+        }
+    }
+
     fn parse_lprint_statement(&mut self, line: usize) -> PbResult<Statement> {
         self.advance(); // consume LPRINT
         match self.peek() {
@@ -8601,7 +8743,9 @@ impl Parser {
 
     fn parse_field_statement(&mut self, line: usize) -> PbResult<Statement> {
         // FIELD RESET / FIELD STRING
-        if let Token::Identifier(w) = self.peek() {
+        // The lexer maps the word STRING to Token::String_, so match through the
+        // helper rather than Token::Identifier alone.
+        if let Some(w) = self.peek_ident_or_string_keyword() {
             let up = w.to_uppercase();
             if up == "RESET" || up == "STRING" {
                 self.advance();

@@ -20,6 +20,8 @@ pub struct CompileOptions {
     pub lib_dir: Option<String>, // path to directory containing import libraries (.lib)
     pub split_threshold: usize, // split functions exceeding this many IR lines (0 = disabled)
     pub target: String, // LLVM target triple (e.g. "i686-pc-windows-msvc", "x86_64-pc-windows-msvc")
+    /// `OPTION EXPLICIT` is in effect: every variable must be declared.
+    pub option_explicit: bool,
 }
 
 /// Compile a parsed PB program to LLVM IR, then optionally to object code via clang.
@@ -30,6 +32,7 @@ pub fn compile(
     pp_constants: &HashMap<String, i64>,
 ) -> PbResult<()> {
     let mut compiler = Compiler::with_target(&opts.target);
+    compiler.option_explicit = opts.option_explicit;
     compiler.session_mode = opts.session_mode;
     compiler.debug_mode = opts.debug_mode;
     compiler.pp_constants = pp_constants.clone();
@@ -795,6 +798,10 @@ fn extract_ir_type(s: &str) -> &str {
 struct Compiler {
     module: ModuleBuilder,
     symbols: SymbolTable,
+    /// True when the source declared `OPTION EXPLICIT`.
+    option_explicit: bool,
+    /// Line of the statement currently being compiled (0 = unknown).
+    current_line: usize,
 
     // Function/sub declarations collected during first pass
     functions: HashMap<String, FuncInfo>,
@@ -975,6 +982,8 @@ impl Compiler {
         Compiler {
             module: ModuleBuilder::new(target),
             symbols: SymbolTable::new(),
+            option_explicit: false,
+            current_line: 0,
             functions: HashMap::new(),
             subs: HashMap::new(),
             current_fn_name: None,
@@ -1713,6 +1722,17 @@ impl Compiler {
             .declare_function("pb_control_uncheck", &IrType::Void, &[IrType::Ptr], false);
         self.module
             .declare_function("pb_control_get_check", &IrType::I64, &[IrType::Ptr], false);
+        self.module.declare_function("pb_progressbar_set_range", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_set_pos", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_set_step", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_step", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_get_pos", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_get_lo", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function("pb_progressbar_get_hi", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function("pb_header_send", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_header_get_count", &IrType::I64, &[IrType::Ptr, IrType::I64], false);
+        self.module.declare_function("pb_header_get_item", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
+        self.module.declare_function("pb_header_set_item", &IrType::I64, &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64], false);
         self.module.declare_function(
             "pb_control_add_scrollbar",
             &IrType::Ptr,
@@ -4697,6 +4717,7 @@ impl Compiler {
             _ => 0,
         };
         self.emit_debug_line(fb, line);
+        self.current_line = line;
 
         match stmt {
             Statement::Assign(a) => self.compile_assign(fb, a),
@@ -5277,6 +5298,16 @@ impl Compiler {
                         fb.store(&converted, &ptr);
                     }
                 } else {
+                    if self.option_explicit {
+                        return Err(PbError::parser(
+                            format!(
+                                "OPTION EXPLICIT: variable `{}` must be declared before use",
+                                orig_name
+                            ),
+                            None,
+                            self.current_line,
+                        ));
+                    }
                     // Auto-declare local → use original name for type inference
                     let pb_type = infer_type_from_name(orig_name);
                     let ir_type = Self::ir_type_for(&pb_type);
@@ -5340,6 +5371,16 @@ impl Compiler {
                         info.pb_type.clone(),
                     ))
                 } else {
+                    if self.option_explicit {
+                        return Err(PbError::parser(
+                            format!(
+                                "OPTION EXPLICIT: variable `{}` must be declared before use",
+                                orig_name
+                            ),
+                            None,
+                            self.current_line,
+                        ));
+                    }
                     // Auto-declare
                     let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
                     let info = self.symbols.lookup(&name).unwrap();
@@ -8101,6 +8142,138 @@ impl Compiler {
                 if let Some(hc) = call.args.first() {
                     let v = self.compile_expr(fb, hc)?;
                     fb.call_void("pb_control_uncheck", &[v]);
+                }
+                return Ok(());
+            }
+            // --- PROGRESSBAR / HEADER (batch 159, official hDlg+id syntax) ---
+            "PROGRESSBAR_SET_RANGE" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    let d = self.compile_expr(fb, &call.args[3])?;
+                    fb.call(&IrType::I64, "pb_progressbar_set_range", &[a, b, c, d]);
+                }
+                return Ok(());
+            }
+            "PROGRESSBAR_SET_POS" => {
+                if call.args.len() >= 3 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(&IrType::I64, "pb_progressbar_set_pos", &[a, b, c]);
+                }
+                return Ok(());
+            }
+            "PROGRESSBAR_SET_STEP" => {
+                if call.args.len() >= 3 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(&IrType::I64, "pb_progressbar_set_step", &[a, b, c]);
+                }
+                return Ok(());
+            }
+            "PROGRESSBAR_STEP" => {
+                if call.args.len() >= 3 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let inc = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(&IrType::I64, "pb_progressbar_step", &[a, b, inc]);
+                }
+                return Ok(());
+            }
+            "PROGRESSBAR_GET_POS" => {
+                if call.args.len() >= 3 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let val = fb.call(&IrType::I64, "pb_progressbar_get_pos", &[a, b]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&val32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "PROGRESSBAR_GET_RANGE" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let lo = fb.call(&IrType::I64, "pb_progressbar_get_lo", &[a, b]);
+                    let lo32 = fb.trunc(&lo, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&lo32, &ptr);
+                    }
+                    // fb.call consumes its operands, so re-evaluate the two
+                    // simple handle/id operands for the second query.
+                    let a2 = self.compile_expr(fb, &call.args[0])?;
+                    let b2 = self.compile_expr(fb, &call.args[1])?;
+                    let hi = fb.call(&IrType::I64, "pb_progressbar_get_hi", &[a2, b2]);
+                    let hi32 = fb.trunc(&hi, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        fb.store(&hi32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "HEADER_GET_COUNT" => {
+                if call.args.len() >= 3 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let val = fb.call(&IrType::I64, "pb_header_get_count", &[a, b]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&val32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "HEADER_SEND" => {
+                if call.args.len() >= 5 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    let d = self.compile_expr(fb, &call.args[3])?;
+                    let e = self.compile_expr(fb, &call.args[4])?;
+                    let val = fb.call(&IrType::I64, "pb_header_send", &[a, b, c, d, e]);
+                    if call.args.len() >= 6 {
+                        let val32 = fb.trunc(&val, &IrType::I32);
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[5]) {
+                            fb.store(&val32, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "HEADER_GET_ITEM" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    let d = self.compile_expr(fb, &call.args[3])?;
+                    let val = fb.call(&IrType::I64, "pb_header_get_item", &[a, b, c, d]);
+                    if call.args.len() >= 5 {
+                        let val32 = fb.trunc(&val, &IrType::I32);
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            fb.store(&val32, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "HEADER_SET_ITEM" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let c = self.compile_expr(fb, &call.args[2])?;
+                    let d = self.compile_expr(fb, &call.args[3])?;
+                    let val = fb.call(&IrType::I64, "pb_header_set_item", &[a, b, c, d]);
+                    if call.args.len() >= 5 {
+                        let val32 = fb.trunc(&val, &IrType::I32);
+                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            fb.store(&val32, &ptr);
+                        }
+                    }
                 }
                 return Ok(());
             }

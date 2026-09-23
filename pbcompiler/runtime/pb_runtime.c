@@ -5378,6 +5378,100 @@ int pb_header(int hDlg, int id, int col, const char* text) {
     SendMessageA(hWnd, HDM_INSERTITEMA, col, (unsigned long long)&item);
     return 1;
 }
+/* PROGRESSBAR / HEADER statements: official PB syntax addresses the control by
+ * (owner window, control id), so resolve the real HWND with GetDlgItem.  All
+ * integer parameters are long long to match the I64 LLVM declarations. */
+#define PBM_SETSTEP   0x0404
+#define PBM_STEPIT    0x0405
+#define PBM_DELTAPOS  0x0403
+#define PBM_GETPOS    0x0408
+#define PBM_GETRANGE  0x0407
+#define HDM_GETITEMCOUNT (HDM_FIRST + 0)
+#define HDM_GETITEMA     (HDM_FIRST + 3)
+#define HDM_SETITEMA     (HDM_FIRST + 4)
+
+typedef struct { int iLow; int iHigh; } PB_PBRANGE;
+
+static void* pb_pb_hwnd(void* hDlg, long long id) {
+    if (!hDlg) return 0;
+    return GetDlgItem(hDlg, (int)id);
+}
+
+long long pb_progressbar_set_range(void* hDlg, long long id, long long lo, long long hi) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    SendMessageA(h, PBM_SETRANGE32, (unsigned int)lo, (unsigned long long)hi);
+    return 1;
+}
+
+long long pb_progressbar_set_pos(void* hDlg, long long id, long long pos) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    SendMessageA(h, PBM_SETPOS, (unsigned int)pos, 0);
+    return 1;
+}
+
+long long pb_progressbar_set_step(void* hDlg, long long id, long long step) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    SendMessageA(h, PBM_SETSTEP, (unsigned int)step, 0);
+    return 1;
+}
+
+long long pb_progressbar_step(void* hDlg, long long id, long long inc) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    if (inc) SendMessageA(h, PBM_DELTAPOS, (unsigned int)inc, 0);
+    else     SendMessageA(h, PBM_STEPIT, 0, 0);
+    return 1;
+}
+
+long long pb_progressbar_get_pos(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return -1;
+    return (long long)SendMessageA(h, PBM_GETPOS, 0, 0);
+}
+
+static long long pb_progressbar_range_part(void* hDlg, long long id, int want_high) {
+    PB_PBRANGE r;
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return -1;
+    r.iLow = 0; r.iHigh = 0;
+    SendMessageA(h, PBM_GETRANGE, 1, (unsigned long long)&r);
+    return want_high ? (long long)r.iHigh : (long long)r.iLow;
+}
+
+long long pb_progressbar_get_lo(void* hDlg, long long id) {
+    return pb_progressbar_range_part(hDlg, id, 0);
+}
+
+long long pb_progressbar_get_hi(void* hDlg, long long id) {
+    return pb_progressbar_range_part(hDlg, id, 1);
+}
+
+long long pb_header_send(void* hWin, long long id, long long msg, long long wparam, long long lparam) {
+    void* h = pb_pb_hwnd(hWin, id);
+    if (!h) return 0;
+    return (long long)SendMessageA(h, (unsigned int)msg, (unsigned int)wparam, (pb_lparam_t)lparam);
+}
+
+long long pb_header_get_count(void* hWin, long long id) {
+    void* h = pb_pb_hwnd(hWin, id);
+    if (!h) return -1;
+    return (long long)SendMessageA(h, HDM_GETITEMCOUNT, 0, 0);
+}
+
+long long pb_header_get_item(void* hWin, long long id, long long index, long long itemPtr) {
+    void* h = pb_pb_hwnd(hWin, id);
+    if (!h || !itemPtr) return 0;
+    return (long long)SendMessageA(h, HDM_GETITEMA, (unsigned int)index, (pb_lparam_t)itemPtr);
+}
+
+long long pb_header_set_item(void* hWin, long long id, long long index, long long itemPtr) {
+    void* h = pb_pb_hwnd(hWin, id);
+    if (!h || !itemPtr) return 0;
+    return (long long)SendMessageA(h, HDM_SETITEMA, (unsigned int)index, (pb_lparam_t)itemPtr);
+}
 /* ARRAY SELECT state: tracks selected range for subsequent array operations */
 static int g_array_sel_start = 0;
 static int g_array_sel_end = 0;

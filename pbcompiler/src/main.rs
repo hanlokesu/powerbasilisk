@@ -62,7 +62,7 @@ fn main() {
         .and_then(|s| s.parse::<usize>().ok())
         .unwrap_or(0);
 
-    let opts = codegen::CompileOptions {
+    let mut opts = codegen::CompileOptions {
         dll_mode,
         exe_mode,
         session_mode,
@@ -72,9 +72,10 @@ fn main() {
         lib_dir,
         split_threshold,
         target,
+        option_explicit: false,
     };
 
-    match compile_file(file_path, &output, parse_only, &opts) {
+    match compile_file(file_path, &output, parse_only, &mut opts) {
         Ok(()) => {
             eprintln!("[pbcompiler] Success: {}", output);
         }
@@ -137,7 +138,7 @@ fn compile_file(
     path: &str,
     output: &str,
     parse_only: bool,
-    opts: &codegen::CompileOptions,
+    opts: &mut codegen::CompileOptions,
 ) -> PbResult<()> {
     let path = Path::new(path);
 
@@ -190,6 +191,8 @@ fn compile_file(
     if parser.error_count > 0 {
         return Err(pb::error::PbError::parser(format!("Build failed with {} parse error(s). Search for unexpected tokens in your .bas file.", parser.error_count), None, 0));
     }
+
+    opts.option_explicit = parser.option_explicit;
 
     if parse_only {
         eprintln!("[pbcompiler] Parse-only mode, skipping codegen");
