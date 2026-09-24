@@ -5474,6 +5474,13 @@ long long pb_progressbar_get_hi(void* hDlg, long long id) {
     return pb_progressbar_range_part(hDlg, id, 1);
 }
 
+/* HEADER GET ITEM / SET ITEM take a 1-based Index& per the official help
+   ("1=first, 2=second, ..."); the underlying HDM_* messages are 0-based. */
+static int pb_hdr_idx(long long pb_index) {
+    long long i = pb_index - 1;
+    return (int)(i < 0 ? 0 : i);
+}
+
 long long pb_header_send(void* hWin, long long id, long long msg, long long wparam, long long lparam) {
     void* h = pb_pb_hwnd(hWin, id);
     if (!h) return 0;
@@ -5489,13 +5496,17 @@ long long pb_header_get_count(void* hWin, long long id) {
 long long pb_header_get_item(void* hWin, long long id, long long index, long long itemPtr) {
     void* h = pb_pb_hwnd(hWin, id);
     if (!h || !itemPtr) return 0;
-    return (long long)SendMessageA(h, HDM_GETITEMA, (unsigned int)index, (pb_lparam_t)itemPtr);
+    /* The official HEADER help says Index& is 1-based ("1=first,")
+       while HDM_GETITEMA is 0-based, so convert (batch 171). */
+    return (long long)SendMessageA(h, HDM_GETITEMA,
+                                   (unsigned int)pb_hdr_idx(index), (pb_lparam_t)itemPtr);
 }
 
 long long pb_header_set_item(void* hWin, long long id, long long index, long long itemPtr) {
     void* h = pb_pb_hwnd(hWin, id);
     if (!h || !itemPtr) return 0;
-    return (long long)SendMessageA(h, HDM_SETITEMA, (unsigned int)index, (pb_lparam_t)itemPtr);
+    return (long long)SendMessageA(h, HDM_SETITEMA,
+                                   (unsigned int)pb_hdr_idx(index), (pb_lparam_t)itemPtr);
 }
 
 /* ===================================================================

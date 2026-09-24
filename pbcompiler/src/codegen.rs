@@ -14961,6 +14961,10 @@ impl Compiler {
         match &val.ty {
             IrType::I32 => val.clone(),
             IrType::I1 => fb.zext(val, &IrType::I32),
+            // BYTE is unsigned; without this arm the catch-all below
+            // returns the value unchanged and callers that truncate to
+            // i8 emit an illegal `trunc i8 to i8` (batch 171).
+            IrType::I8 => fb.zext(val, &IrType::I32),
             IrType::I16 => fb.sext(val, &IrType::I32),
             IrType::I64 => fb.trunc(val, &IrType::I32),
             IrType::Double | IrType::Float => fb.fptosi(val, &IrType::I32),
