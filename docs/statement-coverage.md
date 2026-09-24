@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 166 (v0.2.023)** — 2026-09-24. All statements through batch 166 are reflected in this matrix.
+> **Last updated from batch 167 (v0.2.024)** — 2026-09-24. All statements through batch 167 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **733** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 462 STATEMENT, 2 FORK EXTENSION).
-- **662** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **69** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- Rows in this matrix: **858** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
+- **692** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **164** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 514 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 544 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **662** | Implemented + Established |
+| ✅ **Total available** | **692** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -26,7 +28,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 69 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 164 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -106,7 +108,22 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CLS | STATEMENT | PB/CC only | Established |
 | CODEPTR | FUNCTION | codegen builtin | Implemented |
 | COLOR | STATEMENT | PB/CC only | Established |
-| COMBOBOX | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX ADD | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX FIND | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX INSERT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX RESET | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
 | COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE INPUT | STATEMENT | PB/Win | Implemented |
@@ -393,7 +410,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
 | GRAPHIC_CIRCLE | FUNCTION | codegen builtin | Implemented |
 | GRAPHIC_SCALE_PIXELS | FUNCTION | codegen builtin | Implemented |
-| HEADER | STATEMENT | PB/Win only | Implemented |
+| HEADER GET COUNT | STATEMENT | PB/Win only | Implemented |
+| HEADER GET ITEM | STATEMENT | PB/Win only | Implemented |
+| HEADER SEND | STATEMENT | PB/Win only | Implemented |
+| HEADER SET ITEM | STATEMENT | PB/Win only | Implemented |
 | HEX | FUNCTION | codegen builtin | Implemented |
 | HEX$ | FUNCTION | Win32 | Implemented |
 | HI | FUNCTION | Win32 | Implemented |
@@ -404,7 +424,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | IF | STATEMENT | PB/Win + PB/CC | Established |
 | IF/END IF | BLOCK | PB/Win + PB/CC | Established |
 | IIF | FUNCTION | codegen builtin | Implemented |
-| IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
+| IMAGELIST ADD BITMAP | STATEMENT | PB/Win only | Tier-3 DDT |
+| IMAGELIST ADD ICON | STATEMENT | PB/Win only | Tier-3 DDT |
+| IMAGELIST ADD MASKED | STATEMENT | PB/Win only | Tier-3 DDT |
+| IMAGELIST GET COUNT | STATEMENT | PB/Win only | Implemented |
+| IMAGELIST KILL | STATEMENT | PB/Win only | Implemented |
+| IMAGELIST NEW BITMAP | STATEMENT | PB/Win only | Implemented |
+| IMAGELIST NEW ICON | STATEMENT | PB/Win only | Tier-3 DDT |
+| IMAGELIST SET OVERLAY | STATEMENT | PB/Win only | Tier-3 DDT |
 | IMAGELIST_COUNT | FUNCTION | codegen builtin | Implemented |
 | IMAGELIST_KILL | FUNCTION | codegen builtin | Implemented |
 | IMAGELIST_NEW | FUNCTION | codegen builtin | Implemented |
@@ -441,8 +468,56 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH TYPES)* | STATEMENT | PB/Win + PB/CC | Established |
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Implemented |
 | LINE INPUT# | STATEMENT | PB/Win + PB/CC | Implemented |
-| LISTBOX | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW | STATEMENT | PB/Win only | Implemented
+| LISTBOX ADD | STATEMENT | PB/Win only | Implemented |
+| LISTBOX DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX FIND | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX INSERT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX RESET | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW DELETE COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW DELETE ITEM | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW FIND | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW FIT CONTENT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW FIT HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET COUNT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET HEADERID | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET MODE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET STYLEXX | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET TEXT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW INSERT COLUMN | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW INSERT ITEM | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW RESET | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET IMAGE2 | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET MODE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET OVERLAY | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET STYLEXX | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET TEXT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SORT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW VISIBLE | STATEMENT | PB/Win only | Tier-3 DDT |
 | LO | FUNCTION | codegen builtin | Implemented |
 | LOC | FUNCTION | Win32 | Implemented |
 | LOCAL | STATEMENT | PB/Win + PB/CC | Established |
@@ -548,7 +623,12 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | PROCESS GET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
 | PROCESS SET PRIORITY | STATEMENT | PB/Win + PB/CC | Established |
 | PROFILE | STATEMENT | PB/Win + PB/CC | Established |
-| PROGRESSBAR | STATEMENT | PB/Win only | Implemented
+| PROGRESSBAR GET POS | STATEMENT | PB/Win only | Implemented |
+| PROGRESSBAR GET RANGE | STATEMENT | PB/Win only | Implemented |
+| PROGRESSBAR SET POS | STATEMENT | PB/Win only | Implemented |
+| PROGRESSBAR SET RANGE | STATEMENT | PB/Win only | Implemented |
+| PROGRESSBAR SET STEP | STATEMENT | PB/Win only | Implemented |
+| PROGRESSBAR STEP | STATEMENT | PB/Win only | Implemented |
 | PUT | STATEMENT | PB/Win + PB/CC | Implemented |
 | PUT$ | STATEMENT | PB/Win + PB/CC | Implemented |
 | PUT$$ | STATEMENT | PB/Win + PB/CC | Implemented |
@@ -589,7 +669,13 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RSET$ | FUNCTION | Win32 | Implemented |
 | RTRIM | FUNCTION | codegen builtin | Implemented |
 | RTRIM$ | FUNCTION | Win32 | Implemented |
-| SCROLLBAR | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR GET PAGESIZE | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR GET POS | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR GET RANGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR GET TRACKPOS | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR SET PAGESIZE | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR SET POS | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR SET RANGE | STATEMENT | PB/Win only | Tier-3 DDT |
 | SEC | FUNCTION | C runtime (MSVCRT) | Implemented |
 | SECH | FUNCTION | C runtime (MSVCRT) | Implemented |
 | SEEK | STATEMENT | PB/Win + PB/CC | Implemented |
@@ -611,7 +697,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | SQR | FUNCTION | LLVM intrinsic | Implemented |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
-| STATUSBAR | STATEMENT | PB/Win + PB/CC | Implemented |
+| STATUSBAR SET PARTS | STATEMENT | PB/Win + PB/CC | Implemented |
+| STATUSBAR SET TEXT | STATEMENT | PB/Win + PB/CC | Implemented |
 | STR | FUNCTION | codegen builtin | Implemented |
 | STR$ | FUNCTION | Win32 | Implemented |
 | STRDELETE | FUNCTION | codegen builtin | Implemented |
@@ -625,7 +712,19 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SWAP | STATEMENT | PB/Win + PB/CC | Established |
 | SWITCH | FUNCTION | Win32 | Implemented |
 | SWITCH$ | FUNCTION | codegen builtin | Implemented |
-| TAB | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET DIALOG | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET PAGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB INSERT PAGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB RESET | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB SET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
 | TAB$ | FUNCTION | Win32 | Implemented |
 | TALLY | FUNCTION | codegen builtin | Implemented |
 | TAN | FUNCTION | LLVM intrinsic | Implemented |
@@ -650,9 +749,37 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | THREADID | FUNCTION | Win32 | Implemented |
 | TIMER | FUNCTION | codegen builtin | Implemented |
 | TIX | STATEMENT | PB/Win + PB/CC | Established |
-| TOOLBAR | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR ADD BUTTON | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR ADD SEPARATOR | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR DELETE BUTTON | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR GET COUNT | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR GET STATE | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR SET IMAGELIST | STATEMENT | PB/Win only | Implemented |
+| TOOLBAR SET STATE | STATEMENT | PB/Win only | Implemented |
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
-| TREEVIEW | STATEMENT | PB/Win only | Implemented
+| TREEVIEW DELETE | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET BOLD | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET CHECK | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET CHILD | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET COUNT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET EXPANDED | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET NEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET PARENT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET PREVIOUS | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET ROOT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET TEXT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW INSERT ITEM | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW RESET | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET BOLD | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET CHECK | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET EXPANDED | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
 | TRIM | FUNCTION | codegen builtin | Implemented |
 | TRIM$ | FUNCTION | Win32 | Implemented |
 | TRUNC | FUNCTION | LLVM intrinsic | Implemented |
