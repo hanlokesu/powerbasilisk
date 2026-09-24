@@ -2817,15 +2817,15 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
-            "pb_progressbar",
-            &IrType::I32,
-            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            "pb_dialog_get_size",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
             false,
         );
         self.module.declare_function(
-            "pb_header",
-            &IrType::I32,
-            &[IrType::I32, IrType::I32, IrType::I32, IrType::Ptr],
+            "pb_dialog_set_size",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
             false,
         );
         self.module.declare_function(
@@ -6785,28 +6785,11 @@ impl Compiler {
                 let i1 = self.convert_value(fb, &s1, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_udp_notify", &[i0, i1]);
             }
-            "PROGRESSBAR" => {
-                let mut ia = Vec::new();
-                for i in 0..4 {
-                    let v = self.compile_expr(fb, &call.args[i])?;
-                    ia.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
-                }
-                fb.call_void(
-                    "pb_progressbar",
-                    &[ia[0].clone(), ia[1].clone(), ia[2].clone(), ia[3].clone()],
-                );
-            }
-            "HEADER_CTRL" => {
-                let h0 = self.compile_expr(fb, &call.args[0])?;
-                let ih0 = self.convert_value(fb, &h0, &IrType::I32, &PbType::Long);
-                let h1 = self.compile_expr(fb, &call.args[1])?;
-                let ih1 = self.convert_value(fb, &h1, &IrType::I32, &PbType::Long);
-                let h2 = self.compile_expr(fb, &call.args[2])?;
-                let ih2 = self.convert_value(fb, &h2, &IrType::I32, &PbType::Long);
-                let h3 = self.compile_expr(fb, &call.args[3])?;
-                let ph3 = self.convert_value(fb, &h3, &IrType::Ptr, &PbType::String);
-                fb.call_void("pb_header", &[ih0, ih1, ih2, ph3]);
-            }
+            // The "PROGRESSBAR" (4-arg legacy form) and "HEADER_CTRL" arms were
+            // removed in batch 163.  The parser only ever emits the official
+            // syntax names (PROGRESSBAR_SET_POS / HEADER_GET_COUNT / ...), so both
+            // arms were unreachable, and their runtime helpers treated the dialog
+            // handle as the control HWND.  Do not re-add without a parser path.
             "ARRAY_SELECT" => {
                 let a0 = self.compile_expr(fb, &call.args[0])?;
                 let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
@@ -8732,6 +8715,37 @@ impl Compiler {
             }
             "DIALOG_DOEVENTS" => {
                 fb.call_void("pb_dialog_doevents", &[]);
+                return Ok(());
+            }
+            "DIALOG_GET_SIZE" => {
+                // DIALOG GET SIZE hDlg TO x&, y&   (official statement)
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let pw = fb.alloca(&IrType::I64);
+                    let ph = fb.alloca(&IrType::I64);
+                    fb.call_void("pb_dialog_get_size", &[hdlg64, pw.clone(), ph.clone()]);
+                    for (argi, slot) in [(1usize, &pw), (2usize, &ph)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_SIZE" => {
+                // DIALOG SET SIZE hDlg, nWide&, nHigh&   (official statement)
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let w = self.compile_expr(fb, &call.args[1])?;
+                    let w64 = self.convert_value(fb, &w, &IrType::I64, &PbType::Quad);
+                    let h = self.compile_expr(fb, &call.args[2])?;
+                    let h64 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_set_size", &[hdlg64, w64, h64]);
+                }
                 return Ok(());
             }
             "DIALOG_GET_TEXT" => {

@@ -5394,42 +5394,15 @@ __declspec(dllimport) unsigned long __stdcall DispatchMessageA(const void* lpMsg
 __declspec(dllimport) int __stdcall DestroyWindow(void* hWnd);
 __declspec(dllimport) void __stdcall PostQuitMessage(int nExitCode);
 
-#define PBM_SETRANGE 0x0401
 #define PBM_SETPOS   0x0402
 #define PBM_SETRANGE32 0x0406
 
-int pb_progressbar(int hDlg, int id, int pos, int range) {
-    void* hWnd = (void*)(long long)hDlg;
-    if (!hWnd) return 0;
-    SendMessageA(hWnd, PBM_SETRANGE32, 0, (unsigned long long)range);
-    SendMessageA(hWnd, PBM_SETPOS, pos, 0);
-    return 1;
-}
-
-/* HEADER: Win32 header control */
+/* HEADER: Win32 header control.
+ * The 4-arg pb_header() helper (and its HD_ITEMA typedef) was removed in batch
+ * 163: its only caller was the unreachable codegen arm "HEADER_CTRL", and it
+ * treated the dialog handle as the control HWND.  The official PB syntax is
+ * served by pb_header_send / _get_count / _get_item / _set_item below. */
 #define HDM_FIRST 0x1200
-#define HDM_INSERTITEMA (HDM_FIRST + 1)
-
-typedef struct {
-    unsigned long mask;
-    int cxy;
-    const char* pszText;
-    void* hbm;
-    int cchtText;
-    int fmt;
-    void* lParam;
-} HD_ITEMA;
-
-int pb_header(int hDlg, int id, int col, const char* text) {
-    void* hWnd = (void*)(long long)hDlg;
-    if (!hWnd || !text) return 0;
-    HD_ITEMA item = {0};
-    item.mask = 0x00000001 | 0x00000002; /* HDI_TEXT | HDI_WIDTH */
-    item.pszText = text;
-    item.cxy = 100;
-    SendMessageA(hWnd, HDM_INSERTITEMA, col, (unsigned long long)&item);
-    return 1;
-}
 /* PROGRESSBAR / HEADER statements: official PB syntax addresses the control by
  * (owner window, control id), so resolve the real HWND with GetDlgItem.  All
  * integer parameters are long long to match the I64 LLVM declarations. */
@@ -6418,17 +6391,44 @@ void pb_control_set_check(void* hctrl, int state) {
     SendMessageA(hctrl, 0x00F1 /* BM_SETCHECK */, (unsigned long long)state, 0);
 }
 
-/* DIALOG GET SIZE */
-void pb_dialog_get_size(void* hDlg, long long* pw, long long* ph) {
-    RECT rc;
-    GetClientRect(hDlg, &rc);
-    if (pw) *pw = rc.right - rc.left;
-    if (ph) *ph = rc.bottom - rc.top;
+/* DIALOG GET SIZE - the official statement returns the "total size of the
+ * dialog", i.e. the whole window (GetWindowRect), which pairs with DIALOG SET
+ * SIZE (SetWindowPos).  DIALOG GET CLIENT is the client-area variant and is
+ * still unimplemented.
+ *
+ * Units: the official help (dialog_get_size.htm / dialog_set_size.htm) says the
+ * values are in DIALOG UNITS unless the dialog was created with the PIXELS
+ * option.  DIALOG NEW converts its x/y/w/h through GetDialogBaseUnits() (see
+ * pb_window_new above) and DIALOG PIXELS is still unimplemented, so every
+ * dialog this compiler creates is a dialog-unit dialog: both statements apply
+ * the same conversion, in the opposite direction for GET.  Because pb_dlg_units
+ * reads exactly the base units pb_window_new uses, "DIALOG NEW ... w,h" followed
+ * by "DIALOG GET SIZE" round-trips to w,h for any w divisible by 4 and any h
+ * divisible by 8 (320x200 and 500x360 in the example). */
+static void pb_dlg_units(int* dlu_x, int* dlu_y) {
+    __declspec(dllimport) unsigned long __stdcall GetDialogBaseUnits(void);
+    unsigned long bu = GetDialogBaseUnits();
+    *dlu_x = (int)(bu & 0xFFFF);
+    *dlu_y = (int)((bu >> 16) & 0xFFFF);
+    if (*dlu_x <= 0) *dlu_x = 8;   /* never divide by zero */
+    if (*dlu_y <= 0) *dlu_y = 16;
 }
 
-/* DIALOG SET SIZE */
+void pb_dialog_get_size(void* hDlg, long long* pw, long long* ph) {
+    pb_rect_t rc;
+    int dx, dy;
+    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    GetWindowRect(hDlg, &rc);
+    pb_dlg_units(&dx, &dy);
+    if (pw) *pw = (long long)(((rc.right - rc.left) * 4) / dx);
+    if (ph) *ph = (long long)(((rc.bottom - rc.top) * 8) / dy);
+}
+
+/* DIALOG SET SIZE - dialog units in, pixels out to SetWindowPos */
 void pb_dialog_set_size(void* hDlg, long long w, long long h) {
-    SetWindowPos(hDlg, 0, 0, 0, (int)w, (int)h, 0x0040);
+    int dx, dy;
+    pb_dlg_units(&dx, &dy);
+    SetWindowPos(hDlg, 0, 0, 0, (int)((w * dx) / 4), (int)((h * dy) / 8), 0x0040);
 }
 
 /* ===================================================================

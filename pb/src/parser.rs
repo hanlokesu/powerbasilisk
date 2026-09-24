@@ -5939,6 +5939,27 @@ impl Parser {
                         line,
                     }));
                 }
+                // DIALOG SET SIZE hDlg, nWide&, nHigh&
+                // (must precede DIALOG SET TEXT: that guard only tests the verb)
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="SIZE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let nw = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let nh = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_SIZE".to_string(),
+                        args: vec![hd, nw, nh],
+                        line,
+                    }));
+                }
                 // DIALOG SET TEXT hDlg, "title"
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
@@ -6014,6 +6035,26 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "DIALOG_GET_TEXT".to_string(),
                         args: vec![hd, target],
+                        line,
+                    }));
+                }
+                // DIALOG GET SIZE hDlg TO x&, y&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="SIZE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let xv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yv = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_GET_SIZE".to_string(),
+                        args: vec![hd, xv, yv],
                         line,
                     }));
                 }

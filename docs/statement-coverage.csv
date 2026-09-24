@@ -1,4 +1,4 @@
-# Last updated from batch 162 (v0.2.019) - 2026-09-23,,,,
+# Last updated from batch 163 (v0.2.020) - 2026-09-24,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -180,7 +180,7 @@ DIALOG ENABLE,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG END,STATEMENT,PB/Win only,Implemented
 DIALOG GET CLIENT,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG GET LOC,STATEMENT,PB/Win only,Tier-3 DDT
-DIALOG GET SIZE,STATEMENT,PB/Win only,Tier-3 DDT
+DIALOG GET SIZE,STATEMENT,PB/Win only,Implemented
 DIALOG GET TEXT,STATEMENT,PB/Win only,Implemented
 DIALOG GET USER,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG HIDE,STATEMENT,PB/Win only,Tier-3 DDT
@@ -197,7 +197,7 @@ DIALOG SET CLIENT,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG SET COLOR,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG SET ICON,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG SET LOC,STATEMENT,PB/Win only,Tier-3 DDT
-DIALOG SET SIZE,STATEMENT,PB/Win only,Tier-3 DDT
+DIALOG SET SIZE,STATEMENT,PB/Win only,Implemented
 DIALOG SET TEXT,STATEMENT,PB/Win only,Implemented
 DIALOG SET USER,STATEMENT,PB/Win only,Tier-3 DDT
 DIALOG SHOW MODAL,STATEMENT,PB/Win only,Implemented
@@ -359,7 +359,6 @@ GRAPHIC WINDOW STABILIZE,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
 GRAPHIC_CIRCLE,FUNCTION,codegen builtin,Implemented
 GRAPHIC_SCALE_PIXELS,FUNCTION,codegen builtin,Implemented
 HEADER,STATEMENT,PB/Win only,Implemented
-HEADER_CTRL,FUNCTION,codegen builtin,Implemented
 HEX,FUNCTION,codegen builtin,Implemented
 HEX$,FUNCTION,Win32,Implemented
 HI,FUNCTION,Win32,Implemented
