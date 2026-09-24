@@ -5497,6 +5497,261 @@ long long pb_header_set_item(void* hWin, long long id, long long index, long lon
     if (!h || !itemPtr) return 0;
     return (long long)SendMessageA(h, HDM_SETITEMA, (unsigned int)index, (pb_lparam_t)itemPtr);
 }
+
+/* ===================================================================
+   TOOLBAR / STATUSBAR  (batch 164)
+   -------------------------------------------------------------------
+   Constants below are spelled out from commctrl.h and the PowerBASIC
+   WINAPI headers; this runtime never includes windows.h.  Cross-checked
+   against C:\PBWin10\WINAPI\CommCtrl.inc and compiler-built-in.inc, so
+   the %BTNS_* / %TBSTATE_* / %SBT_* / %CCS_* values a PB program passes
+   in are exactly the Win32 values used here.
+   =================================================================== */
+
+#define PB_TOOLBARCLASSNAME   "ToolbarWindow32"
+#define PB_STATUSCLASSNAME    "msctls_statusbar32"
+
+/* Toolbar messages - WM_USER + n */
+#define PB_TB_ENABLED         (0x0400 + 16)
+#define PB_TB_SETSTATE        (0x0400 + 17)
+#define PB_TB_GETSTATE        (0x0400 + 18)
+#define PB_TB_ADDBUTTONSA     (0x0400 + 20)
+#define PB_TB_INSERTBUTTONA   (0x0400 + 21)
+#define PB_TB_DELETEBUTTON    (0x0400 + 22)
+#define PB_TB_GETBUTTON       (0x0400 + 23)
+#define PB_TB_BUTTONCOUNT     (0x0400 + 24)
+#define PB_TB_COMMANDTOINDEX  (0x0400 + 25)
+#define PB_TB_ADDSTRINGA      (0x0400 + 28)
+#define PB_TB_SETIMAGELIST    (0x0400 + 48)
+#define PB_TB_BUTTONSTRUCTSIZE (0x0400 + 30)
+
+/* TBSTYLE_* / BTNS_* (identical values in CommCtrl.inc) */
+#define PB_TBSTYLE_SEP        0x0001
+#define PB_TBSTYLE_ENABLED    0x0004
+
+/* TBSTATE_* */
+#define PB_TBSTATE_ENABLED    0x0004
+
+/* Statusbar messages - WM_USER + n */
+#define PB_SB_SETTEXTA        (0x0400 + 1)
+#define PB_SB_SETPARTS        (0x0400 + 5)
+
+/* Common-control styles */
+#define PB_CCS_TOP            0x00000001
+#define PB_CCS_BOTTOM         0x00000003
+
+/* TBBUTTON - the two reserved BYTE slots of the 32-bit layout become six
+   on x64 so that the pointer-sized dwData stays 8-byte aligned. */
+#ifdef _WIN64
+typedef struct {
+    int                iBitmap;
+    int                idCommand;
+    unsigned char      fsState;
+    unsigned char      fsStyle;
+    unsigned char      bReserved[6];
+    unsigned long long dwData;
+    long long          iString;
+} PB_TBBUTTON;
+#else
+typedef struct {
+    int                iBitmap;
+    int                idCommand;
+    unsigned char      fsState;
+    unsigned char      fsStyle;
+    unsigned char      bReserved[2];
+    unsigned long      dwData;
+    long               iString;
+} PB_TBBUTTON;
+#endif
+
+/* TB_BUTTONSTRUCTSIZE must be sent exactly once per control, before the
+   first TB_ADDBUTTONS.  Sending it again makes comctl32 re-create its
+   button array, which leaves the earlier entries unaddressable: the
+   control still reports the old TB_BUTTONCOUNT but TB_GETSTATE starts
+   returning -1 for every index above the last insert. */
+static void* pb_toolbar_inited[64];
+
+static void pb_toolbar_init(void* h) {
+    int i;
+    for (i = 0; i < 64; i++) {
+        if (pb_toolbar_inited[i] == h) return;
+    }
+    SendMessageA(h, (unsigned int)PB_TB_BUTTONSTRUCTSIZE,
+                 (unsigned int)sizeof(PB_TBBUTTON), 0);
+    for (i = 0; i < 64; i++) {
+        if (pb_toolbar_inited[i] == 0) {
+            pb_toolbar_inited[i] = h;
+            return;
+        }
+    }
+}
+
+/* Shared tail for ADD BUTTON / ADD SEPARATOR: `at` is a 1-based position
+   (0 = append). */
+static long long pb_toolbar_insert(void* h, const PB_TBBUTTON* tb, long long at) {
+    if (at > 0) {
+        return (long long)SendMessageA(h, (unsigned int)PB_TB_INSERTBUTTONA,
+                                       (unsigned int)(at - 1), (pb_lparam_t)tb);
+    }
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_ADDBUTTONSA, 1, (pb_lparam_t)tb);
+}
+
+/* TOOLBAR ADD BUTTON hDlg, ID, image&, cmd&, style&, text$ [AT item&] */
+long long pb_toolbar_add_button(void* hDlg, long long id, long long image,
+                                long long cmd, long long style,
+                                const char* text, long long at) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    PB_TBBUTTON tb;
+    long long stridx = -1;      /* -1 = "this button has no text" */
+    if (!h) return 0;
+    pb_toolbar_init(h);
+    memset(&tb, 0, sizeof(tb));
+    tb.iBitmap   = (int)image;
+    tb.idCommand = (int)cmd;
+    tb.fsStyle   = (unsigned char)(style & 0xFF);
+    tb.fsState   = (unsigned char)PB_TBSTATE_ENABLED;
+    if (text && *text) {
+        /* TB_ADDSTRING copies the text into the control's own string pool;
+           iString must be that index, not a caller-owned pointer. */
+        stridx = (long long)SendMessageA(h, (unsigned int)PB_TB_ADDSTRINGA,
+                                         0, (pb_lparam_t)text);
+        /* A failed add leaves the pool empty, and an iString of 0 against an
+           empty pool makes comctl32 treat the button as unaddressable
+           (TB_GETSTATE returns -1 for it).  Fall back to -1 = "no text". */
+        if (stridx < 0) stridx = -1;
+    }
+    tb.iString = (long long)stridx;
+    return pb_toolbar_insert(h, &tb, at);
+}
+
+/* TOOLBAR ADD SEPARATOR hDlg, ID, size& [,cmd&] [AT item&]
+   For separators iBitmap carries the width in pixels. */
+long long pb_toolbar_add_separator(void* hDlg, long long id, long long size,
+                                   long long cmd, long long at) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    PB_TBBUTTON tb;
+    if (!h) return 0;
+    pb_toolbar_init(h);
+    memset(&tb, 0, sizeof(tb));
+    tb.iBitmap   = (int)size;
+    tb.idCommand = (int)cmd;
+    tb.fsStyle   = (unsigned char)PB_TBSTYLE_SEP;
+    tb.fsState   = (unsigned char)PB_TBSTATE_ENABLED;
+    return pb_toolbar_insert(h, &tb, at);
+}
+
+/* Resolve a 1-based position or a command id into a 0-based index. */
+static long long pb_toolbar_index(void* h, long long item, long long bycmd) {
+    if (bycmd) {
+        long long idx = (long long)SendMessageA(h, (unsigned int)PB_TB_COMMANDTOINDEX,
+                                                (unsigned int)item, 0);
+        return idx;
+    }
+    return item - 1;
+}
+
+/* TOOLBAR GET/SET STATE address the button by COMMAND ID, not by index:
+   comctl32's TB_GETSTATE / TB_SETSTATE take a command identifier in wParam,
+   while TB_GETBUTTON / TB_DELETEBUTTON take an index.  Resolve a 1-based
+   position to the button's idCommand through TB_GETBUTTON. */
+static long long pb_toolbar_cmdid(void* h, long long item, long long bycmd) {
+    PB_TBBUTTON tb;
+    long long idx;
+    if (bycmd) return item;
+    idx = item - 1;
+    if (idx < 0) return -1;
+    memset(&tb, 0, sizeof(tb));
+    if (!SendMessageA(h, (unsigned int)PB_TB_GETBUTTON, (unsigned int)idx,
+                      (pb_lparam_t)&tb)) {
+        return -1;
+    }
+    return (long long)tb.idCommand;
+}
+
+/* TOOLBAR DELETE BUTTON hDlg, id&, [BYCMD] item& */
+long long pb_toolbar_delete_button(void* hDlg, long long id, long long item,
+                                   long long bycmd) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    long long idx;
+    if (!h) return 0;
+    idx = pb_toolbar_index(h, item, bycmd);
+    if (idx < 0) return 0;
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_DELETEBUTTON,
+                                   (unsigned int)idx, 0);
+}
+
+/* TOOLBAR GET STATE hDlg, ID, [BYCMD] item& TO datav& */
+long long pb_toolbar_get_state(void* hDlg, long long id, long long item,
+                               long long bycmd) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    long long cmd;
+    if (!h) return 0;
+    cmd = pb_toolbar_cmdid(h, item, bycmd);
+    if (cmd < 0) return 0;
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_GETSTATE,
+                                   (unsigned int)cmd, 0);
+}
+
+/* TOOLBAR GET COUNT hDlg, ID TO datav& */
+long long pb_toolbar_get_count(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_BUTTONCOUNT, 0, 0);
+}
+
+/* TOOLBAR SET STATE hDlg, ID, [BYCMD] item&, state& */
+long long pb_toolbar_set_state(void* hDlg, long long id, long long item,
+                               long long state, long long bycmd) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    long long cmd;
+    if (!h) return 0;
+    cmd = pb_toolbar_cmdid(h, item, bycmd);
+    if (cmd < 0) return 0;
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_SETSTATE,
+                                   (unsigned int)cmd, (pb_lparam_t)state);
+}
+
+/* TOOLBAR SET IMAGELIST hDlg, ID, hLst, ListType&
+   PB ListType: 1 = default images, 2 = disabled, 3 = hot.
+   TB_SETIMAGELIST wParam: 0 = normal, 1 = hot, 2 = disabled. */
+long long pb_toolbar_set_imagelist(void* hDlg, long long id, long long hLst,
+                                   long long listtype) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    unsigned int which;
+    if (!h) return 0;
+    if (listtype == 2) {
+        which = 2;
+    } else if (listtype == 3) {
+        which = 1;
+    } else {
+        which = 0;
+    }
+    return (long long)SendMessageA(h, (unsigned int)PB_TB_SETIMAGELIST,
+                                   which, (pb_lparam_t)hLst);
+}
+
+/* STATUSBAR SET PARTS hDlg, id&, x& [,x&...]  (max 32 parts) */
+long long pb_statusbar_set_parts(void* hDlg, long long id, int* widths,
+                                 long long count) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h || !widths || count <= 0) return 0;
+    if (count > 32) count = 32;
+    return (long long)SendMessageA(h, (unsigned int)PB_SB_SETPARTS,
+                                   (unsigned int)count, (pb_lparam_t)widths);
+}
+
+/* STATUSBAR SET TEXT hDlg, id&, item&, style&, text$
+   SB_SETTEXT wParam: low byte = 0-based part index, high byte = style. */
+long long pb_statusbar_set_text(void* hDlg, long long id, long long item,
+                                long long style, const char* text) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    unsigned int wp;
+    if (!h) return 0;
+    wp = (unsigned int)((item > 0 ? item - 1 : 0) & 0xFF)
+       | (unsigned int)((style & 0xFF) << 8);
+    return (long long)SendMessageA(h, (unsigned int)PB_SB_SETTEXTA,
+                                   wp, (pb_lparam_t)text);
+}
 /* ARRAY SELECT state: tracks selected range for subsequent array operations */
 static int g_array_sel_start = 0;
 static int g_array_sel_end = 0;
@@ -6597,6 +6852,46 @@ void* pb_control_add_treeview(void* parent, long id, int x, int y, int w, int ht
     return CreateWindowExA(0x00000200 /* WS_EX_CLIENTEDGE */, "SysTreeView32", "",
                            style, x, y, w, ht, parent,
                            (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* ---------------- CONTROL ADD TOOLBAR / STATUSBAR (batch 164) ----------------
+   The x/y/width/height operands are deliberately ignored: both controls dock
+   themselves inside the parent according to their style bits (%CCS_TOP /
+   %CCS_BOTTOM / %SBARS_SIZEGRIP), which is exactly what the official docs
+   say about these two forms.  The style / exstyle operands are passed
+   straight through to CreateWindowExA. */
+void* pb_control_add_toolbar(void* parent, long id, const char* text,
+                             int x, int y, int w, int ht,
+                             long long style, long long exstyle) {
+    unsigned long s = (unsigned long)(style ? style : PB_CCS_TOP);
+    void* h;
+    (void)text;
+    pb_icc(PB_ICC_BAR_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    h = CreateWindowExA((unsigned long)exstyle, PB_TOOLBARCLASSNAME, "",
+                        s | 0x40000000 /* WS_CHILD */ | 0x10000000 /* WS_VISIBLE */,
+                        x, y, w, ht, parent, (void*)(long long)id,
+                        GetModuleHandleA(0), 0);
+    if (h) {
+        SendMessageA(h, (unsigned int)PB_TB_BUTTONSTRUCTSIZE,
+                     (unsigned int)sizeof(PB_TBBUTTON), 0);
+    }
+    return h;
+}
+
+void* pb_control_add_statusbar(void* parent, long id, const char* text,
+                               int x, int y, int w, int ht,
+                               long long style, long long exstyle) {
+    unsigned long s = (unsigned long)(style ? style : PB_CCS_BOTTOM);
+    void* h;
+    (void)text;
+    pb_icc(PB_ICC_BAR_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    h = CreateWindowExA((unsigned long)exstyle, PB_STATUSCLASSNAME, "",
+                        s | 0x40000000 | 0x10000000,
+                        x, y, w, ht, parent, (void*)(long long)id,
+                        GetModuleHandleA(0), 0);
+    return h;
 }
 
 /* ---------------- LISTVIEW INSERT COLUMN ---------------- */

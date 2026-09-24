@@ -1866,6 +1866,106 @@ impl Compiler {
             ],
             false,
         );
+
+        // ---- TOOLBAR / STATUSBAR (batch 164) ----
+        for ctl in ["pb_control_add_toolbar", "pb_control_add_statusbar"] {
+            self.module.declare_function(
+                ctl,
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ],
+                false,
+            );
+        }
+        self.module.declare_function(
+            "pb_toolbar_add_button",
+            &IrType::I64,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_add_separator",
+            &IrType::I64,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_delete_button",
+            &IrType::I64,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_get_state",
+            &IrType::I64,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_get_count",
+            &IrType::I64,
+            &[IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_set_imagelist",
+            &IrType::I64,
+            &[IrType::I64, IrType::I32, IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_toolbar_set_state",
+            &IrType::I64,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_statusbar_set_parts",
+            &IrType::Void,
+            &[IrType::I64, IrType::I32, IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_statusbar_set_text",
+            &IrType::I64,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+            false,
+        );
         self.module.declare_function(
             "pb_listview_insert_column",
             &IrType::Void,
@@ -8460,6 +8560,214 @@ impl Compiler {
                         let hc_i = fb.ptrtoint64(&hc);
                         fb.store(&hc_i, &ptr);
                     }
+                }
+                return Ok(());
+            }
+            // ---- TOOLBAR / STATUSBAR (batch 164) ----
+            // The parser normalises every optional operand into a fixed slot, so
+            // these arms read positions rather than guessing at the arity.
+            "CONTROL_ADD_TOOLBAR" | "CONTROL_ADD_STATUSBAR" => {
+                if call.args.len() >= 10 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let style_v = self.compile_expr(fb, &call.args[8])?;
+                    let exstyle_v = self.compile_expr(fb, &call.args[9])?;
+                    // The declared signature takes i32 for both, so normalise
+                    // here: a %CCS_* equate or a LONG variable both land in i32.
+                    let style = self.convert_value(fb, &style_v, &IrType::I32, &PbType::Long);
+                    let exstyle = self.convert_value(fb, &exstyle_v, &IrType::I32, &PbType::Long);
+                    let fname = if call.name == "CONTROL_ADD_TOOLBAR" {
+                        "pb_control_add_toolbar"
+                    } else {
+                        "pb_control_add_statusbar"
+                    };
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        fname,
+                        &[parent, id, text, x, y, w, h, style, exstyle],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[7]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        fb.store(&hc_i, &ptr);
+                    }
+                    // Optional trailing CALL callback -> register it on the control
+                    if call.args.len() >= 11 {
+                        if let Expr::Variable(name) = &call.args[10] {
+                            let upper = name.to_uppercase();
+                            let fi = self.functions.get(&upper).or_else(|| self.subs.get(&upper));
+                            if let Some(fi) = fi {
+                                let fn_ptr = Val::new(format!("@{}", fi.ir_name), IrType::Ptr);
+                                fb.call_void("pb_register_callback_hwnd", &[hc, fn_ptr]);
+                            } else {
+                                eprintln!(
+                                    "warning: line {}: CONTROL ADD: unknown sub `{}`",
+                                    call.line, upper
+                                );
+                            }
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "TOOLBAR_ADD_BUTTON" => {
+                if call.args.len() >= 9 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let image = self.compile_expr(fb, &call.args[2])?;
+                    let cmd = self.compile_expr(fb, &call.args[3])?;
+                    let style = self.compile_expr(fb, &call.args[4])?;
+                    let text = self.compile_expr(fb, &call.args[5])?;
+                    let at = self.compile_expr(fb, &call.args[6])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_toolbar_add_button",
+                        &[a, b, image, cmd, style, text, at],
+                    );
+                    // Optional CALL callback -> register it on the toolbar
+                    if let Expr::Variable(name) = &call.args[7] {
+                        let upper = name.to_uppercase();
+                        let fi = self.functions.get(&upper).or_else(|| self.subs.get(&upper));
+                        if let Some(fi) = fi {
+                            let fn_ptr = Val::new(format!("@{}", fi.ir_name), IrType::Ptr);
+                            let a2 = self.compile_expr(fb, &call.args[0])?;
+                            let b2 = self.compile_expr(fb, &call.args[1])?;
+                            let ctrl = fb.call(&IrType::Ptr, "pb_pb_hwnd", &[a2, b2]);
+                            fb.call_void("pb_register_callback_hwnd", &[ctrl, fn_ptr]);
+                        } else {
+                            eprintln!(
+                                "warning: line {}: TOOLBAR ADD BUTTON: unknown sub `{}`",
+                                call.line, upper
+                            );
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "TOOLBAR_ADD_SEPARATOR" => {
+                if call.args.len() >= 6 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let size = self.compile_expr(fb, &call.args[2])?;
+                    let cmd = self.compile_expr(fb, &call.args[3])?;
+                    let at = self.compile_expr(fb, &call.args[4])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_toolbar_add_separator",
+                        &[a, b, size, cmd, at],
+                    );
+                }
+                return Ok(());
+            }
+            "TOOLBAR_DELETE_BUTTON" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let bycmd = self.compile_expr(fb, &call.args[3])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_toolbar_delete_button",
+                        &[a, b, item, bycmd],
+                    );
+                }
+                return Ok(());
+            }
+            "TOOLBAR_GET_STATE" => {
+                if call.args.len() >= 5 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let bycmd = self.compile_expr(fb, &call.args[4])?;
+                    let val = fb.call(&IrType::I64, "pb_toolbar_get_state", &[a, b, item, bycmd]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        fb.store(&val32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TOOLBAR_GET_COUNT" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let val = fb.call(&IrType::I64, "pb_toolbar_get_count", &[a, b]);
+                    let val32 = fb.trunc(&val, &IrType::I32);
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        fb.store(&val32, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TOOLBAR_SET_IMAGELIST" => {
+                if call.args.len() >= 5 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let hlst = self.compile_expr(fb, &call.args[2])?;
+                    let ltype = self.compile_expr(fb, &call.args[3])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_toolbar_set_imagelist",
+                        &[a, b, hlst, ltype],
+                    );
+                }
+                return Ok(());
+            }
+            "TOOLBAR_SET_STATE" => {
+                if call.args.len() >= 5 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let state = self.compile_expr(fb, &call.args[3])?;
+                    let bycmd = self.compile_expr(fb, &call.args[4])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_toolbar_set_state",
+                        &[a, b, item, state, bycmd],
+                    );
+                }
+                return Ok(());
+            }
+            "STATUSBAR_SET_PARTS" => {
+                if call.args.len() >= 4 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    // Widths arrive as a variable-length tail; build a real
+                    // [n x i32] stack array for SB_SETPARTS.
+                    let n = call.args.len() - 3; // drop hDlg, id, trailing flag
+                    let arr_ty = IrType::Array(n, Box::new(IrType::I32));
+                    let buf = fb.alloca(&arr_ty);
+                    for k in 0..n {
+                        let v = self.compile_expr(fb, &call.args[2 + k])?;
+                        let v32 = self.convert_value(fb, &v, &IrType::I32, &PbType::Long);
+                        let idxv = fb.const_i64(k as i64);
+                        let slot = fb.gep_array(&arr_ty, &buf, &idxv);
+                        fb.store(&v32, &slot);
+                    }
+                    let cnt = fb.const_i64(n as i64);
+                    fb.call_void("pb_statusbar_set_parts", &[a, b, buf, cnt]);
+                }
+                return Ok(());
+            }
+            "STATUSBAR_SET_TEXT" => {
+                if call.args.len() >= 6 {
+                    let a = self.compile_expr(fb, &call.args[0])?;
+                    let b = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let style = self.compile_expr(fb, &call.args[3])?;
+                    let text = self.compile_expr(fb, &call.args[4])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_statusbar_set_text",
+                        &[a, b, item, style, text],
+                    );
                 }
                 return Ok(());
             }

@@ -1,4 +1,4 @@
-# Last updated from batch 163 (v0.2.020) - 2026-09-24,,,,
+# Last updated from batch 164 (v0.2.021) - 2026-09-24,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -104,10 +104,10 @@ CONTROL ADD LISTVIEW,STATEMENT,PB/Win only,Implemented
 CONTROL ADD OPTION,STATEMENT,PB/Win only,Tier-3 DDT
 CONTROL ADD PROGRESSBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD SCROLLBAR,STATEMENT,PB/Win only,Implemented
-CONTROL ADD STATUSBAR,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL ADD STATUSBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD TAB,STATEMENT,PB/Win only,Tier-3 DDT
 CONTROL ADD TEXTBOX,STATEMENT,PB/Win only,Tier-3 DDT
-CONTROL ADD TOOLBAR,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL ADD TOOLBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD TREEVIEW,STATEMENT,PB/Win only,Implemented
 CONTROL DISABLE,STATEMENT,PB/Win only,Implemented
 CONTROL ENABLE,STATEMENT,PB/Win only,Implemented
@@ -572,7 +572,7 @@ SPACE$,FUNCTION,Win32,Implemented
 SPLIT,STATEMENT,PB/Win + PB/CC,Established
 SQR,FUNCTION,LLVM intrinsic,Implemented
 STATIC,STATEMENT,PB/Win + PB/CC,Established
-STATUSBAR,STATEMENT,PB/Win + PB/CC,Tier-3 DDT
+STATUSBAR,STATEMENT,PB/Win + PB/CC,Implemented
 STR,FUNCTION,codegen builtin,Implemented
 STR$,FUNCTION,Win32,Implemented
 STRDELETE,FUNCTION,codegen builtin,Implemented
@@ -611,7 +611,7 @@ THREADED,STATEMENT,PB/Win + PB/CC,Established
 THREADID,FUNCTION,Win32,Implemented
 TIMER,FUNCTION,codegen builtin,Implemented
 TIX,STATEMENT,PB/Win + PB/CC,Established
-TOOLBAR,STATEMENT,PB/Win only,Tier-3 DDT
+TOOLBAR,STATEMENT,PB/Win only,Implemented
 TRACE,STATEMENT,PB/Win + PB/CC,Established
 TREEVIEW,STATEMENT,PB/Win only,Implemented
 TRIM,FUNCTION,codegen builtin,Implemented

@@ -1,0 +1,4 @@
+    Checking pb v0.1.1 (C:\Users\HANLO\Doubao\chats\2026-09-05\new-chat\powerbasilisk_test\pbsrc\pb)
+    Checking pbinterp v0.1.1 (C:\Users\HANLO\Doubao\chats\2026-09-05\new-chat\powerbasilisk_test\pbsrc\pbinterp)
+    Checking pbcompiler v0.1.1 (C:\Users\HANLO\Doubao\chats\2026-09-05\new-chat\powerbasilisk_test\pbsrc\pbcompiler)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 5.25s

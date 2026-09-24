@@ -5854,6 +5854,127 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD TOOLBAR, hDlg, ID, Txt$, x, y, nWide, nHigh
+                //   [,style&] [,exstyle&] [,CALL callback]           (batch 164)
+                // CONTROL ADD STATUSBAR, hDlg, id&, txt$, x, y, xx, yy
+                //   [, [style&] [, [exstyle&]]] [[,] CALL callback]  (batch 164)
+                // The x/y/width/height operands are parsed but ignored, exactly as
+                // the official docs state: both controls dock themselves inside the
+                // parent according to their style bits (%CCS_TOP / %CCS_BOTTOM /
+                // %SBARS_SIZEGRIP), not according to those values.  A trailing CALL
+                // clause registers a callback on the created control.  style and
+                // exstyle always occupy their own slots so a trailing CALL clause
+                // can never be mistaken for one of them.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TOOLBAR")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if self.peek() == &Token::To {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::IntegerLit(0)
+                    };
+                    let mut args = vec![hwnd, id, text, x, y, w, h, target];
+                    let mut extra = 0;
+                    while self.peek() == &Token::Comma {
+                        if matches!(self.peek_at(1), Some(Token::Call)) {
+                            break;
+                        }
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    while extra < 2 {
+                        args.push(Expr::IntegerLit(0));
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Call {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_TOOLBAR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="STATUSBAR")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if self.peek() == &Token::To {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::IntegerLit(0)
+                    };
+                    let mut args = vec![hwnd, id, text, x, y, w, h, target];
+                    let mut extra = 0;
+                    while self.peek() == &Token::Comma {
+                        if matches!(self.peek_at(1), Some(Token::Call)) {
+                            break;
+                        }
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    while extra < 2 {
+                        args.push(Expr::IntegerLit(0));
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Call {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_STATUSBAR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
                 // DIALOG NEW hParent, "title", x, y, w, h TO hDlg
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="NEW")
@@ -6947,6 +7068,137 @@ impl Parser {
                 if name_upper == "IMPORT" {
                     return self.parse_import_statement(line);
                 }
+                // TOOLBAR / STATUSBAR statements, official PB syntax (batch 164).
+                // Same reason as PROGRESSBAR / HEADER just below: these must be
+                // handled before the bare-control-name fallback, which would
+                // otherwise swallow the whole line as a Noop and make codegen
+                // report the statement as unimplemented.  Supported forms:
+                //   TOOLBAR ADD BUTTON hDlg, ID, image&, cmd&, style&, text$ [AT item&]
+                //   TOOLBAR ADD SEPARATOR hDlg, ID, size& [,cmd&] [AT item&]
+                //   TOOLBAR DELETE BUTTON hDlg, id&, [BYCMD] item&
+                //   TOOLBAR GET STATE hDlg, ID, [BYCMD] item& TO datav&
+                //   TOOLBAR GET COUNT hDlg, ID TO datav&
+                //   TOOLBAR SET IMAGELIST hDlg, ID, hLst, ListType&
+                //   TOOLBAR SET STATE hDlg, ID, [BYCMD] item&, state&
+                //   STATUSBAR SET PARTS hDlg, id&, x& [,x&...]
+                //   STATUSBAR SET TEXT hDlg, id&, item&, style&, text$
+                if name_upper == "TOOLBAR" || name_upper == "STATUSBAR" {
+                    let head = name_upper.clone();
+                    let verb: Option<String> = match self.peek_at(1) {
+                        Some(Token::Identifier(w)) => {
+                            let u = w.to_uppercase();
+                            if u == "ADD" || u == "DELETE" || u == "GET" || u == "SET" {
+                                Some(u)
+                            } else {
+                                None
+                            }
+                        }
+                        _ => None,
+                    };
+                    if let Some(verb) = verb {
+                        self.advance(); // TOOLBAR / STATUSBAR
+                        self.advance(); // verb
+                                        // Optional noun: BUTTON / SEPARATOR / STATE / COUNT /
+                                        // IMAGELIST / PARTS / TEXT
+                        let mut noun = String::new();
+                        if let Some(Token::Identifier(w2)) = self.peek_at(0) {
+                            let t = w2.to_uppercase();
+                            if t == "BUTTON"
+                                || t == "SEPARATOR"
+                                || t == "STATE"
+                                || t == "COUNT"
+                                || t == "IMAGELIST"
+                                || t == "PARTS"
+                                || t == "TEXT"
+                            {
+                                noun = t;
+                                self.advance();
+                            }
+                        }
+                        // Every form starts with  hDlg, id
+                        let mut args = Vec::new();
+                        args.push(self.parse_expression()?); // hDlg
+                        self.expect(&Token::Comma)?;
+                        args.push(self.parse_expression()?); // id
+                                                             // Optional BYCMD between id& and item& (DELETE BUTTON /
+                                                             // GET STATE / SET STATE).  BYCMD is an identifier, not a
+                                                             // reserved token.
+                        let mut bycmd = false;
+                        if self.peek() == &Token::Comma {
+                            if let Some(Token::Identifier(w3)) = self.peek_at(1) {
+                                if w3.to_uppercase() == "BYCMD" {
+                                    bycmd = true;
+                                    self.advance(); // comma
+                                    self.advance(); // BYCMD
+                                                    // The item operand follows BYCMD directly -
+                                                    // the comma before it was already consumed,
+                                                    // so it has to be parsed here.
+                                    args.push(self.parse_expression()?);
+                                }
+                            }
+                        }
+                        // Remaining comma-separated operands
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        let n_before_at = args.len();
+                        // [AT item&] - AT is an identifier, not a reserved token
+                        let mut saw_at = false;
+                        if let Some(Token::Identifier(w4)) = self.peek_at(0) {
+                            if w4.to_uppercase() == "AT" {
+                                saw_at = true;
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                        }
+                        // [CALL callback] - CALL is a reserved token (token.rs:157)
+                        let mut saw_call = false;
+                        if self.peek() == &Token::Call {
+                            saw_call = true;
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        // Normalise the optional operands into a fixed layout so
+                        // codegen never has to guess which optionals are present:
+                        //   TOOLBAR ADD BUTTON    -> [hDlg, id, image, cmd, style,
+                        //                             text, at, cb]
+                        //   TOOLBAR ADD SEPARATOR -> [hDlg, id, size, cmd, at]
+                        if head == "TOOLBAR" && verb == "ADD" && noun == "BUTTON" {
+                            if saw_call && !saw_at {
+                                args.push(Expr::IntegerLit(0)); // AT slot
+                            }
+                            while args.len() < 8 {
+                                args.push(Expr::IntegerLit(0));
+                            }
+                        } else if head == "TOOLBAR" && verb == "ADD" && noun == "SEPARATOR" {
+                            if saw_at && n_before_at == 3 {
+                                args.push(Expr::IntegerLit(0)); // cmd slot
+                            }
+                            while args.len() < 5 {
+                                args.push(Expr::IntegerLit(0));
+                            }
+                        }
+                        // TO datav&  (GET STATE / GET COUNT)
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        // Trailing BYCMD flag for codegen (0 or 1)
+                        args.push(Expr::IntegerLit(if bycmd { 1 } else { 0 }));
+                        self.consume_to_eol();
+                        let stmt_name = if noun.is_empty() {
+                            format!("{}_{}", head, verb)
+                        } else {
+                            format!("{}_{}_{}", head, verb, noun)
+                        };
+                        return Ok(Statement::Call(CallStmt {
+                            name: stmt_name,
+                            args,
+                            line,
+                        }));
+                    }
+                }
                 // PROGRESSBAR / HEADER statements, official PB syntax.  These
                 // must be handled before the bare-control-name fallback below,
                 // which would otherwise swallow the whole line as a Noop and
@@ -7022,8 +7274,6 @@ impl Parser {
                     "DIALOG"
                         | "CONTROL"
                         | "MENU"
-                        | "TOOLBAR"
-                        | "STATUSBAR"
                         | "COMBOBOX"
                         | "LISTBOX"
                         | "TREEVIEW"

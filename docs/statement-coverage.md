@@ -1,28 +1,30 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 163 (v0.2.020)** — 2026-09-24. All statements through batch 163 are reflected in this matrix.
+> **Last updated from batch 164 (v0.2.021)** — 2026-09-24. All statements through batch 164 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **737** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 467 STATEMENT, 1 FORK EXTENSION).
-- **636** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **100** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
+- **640** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **96** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 488 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 492 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **636** | Implemented + Established |
+| ✅ **Total available** | **640** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 100 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 96 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -134,10 +136,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL ADD OPTION | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | Implemented
-| CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TAB | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Tier-3 DDT |
-| CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | Implemented
 | CONTROL ADDSTRING | STATEMENT | PB/Win only | Implemented |
 | CONTROL DISABLE | STATEMENT | PB/Win only | Implemented
@@ -611,7 +613,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SPLIT | STATEMENT | PB/Win + PB/CC | Established |
 | SQR | FUNCTION | LLVM intrinsic | Implemented |
 | STATIC | STATEMENT | PB/Win + PB/CC | Established |
-| STATUSBAR | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| STATUSBAR | STATEMENT | PB/Win + PB/CC | Implemented |
 | STR | FUNCTION | codegen builtin | Implemented |
 | STR$ | FUNCTION | Win32 | Implemented |
 | STRDELETE | FUNCTION | codegen builtin | Implemented |
@@ -650,7 +652,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | THREADID | FUNCTION | Win32 | Implemented |
 | TIMER | FUNCTION | codegen builtin | Implemented |
 | TIX | STATEMENT | PB/Win + PB/CC | Established |
-| TOOLBAR | STATEMENT | PB/Win only | Tier-3 DDT |
+| TOOLBAR | STATEMENT | PB/Win only | Implemented |
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
 | TREEVIEW | STATEMENT | PB/Win only | Implemented
 | TRIM | FUNCTION | codegen builtin | Implemented |
