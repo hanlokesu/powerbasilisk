@@ -2068,6 +2068,198 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_scrollbar_get_pos",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_get_pagesize",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_get_trackpos",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_get_lo",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_get_hi",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_set_range",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_set_pagesize",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_scrollbar_set_pos",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_add",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_delete",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_find",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_count",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_selcount",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_select",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_state",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_text",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_get_user",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_insert",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_reset",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_select",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_set_text",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_set_user",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I64,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_cblb_unselect",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
             "pb_treeview_delete",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32, IrType::Ptr],
@@ -8234,8 +8426,9 @@ impl Compiler {
                     let hv = self.compile_expr(fb, &call.args[4])?;
                     let hwnd = fb.call(&IrType::Ptr, "pb_window_new", &[tv, xv, yv, wv, hv]);
                     if let Some(target) = call.args.get(5) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
-                            fb.store(&hwnd, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, target) {
+                            let cv = self.convert_value(fb, &hwnd, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -8260,8 +8453,9 @@ impl Compiler {
                         &[hwnd, id, text, x, y, w, h],
                     );
                     if let Some(target) = call.args.get(7) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, target) {
-                            fb.store(&hctrl, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, target) {
+                            let cv = self.convert_value(fb, &hctrl, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -8289,8 +8483,9 @@ impl Compiler {
                         &[hwnd, id, text, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(7) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -8313,8 +8508,9 @@ impl Compiler {
                         &[hwnd, id, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(6) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -8544,6 +8740,780 @@ impl Compiler {
                             fb.store(&val32, &ptr);
                         }
                     }
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_GET_POS" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_scrollbar_get_pos", &[h, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_GET_PAGESIZE" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_scrollbar_get_pagesize", &[h, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_GET_TRACKPOS" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_scrollbar_get_trackpos", &[h, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_GET_RANGE" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let lo = fb.call(&IrType::I64, "pb_scrollbar_get_lo", &[h, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &lo, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                    // fb.call consumes its operands, so the two simple
+                    // handle/id operands are re-evaluated for the second query.
+                    let mut h2 = self.compile_expr(fb, &call.args[0])?;
+                    if h2.ty != IrType::Ptr {
+                        h2 = fb.inttoptr(&h2);
+                    }
+                    let id2 = self.compile_expr(fb, &call.args[1])?;
+                    let hi = fb.call(&IrType::I64, "pb_scrollbar_get_hi", &[h2, id2]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &hi, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_SET_POS" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let a2 = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(&IrType::I64, "pb_scrollbar_set_pos", &[h, id, a2]);
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_SET_PAGESIZE" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let a2 = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(&IrType::I64, "pb_scrollbar_set_pagesize", &[h, id, a2]);
+                }
+                return Ok(());
+            }
+            "SCROLLBAR_SET_RANGE" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let a2 = self.compile_expr(fb, &call.args[2])?;
+                    let a3 = self.compile_expr(fb, &call.args[3])?;
+                    fb.call(&IrType::I64, "pb_scrollbar_set_range", &[h, id, a2, a3]);
+                }
+                return Ok(());
+            }
+            "COMBOBOX_ADD" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_str_payload(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_cblb_add", &[h, id, text, fb.const_i64(0)]);
+                    if call.args.len() >= 4 {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                } else if call.args.len() == 2 {
+                    // Legacy fork form: COMBOBOX ADD hCtrl, "text"
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let txt = self.compile_str_payload(fb, &call.args[1])?;
+                    fb.call_void("pb_combobox_add", &[hc, txt]);
+                }
+                return Ok(());
+            }
+            "COMBOBOX_DELETE" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_delete",
+                        &[h, id, item, fb.const_i64(0)],
+                    );
+                }
+                return Ok(());
+            }
+            "COMBOBOX_FIND" => {
+                if call.args.len() >= 5 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_find",
+                        &[h, id, item, text, fb.const_i64(0), fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_FIND_EXACT" => {
+                if call.args.len() >= 5 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_find",
+                        &[h, id, item, text, fb.const_i64(1), fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_COUNT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_cblb_get_count", &[h, id, fb.const_i64(0)]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_SELCOUNT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_selcount",
+                        &[h, id, fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_SELECT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_select",
+                        &[h, id, fb.const_i32(1), fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_STATE" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_state",
+                        &[h, id, item, fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_cblb_get_text",
+                        &[h, id, item, bp.clone(), fb.const_i32(256), fb.const_i64(0)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                } else if call.args.len() == 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_cblb_get_text",
+                        &[
+                            h,
+                            id,
+                            fb.const_i32(0),
+                            bp.clone(),
+                            fb.const_i32(256),
+                            fb.const_i64(0),
+                        ],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_GET_USER" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_user",
+                        &[h, id, item, fb.const_i64(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_INSERT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_insert",
+                        &[h, id, item, text, fb.const_i64(0)],
+                    );
+                    if call.args.len() >= 5 {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "COMBOBOX_RESET" => {
+                if call.args.len() >= 2 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call(&IrType::I64, "pb_cblb_reset", &[h, id, fb.const_i64(0)]);
+                }
+                return Ok(());
+            }
+            "COMBOBOX_SELECT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_select",
+                        &[h, id, item, fb.const_i64(0)],
+                    );
+                }
+                return Ok(());
+            }
+            "COMBOBOX_SET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_set_text",
+                        &[h, id, item, text, fb.const_i64(0)],
+                    );
+                }
+                return Ok(());
+            }
+            "COMBOBOX_SET_USER" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let val = self.compile_expr(fb, &call.args[3])?;
+                    let val64 = self.to_i64(fb, &val);
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_set_user",
+                        &[h, id, item, val64, fb.const_i64(0)],
+                    );
+                }
+                return Ok(());
+            }
+            "COMBOBOX_UNSELECT" => {
+                if call.args.len() >= 2 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_unselect",
+                        &[h, id, fb.const_i32(0), fb.const_i64(0)],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTBOX_ADD" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_str_payload(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_cblb_add", &[h, id, text, fb.const_i64(1)]);
+                    if call.args.len() >= 4 {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                } else if call.args.len() == 2 {
+                    // Legacy fork form: COMBOBOX ADD hCtrl, "text"
+                    let hc = self.compile_expr(fb, &call.args[0])?;
+                    let txt = self.compile_str_payload(fb, &call.args[1])?;
+                    fb.call_void("pb_listbox_add", &[hc, txt]);
+                }
+                return Ok(());
+            }
+            "LISTBOX_DELETE" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_delete",
+                        &[h, id, item, fb.const_i64(1)],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTBOX_FIND" => {
+                if call.args.len() >= 5 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_find",
+                        &[h, id, item, text, fb.const_i64(0), fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_FIND_EXACT" => {
+                if call.args.len() >= 5 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_find",
+                        &[h, id, item, text, fb.const_i64(1), fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_COUNT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_cblb_get_count", &[h, id, fb.const_i64(1)]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_SELCOUNT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_selcount",
+                        &[h, id, fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_SELECT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let start = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_select",
+                        &[h, id, start, fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                } else if call.args.len() == 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_select",
+                        &[h, id, fb.const_i32(1), fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_STATE" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_state",
+                        &[h, id, item, fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_cblb_get_text",
+                        &[h, id, item, bp.clone(), fb.const_i32(256), fb.const_i64(1)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                } else if call.args.len() == 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_cblb_get_text",
+                        &[
+                            h,
+                            id,
+                            fb.const_i32(0),
+                            bp.clone(),
+                            fb.const_i32(256),
+                            fb.const_i64(1),
+                        ],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_GET_USER" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_get_user",
+                        &[h, id, item, fb.const_i64(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_INSERT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_cblb_insert",
+                        &[h, id, item, text, fb.const_i64(1)],
+                    );
+                    if call.args.len() >= 5 {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "LISTBOX_RESET" => {
+                if call.args.len() >= 2 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call(&IrType::I64, "pb_cblb_reset", &[h, id, fb.const_i64(1)]);
+                }
+                return Ok(());
+            }
+            "LISTBOX_SELECT" => {
+                if call.args.len() >= 3 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_select",
+                        &[h, id, item, fb.const_i64(1)],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTBOX_SET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_set_text",
+                        &[h, id, item, text, fb.const_i64(1)],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTBOX_SET_USER" => {
+                if call.args.len() >= 4 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let val = self.compile_expr(fb, &call.args[3])?;
+                    let val64 = self.to_i64(fb, &val);
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_set_user",
+                        &[h, id, item, val64, fb.const_i64(1)],
+                    );
+                }
+                return Ok(());
+            }
+            "LISTBOX_UNSELECT" => {
+                if call.args.len() >= 2 {
+                    let mut h = self.compile_expr(fb, &call.args[0])?;
+                    if h.ty != IrType::Ptr {
+                        h = fb.inttoptr(&h);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = if call.args.len() >= 3 {
+                        self.compile_expr(fb, &call.args[2])?
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call(
+                        &IrType::I64,
+                        "pb_cblb_unselect",
+                        &[h, id, item, fb.const_i64(1)],
+                    );
                 }
                 return Ok(());
             }
@@ -9583,32 +10553,11 @@ impl Compiler {
                         &[hwnd, id, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(6) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
-                }
-                return Ok(());
-            }
-            "COMBOBOX_ADD" => {
-                if call.args.len() >= 2 {
-                    let mut hc = self.compile_expr(fb, &call.args[0])?;
-                    if hc.ty != IrType::Ptr {
-                        hc = fb.inttoptr(&hc);
-                    }
-                    let txt = self.compile_expr(fb, &call.args[1])?;
-                    fb.call_void("pb_combobox_add", &[hc, txt]);
-                }
-                return Ok(());
-            }
-            "LISTBOX_ADD" => {
-                if call.args.len() >= 2 {
-                    let mut hl = self.compile_expr(fb, &call.args[0])?;
-                    if hl.ty != IrType::Ptr {
-                        hl = fb.inttoptr(&hl);
-                    }
-                    let txt = self.compile_expr(fb, &call.args[1])?;
-                    fb.call_void("pb_listbox_add", &[hl, txt]);
                 }
                 return Ok(());
             }
@@ -9630,8 +10579,9 @@ impl Compiler {
                         &[hwnd, id, text, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(7) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -9655,8 +10605,9 @@ impl Compiler {
                         &[hwnd, id, text, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(7) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -9680,8 +10631,9 @@ impl Compiler {
                         &[hwnd, id, text, x, y, w, h],
                     );
                     if let Some(t) = call.args.get(7) {
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, t) {
-                            fb.store(&hc, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
                         }
                     }
                 }
@@ -13097,6 +14049,20 @@ impl Compiler {
                 fb.sitofp(val, target_ir)
             }
         } else if target_ir.is_int() {
+            if val.ty == IrType::Ptr {
+                // A window/control handle is a pointer at the IR level.  Converting
+                // one to an integer destination has to go through ptrtoint; without
+                // this the fallback below emitted `fptosi ptr ... to i32`, which is
+                // invalid IR and broke every `CONTROL ADD ... TO hVar` store.
+                let as_int = fb.ptrtoint(val);
+                if as_int.ty == *target_ir {
+                    return as_int;
+                }
+                if as_int.ty.bit_width() > target_ir.bit_width() {
+                    return fb.trunc(&as_int, target_ir);
+                }
+                return as_int;
+            }
             if val.ty.is_int() {
                 if val.ty.bit_width() < target_ir.bit_width() {
                     // PB BYTE (I8) is unsigned; widen with zext, everything else sext

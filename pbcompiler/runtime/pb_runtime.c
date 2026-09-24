@@ -7244,6 +7244,366 @@ void* pb_control_add_custom(const char* cls, void* parent, long id, const char* 
     return h;
 }
 
+/* ==================================================================
+   SCROLLBAR family (batch 168)
+
+   Official syntax (`SCROLLBAR_statement.htm`) addresses a standalone
+   scroll-bar control by (dialog handle, control id), so the real HWND comes
+   from GetDlgItem and the bar argument is SB_CTL.  GET returns -1 when the
+   control cannot be resolved, which is the documented "no such control"
+   result; SET returns 0.
+   ================================================================== */
+
+#define PB_SIF_RANGE    0x0001
+#define PB_SIF_PAGE     0x0002
+#define PB_SIF_POS      0x0004
+#define PB_SIF_TRACKPOS 0x0010
+#define PB_SB_CTL       2
+
+typedef struct {
+    unsigned int cbSize;
+    unsigned int fMask;
+    int nMin;
+    int nMax;
+    unsigned int nPage;
+    int nPos;
+    int nTrackPos;
+} PB_SCROLLINFO;
+
+__declspec(dllimport) int __stdcall GetScrollInfo(void* hWnd, int nBar, PB_SCROLLINFO* lpsi);
+__declspec(dllimport) int __stdcall SetScrollInfo(void* hWnd, int nBar, const PB_SCROLLINFO* lpsi, int redraw);
+
+static void* pb_scrollbar_hwnd(void* hDlg, long id) {
+    return GetDlgItem(hDlg, (int)id);
+}
+
+static int pb_scrollbar_read(void* hDlg, long id, PB_SCROLLINFO* si, unsigned int mask) {
+    void* h = pb_scrollbar_hwnd(hDlg, id);
+    if (!h) return 0;
+    memset(si, 0, sizeof(*si));
+    si->cbSize = (unsigned int)sizeof(*si);
+    si->fMask  = mask;
+    return GetScrollInfo(h, PB_SB_CTL, si);
+}
+
+long long pb_scrollbar_get_pos(void* hDlg, long id) {
+    PB_SCROLLINFO si;
+    if (!pb_scrollbar_read(hDlg, id, &si, PB_SIF_POS)) return -1;
+    return si.nPos;
+}
+
+long long pb_scrollbar_get_pagesize(void* hDlg, long id) {
+    PB_SCROLLINFO si;
+    if (!pb_scrollbar_read(hDlg, id, &si, PB_SIF_PAGE)) return -1;
+    return (long long)si.nPage;
+}
+
+long long pb_scrollbar_get_trackpos(void* hDlg, long id) {
+    PB_SCROLLINFO si;
+    if (!pb_scrollbar_read(hDlg, id, &si, PB_SIF_TRACKPOS)) return -1;
+    return si.nTrackPos;
+}
+
+long long pb_scrollbar_get_lo(void* hDlg, long id) {
+    PB_SCROLLINFO si;
+    if (!pb_scrollbar_read(hDlg, id, &si, PB_SIF_RANGE)) return -1;
+    return si.nMin;
+}
+
+long long pb_scrollbar_get_hi(void* hDlg, long id) {
+    PB_SCROLLINFO si;
+    if (!pb_scrollbar_read(hDlg, id, &si, PB_SIF_RANGE)) return -1;
+    return si.nMax;
+}
+
+static long long pb_scrollbar_write(void* hDlg, long id, int mask, int lo, int hi,
+                                    unsigned int page, int pos) {
+    PB_SCROLLINFO si;
+    void* h = pb_scrollbar_hwnd(hDlg, id);
+    if (!h) return 0;
+    memset(&si, 0, sizeof(si));
+    si.cbSize = (unsigned int)sizeof(si);
+    si.fMask  = (unsigned int)mask;
+    si.nMin   = lo;
+    si.nMax   = hi;
+    si.nPage  = page;
+    si.nPos   = pos;
+    return SetScrollInfo(h, PB_SB_CTL, &si, 1);
+}
+
+long long pb_scrollbar_set_range(void* hDlg, long id, int lo, int hi) {
+    return pb_scrollbar_write(hDlg, id, PB_SIF_RANGE, lo, hi, 0, 0);
+}
+
+long long pb_scrollbar_set_pagesize(void* hDlg, long id, int page) {
+    return pb_scrollbar_write(hDlg, id, PB_SIF_PAGE, 0, 0, (unsigned int)page, 0);
+}
+
+long long pb_scrollbar_set_pos(void* hDlg, long id, int pos) {
+    return pb_scrollbar_write(hDlg, id, PB_SIF_POS, 0, 0, 0, pos);
+}
+
+/* ==================================================================
+   COMBOBOX / LISTBOX family (batch 168)
+
+   One implementation drives both families; `kind` is 0 for COMBOBOX and 1 for
+   LISTBOX.  The official help indexes every item& from ONE ("1 for the first
+   item, 2 for the second item, etc."), while the Win32 CB_* / LB_* messages are
+   zero-based, so each index is adjusted by -1 going in and by +1 coming out.
+   A returned 0 therefore means "no selection" or "no match", exactly as the
+   help text specifies.
+   ================================================================== */
+
+#define PB_CBLB_CB 0
+#define PB_CBLB_LB 1
+
+#define PB_CB_ADDSTRING        0x0143
+#define PB_CB_DELETESTRING     0x0144
+#define PB_CB_GETCOUNT         0x0146
+#define PB_CB_GETCURSEL        0x0147
+#define PB_CB_GETLBTEXT        0x0148
+#define PB_CB_INSERTSTRING     0x014A
+#define PB_CB_RESETCONTENT     0x014B
+#define PB_CB_FINDSTRING       0x014C
+#define PB_CB_SETCURSEL        0x014E
+#define PB_CB_GETITEMDATA      0x0150
+#define PB_CB_SETITEMDATA      0x0151
+#define PB_CB_FINDSTRINGEXACT  0x0158
+
+#define PB_LB_ADDSTRING        0x0180
+#define PB_LB_INSERTSTRING     0x0181
+#define PB_LB_DELETESTRING     0x0182
+#define PB_LB_RESETCONTENT     0x0184
+#define PB_LB_SETSEL           0x0185
+#define PB_LB_SETCURSEL        0x0186
+#define PB_LB_GETSEL           0x0187
+#define PB_LB_GETCURSEL        0x0188
+#define PB_LB_GETTEXT          0x0189
+#define PB_LB_GETCOUNT         0x018B
+#define PB_LB_FINDSTRING       0x018F
+#define PB_LB_GETSELCOUNT      0x0190
+#define PB_LB_GETITEMDATA      0x0199
+#define PB_LB_SETITEMDATA      0x019A
+#define PB_LB_FINDSTRINGEXACT  0x01A2
+
+static void* pb_cblb_hwnd(void* hDlg, long id) {
+    return GetDlgItem(hDlg, (int)id);
+}
+
+/* The item& operand of COMBOBOX/LISTBOX ADD is the newly added string's
+   one-based position; a value below one signals an error. */
+long long pb_cblb_add(void* hDlg, long id, const char* text, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return -1;
+    r = (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_ADDSTRING : PB_CB_ADDSTRING),
+            0, (pb_lparam_t)text);
+    return r < 0 ? -1 : r + 1;
+}
+
+long long pb_cblb_delete(void* hDlg, long id, int item, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_DELETESTRING : PB_CB_DELETESTRING),
+            (unsigned int)(item - 1), 0);
+}
+
+/* FIND searches for a prefix, FIND EXACT for a whole string; both start at the
+   one-based item& and do not wrap.  No match yields 0. */
+long long pb_cblb_find(void* hDlg, long id, int item, const char* text,
+                       int exact, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    unsigned int m;
+    if (!h) return 0;
+    if (kind == PB_CBLB_LB) {
+        m = (unsigned int)(exact ? PB_LB_FINDSTRINGEXACT : PB_LB_FINDSTRING);
+    } else {
+        m = (unsigned int)(exact ? PB_CB_FINDSTRINGEXACT : PB_CB_FINDSTRING);
+    }
+    r = (long long)(intptr_t)SendMessageA(h, m, (unsigned int)(item - 1),
+                                          (pb_lparam_t)text);
+    return r < 0 ? 0 : r + 1;
+}
+
+long long pb_cblb_get_count(void* hDlg, long id, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return -1; /* same failure convention as the other GET statements */
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_GETCOUNT : PB_CB_GETCOUNT), 0, 0);
+}
+
+long long pb_cblb_get_selcount(void* hDlg, long id, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return 0;
+    if (kind == PB_CBLB_LB) {
+        r = (long long)(intptr_t)SendMessageA(h, PB_LB_GETSELCOUNT, 0, 0);
+        if (r >= 0) return r;
+        /* LB_GETSELCOUNT is documented for multiple-selection list boxes only and
+           answers LB_ERR for a single-selection one (what CONTROL ADD LISTBOX
+           creates), so fall back to counting the selection with LB_GETSEL. */
+        {
+            long long n = (long long)(intptr_t)SendMessageA(h, PB_LB_GETCOUNT, 0, 0);
+            long long i, c = 0;
+            if (n < 0) return 0;
+            for (i = 0; i < n; i++) {
+                if ((long long)(intptr_t)SendMessageA(h, PB_LB_GETSEL,
+                                                      (unsigned int)i, 0) > 0) {
+                    c++;
+                }
+            }
+            return c;
+        }
+    }
+    /* The help text notes a COMBOBOX is a single-selection list box, so the
+       selected count is always zero or one. */
+    r = (long long)(intptr_t)SendMessageA(h, PB_CB_GETCURSEL, 0, 0);
+    return r < 0 ? 0 : 1;
+}
+
+/* GET SELECT returns the one-based index of the first selected item, starting
+   the search at one-based `start`, or 0 when nothing is selected. */
+long long pb_cblb_get_select(void* hDlg, long id, int start, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r, n, i;
+    if (!h) return 0;
+    if (kind != PB_CBLB_LB) {
+        r = (long long)(intptr_t)SendMessageA(h, PB_CB_GETCURSEL, 0, 0);
+        return r < 0 ? 0 : r + 1;
+    }
+    n = (long long)(intptr_t)SendMessageA(h, PB_LB_GETCOUNT, 0, 0);
+    if (n < 0) return 0;
+    if (start < 1) start = 1;
+    for (i = start - 1; i < n; i++) {
+        if ((long long)(intptr_t)SendMessageA(h, PB_LB_GETSEL, (unsigned int)i, 0) > 0) {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+/* GET STATE reports whether one item is selected: -1 (true) or 0 (false). */
+long long pb_cblb_get_state(void* hDlg, long id, int item, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return 0;
+    if (kind == PB_CBLB_LB) {
+        r = (long long)(intptr_t)SendMessageA(h, PB_LB_GETSEL, (unsigned int)(item - 1), 0);
+        return r > 0 ? -1 : 0;
+    }
+    r = (long long)(intptr_t)SendMessageA(h, PB_CB_GETCURSEL, 0, 0);
+    return (r == (long long)(item - 1)) ? -1 : 0;
+}
+
+/* GET TEXT without an item& (or with item& = 0) returns the selected text. */
+void pb_cblb_get_text(void* hDlg, long id, int item, char* out, int outlen, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long idx = item;
+    unsigned int m = (unsigned int)(kind == PB_CBLB_LB ? PB_LB_GETTEXT : PB_CB_GETLBTEXT);
+    unsigned int cur = (unsigned int)(kind == PB_CBLB_LB ? PB_LB_GETCURSEL : PB_CB_GETCURSEL);
+    if (outlen > 0) out[0] = 0;
+    if (!h) return;
+    if (idx <= 0) {
+        idx = (long long)(intptr_t)SendMessageA(h, cur, 0, 0);
+        if (idx < 0) return;
+        idx += 1;
+    }
+    SendMessageA(h, m, (unsigned int)(idx - 1), (pb_lparam_t)out);
+}
+
+long long pb_cblb_get_user(void* hDlg, long id, int item, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_GETITEMDATA : PB_CB_GETITEMDATA),
+            (unsigned int)(item - 1), 0);
+}
+
+long long pb_cblb_insert(void* hDlg, long id, int item, const char* text, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return -1;
+    r = (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_INSERTSTRING : PB_CB_INSERTSTRING),
+            (unsigned int)(item - 1), (pb_lparam_t)text);
+    return r < 0 ? -1 : r + 1;
+}
+
+long long pb_cblb_reset(void* hDlg, long id, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_RESETCONTENT : PB_CB_RESETCONTENT), 0, 0);
+}
+
+long long pb_cblb_select(void* hDlg, long id, int item, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_SETCURSEL : PB_CB_SETCURSEL),
+            (unsigned int)(item - 1), 0);
+}
+
+/* Neither family has a "set item text" message, so the item is deleted and
+   re-inserted at the same one-based position. */
+long long pb_cblb_set_text(void* hDlg, long id, int item, const char* text, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return -1;
+    SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_DELETESTRING : PB_CB_DELETESTRING),
+            (unsigned int)(item - 1), 0);
+    r = (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_INSERTSTRING : PB_CB_INSERTSTRING),
+            (unsigned int)(item - 1), (pb_lparam_t)text);
+    return r < 0 ? -1 : r + 1;
+}
+
+long long pb_cblb_set_user(void* hDlg, long id, int item, long long val, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)(intptr_t)SendMessageA(h,
+            (unsigned int)(kind == PB_CBLB_LB ? PB_LB_SETITEMDATA : PB_CB_SETITEMDATA),
+            (unsigned int)(item - 1), (pb_lparam_t)(intptr_t)val);
+}
+
+/* COMBOBOX UNSELECT has no item&; LISTBOX UNSELECT takes an optional item&, in
+   which case only that item is deselected. */
+long long pb_cblb_unselect(void* hDlg, long id, int item, int kind) {
+    void* h = pb_cblb_hwnd(hDlg, id);
+    long long r;
+    if (!h) return 0;
+    if (kind == PB_CBLB_LB && item > 0) {
+        r = (long long)(intptr_t)SendMessageA(h, PB_LB_SETSEL, 0,
+                                              (pb_lparam_t)(intptr_t)(item - 1));
+        if (r >= 0) return r; /* multiple-selection list box: item deselected */
+        /* LB_SETSEL is documented for multiple-selection list boxes only and
+           answers LB_ERR for a single-selection one (what CONTROL ADD LISTBOX
+           creates), so clear the cursor when that item is the selected one. */
+        if ((long long)(intptr_t)SendMessageA(h, PB_LB_GETCURSEL, 0, 0)
+            == (long long)(item - 1)) {
+            return (long long)(intptr_t)SendMessageA(h, PB_LB_SETCURSEL,
+                                                     (unsigned int)-1, 0);
+        }
+        return 0;
+    }
+    if (kind == PB_CBLB_LB) {
+        /* No item given: drop every selection.  On a multiple-selection list box
+           LB_SETCURSEL only moves the cursor, so deselect each item first. */
+        long long total = (long long)(intptr_t)SendMessageA(h, PB_LB_GETCOUNT, 0, 0);
+        long long i;
+        for (i = 0; i < total; i++) {
+            SendMessageA(h, PB_LB_SETSEL, 0, (pb_lparam_t)(intptr_t)i);
+        }
+        return (long long)(intptr_t)SendMessageA(h, PB_LB_SETCURSEL,
+                                                 (unsigned int)-1, 0);
+    }
+    return (long long)(intptr_t)SendMessageA(h, PB_CB_SETCURSEL, (unsigned int)-1, 0);
+}
+
 /* ---------------- LISTVIEW INSERT COLUMN ---------------- */
 void pb_listview_insert_column(void* hDlg, long id, int col, const char* text,
                                int width, int fmt) {

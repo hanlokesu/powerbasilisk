@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 167 (v0.2.024)** — 2026-09-24. All statements through batch 167 are reflected in this matrix.
+> **Last updated from batch 168 (v0.2.025)** — 2026-09-24. All statements through batch 168 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **858** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **692** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **164** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **729** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **127** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 544 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 581 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **692** | Implemented + Established |
+| ✅ **Total available** | **729** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -28,7 +30,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 164 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 127 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -109,21 +111,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CODEPTR | FUNCTION | codegen builtin | Implemented |
 | COLOR | STATEMENT | PB/CC only | Established |
 | COMBOBOX ADD | STATEMENT | PB/Win only | Implemented |
-| COMBOBOX DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX FIND | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX INSERT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX RESET | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| COMBOBOX UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| COMBOBOX DELETE | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX FIND | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX FIND EXACT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET COUNT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET SELCOUNT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET SELECT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET STATE | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET TEXT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX GET USER | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX INSERT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX RESET | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX SELECT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX SET TEXT | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX SET USER | STATEMENT | PB/Win only | Implemented |
+| COMBOBOX UNSELECT | STATEMENT | PB/Win only | Implemented |
 | COMM CLOSE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE | STATEMENT | PB/Win + PB/CC | Established |
 | COMM LINE INPUT | STATEMENT | PB/Win | Implemented |
@@ -469,21 +471,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LET *(WITH VARIANTS)* | STATEMENT | PB/Win + PB/CC | Implemented |
 | LINE INPUT# | STATEMENT | PB/Win + PB/CC | Implemented |
 | LISTBOX ADD | STATEMENT | PB/Win only | Implemented |
-| LISTBOX DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX FIND | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX INSERT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX RESET | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTBOX UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTBOX DELETE | STATEMENT | PB/Win only | Implemented |
+| LISTBOX FIND | STATEMENT | PB/Win only | Implemented |
+| LISTBOX FIND EXACT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET COUNT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET SELCOUNT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET SELECT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET STATE | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET TEXT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX GET USER | STATEMENT | PB/Win only | Implemented |
+| LISTBOX INSERT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX RESET | STATEMENT | PB/Win only | Implemented |
+| LISTBOX SELECT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX SET TEXT | STATEMENT | PB/Win only | Implemented |
+| LISTBOX SET USER | STATEMENT | PB/Win only | Implemented |
+| LISTBOX UNSELECT | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW DELETE COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
 | LISTVIEW DELETE ITEM | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW FIND | STATEMENT | PB/Win only | Tier-3 DDT |
@@ -669,13 +671,13 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | RSET$ | FUNCTION | Win32 | Implemented |
 | RTRIM | FUNCTION | codegen builtin | Implemented |
 | RTRIM$ | FUNCTION | Win32 | Implemented |
-| SCROLLBAR GET PAGESIZE | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR GET POS | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR GET RANGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR GET TRACKPOS | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR SET PAGESIZE | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR SET POS | STATEMENT | PB/Win only | Tier-3 DDT |
-| SCROLLBAR SET RANGE | STATEMENT | PB/Win only | Tier-3 DDT |
+| SCROLLBAR GET PAGESIZE | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR GET POS | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR GET RANGE | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR GET TRACKPOS | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR SET PAGESIZE | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR SET POS | STATEMENT | PB/Win only | Implemented |
+| SCROLLBAR SET RANGE | STATEMENT | PB/Win only | Implemented |
 | SEC | FUNCTION | C runtime (MSVCRT) | Implemented |
 | SECH | FUNCTION | C runtime (MSVCRT) | Implemented |
 | SEEK | STATEMENT | PB/Win + PB/CC | Implemented |

@@ -1759,6 +1759,122 @@ impl Parser {
         }
     }
 
+    /// SCROLLBAR <GET|SET> <POS|RANGE|PAGESIZE|TRACKPOS> hDlg, id& [, ...] (batch 168)
+    ///
+    /// Official syntax (`SCROLLBAR_statement.htm`):
+    ///   SCROLLBAR GET PAGESIZE hDlg, id& TO datav&
+    ///   SCROLLBAR GET POS      hDlg, id& TO datav&
+    ///   SCROLLBAR GET RANGE    hDlg, id& TO lo&, hi&
+    ///   SCROLLBAR GET TRACKPOS hDlg, id& TO datav&
+    ///   SCROLLBAR SET PAGESIZE hDlg, id&, page&
+    ///   SCROLLBAR SET POS      hDlg, id&, pos&
+    ///   SCROLLBAR SET RANGE    hDlg, id&, lo&, hi&
+    fn parse_scrollbar_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // SCROLLBAR
+        let verb = self.peek_word_upper();
+        if verb != "GET" && verb != "SET" {
+            self.consume_to_eol();
+            return Ok(Statement::Noop("SCROLLBAR".to_string(), line));
+        }
+        self.advance(); // verb
+        let noun = self.peek_word_upper();
+        if !matches!(noun.as_str(), "POS" | "RANGE" | "PAGESIZE" | "TRACKPOS") {
+            self.consume_to_eol();
+            return Ok(Statement::Noop("SCROLLBAR".to_string(), line));
+        }
+        self.advance(); // noun
+        let mut args = Vec::new();
+        args.push(self.parse_expression()?);
+        self.expect(&Token::Comma)?;
+        args.push(self.parse_expression()?);
+        loop {
+            if self.peek() == &Token::Comma {
+                self.advance();
+                args.push(self.parse_expression()?);
+            } else if self.peek() == &Token::To {
+                self.advance();
+                args.push(self.parse_expression()?);
+            } else {
+                break;
+            }
+        }
+        self.consume_to_eol();
+        Ok(Statement::Call(CallStmt {
+            name: format!("SCROLLBAR_{}_{}", verb, noun),
+            args,
+            line,
+        }))
+    }
+
+    /// COMBOBOX / LISTBOX statements, official PB syntax (batch 168).
+    ///
+    /// Both families expose the same operation set and are driven by the same
+    /// Win32 messages; `kind` is 0 for COMBOBOX and 1 for LISTBOX.  The official
+    /// help indexes every `item&` from ONE ("1 for the first item, 2 for the
+    /// second"), which the runtime converts to the zero-based Win32 index.
+    ///
+    /// ADD keeps accepting the older two-operand form `COMBOBOX ADD hCtrl, "s"`
+    /// alongside the official `COMBOBOX ADD hDlg, id&, StrExpr [TO datav&]`;
+    /// codegen picks the path from the operand count.
+    fn parse_cblb_statement(&mut self, line: usize, head: &str, kind: i64) -> PbResult<Statement> {
+        self.advance(); // COMBOBOX / LISTBOX
+        let verb = self.peek_word_upper();
+        let known = matches!(
+            verb.as_str(),
+            "ADD" | "DELETE" | "FIND" | "GET" | "INSERT" | "RESET" | "SELECT" | "SET" | "UNSELECT"
+        );
+        if !known {
+            self.consume_to_eol();
+            return Ok(Statement::Noop(head.to_string(), line));
+        }
+        self.advance(); // verb
+        let mut noun = String::new();
+        if verb == "FIND" {
+            if self.peek_plain_upper() == "EXACT" {
+                noun = "EXACT".to_string();
+                self.advance();
+            }
+        } else if verb == "GET" || verb == "SET" {
+            let n = self.peek_word_upper();
+            if matches!(
+                n.as_str(),
+                "COUNT" | "SELCOUNT" | "SELECT" | "STATE" | "TEXT" | "USER"
+            ) {
+                noun = n;
+                self.advance();
+            }
+        }
+        let mut args = Vec::new();
+        if verb == "RESET" {
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+        } else {
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+            loop {
+                if self.peek() == &Token::Comma {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                } else if self.peek() == &Token::To {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                } else {
+                    break;
+                }
+            }
+        }
+        self.consume_to_eol();
+        let name = if noun.is_empty() {
+            format!("{}_{}", head, verb)
+        } else {
+            format!("{}_{}_{}", head, verb, noun)
+        };
+        let _ = kind; // the family is carried by the statement name
+        Ok(Statement::Call(CallStmt { name, args, line }))
+    }
+
     fn parse_statement(&mut self) -> PbResult<Statement> {
         self.skip_eol();
         let line = self.current_line();
@@ -5594,39 +5710,6 @@ impl Parser {
                         line,
                     }));
                 }
-                // COMBOBOX ADD hCombo, "text"
-                if name_upper == "COMBOBOX"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                {
-                    self.advance();
-                    self.advance();
-                    let hc = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    let txt = self.parse_expression()?;
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "COMBOBOX_ADD".to_string(),
-                        args: vec![hc, txt],
-                        line,
-                    }));
-                }
-                // LISTBOX ADD hList, "text"
-                if name_upper == "LISTBOX"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                {
-                    self.advance();
-                    self.advance();
-                    let hl = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    let txt = self.parse_expression()?;
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "LISTBOX_ADD".to_string(),
-                        args: vec![hl, txt],
-                        line,
-                    }));
-                }
-
                 // LISTVIEW <sub-command> ...  (batch 158)
                 if name_upper == "LISTVIEW" {
                     return self.parse_listview_statement(line);
@@ -5634,6 +5717,17 @@ impl Parser {
                 // TREEVIEW <sub-command> ...  (batch 158)
                 if name_upper == "TREEVIEW" {
                     return self.parse_treeview_statement(line);
+                }
+                // SCROLLBAR <GET|SET> <noun> ...  (batch 168)
+                if name_upper == "SCROLLBAR" {
+                    return self.parse_scrollbar_statement(line);
+                }
+                // COMBOBOX / LISTBOX <verb> [<noun>] ...  (batch 168)
+                if name_upper == "COMBOBOX" {
+                    return self.parse_cblb_statement(line, "COMBOBOX", 0);
+                }
+                if name_upper == "LISTBOX" {
+                    return self.parse_cblb_statement(line, "LISTBOX", 1);
                 }
                 // CONTROL ADD CHECKBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
@@ -7688,13 +7782,26 @@ impl Parser {
                         args.push(self.parse_expression()?);
                         self.expect(&Token::Comma)?;
                         args.push(self.parse_expression()?);
-                        if self.peek() == &Token::To {
-                            self.advance();
-                            args.push(self.parse_expression()?);
-                        }
-                        while self.peek() == &Token::Comma {
-                            self.advance();
-                            args.push(self.parse_expression()?);
+                        // A trailing TO target may follow any number of
+                        // comma-separated operands, and a TO may itself be
+                        // followed by further comma-separated outputs
+                        // (PROGRESSBAR GET RANGE ... TO lo&, hi&), so both
+                        // separators are consumed in one loop.  Previously TO
+                        // was only tested *before* the comma loop, which
+                        // silently dropped the target of
+                        //   HEADER SEND hWin, ID&, Msg&, wParam&, lParam& TO r&
+                        //   HEADER GET ITEM hWin, ID&, Index&, ItemPtr TO r&
+                        // and made those statements store nothing at all.
+                        loop {
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            } else if self.peek() == &Token::To {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            } else {
+                                break;
+                            }
                         }
                         // PROGRESSBAR STEP hDlg, id& [, incramt&] - the increment
                         // is optional, so default it to 0 for codegen.
@@ -7716,13 +7823,7 @@ impl Parser {
                 }
                 if matches!(
                     name_upper.as_str(),
-                    "DIALOG"
-                        | "CONTROL"
-                        | "MENU"
-                        | "COMBOBOX"
-                        | "LISTBOX"
-                        | "TREEVIEW"
-                        | "LISTVIEW"
+                    "DIALOG" | "CONTROL" | "MENU" | "TREEVIEW" | "LISTVIEW"
                 ) {
                     self.advance();
                     self.consume_to_eol();
@@ -8597,6 +8698,24 @@ impl Parser {
             Token::On => "ON".to_string(),
             Token::Dword => "DWORD".to_string(),
             Token::End => "END".to_string(),
+            _ => String::new(),
+        }
+    }
+
+    /// Uppercase spelling of the next word, for DDT family dispatch.
+    ///
+    /// `peek_plain_upper()` only reports identifiers plus a handful of keyword
+    /// tokens, but some DDT verbs and nouns are keywords: `SELECT` is lexed as
+    /// `Token::Select`, so `COMBOBOX SELECT hDlg, id&, item&` and
+    /// `COMBOBOX GET SELECT hDlg, id& TO datav&` were silently falling through
+    /// to expression parsing ("Unexpected token in expression: Select").
+    ///
+    /// Kept separate from `peek_plain_upper()` on purpose: that one has ~50 call
+    /// sites, and widening it could change unrelated dispatch (e.g. `SELECT CASE`).
+    fn peek_word_upper(&self) -> String {
+        match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Select => "SELECT".to_string(),
             _ => String::new(),
         }
     }
