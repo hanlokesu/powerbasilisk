@@ -6325,6 +6325,23 @@ void pb_control_add_button_with_cb(void* parent, long id, const char* text, int 
     if (fn) pb_register_callback_hwnd(hBtn, fn);
 }
 
+/* -------------------------------------------------------------------
+   Batch 165 forward declarations.  pb_wndproc (immediately below) paints
+   a dialog's custom background colour, and the helpers that colour table
+   lives further down the file.
+   ------------------------------------------------------------------- */
+#define PB_DLG_BG_SLOTS 64
+static void* pb_dlg_bg_h[PB_DLG_BG_SLOTS];
+static long  pb_dlg_bg_v[PB_DLG_BG_SLOTS];
+static int   pb_dlg_bg_set[PB_DLG_BG_SLOTS];
+static int pb_dlg_bg_lookup(void* hWnd, unsigned long* rgb);
+/* DIALOG DEFAULT FONT installs this into every dialog created afterwards */
+static void* pb_default_font = 0;
+__declspec(dllimport) int __stdcall GetClientRect(void*, void*);
+__declspec(dllimport) void* __stdcall CreateSolidBrush(unsigned long);
+__declspec(dllimport) int __stdcall FillRect(void*, const void*, void*);
+__declspec(dllimport) int __stdcall DeleteObject(void*);
+
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
     if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
         if (Msg == 0x0111) /* WM_COMMAND */ {
@@ -6339,6 +6356,22 @@ static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned lon
             fn();
         }
         return 0;
+    }
+    if (Msg == 0x0014) /* WM_ERASEBKGND */ {
+        unsigned long rgb;
+        if (pb_dlg_bg_lookup(hWnd, &rgb)) {
+            void* dc = (void*)wParam;
+            void* br;
+            long rcs[4];   /* RECT = four LONGs */
+            rcs[0] = 0; rcs[1] = 0; rcs[2] = 0; rcs[3] = 0;
+            GetClientRect(hWnd, rcs);
+            br = CreateSolidBrush(rgb);
+            if (br) {
+                FillRect(dc, rcs, br);
+                DeleteObject(br);
+            }
+            return 1;
+        }
     }
     __try {
         return DefWindowProcA(hWnd, Msg, wParam, lParam);
@@ -6404,6 +6437,12 @@ void* pb_window_new(const char* title, int x, int y, int w, int h) {
     if (hwnd) {
         ShowWindow(hwnd, 5);
         UpdateWindow(hwnd);
+        /* DIALOG DEFAULT FONT, when the program has set one, applies to
+           every dialog created afterwards. */
+        if (pb_default_font) {
+            SendMessageA(hwnd, 0x0030 /* WM_SETFONT */,
+                         (unsigned long long)(size_t)pb_default_font, 1);
+        }
     }
     return hwnd;
 }
@@ -6648,8 +6687,8 @@ void pb_control_set_check(void* hctrl, int state) {
 
 /* DIALOG GET SIZE - the official statement returns the "total size of the
  * dialog", i.e. the whole window (GetWindowRect), which pairs with DIALOG SET
- * SIZE (SetWindowPos).  DIALOG GET CLIENT is the client-area variant and is
- * still unimplemented.
+ * SIZE (SetWindowPos).  DIALOG GET CLIENT is the client-area variant and was
+ * implemented in batch 165 (see the block below).
  *
  * Units: the official help (dialog_get_size.htm / dialog_set_size.htm) says the
  * values are in DIALOG UNITS unless the dialog was created with the PIXELS
@@ -6684,6 +6723,296 @@ void pb_dialog_set_size(void* hDlg, long long w, long long h) {
     int dx, dy;
     pb_dlg_units(&dx, &dy);
     SetWindowPos(hDlg, 0, 0, 0, (int)((w * dx) / 4), (int)((h * dy) / 8), 0x0040);
+}
+
+/* ===================================================================
+   Batch 165 - the DIALOG statement family (21 statements)
+   -------------------------------------------------------------------
+   Every constant below was read out of the authoritative local
+   PowerBASIC include file  C:\PBWin10\WinAPI\WinUser.inc  (not from
+   memory):
+
+     %SW_HIDE 0   %SW_MAXIMIZE 3   %SW_SHOW 5   %SW_MINIMIZE 6
+     %SW_RESTORE 9
+     %GWL_STYLE -16   %GWL_EXSTYLE -20   %WM_SETICON &H0080
+     %ICON_SMALL 0    %ICON_BIG 1
+     %RDW_INVALIDATE &H0001  %RDW_ALLCHILDREN &H0080  %RDW_UPDATENOW &H0100
+     %MF_BYCOMMAND 0  %MF_ENABLED 0  %MF_GRAYED 1  %MF_DISABLED 2
+     %SC_CLOSE &HF060   %SWP_NOMOVE &H0002  %SWP_NOZORDER &H0004
+
+   Semantics follow the official help pages in
+   C:\PBWin10\bin\PBWin_extracted\html\dialog_*.htm.
+
+   Units: DIALOG NEW does not implement the PIXELS option yet, so every
+   dialog this compiler creates is a dialog-unit dialog - the same
+   assumption DIALOG GET SIZE / SET SIZE already make.  The geometry
+   statements below convert through pb_dlg_units() (GetDialogBaseUnits),
+   which is exactly the base pb_window_new uses, so GET and SET
+   round-trip against DIALOG NEW.
+   =================================================================== */
+
+typedef struct { long x; long y; } pb_point_t;
+
+__declspec(dllimport) int __stdcall RedrawWindow(void*, const void*, void*, unsigned long);
+__declspec(dllimport) int __stdcall PostMessageA(void*, unsigned long, unsigned int, pb_lparam_t);
+__declspec(dllimport) int __stdcall AdjustWindowRectEx(pb_rect_t*, unsigned long, int, unsigned long);
+__declspec(dllimport) void* __stdcall GetMenu(void*);
+__declspec(dllimport) void* __stdcall GetParent(void*);
+__declspec(dllimport) int __stdcall ClientToScreen(void*, pb_point_t*);
+__declspec(dllimport) void* __stdcall LoadIconA(void*, const char*);
+__declspec(dllimport) void* __stdcall GetSystemMenu(void*, int);
+__declspec(dllimport) int __stdcall DrawMenuBar(void*);
+/* GetWindowLongPtrA does not exist in 32-bit user32 - it is a macro to
+   GetWindowLongA there, so the arch decides which one is imported. */
+#if defined(_WIN64)
+__declspec(dllimport) long long __stdcall GetWindowLongPtrA(void*, int);
+static long long pb_get_winlong(void* h, int idx) { return GetWindowLongPtrA(h, idx); }
+#else
+__declspec(dllimport) long __stdcall GetWindowLongA(void*, int);
+static long long pb_get_winlong(void* h, int idx) { return (long long)GetWindowLongA(h, idx); }
+#endif
+
+/* --- DIALOG ENABLE hDlg / DIALOG DISABLE hDlg ----------------------- */
+void pb_dialog_enable(void* hDlg, int on) { EnableWindow(hDlg, on); }
+
+/* --- DIALOG HIDE / NORMALIZE / MINIMIZE / MAXIMIZE / SHOW MODELESS --- */
+void pb_dialog_show(void* hDlg, int cmd) { ShowWindow(hDlg, cmd); }
+
+/* --- DIALOG REDRAW hDlg ---------------------------------------------
+   Invalidate now, children included: RDW_INVALIDATE | RDW_UPDATENOW |
+   RDW_ALLCHILDREN. */
+void pb_dialog_redraw(void* hDlg) {
+    RedrawWindow(hDlg, 0, 0, 0x0001u | 0x0100u | 0x0080u);
+}
+
+/* --- DIALOG STABILIZE hDlg / DIALOG NONSTABLE hDlg ------------------
+   The close item is greyed rather than deleted so the state is
+   reversible, and Windows stops honouring ALT-F4 on its own:
+   DefWindowProc only posts WM_CLOSE for ALT-F4 while the system menu's
+   SC_CLOSE item is enabled. */
+void pb_dialog_stabilize(void* hDlg, int stable) {
+    void* m = GetSystemMenu(hDlg, 0);
+    if (!m) return;
+    if (stable)
+        EnableMenuItem(m, 0xF060u /* SC_CLOSE */,
+                       0x00000000u /* MF_BYCOMMAND */ | 0x00000001u /* MF_GRAYED */
+                           | 0x00000002u /* MF_DISABLED */);
+    else
+        EnableMenuItem(m, 0xF060u /* SC_CLOSE */, 0x00000000u /* MF_BYCOMMAND | MF_ENABLED */);
+    DrawMenuBar(hDlg);
+}
+
+/* --- DIALOG SEND hDlg, msg&, wParam&, lParam& [TO lResult&] --------- */
+long long pb_dialog_send(void* hDlg, long long msg, long long wp, long long lp) {
+    return (long long)SendMessageA(hDlg, (unsigned int)msg, (unsigned int)wp, (pb_lparam_t)lp);
+}
+
+/* --- DIALOG POST hDlg, msg&, wParam&, lParam& ----------------------- */
+void pb_dialog_post(void* hDlg, long long msg, long long wp, long long lp) {
+    PostMessageA(hDlg, (unsigned long)msg, (unsigned int)wp, (pb_lparam_t)lp);
+}
+
+/* --- DIALOG SET ICON hDlg, newicon$ ---------------------------------
+   The icon comes out of the running module's own resources, which is
+   where the compiler's #RESOURCE ICON directives put it.  A name that
+   begins with '#' is an integral resource id, as documented. */
+void pb_dialog_set_icon(void* hDlg, const char* name) {
+    const char* p = name ? name : "";
+    const char* use = p;
+    if (*p == '#') {
+        long id = 0;
+        const char* q = p + 1;
+        while (*q >= '0' && *q <= '9') { id = id * 10 + (*q - '0'); q++; }
+        use = (const char*)(long long)id;
+    }
+    void* hIcon = LoadIconA(GetModuleHandleA(0), use);
+    if (!hIcon) return;
+    SendMessageA(hDlg, 0x0080 /* WM_SETICON */, 1 /* ICON_BIG */, (pb_lparam_t)hIcon);
+    SendMessageA(hDlg, 0x0080 /* WM_SETICON */, 0 /* ICON_SMALL */, (pb_lparam_t)hIcon);
+}
+
+/* --- DIALOG SET USER / DIALOG GET USER ------------------------------
+   Eight Long values per dialog, index 1..8, completely separate from
+   %GWL_USERDATA.  pb_window_new registers the window class with
+   cbWndExtra = 0, so the area lives in this side table: a slot is taken
+   on first use and kept for the life of the process. */
+#define PB_DLG_USER_SLOTS 256
+static void* pb_dlg_user_h[PB_DLG_USER_SLOTS];
+static long long pb_dlg_user_v[PB_DLG_USER_SLOTS][8];
+
+static int pb_dlg_user_slot(void* h, int make) {
+    int i, free_i = -1;
+    for (i = 0; i < PB_DLG_USER_SLOTS; i++) {
+        if (pb_dlg_user_h[i] == h) return i;
+        if (free_i < 0 && pb_dlg_user_h[i] == 0) free_i = i;
+    }
+    if (!make || free_i < 0) return -1;
+    pb_dlg_user_h[free_i] = h;
+    for (i = 0; i < 8; i++) pb_dlg_user_v[free_i][i] = 0;
+    return free_i;
+}
+
+void pb_dialog_set_user(void* hDlg, long long index, long long value) {
+    int slot;
+    if (index < 1 || index > 8) return;
+    slot = pb_dlg_user_slot(hDlg, 1);
+    if (slot < 0) return;
+    pb_dlg_user_v[slot][index - 1] = value;
+}
+
+long long pb_dialog_get_user(void* hDlg, long long index) {
+    int slot;
+    if (index < 1 || index > 8) return 0;
+    slot = pb_dlg_user_slot(hDlg, 0);
+    if (slot < 0) return 0;
+    return pb_dlg_user_v[slot][index - 1];
+}
+
+/* --- geometry: GET/SET CLIENT, GET/SET LOC, PIXELS, UNITS -----------
+   DIALOG GET LOC / SET LOC measure from the parent's client-area origin
+   when the dialog has a parent, and from the screen origin (0,0) when it
+   does not.  The two official pages disagree here - dialog_get_loc.htm
+   says "relative to the upper-left corner of the display" while
+   dialog_set_loc.htm says "relative to the upper-left corner of the
+   desktop workspace" - so the origin that makes GET and SET round-trip
+   against each other was chosen. */
+static void pb_dlg_origin(void* hDlg, pb_point_t* org) {
+    void* parent = GetParent(hDlg);
+    org->x = 0;
+    org->y = 0;
+    if (parent) ClientToScreen(parent, org);
+}
+
+/* DIALOG GET CLIENT hDlg TO nWide&, nHigh& */
+void pb_dialog_get_client(void* hDlg, long long* pw, long long* ph) {
+    pb_rect_t rc;
+    int dx, dy;
+    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    GetClientRect(hDlg, &rc);
+    pb_dlg_units(&dx, &dy);
+    if (pw) *pw = (long long)(((rc.right - rc.left) * 4) / dx);
+    if (ph) *ph = (long long)(((rc.bottom - rc.top) * 8) / dy);
+}
+
+/* DIALOG SET CLIENT hDlg, x&, y& - the arguments are a CLIENT size, so the
+   window rectangle has to be grown by the borders, caption and menu
+   first. */
+void pb_dialog_set_client(void* hDlg, long long w, long long h) {
+    pb_rect_t rc;
+    int dx, dy, has_menu;
+    unsigned long style, exstyle;
+    pb_dlg_units(&dx, &dy);
+    rc.left = 0; rc.top = 0;
+    rc.right = (long)((w * dx) / 4);
+    rc.bottom = (long)((h * dy) / 8);
+    style = (unsigned long)pb_get_winlong(hDlg, -16 /* GWL_STYLE */);
+    exstyle = (unsigned long)pb_get_winlong(hDlg, -20 /* GWL_EXSTYLE */);
+    has_menu = GetMenu(hDlg) != 0;
+    AdjustWindowRectEx(&rc, style, has_menu, exstyle);
+    SetWindowPos(hDlg, 0, 0, 0, (int)(rc.right - rc.left), (int)(rc.bottom - rc.top),
+                 0x0002u | 0x0004u /* SWP_NOMOVE | SWP_NOZORDER */);
+}
+
+/* DIALOG GET LOC hDlg TO x&, y& */
+void pb_dialog_get_loc(void* hDlg, long long* px, long long* py) {
+    pb_rect_t wr;
+    pb_point_t org;
+    int dx, dy;
+    wr.left = 0; wr.top = 0; wr.right = 0; wr.bottom = 0;
+    GetWindowRect(hDlg, &wr);
+    pb_dlg_origin(hDlg, &org);
+    pb_dlg_units(&dx, &dy);
+    if (px) *px = (long long)(((wr.left - org.x) * 4) / dx);
+    if (py) *py = (long long)(((wr.top - org.y) * 8) / dy);
+}
+
+/* DIALOG SET LOC hDlg, x&, y& */
+void pb_dialog_set_loc(void* hDlg, long long x, long long y) {
+    pb_point_t org;
+    int dx, dy;
+    pb_dlg_units(&dx, &dy);
+    pb_dlg_origin(hDlg, &org);
+    SetWindowPos(hDlg, 0, org.x + (int)((x * dx) / 4), org.y + (int)((y * dy) / 8),
+                 0, 0, 0x0001u | 0x0004u /* SWP_NOSIZE | SWP_NOZORDER */);
+}
+
+/* DIALOG PIXELS hDlg, x&, y& TO UNITS xx&, yy&  - device units -> dialog units */
+void pb_dialog_pixels(void* hDlg, long long x, long long y, long long* px, long long* py) {
+    int dx, dy;
+    (void)hDlg;
+    pb_dlg_units(&dx, &dy);
+    if (px) *px = (long long)((x * 4) / dx);
+    if (py) *py = (long long)((y * 8) / dy);
+}
+
+/* DIALOG UNITS hDlg, x&, y& TO PIXELS xx&, yy&  - dialog units -> device units */
+void pb_dialog_units(void* hDlg, long long x, long long y, long long* px, long long* py) {
+    int dx, dy;
+    (void)hDlg;
+    pb_dlg_units(&dx, &dy);
+    if (px) *px = (long long)((x * dx) / 4);
+    if (py) *py = (long long)((y * dy) / 8);
+}
+
+/* --- DIALOG SET COLOR hDlg, foreclr&, backclr& ----------------------
+   The official help states that foreclr& is not used by the current
+   implementation and that -1& means "the system default", so only the
+   background is honoured here; -1& clears the override and lets the
+   window class brush show through again.  Colours are 0x00BBGGRR. */
+static int pb_dlg_bg_lookup(void* hWnd, unsigned long* rgb) {
+    int i;
+    for (i = 0; i < PB_DLG_BG_SLOTS; i++) {
+        if (pb_dlg_bg_set[i] && pb_dlg_bg_h[i] == hWnd) {
+            *rgb = (unsigned long)pb_dlg_bg_v[i];
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void pb_dialog_set_color(void* hDlg, long long fore, long long back) {
+    int i, free_i = -1;
+    (void)fore;
+    for (i = 0; i < PB_DLG_BG_SLOTS; i++) {
+        if (pb_dlg_bg_set[i] && pb_dlg_bg_h[i] == hDlg) {
+            if (back < 0) pb_dlg_bg_set[i] = 0;
+            else pb_dlg_bg_v[i] = (long)back;
+            RedrawWindow(hDlg, 0, 0, 0x0001u | 0x0100u | 0x0080u);
+            return;
+        }
+        if (!pb_dlg_bg_set[i] && free_i < 0) free_i = i;
+    }
+    if (back < 0 || free_i < 0) return;
+    pb_dlg_bg_h[free_i] = hDlg;
+    pb_dlg_bg_v[free_i] = (long)back;
+    pb_dlg_bg_set[free_i] = 1;
+    RedrawWindow(hDlg, 0, 0, 0x0001u | 0x0100u | 0x0080u);
+}
+
+/* --- DIALOG DEFAULT FONT fontname$ [, points& [, style& [, charset&]]]
+   The official statement sets the font for dialogs and controls created
+   afterwards.  Here the font is created once and installed on every
+   dialog pb_window_new creates from that point on.  It does NOT change
+   the dialog base units used for coordinate conversion - DIALOG NEW and
+   the geometry statements keep using GetDialogBaseUnits(), which is the
+   same assumption DIALOG GET SIZE / SET SIZE already document.
+
+   style&: 0 = normal, 2 = italic (the only two values the help lists).
+   charset&: 0 = ANSI, 1 = default, 2 = symbol, 128 = shiftjis,
+   129 = hangeul, 134 = gb2312, 136 = chinese, 177 = hebrew,
+   178 = arabic, 186 = baltic, 204 = russian, 222 = thai,
+   238 = east europe - all passed straight to CreateFontA. */
+void pb_dialog_default_font(const char* name, int points, int style, int charset) {
+    int height;
+    void* dc;
+    if (!name || !*name) return;
+    if (points <= 0) points = 8;
+    dc = GetDC(0);
+    height = dc ? -((points * GetDeviceCaps(dc, 90 /* LOGPIXELSY */)) / 72) : -points;
+    if (dc) ReleaseDC(0, dc);
+    pb_default_font = CreateFontA(height, 0, 0, 0, 400 /* FW_NORMAL */,
+                                  (unsigned char)(style == 2 ? 1 : 0), 0, 0,
+                                  (unsigned char)charset, 0, 0, 0, 0, name);
 }
 
 /* ===================================================================

@@ -2928,6 +2928,117 @@ impl Compiler {
             &[IrType::Ptr, IrType::I64, IrType::I64],
             false,
         );
+        // Batch 165 - the DIALOG statement family.
+        self.module.declare_function(
+            "pb_dialog_enable",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_show",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_stabilize",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_dialog_redraw", &IrType::Void, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_dialog_send",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_post",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_set_user",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_get_user",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_set_icon",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_get_client",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_set_client",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_get_loc",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_set_loc",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_pixels",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I64,
+                IrType::I64,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_units",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I64,
+                IrType::I64,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_set_color",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_dialog_default_font",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
         self.module.declare_function(
             "pb_array_select",
             &IrType::I32,
@@ -9053,6 +9164,246 @@ impl Compiler {
                     let h = self.compile_expr(fb, &call.args[2])?;
                     let h64 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_dialog_set_size", &[hdlg64, w64, h64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_ENABLE" => {
+                // DIALOG ENABLE hDlg / DIALOG DISABLE hDlg
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let on = self.compile_expr(fb, &call.args[1])?;
+                    let on32 = self.to_i32(fb, &on);
+                    fb.call_void("pb_dialog_enable", &[hdlg64, on32]);
+                }
+                return Ok(());
+            }
+            "DIALOG_SHOW" => {
+                // DIALOG HIDE / NORMALIZE / MINIMIZE / MAXIMIZE / SHOW MODELESS
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let cmd = self.compile_expr(fb, &call.args[1])?;
+                    let cmd32 = self.to_i32(fb, &cmd);
+                    fb.call_void("pb_dialog_show", &[hdlg64, cmd32]);
+                }
+                return Ok(());
+            }
+            "DIALOG_STABILIZE" => {
+                // DIALOG STABILIZE hDlg / DIALOG NONSTABLE hDlg
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let st = self.compile_expr(fb, &call.args[1])?;
+                    let st32 = self.to_i32(fb, &st);
+                    fb.call_void("pb_dialog_stabilize", &[hdlg64, st32]);
+                }
+                return Ok(());
+            }
+            "DIALOG_REDRAW" => {
+                // DIALOG REDRAW hDlg
+                if let Some(a0) = call.args.first() {
+                    let hd = self.compile_expr(fb, a0)?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    fb.call_void("pb_dialog_redraw", &[hdlg64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_SEND" => {
+                // DIALOG SEND hDlg, msg&, wParam&, lParam& [TO lResult&]
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let msg = self.compile_expr(fb, &call.args[1])?;
+                    let msg64 = self.convert_value(fb, &msg, &IrType::I64, &PbType::Quad);
+                    let wp = self.compile_expr(fb, &call.args[2])?;
+                    let wp64 = self.convert_value(fb, &wp, &IrType::I64, &PbType::Quad);
+                    let lp = self.compile_expr(fb, &call.args[3])?;
+                    let lp64 = self.convert_value(fb, &lp, &IrType::I64, &PbType::Quad);
+                    let res = fb.call(&IrType::I64, "pb_dialog_send", &[hdlg64, msg64, wp64, lp64]);
+                    if call.args.len() >= 5 {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            let cv = self.convert_value(fb, &res, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_POST" => {
+                // DIALOG POST hDlg, msg&, wParam&, lParam&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let msg = self.compile_expr(fb, &call.args[1])?;
+                    let msg64 = self.convert_value(fb, &msg, &IrType::I64, &PbType::Quad);
+                    let wp = self.compile_expr(fb, &call.args[2])?;
+                    let wp64 = self.convert_value(fb, &wp, &IrType::I64, &PbType::Quad);
+                    let lp = self.compile_expr(fb, &call.args[3])?;
+                    let lp64 = self.convert_value(fb, &lp, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_post", &[hdlg64, msg64, wp64, lp64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_USER" => {
+                // DIALOG SET USER hDlg, index&, usrval&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let idx = self.compile_expr(fb, &call.args[1])?;
+                    let idx64 = self.convert_value(fb, &idx, &IrType::I64, &PbType::Quad);
+                    let val = self.compile_expr(fb, &call.args[2])?;
+                    let val64 = self.convert_value(fb, &val, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_set_user", &[hdlg64, idx64, val64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_GET_USER" => {
+                // DIALOG GET USER hDlg, index& TO retvar&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let idx = self.compile_expr(fb, &call.args[1])?;
+                    let idx64 = self.convert_value(fb, &idx, &IrType::I64, &PbType::Quad);
+                    let res = fb.call(&IrType::I64, "pb_dialog_get_user", &[hdlg64, idx64]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &res, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_ICON" => {
+                // DIALOG SET ICON hDlg, newicon$
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let nm = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_dialog_set_icon", &[hdlg64, nm]);
+                }
+                return Ok(());
+            }
+            "DIALOG_GET_CLIENT" => {
+                // DIALOG GET CLIENT hDlg TO nWide&, nHigh&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let pw = fb.alloca(&IrType::I64);
+                    let ph = fb.alloca(&IrType::I64);
+                    fb.call_void("pb_dialog_get_client", &[hdlg64, pw.clone(), ph.clone()]);
+                    for (argi, slot) in [(1usize, &pw), (2usize, &ph)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_CLIENT" => {
+                // DIALOG SET CLIENT hDlg, x&, y&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let w = self.compile_expr(fb, &call.args[1])?;
+                    let w64 = self.convert_value(fb, &w, &IrType::I64, &PbType::Quad);
+                    let h = self.compile_expr(fb, &call.args[2])?;
+                    let h64 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_set_client", &[hdlg64, w64, h64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_GET_LOC" => {
+                // DIALOG GET LOC hDlg TO x&, y&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let px = fb.alloca(&IrType::I64);
+                    let py = fb.alloca(&IrType::I64);
+                    fb.call_void("pb_dialog_get_loc", &[hdlg64, px.clone(), py.clone()]);
+                    for (argi, slot) in [(1usize, &px), (2usize, &py)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_LOC" => {
+                // DIALOG SET LOC hDlg, x&, y&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let x = self.compile_expr(fb, &call.args[1])?;
+                    let x64 = self.convert_value(fb, &x, &IrType::I64, &PbType::Quad);
+                    let y = self.compile_expr(fb, &call.args[2])?;
+                    let y64 = self.convert_value(fb, &y, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_set_loc", &[hdlg64, x64, y64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_SET_COLOR" => {
+                // DIALOG SET COLOR hDlg, foreclr&, backclr&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let fg = self.compile_expr(fb, &call.args[1])?;
+                    let fg64 = self.convert_value(fb, &fg, &IrType::I64, &PbType::Quad);
+                    let bg = self.compile_expr(fb, &call.args[2])?;
+                    let bg64 = self.convert_value(fb, &bg, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_dialog_set_color", &[hdlg64, fg64, bg64]);
+                }
+                return Ok(());
+            }
+            "DIALOG_DEFAULT_FONT" => {
+                // DIALOG DEFAULT FONT fontname$ [, points& [, style& [, charset&]]]
+                if !call.args.is_empty() {
+                    let nm = self.compile_expr(fb, &call.args[0])?;
+                    let mut vals = Vec::new();
+                    for i in 1..4 {
+                        if let Some(a) = call.args.get(i) {
+                            let v = self.compile_expr(fb, a)?;
+                            vals.push(self.to_i32(fb, &v));
+                        } else {
+                            vals.push(fb.const_i32(0));
+                        }
+                    }
+                    fb.call_void(
+                        "pb_dialog_default_font",
+                        &[nm, vals[0].clone(), vals[1].clone(), vals[2].clone()],
+                    );
+                }
+                return Ok(());
+            }
+            "DIALOG_PIXELS" | "DIALOG_UNITS" => {
+                // DIALOG PIXELS  hDlg, x&, y& TO UNITS  xx&, yy&
+                // DIALOG UNITS   hDlg, x&, y& TO PIXELS xx&, yy&
+                if call.args.len() >= 5 {
+                    let is_px = call.name.to_uppercase() == "DIALOG_PIXELS";
+                    let fname = if is_px {
+                        "pb_dialog_pixels"
+                    } else {
+                        "pb_dialog_units"
+                    };
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let x = self.compile_expr(fb, &call.args[1])?;
+                    let x64 = self.convert_value(fb, &x, &IrType::I64, &PbType::Quad);
+                    let y = self.compile_expr(fb, &call.args[2])?;
+                    let y64 = self.convert_value(fb, &y, &IrType::I64, &PbType::Quad);
+                    let px = fb.alloca(&IrType::I64);
+                    let py = fb.alloca(&IrType::I64);
+                    fb.call_void(fname, &[hdlg64, x64, y64, px.clone(), py.clone()]);
+                    for (argi, slot) in [(3usize, &px), (4usize, &py)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
                 }
                 return Ok(());
             }

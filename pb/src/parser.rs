@@ -6024,15 +6024,24 @@ impl Parser {
                     }));
                 }
                 // DIALOG SHOW MODAL hDlg CALL proc
+                //
+                // The guard must test the noun as well as the verb.  It
+                // used to test only SHOW, so it also captured
+                // DIALOG SHOW STATE and DIALOG SHOW MODELESS: it skipped
+                // no MODAL keyword (the noun is not MODAL), parsed the
+                // noun as the handle and the real handle as the callback,
+                // and codegen then reported
+                // "DIALOG SHOW MODAL: unknown sub '<handle>'".  Both
+                // sibling statements were silently dead - DIALOG SHOW
+                // STATE had never worked.  Batch 165 found this while
+                // adding DIALOG SHOW MODELESS.
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="MODAL")
                 {
                     self.advance();
                     self.advance();
-                    // skip MODAL
-                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase()=="MODAL") {
-                        self.advance();
-                    }
+                    self.advance(); // MODAL (now guaranteed by the guard)
                     let hd = self.parse_expression()?;
                     // skip CALL (Token::Call)
                     if self.peek() == &Token::Call {
@@ -6061,7 +6070,9 @@ impl Parser {
                     }));
                 }
                 // DIALOG SET SIZE hDlg, nWide&, nHigh&
-                // (must precede DIALOG SET TEXT: that guard only tests the verb)
+                // (this no longer has to precede DIALOG SET TEXT - that
+                //  guard tests its noun as well since batch 165; see the
+                //  note there)
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
                     && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="SIZE")
@@ -6082,8 +6093,20 @@ impl Parser {
                     }));
                 }
                 // DIALOG SET TEXT hDlg, "title"
+                //
+                // The guard must test the noun as well as the verb.  It
+                // used to test only the verb, which meant every other
+                // "DIALOG SET ..." statement - SET SIZE, SET CLIENT,
+                // SET LOC, SET USER, SET COLOR, SET ICON - was captured
+                // here, compiled into a window-title change, and had its
+                // remaining arguments eaten by consume_to_eol.  The
+                // statement compiled, exited 0, and silently did the
+                // wrong thing.  Batch 165 found this while adding the
+                // rest of the SET family; DIALOG SET SIZE had been
+                // dodging it by sitting earlier in the chain.
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TEXT")
                 {
                     self.advance();
                     self.advance();
@@ -6241,6 +6264,382 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "DIALOG_MENU".to_string(),
                         args: vec![hd, hm],
+                        line,
+                    }));
+                }
+
+                // --------------------------------------------------------
+                // Batch 165 - the DIALOG statement family.  Every keyword
+                // below is a plain Identifier token (verified against
+                // token.rs), and each guard keys off the word after DIALOG,
+                // so the order of these blocks does not matter.
+                // --------------------------------------------------------
+                // DIALOG ENABLE hDlg / DIALOG DISABLE hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "ENABLE" | "DISABLE"))
+                {
+                    let on = matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "ENABLE");
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_ENABLE".to_string(),
+                        args: vec![hd, Expr::IntegerLit(if on { 1 } else { 0 })],
+                        line,
+                    }));
+                }
+                // DIALOG HIDE / NORMALIZE / MINIMIZE / MAXIMIZE hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(),
+                            "HIDE" | "NORMALIZE" | "MINIMIZE" | "MAXIMIZE"))
+                {
+                    let cmd = match self.peek_at(1) {
+                        Some(Token::Identifier(w)) => match w.to_uppercase().as_str() {
+                            "HIDE" => 0,     // %SW_HIDE
+                            "MINIMIZE" => 6, // %SW_MINIMIZE
+                            "MAXIMIZE" => 3, // %SW_MAXIMIZE
+                            _ => 9,          // %SW_RESTORE - DIALOG NORMALIZE
+                        },
+                        _ => 9,
+                    };
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SHOW".to_string(),
+                        args: vec![hd, Expr::IntegerLit(cmd)],
+                        line,
+                    }));
+                }
+                // DIALOG SHOW MODELESS hDlg [[,] CALL callback] [TO lResult&]
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="MODELESS")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SHOW".to_string(),
+                        // %SW_SHOW - display and activate; the message pump is
+                        // the program's own (DIALOG DOEVENTS / PBMAIN loop).
+                        args: vec![hd, Expr::IntegerLit(5)],
+                        line,
+                    }));
+                }
+                // DIALOG STABILIZE hDlg / DIALOG NONSTABLE hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if matches!(w.to_uppercase().as_str(), "STABILIZE" | "NONSTABLE"))
+                {
+                    let stable = matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "STABILIZE");
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_STABILIZE".to_string(),
+                        args: vec![hd, Expr::IntegerLit(if stable { 1 } else { 0 })],
+                        line,
+                    }));
+                }
+                // DIALOG REDRAW hDlg
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "REDRAW")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_REDRAW".to_string(),
+                        args: vec![hd],
+                        line,
+                    }));
+                }
+                // DIALOG SEND hDlg, msg&, wParam&, lParam& [TO lResult&]
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "SEND")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let msg = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let wp = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let lp = self.parse_expression()?;
+                    let mut args = vec![hd, msg, wp, lp];
+                    if self.peek() == &Token::To {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SEND".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // DIALOG POST hDlg, msg&, wParam&, lParam&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "POST")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let msg = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let wp = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let lp = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_POST".to_string(),
+                        args: vec![hd, msg, wp, lp],
+                        line,
+                    }));
+                }
+                // DIALOG SET USER hDlg, index&, usrval&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="USER")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let idx = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let val = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_USER".to_string(),
+                        args: vec![hd, idx, val],
+                        line,
+                    }));
+                }
+                // DIALOG GET USER hDlg, index& TO retvar&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="USER")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let idx = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let dst = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_GET_USER".to_string(),
+                        args: vec![hd, idx, dst],
+                        line,
+                    }));
+                }
+                // DIALOG SET COLOR hDlg, foreclr&, backclr&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="COLOR")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let fore = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let back = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_COLOR".to_string(),
+                        args: vec![hd, fore, back],
+                        line,
+                    }));
+                }
+                // DIALOG DEFAULT FONT fontname$ [, points& [, style& [, charset&]]]
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="DEFAULT")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="FONT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let mut args = vec![self.parse_expression()?];
+                    while self.peek() == &Token::Comma && args.len() < 4 {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_DEFAULT_FONT".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // DIALOG SET ICON hDlg, newicon$
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="ICON")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let nm = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_ICON".to_string(),
+                        args: vec![hd, nm],
+                        line,
+                    }));
+                }
+                // DIALOG GET CLIENT hDlg TO nWide&, nHigh&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="CLIENT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let wv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hv = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_GET_CLIENT".to_string(),
+                        args: vec![hd, wv, hv],
+                        line,
+                    }));
+                }
+                // DIALOG SET CLIENT hDlg, x&, y&   (client-area size)
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="CLIENT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let wv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hv = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_CLIENT".to_string(),
+                        args: vec![hd, wv, hv],
+                        line,
+                    }));
+                }
+                // DIALOG GET LOC hDlg TO x&, y&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LOC")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let xv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yv = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_GET_LOC".to_string(),
+                        args: vec![hd, xv, yv],
+                        line,
+                    }));
+                }
+                // DIALOG SET LOC hDlg, x&, y&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LOC")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let xv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yv = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_SET_LOC".to_string(),
+                        args: vec![hd, xv, yv],
+                        line,
+                    }));
+                }
+                // DIALOG PIXELS hDlg, x&, y& TO UNITS xx&, yy&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "PIXELS")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let xv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yv = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase() == "UNITS") {
+                        self.advance();
+                    }
+                    let xo = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yo = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_PIXELS".to_string(),
+                        args: vec![hd, xv, yv, xo, yo],
+                        line,
+                    }));
+                }
+                // DIALOG UNITS hDlg, x&, y& TO PIXELS xx&, yy&
+                if name_upper == "DIALOG"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                        if w.to_uppercase() == "UNITS")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let xv = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yv = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    if matches!(self.peek(), Token::Identifier(w) if w.to_uppercase() == "PIXELS") {
+                        self.advance();
+                    }
+                    let xo = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let yo = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "DIALOG_UNITS".to_string(),
+                        args: vec![hd, xv, yv, xo, yo],
                         line,
                     }));
                 }

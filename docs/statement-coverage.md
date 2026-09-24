@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 164 (v0.2.021)** — 2026-09-24. All statements through batch 164 are reflected in this matrix.
+> **Last updated from batch 165 (v0.2.022)** — 2026-09-24. All statements through batch 165 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **737** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 467 STATEMENT, 1 FORK EXTENSION).
-- **640** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **96** Tier-3 DDT GUI items deferred; **1** fork extension (implemented here, not an official PB keyword).
+- Rows in this matrix: **734** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 463 STATEMENT, 2 FORK EXTENSION).
+- **662** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **70** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 492 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 514 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **640** | Implemented + Established |
+| ✅ **Total available** | **662** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -24,7 +26,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 96 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 70 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -172,7 +174,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL SET TEXT | STATEMENT | PB/Win only | Implemented
 | CONTROL SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL SHOW STATE | STATEMENT | PB/Win only | Tier-3 DDT |
-| CONTROL TRAXOMATIC | STATEMENT | PB/Win only | Tier-3 DDT |
 | COS | FUNCTION | LLVM intrinsic | Implemented |
 | COSH | FUNCTION | LLVM intrinsic | Implemented |
 | COT | FUNCTION | C runtime (MSVCRT) | Implemented |
@@ -207,41 +208,39 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | DESKTOP GET LOC | STATEMENT | PB/Win + PB/CC | Established |
 | DESKTOP GET PPI | STATEMENT | PB/Win + PB/CC | Implemented |
 | DESKTOP GET SIZE | STATEMENT | PB/Win + PB/CC | Established |
-| DIALOG CENTER | STATEMENT | PB/Win only | Implemented |
-| DIALOG DEFAULT FONT | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG DISABLE | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG CENTER | FORK EXTENSION | PB/Win only | Implemented |
+| DIALOG DEFAULT FONT | STATEMENT | PB/Win only | Implemented |
+| DIALOG DISABLE | STATEMENT | PB/Win only | Implemented |
 | DIALOG DOEVENTS | STATEMENT | PB/Win only | Implemented
-| DIALOG ENABLE | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG ENABLE | STATEMENT | PB/Win only | Implemented |
 | DIALOG END | STATEMENT | PB/Win only | Implemented
-| DIALOG GET CLIENT | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG GET LOC | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG GET CLIENT | STATEMENT | PB/Win only | Implemented |
+| DIALOG GET LOC | STATEMENT | PB/Win only | Implemented |
 | DIALOG GET SIZE | STATEMENT | PB/Win only | Implemented |
 | DIALOG GET TEXT | STATEMENT | PB/Win only | Implemented
-| DIALOG GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG HIDE | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG MAXIMIZE | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG MINIMIZE | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG GET USER | STATEMENT | PB/Win only | Implemented |
+| DIALOG HIDE | STATEMENT | PB/Win only | Implemented |
+| DIALOG MAXIMIZE | STATEMENT | PB/Win only | Implemented |
+| DIALOG MINIMIZE | STATEMENT | PB/Win only | Implemented |
 | DIALOG NEW | STATEMENT | PB/Win only | Implemented
-| DIALOG NONSTABLE | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG NORMALIZE | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG PIXELS | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG POST | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG REDRAW | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG SEND | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG SET CLIENT | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG SET COLOR | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG SET ICON | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG SET LOC | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG NONSTABLE | STATEMENT | PB/Win only | Implemented |
+| DIALOG NORMALIZE | STATEMENT | PB/Win only | Implemented |
+| DIALOG PIXELS | STATEMENT | PB/Win only | Implemented |
+| DIALOG POST | STATEMENT | PB/Win only | Implemented |
+| DIALOG REDRAW | STATEMENT | PB/Win only | Implemented |
+| DIALOG SEND | STATEMENT | PB/Win only | Implemented |
+| DIALOG SET CLIENT | STATEMENT | PB/Win only | Implemented |
+| DIALOG SET COLOR | STATEMENT | PB/Win only | Implemented |
+| DIALOG SET ICON | STATEMENT | PB/Win only | Implemented |
+| DIALOG SET LOC | STATEMENT | PB/Win only | Implemented |
 | DIALOG SET SIZE | STATEMENT | PB/Win only | Implemented |
 | DIALOG SET TEXT | STATEMENT | PB/Win only | Implemented
-| DIALOG SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG SET USER | STATEMENT | PB/Win only | Implemented |
 | DIALOG SHOW MODAL | STATEMENT | PB/Win only | Implemented
-| DIALOG SHOW MODELESS | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG SHOW MODELESS | STATEMENT | PB/Win only | Implemented |
 | DIALOG SHOW STATE | STATEMENT | PB/Win only | Implemented
-| DIALOG STABILIZE | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG TRAXOMATIC | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG UNITS | STATEMENT | PB/Win only | Tier-3 DDT |
-| DIALOG XLAT | STATEMENT | PB/Win only | Tier-3 DDT |
+| DIALOG STABILIZE | STATEMENT | PB/Win only | Implemented |
+| DIALOG UNITS | STATEMENT | PB/Win only | Implemented |
 | DIM | STATEMENT | PB/Win + PB/CC | Implemented |
 | DIR | FUNCTION | codegen builtin | Implemented |
 | DIR CLOSE | STATEMENT | PB/Win + PB/CC | Implemented |
