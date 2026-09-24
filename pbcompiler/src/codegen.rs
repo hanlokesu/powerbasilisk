@@ -2035,6 +2035,174 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_listview_delete_column",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_find",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_fit_content",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_fit_header",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_column",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_column",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_header",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_header",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_headerid",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_mode",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_mode",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_selcount",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_select",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_state",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_select",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_unselect",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_stylexx",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_stylexx",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_get_user",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_user",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_image",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_image2",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_overlay",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_set_imagelist",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_visible",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_listview_sort",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
             "pb_treeview_insert_item",
             &IrType::Void,
             &[
@@ -8767,9 +8935,9 @@ impl Compiler {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
                     let val = fb.call(&IrType::I64, "pb_progressbar_get_pos", &[a, b]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -8779,18 +8947,18 @@ impl Compiler {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
                     let lo = fb.call(&IrType::I64, "pb_progressbar_get_lo", &[a, b]);
-                    let lo32 = fb.trunc(&lo, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&lo32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &lo, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                     // fb.call consumes its operands, so re-evaluate the two
                     // simple handle/id operands for the second query.
                     let a2 = self.compile_expr(fb, &call.args[0])?;
                     let b2 = self.compile_expr(fb, &call.args[1])?;
                     let hi = fb.call(&IrType::I64, "pb_progressbar_get_hi", &[a2, b2]);
-                    let hi32 = fb.trunc(&hi, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
-                        fb.store(&hi32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &hi, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -8800,9 +8968,9 @@ impl Compiler {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
                     let val = fb.call(&IrType::I64, "pb_header_get_count", &[a, b]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -8816,9 +8984,9 @@ impl Compiler {
                     let e = self.compile_expr(fb, &call.args[4])?;
                     let val = fb.call(&IrType::I64, "pb_header_send", &[a, b, c, d, e]);
                     if call.args.len() >= 6 {
-                        let val32 = fb.trunc(&val, &IrType::I32);
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[5]) {
-                            fb.store(&val32, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[5]) {
+                            let vv = self.convert_value(fb, &val, &ty, &pty);
+                            fb.store(&vv, &ptr);
                         }
                     }
                 }
@@ -8832,9 +9000,9 @@ impl Compiler {
                     let d = self.compile_expr(fb, &call.args[3])?;
                     let val = fb.call(&IrType::I64, "pb_header_get_item", &[a, b, c, d]);
                     if call.args.len() >= 5 {
-                        let val32 = fb.trunc(&val, &IrType::I32);
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
-                            fb.store(&val32, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            let vv = self.convert_value(fb, &val, &ty, &pty);
+                            fb.store(&vv, &ptr);
                         }
                     }
                 }
@@ -8848,9 +9016,9 @@ impl Compiler {
                     let d = self.compile_expr(fb, &call.args[3])?;
                     let val = fb.call(&IrType::I64, "pb_header_set_item", &[a, b, c, d]);
                     if call.args.len() >= 5 {
-                        let val32 = fb.trunc(&val, &IrType::I32);
-                        if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
-                            fb.store(&val32, &ptr);
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                            let vv = self.convert_value(fb, &val, &ty, &pty);
+                            fb.store(&vv, &ptr);
                         }
                     }
                 }
@@ -9868,9 +10036,9 @@ impl Compiler {
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let val = fb.call(&IrType::I64, "pb_control_get_check", &[hc]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -10157,9 +10325,9 @@ impl Compiler {
                     let item = self.compile_expr(fb, &call.args[2])?;
                     let bycmd = self.compile_expr(fb, &call.args[4])?;
                     let val = fb.call(&IrType::I64, "pb_toolbar_get_state", &[a, b, item, bycmd]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -10169,9 +10337,9 @@ impl Compiler {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
                     let val = fb.call(&IrType::I64, "pb_toolbar_get_count", &[a, b]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -10281,9 +10449,9 @@ impl Compiler {
                     }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let n = fb.call(&IrType::I64, "pb_listview_get_count", &[hd, id]);
-                    let n32 = fb.trunc(&n, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&n32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &n, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -10349,6 +10517,450 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            "LISTVIEW_DELETE_COLUMN" => {
+                // LISTVIEW DELETE COLUMN hDlg, ID&, Col&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_delete_column", &[hd, id, col]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_FIND" => {
+                // LISTVIEW FIND hDlg, ID&, Item&, StrExpr TO datav&
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let needle = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_listview_find",
+                        &[hd, id, item, needle, fb.const_i32(0)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_FIND_EXACT" => {
+                // LISTVIEW FIND EXACT hDlg, ID&, Item&, StrExpr TO datav&
+                // Same runtime entry as LISTVIEW FIND; operand 5 selects
+                // the exact-match comparison instead of the prefix match.
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let needle = self.compile_str_payload(fb, &call.args[3])?;
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_listview_find",
+                        &[hd, id, item, needle, fb.const_i32(1)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_FIT_CONTENT" => {
+                // LISTVIEW FIT CONTENT hDlg, ID&, Col&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_fit_content", &[hd, id, col]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_FIT_HEADER" => {
+                // LISTVIEW FIT HEADER hDlg, ID&, Col&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_fit_header", &[hd, id, col]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_COLUMN" => {
+                // LISTVIEW GET COLUMN hDlg, ID&, Col& TO datav&
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_column", &[hd, id, col]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_COLUMN" => {
+                // LISTVIEW SET COLUMN hDlg, ID&, Col&, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let width = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_column", &[hd, id, col, width]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_HEADER" => {
+                // LISTVIEW GET HEADER hDlg, ID&, Col& TO txtv$
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    fb.call_void(
+                        "pb_listview_get_header",
+                        &[hd, id, col, bp.clone(), fb.const_i32(256)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_HEADER" => {
+                // LISTVIEW SET HEADER hDlg, ID&, Col&, StrExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_header", &[hd, id, col, text]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_HEADERID" => {
+                // LISTVIEW GET HEADERID hDlg, ID& TO hLV, idv&
+                // Two out-parameters, so both travel through I64 slots
+                // that the runtime fills and we convert on the way back.
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let hlv_tmp = fb.alloca(&IrType::I64);
+                    // The runtime writes a `long` here, so the slot must be
+                    // I32: an I64 slot would leave the high half uninitialised
+                    // and the load below would read garbage.
+                    let hid_tmp = fb.alloca(&IrType::I32);
+                    fb.call_void(
+                        "pb_listview_get_headerid",
+                        &[hd, id, hlv_tmp.clone(), hid_tmp.clone()],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let v = fb.load(&IrType::I64, &hlv_tmp);
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let v = fb.load(&IrType::I32, &hid_tmp);
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_MODE" => {
+                // LISTVIEW GET MODE hDlg, ID& TO datav&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_mode", &[hd, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_MODE" => {
+                // LISTVIEW SET MODE hDlg, ID&, NumExpr
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mode = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_set_mode", &[hd, id, mode]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_SELCOUNT" => {
+                // LISTVIEW GET SELCOUNT hDlg, ID& TO datav&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_selcount", &[hd, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_SELECT" => {
+                // LISTVIEW GET SELECT hDlg, ID& [, Item&] TO datav&
+                // The parser always emits Item&, defaulting it to 1.
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let start = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_select", &[hd, id, start]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_STATE" => {
+                // LISTVIEW GET STATE hDlg, ID&, Item&, Col& TO datav&
+                if call.args.len() >= 5 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let col = self.compile_expr(fb, &call.args[3])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_state", &[hd, id, item, col]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[4]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SELECT" => {
+                // LISTVIEW SELECT hDlg, ID&, Item& [, Col&]
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let col = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_select", &[hd, id, item, col]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_UNSELECT" => {
+                // LISTVIEW UNSELECT hDlg, ID&, Item& [, Col&]
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let col = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_unselect", &[hd, id, item, col]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_STYLEXX" => {
+                // LISTVIEW GET STYLEXX hDlg, ID& TO datav&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_stylexx", &[hd, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_STYLEXX" => {
+                // LISTVIEW SET STYLEXX hDlg, ID&, NumExpr
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let style = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_set_stylexx", &[hd, id, style]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_GET_USER" => {
+                // LISTVIEW GET USER hDlg, ID&, Item& TO datav&
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_listview_get_user", &[hd, id, item]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_USER" => {
+                // LISTVIEW SET USER hDlg, ID&, Item&, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let value = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_user", &[hd, id, item, value]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_IMAGE" => {
+                // LISTVIEW SET IMAGE hDlg, ID&, Item&, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let image = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_image", &[hd, id, item, image]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_IMAGE2" => {
+                // LISTVIEW SET IMAGE2 hDlg, ID&, Item&, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let image = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_image2", &[hd, id, item, image]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_OVERLAY" => {
+                // LISTVIEW SET OVERLAY hDlg, ID&, Item&, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    let overlay = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_overlay", &[hd, id, item, overlay]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SET_IMAGELIST" => {
+                // LISTVIEW SET IMAGELIST hDlg, ID&, hLst, NumExpr
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hlst = self.compile_expr(fb, &call.args[2])?;
+                    if hlst.ty != IrType::Ptr {
+                        hlst = fb.inttoptr(&hlst);
+                    }
+                    let which = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_set_imagelist", &[hd, id, hlst, which]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_VISIBLE" => {
+                // LISTVIEW VISIBLE hDlg, ID&, Item&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let item = self.compile_expr(fb, &call.args[2])?;
+                    fb.call_void("pb_listview_visible", &[hd, id, item]);
+                }
+                return Ok(());
+            }
+            "LISTVIEW_SORT" => {
+                // LISTVIEW SORT hDlg, ID&, Col& [, options...]
+                // The parser folds the option keywords into one bitmask
+                // operand (see parse_listview_sort_options); the encoding
+                // is shared with PB_LVSORT_* in pb_runtime.c.
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let col = self.compile_expr(fb, &call.args[2])?;
+                    let mode = self.compile_expr(fb, &call.args[3])?;
+                    fb.call_void("pb_listview_sort", &[hd, id, col, mode]);
+                }
+                return Ok(());
+            }
             "TREEVIEW_INSERT_ITEM" => {
                 if call.args.len() >= 8 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10388,9 +11000,9 @@ impl Compiler {
                     }
                     let id = self.compile_expr(fb, &call.args[1])?;
                     let n = fb.call(&IrType::I64, "pb_treeview_get_count", &[hd, id]);
-                    let n32 = fb.trunc(&n, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[2]) {
-                        fb.store(&n32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &n, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());
@@ -10884,9 +11496,9 @@ impl Compiler {
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let val = fb.call(&IrType::I64, "pb_control_get_pos", &[hc]);
-                    let val32 = fb.trunc(&val, &IrType::I32);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
-                        fb.store(&val32, &ptr);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let vv = self.convert_value(fb, &val, &ty, &pty);
+                        fb.store(&vv, &ptr);
                     }
                 }
                 return Ok(());

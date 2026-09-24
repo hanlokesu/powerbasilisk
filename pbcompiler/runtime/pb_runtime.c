@@ -6806,6 +6806,17 @@ __declspec(dllimport) long __stdcall GetWindowLongA(void*, int);
 static long long pb_get_winlong(void* h, int idx) { return (long long)GetWindowLongA(h, idx); }
 #endif
 
+/* SetWindowLongPtrA, like GetWindowLongPtrA above, only exists in 64-bit
+   user32; the 32-bit build falls back to SetWindowLongA.  Needed by
+   LISTVIEW SET MODE, which rewrites the LVS_TYPEMASK style bits. */
+#if defined(_WIN64)
+__declspec(dllimport) long long __stdcall SetWindowLongPtrA(void*, int, long long);
+static long long pb_set_winlong(void* h, int idx, long long v) { return SetWindowLongPtrA(h, idx, v); }
+#else
+__declspec(dllimport) long __stdcall SetWindowLongA(void*, int, long);
+static long long pb_set_winlong(void* h, int idx, long long v) { return (long long)SetWindowLongA(h, idx, (long)v); }
+#endif
+
 /* --- DIALOG ENABLE hDlg / DIALOG DISABLE hDlg ----------------------- */
 void pb_dialog_enable(void* hDlg, int on) { EnableWindow(hDlg, on); }
 
@@ -7087,11 +7098,71 @@ static void pb_icc(unsigned long flags) {
 
 #define PB_LVIF_TEXT   0x0001
 #define PB_LVIF_IMAGE  0x0002
+#define PB_LVIF_PARAM  0x0004
+#define PB_LVIF_STATE  0x0008
 #define PB_LVCF_FMT    0x0001
 #define PB_LVCF_WIDTH  0x0002
 #define PB_LVCF_TEXT   0x0004
 #define PB_LVCF_SUBITEM 0x0008
 #define PB_LVS_EX_FULLROWSELECT 0x20
+
+/* ---- ListView: the rest of the family (batch 170) ----
+   Every value below is copied from C:\PBWin10\WINAPI\commctrl.inc so the
+   runtime and the official PowerBASIC headers cannot drift apart. */
+#define PB_LVM_SETIMAGELIST           (PB_LVM_FIRST + 3)   /* 0x1003 */
+#define PB_LVM_GETITEMA               (PB_LVM_FIRST + 5)   /* 0x1005 */
+#define PB_LVM_SETITEMA               (PB_LVM_FIRST + 6)   /* 0x1006 */
+#define PB_LVM_GETNEXTITEM            (PB_LVM_FIRST + 12)  /* 0x100C */
+#define PB_LVM_FINDITEMA              (PB_LVM_FIRST + 13)  /* 0x100D */
+#define PB_LVM_ENSUREVISIBLE          (PB_LVM_FIRST + 19)  /* 0x1013 */
+#define PB_LVM_GETCOLUMNA             (PB_LVM_FIRST + 25)  /* 0x1019 */
+#define PB_LVM_SETCOLUMNA             (PB_LVM_FIRST + 26)  /* 0x101A */
+#define PB_LVM_DELETECOLUMN           (PB_LVM_FIRST + 28)  /* 0x101C */
+#define PB_LVM_GETCOLUMNWIDTH         (PB_LVM_FIRST + 29)  /* 0x101D */
+#define PB_LVM_SETCOLUMNWIDTH         (PB_LVM_FIRST + 30)  /* 0x101E */
+#define PB_LVM_GETHEADER              (PB_LVM_FIRST + 31)  /* 0x101F */
+#define PB_LVM_SETITEMSTATE           (PB_LVM_FIRST + 43)  /* 0x102B */
+#define PB_LVM_GETITEMSTATE           (PB_LVM_FIRST + 44)  /* 0x102C */
+#define PB_LVM_SORTITEMS              (PB_LVM_FIRST + 48)  /* 0x1030 */
+#define PB_LVM_GETSELECTEDCOUNT       (PB_LVM_FIRST + 50)  /* 0x1032 */
+#define PB_LVM_GETEXTENDEDLISTVIEWSTYLE (PB_LVM_FIRST + 55) /* 0x1037 */
+
+#define PB_LVSCW_AUTOSIZE             (-1)
+#define PB_LVSCW_AUTOSIZE_USEHEADER   (-2)
+#define PB_LVS_TYPEMASK               0x00000003
+
+#define PB_LVFI_STRING   0x0002
+#define PB_LVFI_PARTIAL  0x0008
+
+#define PB_LVNI_SELECTED       0x0002
+#define PB_LVIS_SELECTED       0x0002
+#define PB_LVIS_OVERLAYMASK    0x0F00
+#define PB_LVIS_STATEIMAGEMASK 0xF000
+
+/* LISTVIEW SORT option bits.  This is OUR encoding, shared with the
+   parser (pb/src/parser.rs, LISTVIEW SORT arm) - it is not a Win32
+   constant, and the two sides have to be changed together. */
+#define PB_LVSORT_ASCEND    0x0001
+#define PB_LVSORT_DESCEND   0x0002
+#define PB_LVSORT_ALPHANUM  0x0004
+#define PB_LVSORT_UCASE     0x0008
+#define PB_LVSORT_NUMERIC   0x0010
+#define PB_LVSORT_MMDDYYYY  0x0020
+#define PB_LVSORT_DDMMYYYY  0x0040
+#define PB_LVSORT_YYYYMMDD  0x0080
+#define PB_LVSORT_YYYYDDMM  0x0100
+
+/* x64 LVFINDINFOA.  Offsets: flags 0, psz 8, lParam 16, pt 24,
+   vkDirection 32 (size 40).  The PowerBASIC TYPE declares lParam AS
+   LONG, but the Win32 member is LPARAM, which is 64-bit on x64. */
+typedef struct {
+    unsigned int flags;
+    const char*  psz;
+    long long    lParam;
+    long         pt_x;
+    long         pt_y;
+    unsigned int vkDirection;
+} PB_LVFINDINFOA;
 
 /* ---- TreeView messages (commctrl.inc: TV_FIRST = &H1100) ---- */
 #define PB_TV_FIRST          0x1100
@@ -7998,40 +8069,71 @@ long long pb_tab_set_text(void* hDlg, long id, int page, const char* text) {
                         (pb_lparam_t)(size_t)&it) ? 0 : -1;
 }
 
+/* ---------------- LISTVIEW family ----------------
+   PowerBASIC numbers items and columns from 1 ("First=1, second=2...",
+   see LISTVIEW_statement.htm), but every Win32 list-view message takes a
+   0-based index.  The conversion is done here, once, for the whole
+   family, so no caller has to think about it.
+
+   batch 170 corrected the batch 158 functions below: they passed the
+   PowerBASIC numbers straight through to SendMessageA and were therefore
+   off by one for every caller that followed the documented 1-based
+   convention.  examples/batch158_listview_treeview.bas was written
+   against the old 0-based behaviour and was updated with this batch. */
+
+static void* pb_lv_hwnd(void* hDlg, long id) {
+    if (!hDlg) return 0;
+    return GetDlgItem(hDlg, (int)id);
+}
+
+/* 1-based PowerBASIC index -> 0-based Win32 index, clamped at 0. */
+static int pb_lv_idx(int pb_index) {
+    int i = pb_index - 1;
+    return i < 0 ? 0 : i;
+}
+
 /* ---------------- LISTVIEW INSERT COLUMN ---------------- */
 void pb_listview_insert_column(void* hDlg, long id, int col, const char* text,
                                int width, int fmt) {
     PB_LVCOLUMN c;
-    void* h = GetDlgItem(hDlg, (int)id);
+    void* h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
     memset(&c, 0, sizeof(c));
     c.mask     = PB_LVCF_FMT | PB_LVCF_WIDTH | PB_LVCF_TEXT | PB_LVCF_SUBITEM;
     c.fmt      = fmt;
     c.cx       = width;
     c.pszText  = (const char*)text;
-    c.iSubItem = col;
-    SendMessageA(h, PB_LVM_INSERTCOLUMNA, (unsigned int)col, (pb_lparam_t)&c);
+    c.iSubItem = pb_lv_idx(col);
+    SendMessageA(h, PB_LVM_INSERTCOLUMNA, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(size_t)&c);
 }
 
-/* ---------------- LISTVIEW INSERT ITEM ---------------- */
+/* ---------------- LISTVIEW INSERT ITEM ----------------
+   item& is the documented row number, but LVM_INSERTITEM always appends,
+   so iItem is advisory only and the row lands at the end of the control.
+   This matches the official remark that the remaining columns are empty
+   until LISTVIEW SET TEXT fills them. */
 void pb_listview_insert_item(void* hDlg, long id, int item, int image,
                              const char* text) {
     PB_LVITEM it;
-    void* h = GetDlgItem(hDlg, (int)id);
+    void* h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
     memset(&it, 0, sizeof(it));
     it.mask     = PB_LVIF_TEXT | PB_LVIF_IMAGE;
-    it.iItem    = item;
+    it.iItem    = pb_lv_idx(item);
     it.iSubItem = 0;
     it.pszText  = (const char*)text;
     it.iImage   = image;
-    SendMessageA(h, PB_LVM_INSERTITEMA, 0, (pb_lparam_t)&it);
+    SendMessageA(h, PB_LVM_INSERTITEMA, 0, (pb_lparam_t)(size_t)&it);
 }
 
 /* ---------------- LISTVIEW GET COUNT ---------------- */
 long long pb_listview_get_count(void* hDlg, long id) {
-    void* h = GetDlgItem(hDlg, (int)id);
-    if (!h) return 0;
+    void* h = pb_lv_hwnd(hDlg, id);
+    /* -1 on an unresolvable control, matching the rest of the family
+       (TAB GET COUNT, LISTVIEW GET MODE / GET SELCOUNT / GET COLUMN).
+       A negative count can never be a real answer, so it is unambiguous. */
+    if (!h) return -1;
     return (long long)(intptr_t)SendMessageA(h, PB_LVM_GETITEMCOUNT, 0, 0);
 }
 
@@ -8041,43 +8143,525 @@ void pb_listview_get_text(void* hDlg, long id, int item, int col,
     PB_LVITEM it;
     void* h;
     if (outlen > 0) out[0] = 0;
-    h = GetDlgItem(hDlg, (int)id);
+    h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
     memset(&it, 0, sizeof(it));
     it.mask       = PB_LVIF_TEXT;
-    it.iItem      = item;
-    it.iSubItem   = col;
+    it.iItem      = pb_lv_idx(item);
+    it.iSubItem   = pb_lv_idx(col);
     it.pszText    = out;
     it.cchTextMax = outlen;
-    SendMessageA(h, PB_LVM_GETITEMTEXTA, (unsigned int)item, (pb_lparam_t)&it);
+    SendMessageA(h, PB_LVM_GETITEMTEXTA, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
 }
 
 /* ---------------- LISTVIEW SET TEXT ---------------- */
 void pb_listview_set_text(void* hDlg, long id, int item, int col,
                           const char* text) {
     PB_LVITEM it;
-    void* h = GetDlgItem(hDlg, (int)id);
+    void* h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
     memset(&it, 0, sizeof(it));
     it.mask     = PB_LVIF_TEXT;
-    it.iItem    = item;
-    it.iSubItem = col;
+    it.iItem    = pb_lv_idx(item);
+    it.iSubItem = pb_lv_idx(col);
     it.pszText  = (const char*)text;
-    SendMessageA(h, PB_LVM_SETITEMTEXTA, (unsigned int)item, (pb_lparam_t)&it);
+    SendMessageA(h, PB_LVM_SETITEMTEXTA, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
 }
 
 /* ---------------- LISTVIEW DELETE ITEM ---------------- */
 void pb_listview_delete_item(void* hDlg, long id, int item) {
-    void* h = GetDlgItem(hDlg, (int)id);
+    void* h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
-    SendMessageA(h, PB_LVM_DELETEITEM, (unsigned int)item, 0);
+    SendMessageA(h, PB_LVM_DELETEITEM, (unsigned int)pb_lv_idx(item), 0);
 }
 
-/* ---------------- LISTVIEW RESET ---------------- */
+/* ---------------- LISTVIEW RESET ----------------
+   Deletes every data item; columns and their headers survive, as the
+   official documentation requires. */
 void pb_listview_reset(void* hDlg, long id) {
-    void* h = GetDlgItem(hDlg, (int)id);
+    void* h = pb_lv_hwnd(hDlg, id);
     if (!h) return;
     SendMessageA(h, PB_LVM_DELETEALLITEMS, 0, 0);
+}
+
+/* ============== batch 170: the rest of the LISTVIEW family ============== */
+
+/* ---------------- LISTVIEW DELETE COLUMN ----------------
+   Windows refuses to delete column 1 of a list-view control; the
+   official documentation states this explicitly and tells the caller to
+   insert a zero-width dummy column instead. */
+void pb_listview_delete_column(void* hDlg, long id, int col) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_DELETECOLUMN, (unsigned int)pb_lv_idx(col), 0);
+}
+
+/* ---------------- LISTVIEW FIND / LISTVIEW FIND EXACT ----------------
+   Searches column 1 only, case-insensitively, from item& to the last
+   item, without wrapping.  Returns the 1-based index of the match, or 0
+   when nothing matches - exactly the documented contract.
+
+   `exact` picks LVFI_STRING (whole string) over LVFI_PARTIAL (leading
+   substring); that is the only difference between the two statements. */
+long long pb_listview_find(void* hDlg, long id, int item, const char* needle,
+                           int exact) {
+    PB_LVFINDINFOA fi;
+    void* h = pb_lv_hwnd(hDlg, id);
+    intptr_t r;
+    if (!h) return 0;
+    memset(&fi, 0, sizeof(fi));
+    fi.flags = exact ? PB_LVFI_STRING : PB_LVFI_PARTIAL;
+    fi.psz   = (const char*)needle;
+    r = (intptr_t)SendMessageA(h, PB_LVM_FINDITEMA,
+                               (unsigned int)pb_lv_idx(item),
+                               (pb_lparam_t)(size_t)&fi);
+    if (r < 0) return 0;
+    return (long long)r + 1;   /* Win32 0-based -> PowerBASIC 1-based */
+}
+
+/* ---------------- LISTVIEW FIT CONTENT / FIT HEADER ----------------
+   LVM_SETCOLUMNWIDTH with LVSCW_AUTOSIZE (-1) fits the column to its
+   data, LVSCW_AUTOSIZE_USEHEADER (-2) to data plus header text.  Both
+   must be sign-extended into the LPARAM: a zero-extended -1 would not
+   reach Windows as the documented sentinel. */
+void pb_listview_fit_content(void* hDlg, long id, int col) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_SETCOLUMNWIDTH, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(long long)PB_LVSCW_AUTOSIZE);
+}
+
+void pb_listview_fit_header(void* hDlg, long id, int col) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_SETCOLUMNWIDTH, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(long long)PB_LVSCW_AUTOSIZE_USEHEADER);
+}
+
+/* ---------------- LISTVIEW GET COLUMN ----------------
+   The current width of the column, in the unit chosen at creation.
+   Returns -1 when the control cannot be resolved. */
+long long pb_listview_get_column(void* hDlg, long id, int col) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return -1;
+    return (long long)(intptr_t)SendMessageA(h, PB_LVM_GETCOLUMNWIDTH,
+                                             (unsigned int)pb_lv_idx(col), 0);
+}
+
+/* ---------------- LISTVIEW SET COLUMN ----------------
+   Any value other than the two documented sentinels is a width. */
+void pb_listview_set_column(void* hDlg, long id, int col, int width) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_SETCOLUMNWIDTH, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(long long)width);
+}
+
+/* ---------------- LISTVIEW GET HEADER ---------------- */
+void pb_listview_get_header(void* hDlg, long id, int col, char* out,
+                            int outlen) {
+    PB_LVCOLUMN c;
+    void* h;
+    if (outlen > 0) out[0] = 0;
+    h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    memset(&c, 0, sizeof(c));
+    c.mask       = PB_LVCF_TEXT;
+    c.pszText    = out;
+    c.cchTextMax = outlen;
+    SendMessageA(h, PB_LVM_GETCOLUMNA, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(size_t)&c);
+}
+
+/* ---------------- LISTVIEW SET HEADER ---------------- */
+void pb_listview_set_header(void* hDlg, long id, int col, const char* text) {
+    PB_LVCOLUMN c;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    memset(&c, 0, sizeof(c));
+    c.mask    = PB_LVCF_TEXT;
+    c.pszText = (const char*)text;
+    SendMessageA(h, PB_LVM_SETCOLUMNA, (unsigned int)pb_lv_idx(col),
+                 (pb_lparam_t)(size_t)&c);
+}
+
+/* ---------------- LISTVIEW GET HEADERID ----------------
+   Hands back the list-view handle itself plus the window id of the
+   HEADER control embedded in it, so the pair can be fed to the HEADER
+   statement.  The id is read with GWL_ID (-12), which is what
+   GetDlgCtrlID does internally, so no extra import is needed. */
+void pb_listview_get_headerid(void* hDlg, long id, void** out_hlv,
+                              long* out_hid) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    void* hdr;
+    if (out_hlv) *out_hlv = h;
+    if (out_hid) *out_hid = 0;
+    if (!h) return;
+    hdr = (void*)(intptr_t)SendMessageA(h, PB_LVM_GETHEADER, 0, 0);
+    if (out_hid) *out_hid = hdr ? (long)pb_get_winlong(hdr, -12) : 0;
+}
+
+/* ---------------- LISTVIEW GET MODE ----------------
+   The four classic display modes live in the LVS_TYPEMASK bits of the
+   control style: 0=icon, 1=report, 2=small icon, 3=list. */
+long long pb_listview_get_mode(void* hDlg, long id) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return -1;
+    return pb_get_winlong(h, -16 /* GWL_STYLE */) & PB_LVS_TYPEMASK;
+}
+
+/* ---------------- LISTVIEW SET MODE ----------------
+   Replaces only the LVS_TYPEMASK bits so every other style bit
+   survives.  There is no list-view message for this; the window style
+   has to be rewritten. */
+void pb_listview_set_mode(void* hDlg, long id, int mode) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    long long style;
+    if (!h) return;
+    style = pb_get_winlong(h, -16 /* GWL_STYLE */);
+    style = (style & ~(long long)PB_LVS_TYPEMASK)
+          | (long long)((unsigned int)mode & PB_LVS_TYPEMASK);
+    pb_set_winlong(h, -16 /* GWL_STYLE */, style);
+}
+
+/* ---------------- LISTVIEW GET SELCOUNT ---------------- */
+long long pb_listview_get_selcount(void* hDlg, long id) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return -1;
+    return (long long)(intptr_t)SendMessageA(h, PB_LVM_GETSELECTEDCOUNT, 0, 0);
+}
+
+/* ---------------- LISTVIEW GET SELECT ----------------
+   The next selected primary item at or after item&, as a 1-based index,
+   or 0 when there is none.  Callers walk a multi-selection by feeding
+   the previous result back in as item&. */
+long long pb_listview_get_select(void* hDlg, long id, int start) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    intptr_t r;
+    if (!h) return 0;
+    r = (intptr_t)SendMessageA(h, PB_LVM_GETNEXTITEM,
+                               (unsigned int)pb_lv_idx(start),
+                               (pb_lparam_t)PB_LVNI_SELECTED);
+    if (r < 0) return 0;
+    return (long long)r + 1;
+}
+
+/* ---------------- LISTVIEW GET STATE ----------------
+   -1 when the item is selected, 0 otherwise, per the official
+   documentation.  col& is accepted because the official syntax has it,
+   but Windows tracks selection per item rather than per sub-item, so it
+   does not change the answer. */
+long long pb_listview_get_state(void* hDlg, long id, int item, int col) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    unsigned int st;
+    (void)col;
+    if (!h) return 0;
+    st = (unsigned int)(intptr_t)SendMessageA(h, PB_LVM_GETITEMSTATE,
+                                              (unsigned int)pb_lv_idx(item),
+                                              (pb_lparam_t)PB_LVIS_SELECTED);
+    return (st & PB_LVIS_SELECTED) ? -1 : 0;
+}
+
+/* ---------------- LISTVIEW SELECT / LISTVIEW UNSELECT ----------------
+   Sets or clears LVIS_SELECTED on one item.  UNSELECT takes the same
+   optional col& as SELECT and, like GET STATE, the column does not
+   affect the outcome on Windows. */
+void pb_listview_select(void* hDlg, long id, int item, int col) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    (void)col;
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask      = PB_LVIF_STATE;
+    it.iItem     = pb_lv_idx(item);
+    it.state     = PB_LVIS_SELECTED;
+    it.stateMask = PB_LVIS_SELECTED;
+    SendMessageA(h, PB_LVM_SETITEMSTATE, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+void pb_listview_unselect(void* hDlg, long id, int item, int col) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    (void)col;
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask      = PB_LVIF_STATE;
+    it.iItem     = pb_lv_idx(item);
+    it.state     = 0;
+    it.stateMask = PB_LVIS_SELECTED;
+    SendMessageA(h, PB_LVM_SETITEMSTATE, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+/* ---------------- LISTVIEW GET STYLEXX / SET STYLEXX ----------------
+   The list-view specific extended style (the %LVS_EX_* set), which is
+   deliberately distinct from the primary and extended styles given to
+   CONTROL ADD LISTVIEW. */
+long long pb_listview_get_stylexx(void* hDlg, long id) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return -1;
+    return (long long)(intptr_t)SendMessageA(h, PB_LVM_GETEXTENDEDLISTVIEWSTYLE,
+                                             0, 0);
+}
+
+void pb_listview_set_stylexx(void* hDlg, long id, int style) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    /* The %LVS_EX_* mask is 32 bits wide and two of its members
+       (%LVS_EX_COLUMNSNAPPOINTS, %LVS_EX_COLUMNOVERFLOW) have bit 31
+       set, so truncate to unsigned before widening into the LPARAM. */
+    SendMessageA(h, PB_LVM_SETEXTENDEDLISTVIEWSTYLE, 0,
+                 (pb_lparam_t)(long long)(unsigned int)style);
+}
+
+/* ---------------- LISTVIEW GET USER / LISTVIEW SET USER ----------------
+   The per-row user value is the item lParam.  The official
+   documentation warns that LISTVIEW SORT overwrites it, because the
+   sort callback is handed the lParam of each row. */
+long long pb_listview_get_user(void* hDlg, long id, int item) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return 0;
+    memset(&it, 0, sizeof(it));
+    it.mask  = PB_LVIF_PARAM;
+    it.iItem = pb_lv_idx(item);
+    if (!SendMessageA(h, PB_LVM_GETITEMA, (unsigned int)pb_lv_idx(item),
+                      (pb_lparam_t)(size_t)&it))
+        return 0;
+    return (long long)it.lParam;
+}
+
+void pb_listview_set_user(void* hDlg, long id, int item, int value) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask   = PB_LVIF_PARAM;
+    it.iItem  = pb_lv_idx(item);
+    it.lParam = (long long)value;
+    SendMessageA(h, PB_LVM_SETITEMA, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+/* ---------------- LISTVIEW SET IMAGE ----------------
+   The primary image index for the row; 0 means no image. */
+void pb_listview_set_image(void* hDlg, long id, int item, int image) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask     = PB_LVIF_IMAGE;
+    it.iItem    = pb_lv_idx(item);
+    it.iSubItem = 0;
+    it.iImage   = image;
+    SendMessageA(h, PB_LVM_SETITEMA, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+/* ---------------- LISTVIEW SET IMAGE2 ----------------
+   Secondary status image.  It lives in the LVIS_STATEIMAGEMASK bits as
+   a 1-based index shifted left by 12 (INDEXTOSTATEIMAGEMASK); 0 hides
+   it.  The official documentation caps it at 15. */
+void pb_listview_set_image2(void* hDlg, long id, int item, int image) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    if (image < 0) image = 0;
+    if (image > 15) image = 15;
+    memset(&it, 0, sizeof(it));
+    it.mask      = PB_LVIF_STATE;
+    it.iItem     = pb_lv_idx(item);
+    it.state     = (unsigned int)((unsigned int)image << 12);
+    it.stateMask = PB_LVIS_STATEIMAGEMASK;
+    SendMessageA(h, PB_LVM_SETITEMSTATE, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+/* ---------------- LISTVIEW SET OVERLAY ----------------
+   The overlay index lives in the LVIS_OVERLAYMASK bits, shifted left by
+   8 (INDEXTOOVERLAYMASK); 0 removes the overlay. */
+void pb_listview_set_overlay(void* hDlg, long id, int item, int overlay) {
+    PB_LVITEM it;
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    if (overlay < 0) overlay = 0;
+    if (overlay > 15) overlay = 15;
+    memset(&it, 0, sizeof(it));
+    it.mask      = PB_LVIF_STATE;
+    it.iItem     = pb_lv_idx(item);
+    it.state     = (unsigned int)((unsigned int)overlay << 8);
+    it.stateMask = PB_LVIS_OVERLAYMASK;
+    SendMessageA(h, PB_LVM_SETITEMSTATE, (unsigned int)pb_lv_idx(item),
+                 (pb_lparam_t)(size_t)&it);
+}
+
+/* ---------------- LISTVIEW SET IMAGELIST ----------------
+   which& is one of %LVSIL_NORMAL (large icons), %LVSIL_SMALL (small
+   icons) or %LVSIL_STATE (status images). */
+void pb_listview_set_imagelist(void* hDlg, long id, void* hLst, int which) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_SETIMAGELIST, (unsigned int)which,
+                 (pb_lparam_t)(size_t)hLst);
+}
+
+/* ---------------- LISTVIEW VISIBLE ----------------
+   Scrolls the control, if necessary, so the row is on screen. */
+void pb_listview_visible(void* hDlg, long id, int item) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    if (!h) return;
+    SendMessageA(h, PB_LVM_ENSUREVISIBLE, (unsigned int)pb_lv_idx(item), 0);
+}
+
+/* ---------------- LISTVIEW SORT ----------------
+   The option keywords are folded into a single bitmask by the parser
+   (see the LISTVIEW SORT arm in pb/src/parser.rs); PB_LVSORT_* above is
+   that shared encoding and is not a Win32 constant.
+
+   Windows sorts through a callback that receives only the two item
+   lParams and the sort lParam.  wParam of SendMessageA is declared
+   32-bit in this runtime, so a pointer cannot travel that way; the sort
+   state lives in a file-scope struct instead.  LVM_SORTITEMS is
+   synchronous, so a single shared slot is safe as long as nothing sorts
+   re-entrantly from inside the comparison callback.
+
+   The callback fetches each row's text, so every row must carry its own
+   index as the lParam - which is exactly the overwrite of USER data the
+   official documentation warns about. */
+
+typedef struct {
+    void* h;
+    int   col;    /* 1-based, as written by the programmer */
+    int   mode;   /* PB_LVSORT_* bits */
+} PB_LVSORTCTX;
+
+static PB_LVSORTCTX pb_lvsort_ctx;
+
+/* Split a string into up to three numeric fields.  The four date
+   formats are "exactly ten bytes" with arbitrary delimiters and possibly
+   spaces in place of leading zeros, so splitting on field boundaries is
+   more robust than counting digits. */
+static int pb_lvsort_fields(const char* s, long* f) {
+    int n = 0;
+    if (!s) return 0;
+    while (*s && n < 3) {
+        long v = 0;
+        while (*s && !(*s >= '0' && *s <= '9')) s++;
+        if (!*s) break;
+        while (*s >= '0' && *s <= '9') {
+            v = v * 10 + (*s - '0');
+            s++;
+        }
+        f[n++] = v;
+    }
+    return n;
+}
+
+/* One comparable yyyymmdd key per documented date layout.
+   order: 0 = mm/dd/yyyy, 1 = dd/mm/yyyy, 2 = yyyy/mm/dd, 3 = yyyy/dd/mm. */
+static long pb_lvsort_datekey(const char* s, int order) {
+    long f[3];
+    if (pb_lvsort_fields(s, f) < 3) return 0;
+    switch (order) {
+    case 0:  return f[2] * 10000 + f[0] * 100 + f[1];
+    case 1:  return f[2] * 10000 + f[1] * 100 + f[0];
+    case 2:  return f[0] * 10000 + f[1] * 100 + f[2];
+    default: return f[0] * 10000 + f[2] * 100 + f[1];
+    }
+}
+
+static int pb_lvsort_cmp_num(const char* a, const char* b) {
+    double da = a ? atof(a) : 0.0;
+    double db = b ? atof(b) : 0.0;
+    if (da < db) return -1;
+    if (da > db) return 1;
+    return 0;
+}
+
+/* Case-insensitive compare, the UCASE option.  Hand-rolled so the
+   runtime does not depend on the CRT spelling of _stricmp. */
+static int pb_lvsort_cmp_ci(const char* a, const char* b) {
+    while (*a && *b) {
+        int ca = toupper((unsigned char)*a);
+        int cb = toupper((unsigned char)*b);
+        if (ca != cb) return ca < cb ? -1 : 1;
+        a++;
+        b++;
+    }
+    if (*a == *b) return 0;
+    return *a ? 1 : -1;
+}
+
+static void pb_lvsort_text(void* h, int idx, int col, char* out, int outlen) {
+    PB_LVITEM it;
+    if (outlen > 0) out[0] = 0;
+    memset(&it, 0, sizeof(it));
+    it.mask       = PB_LVIF_TEXT;
+    it.iItem      = idx;
+    it.iSubItem   = pb_lv_idx(col);
+    it.pszText    = out;
+    it.cchTextMax = outlen;
+    SendMessageA(h, PB_LVM_GETITEMTEXTA, (unsigned int)idx,
+                 (pb_lparam_t)(size_t)&it);
+}
+
+static int __stdcall pb_lvsort_cb(pb_lparam_t l1, pb_lparam_t l2,
+                                 pb_lparam_t sortparam) {
+    char ta[256], tb[256];
+    int mode = pb_lvsort_ctx.mode;
+    int r;
+    (void)sortparam;   /* the state travels in pb_lvsort_ctx, see above */
+    pb_lvsort_text(pb_lvsort_ctx.h, (int)l1, pb_lvsort_ctx.col, ta,
+                   (int)sizeof(ta));
+    pb_lvsort_text(pb_lvsort_ctx.h, (int)l2, pb_lvsort_ctx.col, tb,
+                   (int)sizeof(tb));
+    if (mode & PB_LVSORT_NUMERIC) {
+        r = pb_lvsort_cmp_num(ta, tb);
+    } else if (mode & PB_LVSORT_MMDDYYYY) {
+        long ka = pb_lvsort_datekey(ta, 0), kb = pb_lvsort_datekey(tb, 0);
+        r = (ka < kb) ? -1 : (ka > kb) ? 1 : 0;
+    } else if (mode & PB_LVSORT_DDMMYYYY) {
+        long ka = pb_lvsort_datekey(ta, 1), kb = pb_lvsort_datekey(tb, 1);
+        r = (ka < kb) ? -1 : (ka > kb) ? 1 : 0;
+    } else if (mode & PB_LVSORT_YYYYMMDD) {
+        long ka = pb_lvsort_datekey(ta, 2), kb = pb_lvsort_datekey(tb, 2);
+        r = (ka < kb) ? -1 : (ka > kb) ? 1 : 0;
+    } else if (mode & PB_LVSORT_YYYYDDMM) {
+        long ka = pb_lvsort_datekey(ta, 3), kb = pb_lvsort_datekey(tb, 3);
+        r = (ka < kb) ? -1 : (ka > kb) ? 1 : 0;
+    } else if (mode & PB_LVSORT_UCASE) {
+        r = pb_lvsort_cmp_ci(ta, tb);
+    } else {
+        /* ALPHANUM, and the default when no comparison option is given:
+           sequenced on the ASCII value of each byte, so case matters. */
+        r = strcmp(ta, tb);
+    }
+    if (mode & PB_LVSORT_DESCEND) r = -r;
+    return r;
+}
+
+void pb_listview_sort(void* hDlg, long id, int col, int mode) {
+    void* h = pb_lv_hwnd(hDlg, id);
+    int i, n;
+    if (!h) return;
+    n = (int)(intptr_t)SendMessageA(h, PB_LVM_GETITEMCOUNT, 0, 0);
+    for (i = 0; i < n; i++) {
+        PB_LVITEM it;
+        memset(&it, 0, sizeof(it));
+        it.mask   = PB_LVIF_PARAM;
+        it.iItem  = i;
+        it.lParam = (long long)i;
+        SendMessageA(h, PB_LVM_SETITEMA, (unsigned int)i,
+                     (pb_lparam_t)(size_t)&it);
+    }
+    pb_lvsort_ctx.h    = h;
+    pb_lvsort_ctx.col  = col;
+    pb_lvsort_ctx.mode = mode;
+    SendMessageA(h, PB_LVM_SORTITEMS, 0,
+                 (pb_lparam_t)(size_t)pb_lvsort_cb);
 }
 
 /* ---------------- TREEVIEW INSERT ITEM ---------------- */

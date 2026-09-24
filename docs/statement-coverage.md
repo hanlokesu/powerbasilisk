@@ -1,22 +1,26 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 169 (v0.2.026)** — 2026-09-24. All statements through batch 169 are reflected in this matrix.
+> **Last updated from batch 170 (v0.2.027)** — 2026-09-24. All statements through batch 170 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **858** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **743** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **113** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
+- **769** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **86** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 595 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 621 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **743** | Implemented + Established |
+| ✅ **Total available** | **769** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -32,7 +36,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 113 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 86 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -437,7 +441,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | IMAGELIST NEW ICON | STATEMENT | PB/Win only | Tier-3 DDT |
 | IMAGELIST SET OVERLAY | STATEMENT | PB/Win only | Tier-3 DDT |
 | IMAGELIST_COUNT | FUNCTION | codegen builtin | Implemented |
-| IMAGELIST_KILL | FUNCTION | codegen builtin | Implemented |
 | IMAGELIST_NEW | FUNCTION | codegen builtin | Implemented |
 | IMP | FUNCTION | PB/Win + PB/CC | Implemented |
 | IMPORT | STATEMENT | PB/Win + PB/CC | Established |
@@ -488,40 +491,40 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | LISTBOX SET TEXT | STATEMENT | PB/Win only | Implemented |
 | LISTBOX SET USER | STATEMENT | PB/Win only | Implemented |
 | LISTBOX UNSELECT | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW DELETE COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW DELETE COLUMN | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW DELETE ITEM | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW FIND | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW FIND EXACT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW FIT CONTENT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW FIT HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW FIND | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW FIND EXACT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW FIT CONTENT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW FIT HEADER | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET COLUMN | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW GET COUNT | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW GET HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET HEADERID | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET MODE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET SELCOUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET STATE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW GET STYLEXX | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET HEADER | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET HEADERID | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET MODE | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET SELCOUNT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET SELECT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET STATE | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW GET STYLEXX | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW GET TEXT | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW GET USER | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW INSERT COLUMN | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW INSERT ITEM | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW RESET | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET COLUMN | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET IMAGE2 | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET MODE | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET OVERLAY | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SET STYLEXX | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SELECT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET COLUMN | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET HEADER | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET IMAGE | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET IMAGE2 | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET IMAGELIST | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET MODE | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET OVERLAY | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SET STYLEXX | STATEMENT | PB/Win only | Implemented |
 | LISTVIEW SET TEXT | STATEMENT | PB/Win only | Implemented |
-| LISTVIEW SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW SORT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| LISTVIEW VISIBLE | STATEMENT | PB/Win only | Tier-3 DDT |
+| LISTVIEW SET USER | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW SORT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW UNSELECT | STATEMENT | PB/Win only | Implemented |
+| LISTVIEW VISIBLE | STATEMENT | PB/Win only | Implemented |
 | LO | FUNCTION | codegen builtin | Implemented |
 | LOC | FUNCTION | Win32 | Implemented |
 | LOCAL | STATEMENT | PB/Win + PB/CC | Established |

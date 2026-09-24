@@ -9,6 +9,10 @@
 '
 ' NOTE: the official DDT syntax addresses a control by (dialog handle,
 ' control id) - NOT by the control handle returned from CONTROL ADD.
+'
+' NOTE (batch 170): every item and column number below is 1-based
+' (First = 1), which is the convention the official PowerBASIC help
+' documents and the one the runtime now implements.
 '=====================================================================
 #CONSOLE OFF
 #COMPILE EXE
@@ -27,14 +31,14 @@ FUNCTION PBMAIN() AS LONG
     CONTROL ADD TREEVIEW, g_hDlg, 202, 175, 10, 155, 95 TO hTV
 
     ' --- ListView: two columns, three rows --------------------------
-    LISTVIEW INSERT COLUMN g_hDlg, 201, 0, "Item", 70, 0
-    LISTVIEW INSERT COLUMN g_hDlg, 201, 1, "Qty", 50, 0
-    LISTVIEW INSERT ITEM g_hDlg, 201, 0, 0, "Apple"
-    LISTVIEW INSERT ITEM g_hDlg, 201, 1, 0, "Banana"
-    LISTVIEW INSERT ITEM g_hDlg, 201, 2, 0, "Cherry"
-    LISTVIEW SET TEXT g_hDlg, 201, 0, 1, "10"
-    LISTVIEW SET TEXT g_hDlg, 201, 1, 1, "20"
-    LISTVIEW SET TEXT g_hDlg, 201, 2, 1, "30"
+    LISTVIEW INSERT COLUMN g_hDlg, 201, 1, "Item", 70, 0
+    LISTVIEW INSERT COLUMN g_hDlg, 201, 2, "Qty", 50, 0
+    LISTVIEW INSERT ITEM g_hDlg, 201, 1, 0, "Apple"
+    LISTVIEW INSERT ITEM g_hDlg, 201, 2, 0, "Banana"
+    LISTVIEW INSERT ITEM g_hDlg, 201, 3, 0, "Cherry"
+    LISTVIEW SET TEXT g_hDlg, 201, 1, 2, "10"
+    LISTVIEW SET TEXT g_hDlg, 201, 2, 2, "20"
+    LISTVIEW SET TEXT g_hDlg, 201, 3, 2, "30"
 
     ' --- TreeView: root + two children ------------------------------
     TREEVIEW INSERT ITEM g_hDlg, 202, 0, 0, 0, 0, "Root" TO g_hRoot
@@ -69,20 +73,20 @@ CALLBACK FUNCTION DlgProc()
         CASE 273
             SELECT CASE CB.CTL
                 CASE 301
-                    LISTVIEW INSERT ITEM g_hDlg, 201, 3, 0, "Date"
-                    LISTVIEW SET TEXT g_hDlg, 201, 3, 1, "40"
+                    LISTVIEW INSERT ITEM g_hDlg, 201, 4, 0, "Date"
+                    LISTVIEW SET TEXT g_hDlg, 201, 4, 2, "40"
                     MSGBOX "ListView: added a 4th row."
                 CASE 302
                     LISTVIEW GET COUNT g_hDlg, 201 TO n
                     MSGBOX "ListView row count = " & STR$(n)
                 CASE 303
-                    LISTVIEW GET TEXT g_hDlg, 201, 0, 0 TO s
+                    LISTVIEW GET TEXT g_hDlg, 201, 1, 1 TO s
                     MSGBOX "ListView cell (row1,col1) = " & s
                 CASE 304
-                    LISTVIEW SET TEXT g_hDlg, 201, 0, 0, "Apricot"
+                    LISTVIEW SET TEXT g_hDlg, 201, 1, 1, "Apricot"
                     MSGBOX "ListView: row 1 col 1 set to Apricot."
                 CASE 305
-                    LISTVIEW DELETE ITEM g_hDlg, 201, 0
+                    LISTVIEW DELETE ITEM g_hDlg, 201, 1
                     MSGBOX "ListView: deleted row 1."
                 CASE 306
                     LISTVIEW RESET g_hDlg, 201
