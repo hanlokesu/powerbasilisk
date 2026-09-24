@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 160 (v0.2.019)** — 2026-09-23. All statements through batch 160 are reflected in this matrix.
+> **Last updated from batch 162 (v0.2.019)** — 2026-09-23. All statements through batch 162 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
@@ -18,8 +18,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
 | ✅ **Total available** | **635** | Implemented + Established |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
-| ❌ Not implemented | 2 | Official PB keywords this fork does not implement yet (METRICS, UCODE$) |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 102 | DDT GUI / window-callback framework, high effort, deferred |

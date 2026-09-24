@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (738 rows, deduplicated). **0** official keywords are not implemented yet; **1** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 160 (v0.2.019). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 162 (v0.2.019). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> (2026-09-24: docs accuracy pass from batch 162 — corrected a stale summary line in statement-coverage.md that still claimed 2 unimplemented keywords (METRICS, UCODE$); both were implemented in batch 160. No keyword status changed: 738 rows / 487 implemented / 148 established / 102 Tier-3 / 1 fork extension / 635 available.)
 > (2026-09-23: +3 official keyword(s) from batch 160 — METRICS (GetSystemMetrics, all 20 official metric names), UCODE$ / ACODE$ (real UTF-16LE conversion via MultiByteToWideChar / WideCharToMultiByte).)
 
 **All 635 official keywords currently available for use (alphabetical):**
