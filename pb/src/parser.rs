@@ -1788,10 +1788,10 @@ impl Parser {
         self.expect(&Token::Comma)?;
         args.push(self.parse_expression()?);
         loop {
-            if self.peek() == &Token::Comma {
-                self.advance();
-                args.push(self.parse_expression()?);
-            } else if self.peek() == &Token::To {
+            // Both separators are accepted at every step: `TO` introduces the
+            // result variable(s) and a comma can follow it for a two-target
+            // form such as `HEADER GET ITEM ... TO lo, hi`.
+            if self.peek() == &Token::Comma || self.peek() == &Token::To {
                 self.advance();
                 args.push(self.parse_expression()?);
             } else {
@@ -1854,10 +1854,10 @@ impl Parser {
             self.expect(&Token::Comma)?;
             args.push(self.parse_expression()?);
             loop {
-                if self.peek() == &Token::Comma {
-                    self.advance();
-                    args.push(self.parse_expression()?);
-                } else if self.peek() == &Token::To {
+                // Both separators are accepted at every step: `TO` introduces the
+                // result variable(s) and a comma can follow it for a two-target
+                // form such as `HEADER GET ITEM ... TO lo, hi`.
+                if self.peek() == &Token::Comma || self.peek() == &Token::To {
                     self.advance();
                     args.push(self.parse_expression()?);
                 } else {
@@ -7793,10 +7793,10 @@ impl Parser {
                         //   HEADER GET ITEM hWin, ID&, Index&, ItemPtr TO r&
                         // and made those statements store nothing at all.
                         loop {
-                            if self.peek() == &Token::Comma {
-                                self.advance();
-                                args.push(self.parse_expression()?);
-                            } else if self.peek() == &Token::To {
+                            // Both separators are accepted at every step: `TO` introduces the
+                            // result variable(s) and a comma can follow it for a two-target
+                            // form such as `HEADER GET ITEM ... TO lo, hi`.
+                            if self.peek() == &Token::Comma || self.peek() == &Token::To {
                                 self.advance();
                                 args.push(self.parse_expression()?);
                             } else {
