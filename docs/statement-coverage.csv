@@ -1,4 +1,4 @@
-# Last updated from batch 165 (v0.2.022) - 2026-09-24,,,,
+# Last updated from batch 166 (v0.2.023) - 2026-09-24,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -85,7 +85,7 @@ COMM SET,STATEMENT,PB/Win + PB/CC,Established
 COMM TIMEOUT,STATEMENT,PB/Win + PB/CC,Established
 COMMAND,FUNCTION,codegen builtin,Implemented
 COMMAND$,FUNCTION,Win32,Implemented
-CONTROL ADD *CUSTOM CONTROL*,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL ADD,STATEMENT,PB/Win only,Implemented
 CONTROL ADD BUTTON,STATEMENT,PB/Win only,Implemented
 CONTROL ADD CHECK3STATE,STATEMENT,PB/Win only,Tier-3 DDT
 CONTROL ADD CHECKBOX,STATEMENT,PB/Win only,Implemented
@@ -734,4 +734,3 @@ MCASE,FUNCTION,PB/Win + PB/CC,Implemented
 COMM LINE INPUT,STATEMENT,PB/Win,Implemented
 WAITKEY$,FUNCTION,PB/CC + console,Implemented
 DIALOG CENTER,FORK EXTENSION,PB/Win only,Implemented
-CONTROL ADDSTRING,STATEMENT,PB/Win only,Implemented

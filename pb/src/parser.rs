@@ -5975,6 +5975,68 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD classname$, hDlg, id&, txt$, x, y, xx, yy
+                //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                //   (batch 166)  The generic custom-control form documented on
+                // control_add.htm.  The class name is a string expression
+                // ("MSCTLS_TRACKBAR_CLASS32", or a classname$ variable), not one
+                // of the fixed type words handled above, so this branch has to be
+                // tested AFTER every typed CONTROL ADD branch.  DDT gives a custom
+                // control no default style (Custom_Control_Style_Note.htm), so the
+                // style operands are passed through exactly as written.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                {
+                    self.advance(); // CONTROL
+                    self.advance(); // ADD
+                    let cls = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    // Optional [, style&] [, exstyle&] - a trailing CALL clause
+                    // is left for consume_to_eol, exactly as the BUTTON branch does.
+                    let mut style = Expr::IntegerLit(0);
+                    let mut exstyle = Expr::IntegerLit(0);
+                    let mut n_opt = 0;
+                    while self.peek() == &Token::Comma && n_opt < 2 {
+                        let is_call = matches!(self.peek_at(1),
+                            Some(Token::Identifier(w)) if w.to_uppercase() == "CALL");
+                        if is_call {
+                            break;
+                        }
+                        self.advance(); // comma
+                        let e = self.parse_expression()?;
+                        if n_opt == 0 {
+                            style = e;
+                        } else {
+                            exstyle = e;
+                        }
+                        n_opt += 1;
+                    }
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_CUSTOM".to_string(),
+                        args: vec![cls, hwnd, id, text, x, y, w, h, style, exstyle, target],
+                        line,
+                    }));
+                }
                 // DIALOG NEW hParent, "title", x, y, w, h TO hDlg
                 if name_upper == "DIALOG"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="NEW")
@@ -6145,22 +6207,6 @@ impl Parser {
                     return Ok(Statement::Call(CallStmt {
                         name: "DIALOG_CENTER".to_string(),
                         args: vec![hd],
-                        line,
-                    }));
-                }
-                // CONTROL ADDSTRING hCtrl, "text"
-                if name_upper == "CONTROL"
-                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADDSTRING")
-                {
-                    self.advance();
-                    self.advance();
-                    let hc = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    let txt = self.parse_expression()?;
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "CONTROL_ADDSTRING".to_string(),
-                        args: vec![hc, txt],
                         line,
                     }));
                 }

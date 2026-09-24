@@ -255,11 +255,12 @@ exit code 0:
 > - **662** official PowerBASIC statement/function keywords currently available for use
 >   - **514** implemented or completed by this fork
 >   - **148** official keywords that are long established in the PB documentation, listed in the established-keywords table below. The CSV label "Established" means *mature in the official PB docs* - it is **not** a claim about what upstream shipped.
-> - **70** DDT/GUI-class keywords deferred (Tier 3)
+> - **69** DDT/GUI-class keywords deferred (Tier 3)
 > - **0** documented keywords not yet implemented
 >
-> Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (734 rows, deduplicated). **0** official keywords are not implemented yet; **2** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 165 (v0.2.022). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (733 rows, deduplicated). **0** official keywords are not implemented yet; **2** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
+> Updated through batch 166 (v0.2.023). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 166 (v0.2.023) - CONTROL ADD classname$ implemented and proven at runtime; CONTROL ADDSTRING removed (not an official statement); a 64-bit handle stored into a 4-byte LOCAL LONG fixed across nine DIALOG/CONTROL arms
 > batch 165 (v0.2.022) - DIALOG family: 23 DDT statements implemented, and two verb-only parser guards fixed (DIALOG SET TEXT / DIALOG SHOW MODAL) that had been silently killing whole statement families - including DIALOG SHOW STATE, which the table had listed as Implemented while the parser could never reach it; three non-official rows (DIALOG TRAXOMATIC, DIALOG XLAT, CONTROL TRAXOMATIC) removed and DIALOG CENTER reclassified as a fork extension
 > batch 164 (v0.2.021) - TOOLBAR + STATUSBAR: 9 DDT statements implemented (7 TOOLBAR + 2 STATUSBAR) plus the two CONTROL ADD forms; three real comctl32 defects fixed (TB_GETSTATE needs a command id, not an index; TB_ADDSTRINGA id; TB_BUTTONSTRUCTSIZE re-sent per insertion)
 > (2026-09-24: +2 official keyword(s) from batch 163 — DIALOG GET SIZE / DIALOG SET SIZE (Tier-3 DDT), both expressed in dialog units through the same GetDialogBaseUnits conversion DIALOG NEW already uses, so DIALOG NEW ... w,h followed by DIALOG GET SIZE round-trips exactly; two unreachable PROGRESSBAR / HEADER_CTRL runtime stubs were deleted in the same batch. 737 rows / 488 implemented / 148 established / 100 Tier-3 / 1 fork extension / 636 available.)
@@ -355,18 +356,18 @@ exit code 0:
 | COMM TIMEOUT | FLUSH | LOCK | RND | XPRINT GET PAPERS |
 | COMMAND | FONT END | LOF | ROTATE | XPRINT GET PIXEL |
 | COMMAND$ | FONT NEW | LOG | ROUND | XPRINT GET POS |
-| CONTROL ADD BUTTON | FOR / NEXT | LOG10 | RSET | XPRINT GET PPI |
-| CONTROL ADD CHECKBOX | FORMAT | LOG1P | RSET$ | XPRINT GET QUALITY |
-| CONTROL ADD COMBOBOX | FORMAT$ | LOG2 | RTRIM | XPRINT GET SCALE |
-| CONTROL ADD LABEL | FRAC | LONG | RTRIM$ | XPRINT GET SELECTION |
-| CONTROL ADD LISTBOX | FRE | LOWRD | SEC | XPRINT GET SIZE |
-| CONTROL ADD LISTVIEW | FREEFILE | LPRINT | SECH | XPRINT GET STRETCHMODE |
-| CONTROL ADD PROGRESSBAR | FUNCNAME | LPRINT ATTACH | SEEK | XPRINT GET TEXTALIGN |
-| CONTROL ADD SCROLLBAR | FUNCNAME$ | LPRINT CLOSE | SELECT CASE/END SELECT | XPRINT GET TRAY |
-| CONTROL ADD STATUSBAR | FUNCTION / END FUNCTION | LPRINT FLUSH | SETATTR | XPRINT GET TRAYS |
-| CONTROL ADD TOOLBAR | GET | LPRINT FORMFEED | SETEOF | XPRINT GET WORDWRAP |
-| CONTROL ADD TREEVIEW | GET STR | LPRINT$ | SGN | XPRINT GET WRAP |
-| CONTROL ADDSTRING | GET WSTR | LSET | SHELL | XPRINT IMAGELIST |
+| CONTROL ADD | FOR / NEXT | LOG10 | RSET | XPRINT GET PPI |
+| CONTROL ADD BUTTON | FORMAT | LOG1P | RSET$ | XPRINT GET QUALITY |
+| CONTROL ADD CHECKBOX | FORMAT$ | LOG2 | RTRIM | XPRINT GET SCALE |
+| CONTROL ADD COMBOBOX | FRAC | LONG | RTRIM$ | XPRINT GET SELECTION |
+| CONTROL ADD LABEL | FRE | LOWRD | SEC | XPRINT GET SIZE |
+| CONTROL ADD LISTBOX | FREEFILE | LPRINT | SECH | XPRINT GET STRETCHMODE |
+| CONTROL ADD LISTVIEW | FUNCNAME | LPRINT ATTACH | SEEK | XPRINT GET TEXTALIGN |
+| CONTROL ADD PROGRESSBAR | FUNCNAME$ | LPRINT CLOSE | SELECT CASE/END SELECT | XPRINT GET TRAY |
+| CONTROL ADD SCROLLBAR | FUNCTION / END FUNCTION | LPRINT FLUSH | SETATTR | XPRINT GET TRAYS |
+| CONTROL ADD STATUSBAR | GET | LPRINT FORMFEED | SETEOF | XPRINT GET WORDWRAP |
+| CONTROL ADD TOOLBAR | GET STR | LPRINT$ | SGN | XPRINT GET WRAP |
+| CONTROL ADD TREEVIEW | GET WSTR | LSET | SHELL | XPRINT IMAGELIST |
 | CONTROL DISABLE | GET$ | LSET$ | SHIFT | XPRINT LINE |
 | CONTROL ENABLE | GET$$ | LTRIM | SHRINK | XPRINT PIE |
 | CONTROL GET CHECK | GETATTR | LTRIM$ | SHRINK$ | XPRINT POLYGON |
@@ -471,18 +472,18 @@ exit code 0:
 | COMM LINE INPUT | GET STR | MENU SET TEXT | XPRINT CHR SIZE |
 | COMMAND | GET WSTR | METRICS | XPRINT CLOSE |
 | COMMAND$ | GET$ | MID | XPRINT COLOR |
-| CONTROL ADD BUTTON | GET$$ | MIN | XPRINT COPY |
-| CONTROL ADD CHECKBOX | GETATTR | MKBYT | XPRINT ELLIPSE |
-| CONTROL ADD COMBOBOX | GRAPHIC ARC | MKCUX | XPRINT FORMFEED |
-| CONTROL ADD LABEL | GRAPHIC ATTACH | MKDWD | XPRINT GET ATTACH |
-| CONTROL ADD LISTBOX | GRAPHIC BITMAP END | MKE | XPRINT GET CANVAS |
-| CONTROL ADD LISTVIEW | GRAPHIC BITMAP LOAD | MKS | XPRINT GET CLIENT |
-| CONTROL ADD PROGRESSBAR | GRAPHIC BITMAP NEW | MKWRD | XPRINT GET CLIP |
-| CONTROL ADD SCROLLBAR | GRAPHIC BOX | MOD | XPRINT GET COLLATE |
-| CONTROL ADD STATUSBAR | GRAPHIC CELL | MONTHNAME | XPRINT GET COLOR |
-| CONTROL ADD TOOLBAR | GRAPHIC CELL SIZE | MONTHNAME$ | XPRINT GET COLORMODE |
-| CONTROL ADD TREEVIEW | GRAPHIC CHR SIZE | NUL$ | XPRINT GET COPIES |
-| CONTROL ADDSTRING | GRAPHIC CIRCLE | OCT | XPRINT GET DC |
+| CONTROL ADD | GET$$ | MIN | XPRINT COPY |
+| CONTROL ADD BUTTON | GETATTR | MKBYT | XPRINT ELLIPSE |
+| CONTROL ADD CHECKBOX | GRAPHIC ARC | MKCUX | XPRINT FORMFEED |
+| CONTROL ADD COMBOBOX | GRAPHIC ATTACH | MKDWD | XPRINT GET ATTACH |
+| CONTROL ADD LABEL | GRAPHIC BITMAP END | MKE | XPRINT GET CANVAS |
+| CONTROL ADD LISTBOX | GRAPHIC BITMAP LOAD | MKS | XPRINT GET CLIENT |
+| CONTROL ADD LISTVIEW | GRAPHIC BITMAP NEW | MKWRD | XPRINT GET CLIP |
+| CONTROL ADD PROGRESSBAR | GRAPHIC BOX | MOD | XPRINT GET COLLATE |
+| CONTROL ADD SCROLLBAR | GRAPHIC CELL | MONTHNAME | XPRINT GET COLOR |
+| CONTROL ADD STATUSBAR | GRAPHIC CELL SIZE | MONTHNAME$ | XPRINT GET COLORMODE |
+| CONTROL ADD TOOLBAR | GRAPHIC CHR SIZE | NUL$ | XPRINT GET COPIES |
+| CONTROL ADD TREEVIEW | GRAPHIC CIRCLE | OCT | XPRINT GET DC |
 | CONTROL DISABLE | GRAPHIC CLEAR | OCT$ | XPRINT GET DUPLEX |
 | CONTROL ENABLE | GRAPHIC COLOR | OEMTOCHR | XPRINT GET LINES |
 | CONTROL GET CHECK | GRAPHIC COPY | OEMTOCHR$ | XPRINT GET MARGIN |
@@ -596,6 +597,13 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.023 (2026-09-24) — CONTROL ADD classname$ + local dialog-handle fix
+
+- **`CONTROL ADD classname$`** — the DDT custom-control statement, implemented and proven at runtime. The official page is titled `CONTROL ADD "custom-control" statement` and the Quick Finder lists the bare `CONTROL ADD`; the coverage row had been carrying the placeholder spelling `CONTROL ADD *CUSTOM CONTROL*`, now corrected to `CONTROL ADD`. All three documented operand forms work: a literal class name, a class name with explicit primary/extended style, and a class name held in a `STRING`. With no style supplied the runtime adds `WS_CHILD | WS_VISIBLE`, because the official page warns that DDT applies no default style of its own to a custom control; the common Win95 control families are pre-registered through `InitCommonControlsEx`.
+- **`CONTROL ADDSTRING` removed** — it is not an official PowerBASIC statement. The Quick Finder has no `ADDSTRING` entry, the DDT command index does not list it, and three rounds of web search found nothing comparable. The fork had invented it as a thin `CB_ADDSTRING` wrapper; the official statements for that job are `COMBOBOX ADD` and `LISTBOX ADD`, both already implemented. Its parser branch, codegen arm and runtime function are deleted, and its coverage row is gone. (`DIALOG TRAXOMATIC` and `DIALOG XLAT` were re-checked in the same pass and remain deleted: absent from the Quick Finder, and nothing on the web treats either as a PB statement.)
+- **Bug fix — a 64-bit handle stored into a 4-byte variable.** Nine DIALOG/CONTROL creation arms ended with an unconditional `ptrtoint64` + `store i64`, ignoring the destination variable's declared type. With a `LOCAL ... AS LONG` target the store ran past the end of the alloca and the handle read back as **0**, so `DIALOG NEW ... TO hDlg` on a LOCAL handle produced a null dialog while the compiler still reported success — every GUI program that declared its dialog handle LOCAL was silently broken. Measured before the fix: LOCAL LONG = 0, LOCAL QUAD = 724232, GLOBAL LONG = 593150. The arms now route the handle through `convert_value` against the target's type, the idiom `DIALOG GET SIZE` already used; the IR for a LOCAL LONG is now `store i32` and the value is a real HWND.
+- **New sample** — `examples/batch166_test.bas` covers both halves in one file: it declares its dialog handle LOCAL, creates three custom controls (literal class name, explicit styles, class name in a `STRING`) and prints `PASS` with exit code 0.
+
 ### v0.2.022 (2026-09-24) - batch 165: the DIALOG statement family
 
 - **`DIALOG` - 23 statements implemented**: `ENABLE`, `DISABLE`, `HIDE`, `NORMALIZE`, `MINIMIZE`, `MAXIMIZE`, `SHOW MODELESS`, `STABILIZE`, `NONSTABLE`, `REDRAW`, `SEND`, `POST`, `SET USER`, `GET USER`, `SET ICON`, `GET CLIENT`, `SET CLIENT`, `GET LOC`, `SET LOC`, `PIXELS`, `UNITS`, `SET COLOR` and `DEFAULT FONT`. Most map straight onto one Win32 call (`EnableWindow`, `ShowWindow`, `RedrawWindow`, `SendMessageA`, `PostMessageA`, `AdjustWindowRectEx` + `SetWindowPos`); `STABILIZE` reaches the system menu through `GetSystemMenu` + `EnableMenuItem(SC_CLOSE)`, `SET USER` / `GET USER` keep eight per-dialog LONG slots, `PIXELS` / `UNITS` convert through the dialog's own base units, and `DEFAULT FONT` builds a font with `CreateFontA` that every dialog created afterwards receives through `WM_SETFONT`.

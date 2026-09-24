@@ -6508,9 +6508,6 @@ void pb_dialog_center(void* hDlg) {
 void pb_combobox_add(void* hCombo, const char* text) {
     SendMessageA(hCombo, 0x143, 0, (pb_lparam_t)text);
 }
-void pb_control_addstring(void* hCtrl, const char* text) {
-    SendMessageA(hCtrl, 0x0143 /* CB_ADDSTRING */, 0, (pb_lparam_t)text);
-}
 void pb_listbox_add(void* hList, const char* text) {
     SendMessageA(hList, 0x180, 0, (pb_lparam_t)text);
 }
@@ -7220,6 +7217,30 @@ void* pb_control_add_statusbar(void* parent, long id, const char* text,
                         s | 0x40000000 | 0x10000000,
                         x, y, w, ht, parent, (void*)(long long)id,
                         GetModuleHandleA(0), 0);
+    return h;
+}
+
+/* CONTROL ADD classname$ - the generic custom-control form (batch 166).
+   The class name arrives as a string expression, so it goes straight to
+   CreateWindowExA.  control_add.htm documents no default style for a custom
+   control (see Custom_Control_Style_Note.htm): every primary and extended
+   style is the caller's, and the style operand is passed through untouched.
+   The one exception is an entirely zero style, which would create an invisible
+   control; in that case WS_CHILD|WS_VISIBLE is supplied. */
+void* pb_control_add_custom(const char* cls, void* parent, long id, const char* text,
+                            int x, int y, int w, int ht,
+                            long style, long exstyle) {
+    unsigned long s = (unsigned long)style;
+    void* h;
+    if (s == 0) {
+        s = 0x40000000 | 0x10000000; /* WS_CHILD | WS_VISIBLE */
+    }
+    /* register the common Win95 control families first, so a custom control
+       built from one of them (e.g. "MSCTLS_TRACKBAR_CLASS32") exists */
+    pb_icc(PB_ICC_LISTVIEW_CLASSES | PB_ICC_TREEVIEW_CLASSES | PB_ICC_BAR_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    h = CreateWindowExA((unsigned long)exstyle, cls, text ? text : "", s, x, y, w, ht,
+                        parent, (void*)(long long)id, GetModuleHandleA(0), 0);
     return h;
 }
 

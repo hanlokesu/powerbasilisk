@@ -2202,9 +2202,20 @@ impl Compiler {
         self.module
             .declare_function("pb_dialog_center", &IrType::Void, &[IrType::Ptr], false);
         self.module.declare_function(
-            "pb_control_addstring",
-            &IrType::Void,
-            &[IrType::Ptr, IrType::Ptr],
+            "pb_control_add_custom",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
             false,
         );
         self.module.declare_function(
@@ -8560,9 +8571,10 @@ impl Compiler {
                         "pb_control_add_hscrollbar",
                         &[parent, id, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8580,9 +8592,10 @@ impl Compiler {
                         "pb_control_add_scrollbar",
                         &[parent, id, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8601,9 +8614,10 @@ impl Compiler {
                         "pb_control_add_label",
                         &[parent, id, text, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[7]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[7]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8621,9 +8635,10 @@ impl Compiler {
                         "pb_control_add_progressbar",
                         &[parent, id, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8644,9 +8659,10 @@ impl Compiler {
                         "pb_control_add_listview",
                         &[parent, id, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8667,9 +8683,10 @@ impl Compiler {
                         "pb_control_add_treeview",
                         &[parent, id, x, y, w, h],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -8705,9 +8722,10 @@ impl Compiler {
                         fname,
                         &[parent, id, text, x, y, w, h, style, exstyle],
                     );
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[7]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[7]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                     // Optional trailing CALL callback -> register it on the control
                     if call.args.len() >= 11 {
@@ -9099,9 +9117,10 @@ impl Compiler {
                     let _style = self.compile_expr(fb, &call.args[6])?;
                     let _exstyle = self.compile_expr(fb, &call.args[7])?;
                     let hc = fb.call(&IrType::Ptr, "pb_window_new", &[title, x, y, w, h]);
-                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[8]) {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[8]) {
                         let hc_i = fb.ptrtoint64(&hc);
-                        fb.store(&hc_i, &ptr);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
                     }
                 }
                 return Ok(());
@@ -9460,12 +9479,36 @@ impl Compiler {
                 }
                 return Ok(());
             }
-            "CONTROL_ADDSTRING" => {
-                if call.args.len() >= 2 {
-                    let hc = self.compile_expr(fb, &call.args[0])?;
-                    let txt = self.compile_expr(fb, &call.args[1])?;
-                    let hc64 = fb.inttoptr(&hc);
-                    fb.call_void("pb_control_addstring", &[hc64, txt]);
+            // CONTROL ADD classname$ - generic custom control (batch 166).
+            // Layout normalised by the parser to
+            //   [cls, hDlg, id, text, x, y, w, h, style, exstyle, target]
+            "CONTROL_ADD_CUSTOM" => {
+                if call.args.len() >= 11 {
+                    let cls = self.compile_expr(fb, &call.args[0])?;
+                    let mut parent = self.compile_expr(fb, &call.args[1])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_expr(fb, &call.args[3])?;
+                    let x = self.compile_expr(fb, &call.args[4])?;
+                    let y = self.compile_expr(fb, &call.args[5])?;
+                    let w = self.compile_expr(fb, &call.args[6])?;
+                    let h = self.compile_expr(fb, &call.args[7])?;
+                    let style_v = self.compile_expr(fb, &call.args[8])?;
+                    let exstyle_v = self.compile_expr(fb, &call.args[9])?;
+                    let style = self.convert_value(fb, &style_v, &IrType::I32, &PbType::Long);
+                    let exstyle = self.convert_value(fb, &exstyle_v, &IrType::I32, &PbType::Long);
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_custom",
+                        &[cls, parent, id, text, x, y, w, h, style, exstyle],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[10]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
+                    }
                 }
                 return Ok(());
             }

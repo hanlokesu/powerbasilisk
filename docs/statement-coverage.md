@@ -1,14 +1,14 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 165 (v0.2.022)** — 2026-09-24. All statements through batch 165 are reflected in this matrix.
+> **Last updated from batch 166 (v0.2.023)** — 2026-09-24. All statements through batch 166 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **734** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 463 STATEMENT, 2 FORK EXTENSION).
+- Rows in this matrix: **733** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 462 STATEMENT, 2 FORK EXTENSION).
 - **662** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **70** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **0** documented keywords still not implemented; **69** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
@@ -26,7 +26,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 70 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 69 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -119,7 +119,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | COMM TIMEOUT | STATEMENT | PB/Win + PB/CC | Established |
 | COMMAND | FUNCTION | codegen builtin | Implemented |
 | COMMAND$ | FUNCTION | Win32 | Implemented |
-| CONTROL ADD *CUSTOM CONTROL* | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD BUTTON | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD CHECKBOX | STATEMENT | PB/Win only | Implemented
@@ -143,7 +143,6 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | Implemented
-| CONTROL ADDSTRING | STATEMENT | PB/Win only | Implemented |
 | CONTROL DISABLE | STATEMENT | PB/Win only | Implemented
 | CONTROL ENABLE | STATEMENT | PB/Win only | Implemented
 | CONTROL GET CHECK | STATEMENT | PB/Win only | Implemented
