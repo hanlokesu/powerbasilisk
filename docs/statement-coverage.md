@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 168 (v0.2.025)** — 2026-09-24. All statements through batch 168 are reflected in this matrix.
+> **Last updated from batch 169 (v0.2.026)** — 2026-09-24. All statements through batch 169 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **858** (10 BLOCK, 254 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **729** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **127** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **743** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **113** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 581 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 595 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **729** | Implemented + Established |
+| ✅ **Total available** | **743** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -30,7 +32,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 127 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 113 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -158,7 +160,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Implemented |
-| CONTROL ADD TAB | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD TAB | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | Implemented
@@ -714,19 +716,19 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | SWAP | STATEMENT | PB/Win + PB/CC | Established |
 | SWITCH | FUNCTION | Win32 | Implemented |
 | SWITCH$ | FUNCTION | codegen builtin | Implemented |
-| TAB DELETE | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET COUNT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET DIALOG | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET PAGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB GET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB INSERT PAGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB RESET | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB SET IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
-| TAB SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TAB DELETE | STATEMENT | PB/Win only | Implemented |
+| TAB GET COUNT | STATEMENT | PB/Win only | Implemented |
+| TAB GET DIALOG | STATEMENT | PB/Win only | Implemented |
+| TAB GET IMAGE | STATEMENT | PB/Win only | Implemented |
+| TAB GET PAGE | STATEMENT | PB/Win only | Implemented |
+| TAB GET SELECT | STATEMENT | PB/Win only | Implemented |
+| TAB GET TEXT | STATEMENT | PB/Win only | Implemented |
+| TAB INSERT PAGE | STATEMENT | PB/Win only | Implemented |
+| TAB RESET | STATEMENT | PB/Win only | Implemented |
+| TAB SELECT | STATEMENT | PB/Win only | Implemented |
+| TAB SET IMAGE | STATEMENT | PB/Win only | Implemented |
+| TAB SET IMAGELIST | STATEMENT | PB/Win only | Implemented |
+| TAB SET TEXT | STATEMENT | PB/Win only | Implemented |
 | TAB$ | FUNCTION | Win32 | Implemented |
 | TALLY | FUNCTION | codegen builtin | Implemented |
 | TAN | FUNCTION | LLVM intrinsic | Implemented |

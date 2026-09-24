@@ -1,4 +1,4 @@
-# Last updated from batch 168 (v0.2.025) - 2026-09-24,,,,
+# Last updated from batch 169 (v0.2.026) - 2026-09-24,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -120,7 +120,7 @@ CONTROL ADD OPTION,STATEMENT,PB/Win only,Tier-3 DDT
 CONTROL ADD PROGRESSBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD SCROLLBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD STATUSBAR,STATEMENT,PB/Win only,Implemented
-CONTROL ADD TAB,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL ADD TAB,STATEMENT,PB/Win only,Implemented
 CONTROL ADD TEXTBOX,STATEMENT,PB/Win only,Tier-3 DDT
 CONTROL ADD TOOLBAR,STATEMENT,PB/Win only,Implemented
 CONTROL ADD TREEVIEW,STATEMENT,PB/Win only,Implemented
@@ -668,19 +668,19 @@ STRREVERSE$,FUNCTION,Win32,Implemented
 SWAP,STATEMENT,PB/Win + PB/CC,Established
 SWITCH,FUNCTION,Win32,Implemented
 SWITCH$,FUNCTION,codegen builtin,Implemented
-TAB DELETE,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET COUNT,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET DIALOG,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET IMAGE,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET PAGE,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET SELECT,STATEMENT,PB/Win only,Tier-3 DDT
-TAB GET TEXT,STATEMENT,PB/Win only,Tier-3 DDT
-TAB INSERT PAGE,STATEMENT,PB/Win only,Tier-3 DDT
-TAB RESET,STATEMENT,PB/Win only,Tier-3 DDT
-TAB SELECT,STATEMENT,PB/Win only,Tier-3 DDT
-TAB SET IMAGE,STATEMENT,PB/Win only,Tier-3 DDT
-TAB SET IMAGELIST,STATEMENT,PB/Win only,Tier-3 DDT
-TAB SET TEXT,STATEMENT,PB/Win only,Tier-3 DDT
+TAB DELETE,STATEMENT,PB/Win only,Implemented
+TAB GET COUNT,STATEMENT,PB/Win only,Implemented
+TAB GET DIALOG,STATEMENT,PB/Win only,Implemented
+TAB GET IMAGE,STATEMENT,PB/Win only,Implemented
+TAB GET PAGE,STATEMENT,PB/Win only,Implemented
+TAB GET SELECT,STATEMENT,PB/Win only,Implemented
+TAB GET TEXT,STATEMENT,PB/Win only,Implemented
+TAB INSERT PAGE,STATEMENT,PB/Win only,Implemented
+TAB RESET,STATEMENT,PB/Win only,Implemented
+TAB SELECT,STATEMENT,PB/Win only,Implemented
+TAB SET IMAGE,STATEMENT,PB/Win only,Implemented
+TAB SET IMAGELIST,STATEMENT,PB/Win only,Implemented
+TAB SET TEXT,STATEMENT,PB/Win only,Implemented
 TAB$,FUNCTION,Win32,Implemented
 TALLY,FUNCTION,codegen builtin,Implemented
 TAN,FUNCTION,LLVM intrinsic,Implemented

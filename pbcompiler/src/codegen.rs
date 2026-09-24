@@ -2254,6 +2254,119 @@ impl Compiler {
         );
 
         self.module.declare_function(
+            "pb_control_add_tab",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_delete",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_get_count",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_get_dialog",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_get_image",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module
+            .declare_function("pb_tab_get_page", &IrType::I64, &[IrType::Ptr], false);
+
+        self.module.declare_function(
+            "pb_tab_get_select",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_get_text",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_insert_page",
+            &IrType::I64,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::Ptr,
+            ],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_reset",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_select",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_set_image",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_set_imagelist",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_tab_set_text",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
             "pb_cblb_unselect",
             &IrType::I64,
             &[IrType::Ptr, IrType::I32, IrType::I32, IrType::I32],
@@ -8743,6 +8856,240 @@ impl Compiler {
                 }
                 return Ok(());
             }
+            // ---------------------------------------------------------
+            // TAB family (batch 169) -- official TAB_statement.htm
+            // ---------------------------------------------------------
+            "TAB_DELETE" => {
+                // TAB DELETE hDlg, ID&, PageNum&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let _ = fb.call(&IrType::I64, "pb_tab_delete", &[hd, id, page]);
+                }
+                return Ok(());
+            }
+            "TAB_GET_COUNT" => {
+                // TAB GET COUNT hDlg, ID& TO CountVar&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_tab_get_count", &[hd, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_GET_DIALOG" => {
+                // TAB GET DIALOG hDlg, ID&, PageNum& TO PageDlgVar&
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_tab_get_dialog", &[hd, id, page]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_GET_IMAGE" => {
+                // TAB GET IMAGE hDlg, ID&, PageNum& TO ImageVar&
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let v = fb.call(&IrType::I64, "pb_tab_get_image", &[hd, id, page]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_GET_PAGE" => {
+                // TAB GET PAGE PageDlg TO PageNumVar&
+                // The operand is a page dialog handle, not an (hDlg, id) pair.
+                if call.args.len() >= 2 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let v = fb.call(&IrType::I64, "pb_tab_get_page", &[hd]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[1]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_GET_SELECT" => {
+                // TAB GET SELECT hDlg, ID& TO PageNumVar&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let v = fb.call(&IrType::I64, "pb_tab_get_select", &[hd, id]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_GET_TEXT" => {
+                // TAB GET TEXT hDlg, ID&, PageNum& TO TextVar$
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let buf = fb.alloca(&IrType::Array(256, Box::new(IrType::I8)));
+                    let bp = fb.gep_byte(&buf, &fb.const_i32(0));
+                    let _ = fb.call(
+                        &IrType::I64,
+                        "pb_tab_get_text",
+                        &[hd, id, page, bp.clone(), fb.const_i32(256)],
+                    );
+                    if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let len =
+                            fb.call(&IrType::I32, "pb_str_cstr_len", std::slice::from_ref(&bp));
+                        let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
+                        fb.store(&bstr, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_INSERT_PAGE" => {
+                // TAB INSERT PAGE hDlg, ID&, PageNum&, Image&, Text$ [CALL cb]
+                //                 TO PageDlgVar&
+                // The parser always emits seven operands; operand 5 is
+                // Expr::IntegerLit(0) when no CALL was written.
+                if call.args.len() >= 7 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let image = self.compile_expr(fb, &call.args[3])?;
+                    let text = self.compile_expr(fb, &call.args[4])?;
+                    let cbv = if let Expr::Variable(name) = &call.args[5] {
+                        let upper = name.to_uppercase();
+                        self.functions
+                            .get(&upper)
+                            .or_else(|| self.subs.get(&upper))
+                            .map(|fi| Val::new(format!("@{}", fi.ir_name), IrType::Ptr))
+                    } else {
+                        None
+                    };
+                    let cbarg = match cbv {
+                        Some(v) => v,
+                        None => {
+                            let z = fb.const_i64(0);
+                            fb.inttoptr(&z)
+                        }
+                    };
+                    let v = fb.call(
+                        &IrType::I64,
+                        "pb_tab_insert_page",
+                        &[hd, id, page, image, text, cbarg],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let vv = self.convert_value(fb, &v, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TAB_RESET" => {
+                // TAB RESET hDlg, ID&
+                if call.args.len() >= 2 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let _ = fb.call(&IrType::I64, "pb_tab_reset", &[hd, id]);
+                }
+                return Ok(());
+            }
+            "TAB_SELECT" => {
+                // TAB SELECT hDlg, ID&, PageNum&
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let _ = fb.call(&IrType::I64, "pb_tab_select", &[hd, id, page]);
+                }
+                return Ok(());
+            }
+            "TAB_SET_IMAGE" => {
+                // TAB SET IMAGE hDlg, ID&, PageNum&, Image&
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let image = self.compile_expr(fb, &call.args[3])?;
+                    let _ = fb.call(&IrType::I64, "pb_tab_set_image", &[hd, id, page, image]);
+                }
+                return Ok(());
+            }
+            "TAB_SET_IMAGELIST" => {
+                // TAB SET IMAGELIST hDlg, ID&, hLst
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hlst = self.compile_expr(fb, &call.args[2])?;
+                    if hlst.ty != IrType::Ptr {
+                        hlst = fb.inttoptr(&hlst);
+                    }
+                    let _ = fb.call(&IrType::I64, "pb_tab_set_imagelist", &[hd, id, hlst]);
+                }
+                return Ok(());
+            }
+            "TAB_SET_TEXT" => {
+                // TAB SET TEXT hDlg, ID&, PageNum&, Text$
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let page = self.compile_expr(fb, &call.args[2])?;
+                    let text = self.compile_expr(fb, &call.args[3])?;
+                    let _ = fb.call(&IrType::I64, "pb_tab_set_text", &[hd, id, page, text]);
+                }
+                return Ok(());
+            }
             "SCROLLBAR_GET_POS" => {
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
@@ -9603,6 +9950,30 @@ impl Compiler {
                     let hc = fb.call(
                         &IrType::Ptr,
                         "pb_control_add_progressbar",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_TAB" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_tab",
                         &[parent, id, x, y, w, h],
                     );
                     if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {

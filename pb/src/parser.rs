@@ -1875,6 +1875,87 @@ impl Parser {
         Ok(Statement::Call(CallStmt { name, args, line }))
     }
 
+    /// TAB <verb> [<noun>] ... -- official TAB_statement.htm (batch 169).
+    ///
+    /// Verbs: DELETE, GET, INSERT, RESET, SELECT, SET.
+    /// Nouns: COUNT, DIALOG, IMAGE, PAGE, SELECT, TEXT, IMAGELIST.
+    /// `SELECT` is a reserved token, so the verb/noun are read with
+    /// `peek_word_upper()` (which maps Token::Select to "SELECT").
+    fn parse_tab_statement(&mut self, line: usize) -> PbResult<Statement> {
+        self.advance(); // TAB
+        let verb = self.peek_word_upper();
+        let known = matches!(
+            verb.as_str(),
+            "DELETE" | "GET" | "INSERT" | "RESET" | "SELECT" | "SET"
+        );
+        if !known {
+            self.consume_to_eol();
+            return Ok(Statement::Noop("TAB".to_string(), line));
+        }
+        self.advance(); // verb
+        let mut noun = String::new();
+        if verb == "GET" || verb == "SET" {
+            let n = self.peek_word_upper();
+            if matches!(
+                n.as_str(),
+                "COUNT" | "DIALOG" | "IMAGE" | "PAGE" | "SELECT" | "TEXT" | "IMAGELIST"
+            ) {
+                noun = n;
+                self.advance();
+            }
+        } else if verb == "INSERT" && self.peek_word_upper() == "PAGE" {
+            noun = "PAGE".to_string();
+            self.advance();
+        }
+        let mut args = Vec::new();
+        if verb == "INSERT" && noun == "PAGE" {
+            // TAB INSERT PAGE hDlg, ID&, PageNum&, Image&, Text$ [CALL cb]
+            //                 TO PageDlgVar&
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+            // The optional CALL operand is always emitted, as IntegerLit(0)
+            // when absent, so codegen sees a fixed seven-operand layout.
+            if self.peek() == &Token::Call {
+                self.advance();
+                args.push(self.parse_expression()?);
+            } else {
+                args.push(Expr::IntegerLit(0));
+            }
+            self.expect(&Token::To)?;
+            args.push(self.parse_expression()?);
+        } else if verb == "RESET" {
+            args.push(self.parse_expression()?);
+            self.expect(&Token::Comma)?;
+            args.push(self.parse_expression()?);
+        } else {
+            args.push(self.parse_expression()?);
+            loop {
+                // Both separators are accepted at every step: `TO` introduces
+                // the result variable and a comma separates further operands.
+                if self.peek() == &Token::Comma || self.peek() == &Token::To {
+                    self.advance();
+                    args.push(self.parse_expression()?);
+                } else {
+                    break;
+                }
+            }
+        }
+        self.consume_to_eol();
+        let name = if noun.is_empty() {
+            format!("TAB_{}", verb)
+        } else {
+            format!("TAB_{}_{}", verb, noun)
+        };
+        Ok(Statement::Call(CallStmt { name, args, line }))
+    }
+
     fn parse_statement(&mut self) -> PbResult<Statement> {
         self.skip_eol();
         let line = self.current_line();
@@ -5729,6 +5810,19 @@ impl Parser {
                 if name_upper == "LISTBOX" {
                     return self.parse_cblb_statement(line, "LISTBOX", 1);
                 }
+                // TAB <verb> [<noun>] ...  (batch 169)
+                // Guarded on a known verb so a variable that happens to be
+                // named TAB is still parsed as an ordinary identifier.
+                if name_upper == "TAB"
+                    && (matches!(self.peek_at(1), Some(Token::Identifier(w))
+                                 if matches!(w.to_uppercase().as_str(),
+                                             "DELETE" | "GET" | "INSERT" | "RESET" | "SET"))
+                        // TAB SELECT: the verb is the reserved word SELECT, which
+                        // the lexer emits as Token::Select, not an identifier.
+                        || matches!(self.peek_at(1), Some(Token::Select)))
+                {
+                    return self.parse_tab_statement(line);
+                }
                 // CONTROL ADD CHECKBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
@@ -5886,6 +5980,35 @@ impl Parser {
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_PROGRESSBAR".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD TAB, hWnd, id, x, y, w, h TO hCtrl&  (batch 169)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TAB")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_TAB".to_string(),
                         args: vec![hwnd, id, x, y, w, h, target],
                         line,
                     }));

@@ -6269,6 +6269,17 @@ void pb_register_callback_hwnd(void* hwnd, void* fn) {
     }
 }
 
+/* batch 169: look up the per-window callback registered above.  Until now the
+   table was written but never read, so a `... CALL cb` operand recorded the
+   address and then dropped it.  TAB page dialogs are the first consumer. */
+void* pb_lookup_callback_hwnd(void* hwnd) {
+    for (int i = 0; i < pb_cb_count; i++) {
+        if (pb_cb_hwnd[i] == hwnd) return pb_cb_fns[i];
+    }
+    return 0;
+}
+
+
 
 /* Forward declaration */
 
@@ -6330,6 +6341,11 @@ void pb_control_add_button_with_cb(void* parent, long id, const char* text, int 
    a dialog's custom background colour, and the helpers that colour table
    lives further down the file.
    ------------------------------------------------------------------- */
+/* batch 169: TAB page switching.  TCN_SELCHANGE = TCN_FIRST(-550) - 1
+   (commctrl.inc / CommCtrl.h); pb_wndproc forwards it to the TAB family. */
+#define PB_TCN_SELCHANGE 0xFFFFFDD9u
+static void pb_tab_apply_selection(void* hTab);
+
 #define PB_DLG_BG_SLOTS 64
 static void* pb_dlg_bg_h[PB_DLG_BG_SLOTS];
 static long  pb_dlg_bg_v[PB_DLG_BG_SLOTS];
@@ -6354,6 +6370,27 @@ static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned lon
         if (pb_dialog_cb) {
             void (*fn)(void) = (void(*)(void))pb_dialog_cb;
             fn();
+        }
+        return 0;
+    }
+    if (Msg == 0x004E) /* WM_NOTIFY */ {
+        /* NMHDR is { HWND hwndFrom; UINT_PTR idFrom; UINT code; } (WinUser.h) */
+        void** nh = (void**)lParam;
+        if (nh) {
+            void* from = nh[0];
+            unsigned int idfrom = (unsigned int)(size_t)nh[1];
+            unsigned int code = (unsigned int)(size_t)nh[2];
+            if (code == PB_TCN_SELCHANGE) pb_tab_apply_selection(from);
+            cb_msg = Msg;
+            cb_hwnd = hWnd;
+            cb_ctl = idfrom;
+            cb_ctlmsg = code;
+            cb_wparam = wParam;
+            cb_lparam = lParam;
+            if (pb_dialog_cb) {
+                void (*fn)(void) = (void(*)(void))pb_dialog_cb;
+                fn();
+            }
         }
         return 0;
     }
@@ -7602,6 +7639,363 @@ long long pb_cblb_unselect(void* hDlg, long id, int item, int kind) {
                                                  (unsigned int)-1, 0);
     }
     return (long long)(intptr_t)SendMessageA(h, PB_CB_SETCURSEL, (unsigned int)-1, 0);
+}
+
+/* ===================================================================
+   batch 169: TAB control family (SysTabControl32)
+
+   Official syntax and semantics: TAB_statement.htm.  Every page is a real
+   child dialog -- that is what makes TAB INSERT PAGE able to hand back a
+   dialog handle -- so a small registry maps (tab HWND, page number) to the
+   page dialog.  Page and image numbers are ONE-based, as the official help
+   specifies ("the first item is 1, the second item is 2").
+
+   Message and style values below are taken verbatim from the Windows SDK
+   (CommCtrl.h) and the PowerBASIC equates (WINAPI\commctrl.inc), not guessed:
+     TCM_FIRST 0x1300 | TCM_SETIMAGELIST +3 | TCM_GETITEMCOUNT +4
+     TCM_GETITEMA +5 | TCM_SETITEMA +6 | TCM_INSERTITEMA +7
+     TCM_DELETEITEM +8 | TCM_DELETEALLITEMS +9 | TCM_GETCURSEL +11
+     TCM_SETCURSEL +12 | TCM_ADJUSTRECT +40
+     TCS_TABS 0x0000 | TCS_HOTTRACK 0x0040
+     TCIF_TEXT 0x0001 | TCIF_IMAGE 0x0002
+     ICC_TAB_CLASSES 0x00000008 | WC_TABCONTROLA "SysTabControl32"
+   =================================================================== */
+#define PB_TCM_SETIMAGELIST   0x1303u
+#define PB_TCM_GETITEMCOUNT   0x1304u
+#define PB_TCM_GETITEMA       0x1305u
+#define PB_TCM_SETITEMA       0x1306u
+#define PB_TCM_INSERTITEMA    0x1307u
+#define PB_TCM_DELETEITEM     0x1308u
+#define PB_TCM_DELETEALLITEMS 0x1309u
+#define PB_TCM_GETCURSEL      0x130Bu
+#define PB_TCM_SETCURSEL      0x130Cu
+#define PB_TCM_ADJUSTRECT     0x1328u
+#define PB_TCS_TABS           0x00000000u
+#define PB_TCS_HOTTRACK       0x00000040u
+#define PB_TCIF_TEXT          0x0001u
+#define PB_TCIF_IMAGE         0x0002u
+#define PB_ICC_TAB_CLASSES    0x00000008u
+
+/* NMHDR (WinUser.h) and TCITEMA (CommCtrl.h), x64 layout.  The PB include
+   file declares these with DWORD fields because it targets 32-bit PBWin; the
+   C runtime is 64-bit, so the pointer/UINT_PTR/LPARAM fields are 8 bytes. */
+typedef struct {
+    void*              hwndFrom;
+    unsigned long long idFrom;
+    unsigned int       code;
+} pb_nmhdr_t;
+
+typedef struct {
+    unsigned int       mask;
+    unsigned long      dwState;
+    unsigned long      dwStateMask;
+    char*              pszText;
+    int                cchTextMax;
+    int                iImage;
+    long long          lParam;
+} pb_tcitema_t;
+
+#define PB_TAB_MAX_PAGES 256
+static void* pb_tab_page_tab[PB_TAB_MAX_PAGES];
+static int   pb_tab_page_num[PB_TAB_MAX_PAGES];
+static void* pb_tab_page_dlg[PB_TAB_MAX_PAGES];
+static int   pb_tab_page_count = 0;
+static int   pb_tabpage_registered = 0;
+
+static int pb_tab_page_find(void* hTab, int page) {
+    for (int i = 0; i < pb_tab_page_count; i++) {
+        if (pb_tab_page_tab[i] == hTab && pb_tab_page_num[i] == page) return i;
+    }
+    return -1;
+}
+
+static void pb_tab_page_forget(void* hTab, int page) {
+    int i = pb_tab_page_find(hTab, page);
+    if (i < 0) return;
+    if (pb_tab_page_dlg[i]) DestroyWindow(pb_tab_page_dlg[i]);
+    pb_tab_page_count--;
+    for (int j = i; j < pb_tab_page_count; j++) {
+        pb_tab_page_tab[j] = pb_tab_page_tab[j + 1];
+        pb_tab_page_num[j] = pb_tab_page_num[j + 1];
+        pb_tab_page_dlg[j] = pb_tab_page_dlg[j + 1];
+    }
+}
+
+static void pb_tab_pages_clear(void* hTab) {
+    for (int i = pb_tab_page_count - 1; i >= 0; i--) {
+        if (pb_tab_page_tab[i] == hTab) pb_tab_page_forget(hTab, pb_tab_page_num[i]);
+    }
+}
+
+/* Show the page dialog belonging to the current tab and hide the others.
+   Driven by the tab control's TCN_SELCHANGE notification and by TAB SELECT. */
+static void pb_tab_apply_selection(void* hTab) {
+    long long sel;
+    if (!hTab) return;
+    sel = (long long)(intptr_t)SendMessageA(hTab, PB_TCM_GETCURSEL, 0, 0);
+    for (int i = 0; i < pb_tab_page_count; i++) {
+        int want;
+        if (pb_tab_page_tab[i] != hTab) continue;
+        want = (pb_tab_page_num[i] == (int)sel + 1);
+        ShowWindow(pb_tab_page_dlg[i], want ? 5 /* SW_SHOW */ : 0 /* SW_HIDE */);
+    }
+}
+
+/* Page dialogs get their own window class: pb_wndproc posts WM_QUIT on
+   WM_DESTROY, which would tear the message loop down when a page is
+   destroyed.  They also route WM_COMMAND to the callback named in
+   `TAB INSERT PAGE ... CALL cb`, falling back to the dialog callback. */
+static long long __stdcall pb_tabpage_wndproc(void* hWnd, unsigned int Msg,
+                                              unsigned long long wParam,
+                                              unsigned long long lParam) {
+    if (Msg == 0x0111 /* WM_COMMAND */) {
+        void* fn;
+        cb_msg = Msg;
+        cb_hwnd = hWnd;
+        cb_ctl = (unsigned int)(wParam & 0xFFFF);
+        cb_ctlmsg = (unsigned int)(wParam >> 16);
+        cb_wparam = wParam;
+        cb_lparam = lParam;
+        fn = pb_lookup_callback_hwnd(hWnd);
+        if (fn) {
+            void (*f)(void) = (void(*)(void))fn;
+            f();
+        } else if (pb_dialog_cb) {
+            void (*f)(void) = (void(*)(void))pb_dialog_cb;
+            f();
+        }
+        return 0;
+    }
+    __try {
+        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+    } __except(1) {
+        return 0;
+    }
+}
+
+static void pb_tabpage_register_class(void) {
+    pb_wndclassex_t wc;
+    if (pb_tabpage_registered) return;
+    memset(&wc, 0, sizeof(wc));
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = (void*)pb_tabpage_wndproc;
+    wc.hInstance = GetModuleHandleA(0);
+    wc.hCursor = LoadCursorA(0, (const char*)32512);
+    wc.hbrBackground = (void*)5;   /* COLOR_WINDOW + 1 */
+    wc.lpszClassName = "PBWIN_TABPAGE_CLASS";
+    RegisterClassExA(&wc);
+    pb_tabpage_registered = 1;
+}
+
+/* Resolve the tab control from (dialog handle, control id). */
+static void* pb_tab_hwnd(void* hDlg, long id) {
+    if (!hDlg) return 0;
+    if (id == 0) return hDlg;
+    return GetDlgItem(hDlg, id);
+}
+
+/* ---------------- CONTROL ADD TAB ---------------- */
+void* pb_control_add_tab(void* parent, long id, int x, int y, int w, int ht) {
+    /* TCS_TABS | TCS_HOTTRACK | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_TABSTOP */
+    unsigned long style = PB_TCS_TABS | PB_TCS_HOTTRACK
+                        | 0x40000000u | 0x10000000u | 0x04000000u | 0x00010000u;
+    pb_icc(PB_ICC_TAB_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    return CreateWindowExA(0x00000200 /* WS_EX_CLIENTEDGE */, "SysTabControl32", "",
+                           style, x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* ---------------- TAB DELETE hDlg, ID&, PageNum& ---------------- */
+long long pb_tab_delete(void* hDlg, long id, int page) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    long long r;
+    if (!h || page < 1) return -1;
+    r = (long long)(intptr_t)SendMessageA(h, PB_TCM_DELETEITEM,
+                                          (unsigned int)(page - 1), 0);
+    pb_tab_page_forget(h, page);
+    /* pages after the deleted one shift down by one */
+    for (int i = 0; i < pb_tab_page_count; i++) {
+        if (pb_tab_page_tab[i] == h && pb_tab_page_num[i] > page) pb_tab_page_num[i]--;
+    }
+    pb_tab_apply_selection(h);
+    return r ? 0 : -1;
+}
+
+/* ---------------- TAB GET COUNT hDlg, ID& TO CountVar& ---------------- */
+long long pb_tab_get_count(void* hDlg, long id) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    if (!h) return -1;   /* same failure convention as the other GET statements */
+    return (long long)(intptr_t)SendMessageA(h, PB_TCM_GETITEMCOUNT, 0, 0);
+}
+
+/* ---------------- TAB GET DIALOG hDlg, ID&, PageNum& TO PageDlgVar& ------ */
+long long pb_tab_get_dialog(void* hDlg, long id, int page) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    int i;
+    if (!h || page < 1) return 0;
+    i = pb_tab_page_find(h, page);
+    if (i < 0) return 0;   /* page does not exist -> 0 (official) */
+    return (long long)(intptr_t)pb_tab_page_dlg[i];
+}
+
+/* ---------------- TAB GET IMAGE hDlg, ID&, PageNum& TO ImageVar& --------- */
+long long pb_tab_get_image(void* hDlg, long id, int page) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    pb_tcitema_t it;
+    if (!h || page < 1) return 0;
+    memset(&it, 0, sizeof(it));
+    it.mask = PB_TCIF_IMAGE;
+    if (!SendMessageA(h, PB_TCM_GETITEMA, (unsigned int)(page - 1),
+                      (pb_lparam_t)(size_t)&it)) {
+        return 0;
+    }
+    if (it.iImage < 0) return 0;   /* no image -> 0 (official) */
+    return (long long)it.iImage + 1;
+}
+
+/* ---------------- TAB GET PAGE PageDlg TO PageNumVar& -------------------
+   The input is the page dialog handle, not an (hDlg, id) pair. */
+long long pb_tab_get_page(void* hPage) {
+    for (int i = 0; i < pb_tab_page_count; i++) {
+        if (pb_tab_page_dlg[i] == hPage) return (long long)pb_tab_page_num[i];
+    }
+    return 0;
+}
+
+/* ---------------- TAB GET SELECT hDlg, ID& TO PageNumVar& --------------- */
+long long pb_tab_get_select(void* hDlg, long id) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    long long sel;
+    if (!h) return 0;
+    sel = (long long)(intptr_t)SendMessageA(h, PB_TCM_GETCURSEL, 0, 0);
+    if (sel < 0) return 0;   /* no current selection -> 0 (official) */
+    return sel + 1;          /* pages are 1-based */
+}
+
+/* ---------------- TAB GET TEXT hDlg, ID&, PageNum& TO TextVar$ ---------- */
+long long pb_tab_get_text(void* hDlg, long id, int page, char* out, int outlen) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    pb_tcitema_t it;
+    if (!out || outlen <= 0) return 0;
+    out[0] = 0;
+    if (!h || page < 1) return 0;
+    memset(&it, 0, sizeof(it));
+    it.mask = PB_TCIF_TEXT;
+    it.pszText = out;
+    it.cchTextMax = outlen;
+    SendMessageA(h, PB_TCM_GETITEMA, (unsigned int)(page - 1),
+                 (pb_lparam_t)(size_t)&it);
+    return 1;
+}
+
+/* ---------------- TAB INSERT PAGE hDlg, ID&, PageNum&, Image&, Text$
+                    [CALL cb] TO PageDlgVar& --------------------------- */
+long long pb_tab_insert_page(void* hDlg, long id, int page, int image,
+                             const char* text, void* cb) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    pb_tcitema_t it;
+    long rc;
+    long rcs[4];
+    void* hPage;
+    int slot;
+    if (!h || page < 1) return 0;
+    pb_tabpage_register_class();
+    memset(&it, 0, sizeof(it));
+    it.mask = PB_TCIF_TEXT | (image > 0 ? PB_TCIF_IMAGE : 0u);
+    it.pszText = (char*)(text ? text : "");
+    it.iImage = image > 0 ? image - 1 : 0;   /* image numbers are 1-based */
+    rc = (long)(intptr_t)SendMessageA(h, PB_TCM_INSERTITEMA,
+                                      (unsigned int)(page - 1),
+                                      (pb_lparam_t)(size_t)&it);
+    if (rc < 0) return 0;
+
+    /* the page dialog fills the tab control's display area */
+    rcs[0] = 0; rcs[1] = 0; rcs[2] = 0; rcs[3] = 0;
+    GetClientRect(h, rcs);
+    SendMessageA(h, PB_TCM_ADJUSTRECT, 0 /* FALSE: give the display area */,
+                 (pb_lparam_t)(size_t)rcs);
+    hPage = CreateWindowExA(0, "PBWIN_TABPAGE_CLASS", "",
+                            0x40000000u /* WS_CHILD */ | 0x10000000u /* WS_VISIBLE */,
+                            rcs[0], rcs[1], rcs[2] - rcs[0], rcs[3] - rcs[1],
+                            h, 0, GetModuleHandleA(0), 0);
+    if (!hPage) {
+        SendMessageA(h, PB_TCM_DELETEITEM, (unsigned int)(page - 1), 0);
+        return 0;
+    }
+    if (cb) pb_register_callback_hwnd(hPage, cb);
+    if (pb_tab_page_count < PB_TAB_MAX_PAGES) {
+        slot = pb_tab_page_count++;
+        pb_tab_page_tab[slot] = h;
+        pb_tab_page_num[slot] = page;
+        pb_tab_page_dlg[slot] = hPage;
+    }
+    /* pages inserted before an existing one shift up */
+    for (int i = 0; i < pb_tab_page_count; i++) {
+        if (pb_tab_page_tab[i] == h && pb_tab_page_dlg[i] != hPage
+            && pb_tab_page_num[i] >= page) {
+            pb_tab_page_num[i]++;
+        }
+    }
+    /* the first page ever inserted becomes the current one */
+    if ((long long)(intptr_t)SendMessageA(h, PB_TCM_GETCURSEL, 0, 0) < 0) {
+        SendMessageA(h, PB_TCM_SETCURSEL, (unsigned int)(page - 1), 0);
+    }
+    pb_tab_apply_selection(h);
+    return (long long)(intptr_t)hPage;
+}
+
+/* ---------------- TAB RESET hDlg, ID& ---------------- */
+long long pb_tab_reset(void* hDlg, long id) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    if (!h) return -1;
+    SendMessageA(h, PB_TCM_DELETEALLITEMS, 0, 0);
+    pb_tab_pages_clear(h);
+    return 0;
+}
+
+/* ---------------- TAB SELECT hDlg, ID&, PageNum& ---------------- */
+long long pb_tab_select(void* hDlg, long id, int page) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    if (!h || page < 1) return -1;
+    SendMessageA(h, PB_TCM_SETCURSEL, (unsigned int)(page - 1), 0);
+    pb_tab_apply_selection(h);
+    return 0;
+}
+
+/* ---------------- TAB SET IMAGE hDlg, ID&, PageNum&, Image& ------------- */
+long long pb_tab_set_image(void* hDlg, long id, int page, int image) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    pb_tcitema_t it;
+    if (!h || page < 1) return -1;
+    memset(&it, 0, sizeof(it));
+    it.mask = PB_TCIF_IMAGE;
+    it.iImage = image > 0 ? image - 1 : -1;   /* image numbers are 1-based */
+    return SendMessageA(h, PB_TCM_SETITEMA, (unsigned int)(page - 1),
+                        (pb_lparam_t)(size_t)&it) ? 0 : -1;
+}
+
+/* ---------------- TAB SET IMAGELIST hDlg, ID&, hLst ---------------------
+   The IMAGELIST is owned by the tab control from here on: it is destroyed
+   together with the control (official semantics). */
+long long pb_tab_set_imagelist(void* hDlg, long id, void* hLst) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    if (!h) return -1;
+    SendMessageA(h, PB_TCM_SETIMAGELIST, 0, (pb_lparam_t)(size_t)hLst);
+    return 0;
+}
+
+/* ---------------- TAB SET TEXT hDlg, ID&, PageNum&, Text$ --------------- */
+long long pb_tab_set_text(void* hDlg, long id, int page, const char* text) {
+    void* h = pb_tab_hwnd(hDlg, id);
+    pb_tcitema_t it;
+    if (!h || page < 1) return -1;
+    memset(&it, 0, sizeof(it));
+    it.mask = PB_TCIF_TEXT;
+    it.pszText = (char*)(text ? text : "");
+    it.cchTextMax = 0;
+    return SendMessageA(h, PB_TCM_SETITEMA, (unsigned int)(page - 1),
+                        (pb_lparam_t)(size_t)&it) ? 0 : -1;
 }
 
 /* ---------------- LISTVIEW INSERT COLUMN ---------------- */
