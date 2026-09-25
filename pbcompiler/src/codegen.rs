@@ -3624,6 +3624,37 @@ impl Compiler {
             ],
             false,
         );
+
+        // Batch 175 - CONTROL geometry: by (hDlg, id), dialog units.
+        for (fname, params) in [
+            (
+                "pb_control_get_client",
+                &[IrType::Ptr, IrType::I64, IrType::Ptr, IrType::Ptr][..],
+            ),
+            (
+                "pb_control_get_size",
+                &[IrType::Ptr, IrType::I64, IrType::Ptr, IrType::Ptr][..],
+            ),
+            (
+                "pb_control_get_loc",
+                &[IrType::Ptr, IrType::I64, IrType::Ptr, IrType::Ptr][..],
+            ),
+            (
+                "pb_control_set_client",
+                &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
+            ),
+            (
+                "pb_control_set_loc",
+                &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
+            ),
+            (
+                "pb_control_set_size",
+                &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
+            ),
+        ] {
+            self.module
+                .declare_function(fname, &IrType::Void, params, false);
+        }
         self.module.declare_function(
             "pb_dialog_set_color",
             &IrType::Void,
@@ -11912,6 +11943,138 @@ impl Compiler {
                         let vv = self.convert_value(fb, &val, &ty, &pty);
                         fb.store(&vv, &ptr);
                     }
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_CLIENT" => {
+                // CONTROL GET CLIENT hDlg, id& TO nWide&, nHigh&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let pa = fb.alloca(&IrType::I64);
+                    let pb_ = fb.alloca(&IrType::I64);
+                    fb.call_void(
+                        "pb_control_get_client",
+                        &[hdlg64, id64, pa.clone(), pb_.clone()],
+                    );
+                    for (argi, slot) in [(2usize, &pa), (3usize, &pb_)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_LOC" => {
+                // CONTROL GET LOC hDlg, id& TO x&, y&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let pa = fb.alloca(&IrType::I64);
+                    let pb_ = fb.alloca(&IrType::I64);
+                    fb.call_void(
+                        "pb_control_get_loc",
+                        &[hdlg64, id64, pa.clone(), pb_.clone()],
+                    );
+                    for (argi, slot) in [(2usize, &pa), (3usize, &pb_)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_SIZE" => {
+                // CONTROL GET SIZE hDlg, id& TO nWide&, nHigh&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let pa = fb.alloca(&IrType::I64);
+                    let pb_ = fb.alloca(&IrType::I64);
+                    fb.call_void(
+                        "pb_control_get_size",
+                        &[hdlg64, id64, pa.clone(), pb_.clone()],
+                    );
+                    for (argi, slot) in [(2usize, &pa), (3usize, &pb_)] {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[argi]) {
+                            let v = fb.load(&IrType::I64, slot);
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_CLIENT" => {
+                // CONTROL SET CLIENT hDlg, id&, nWide&, nHigh&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let a = self.compile_expr(fb, &call.args[2])?;
+                    let a64 = self.convert_value(fb, &a, &IrType::I64, &PbType::Quad);
+                    let b = self.compile_expr(fb, &call.args[3])?;
+                    let b64 = self.convert_value(fb, &b, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_client", &[hdlg64, id64, a64, b64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_LOC" => {
+                // CONTROL SET LOC hDlg, id&, x&, y&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let a = self.compile_expr(fb, &call.args[2])?;
+                    let a64 = self.convert_value(fb, &a, &IrType::I64, &PbType::Quad);
+                    let b = self.compile_expr(fb, &call.args[3])?;
+                    let b64 = self.convert_value(fb, &b, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_loc", &[hdlg64, id64, a64, b64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_SIZE" => {
+                // CONTROL SET SIZE hDlg, id&, nWide&, nHigh&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let a = self.compile_expr(fb, &call.args[2])?;
+                    let a64 = self.convert_value(fb, &a, &IrType::I64, &PbType::Quad);
+                    let b = self.compile_expr(fb, &call.args[3])?;
+                    let b64 = self.convert_value(fb, &b, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_size", &[hdlg64, id64, a64, b64]);
                 }
                 return Ok(());
             }

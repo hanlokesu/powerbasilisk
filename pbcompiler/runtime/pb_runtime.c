@@ -6462,10 +6462,20 @@ void* pb_lookup_callback_hwnd(void* hwnd) {
 
 /* Forward declaration */
 
+/* The dialog-unit base every CONTROL coordinate is expressed in.
+   pb_dlu_to_px() below converts units -> pixels when a control is created,
+   and the CONTROL GET/SET geometry statements convert back with the same two
+   numbers: a control written at "12, 12" must read back as 12, 12 and SET LOC
+   must put it where ADD would have.  They used to disagree - the geometry
+   went through GetDialogBaseUnits() (8x16 on this machine), so a button added
+   at 10,10 read back 8,8 (see the batch 175 block further down). */
+#define PB_CTL_DLU_X 7
+#define PB_CTL_DLU_Y 14
+
 /* Convert dialog units to pixels (matching PBWin DDT) */
 static void pb_dlu_to_px(int *x, int *y, int *w, int *h) {
     /* 8pt MS Shell Dlg: avg char width ~6px, height ~13px */
-    int dx = 7, dy = 14;
+    int dx = PB_CTL_DLU_X, dy = PB_CTL_DLU_Y;
     *x = (*x * dx) / 4;
     *y = (*y * dy) / 8;
     *w = (*w * dx) / 4;
@@ -6931,11 +6941,19 @@ void pb_dialog_get_size(void* hDlg, long long* pw, long long* ph) {
     if (ph) *ph = (long long)(((rc.bottom - rc.top) * 8) / dy);
 }
 
-/* DIALOG SET SIZE - dialog units in, pixels out to SetWindowPos */
+/* DIALOG SET SIZE - dialog units in, pixels out to SetWindowPos.
+ *
+ * Batch 175 fix: the flags used to be 0x0040 (SWP_SHOWWINDOW) alone, so
+ * this statement did three things instead of one - it resized the dialog,
+ * MOVED it to screen (0,0) (no SWP_NOMOVE), and forced a hidden dialog
+ * visible.  The official statement only changes the size.  SWP_NOMOVE |
+ * SWP_NOZORDER is what DIALOG SET CLIENT / SET LOC already use, and
+ * examples/batch175_test.bas asserts the position survives the resize. */
 void pb_dialog_set_size(void* hDlg, long long w, long long h) {
     int dx, dy;
     pb_dlg_units(&dx, &dy);
-    SetWindowPos(hDlg, 0, 0, 0, (int)((w * dx) / 4), (int)((h * dy) / 8), 0x0040);
+    SetWindowPos(hDlg, 0, 0, 0, (int)((w * dx) / 4), (int)((h * dy) / 8),
+                 0x0002u | 0x0004u /* SWP_NOMOVE | SWP_NOZORDER */);
 }
 
 /* ===================================================================
@@ -7176,6 +7194,122 @@ void pb_dialog_units(void* hDlg, long long x, long long y, long long* px, long l
     pb_dlg_units(&dx, &dy);
     if (px) *px = (long long)((x * dx) / 4);
     if (py) *py = (long long)((y * dy) / 8);
+}
+
+/* ===================================================================
+   Batch 175 - CONTROL geometry: GET/SET CLIENT, GET/SET LOC, GET/SET SIZE
+   -------------------------------------------------------------------
+   Official syntax (control_get_client.htm, control_get_loc.htm,
+   control_get_size.htm, control_set_client.htm, control_set_loc.htm,
+   control_set_size.htm) addresses the control by (hDlg, id&): the dialog
+   that OWNS the control, plus the control id assigned by CONTROL ADD.
+   The HWND comes from GetDlgItem through pb_pb_hwnd() above - the same
+   (owner, id) resolution PROGRESSBAR / HEADER use.
+
+   Units: every CONTROL in this compiler is laid out by pb_dlu_to_px(), i.e.
+   in the dialog units of PB_CTL_DLU_X x PB_CTL_DLU_Y (7 x 14).  The geometry
+   statements convert back with those same two numbers, so CONTROL ADD of
+   "12, 12" and CONTROL GET LOC agree, and CONTROL SET LOC puts a control
+   exactly where the same numbers in CONTROL ADD would.  (Batch 175 first
+   routed these through pb_dlg_units(), which describes the SYSTEM font -
+   8 x 16 on this machine - and the two disagreed: a button added at 10,10
+   read back 8,8 and a 60x20 button read back 52x17.)
+   Divisibility, exactly as in the DIALOG family: a width in units is exact
+   when it is a multiple of 4 and a height when it is a multiple of 8 -
+   one vertical unit is 1.75 px, so 30 units cannot land on a whole pixel.
+
+   LOC is measured from the upper-left corner of the PARENT DIALOG's client
+   area (control_get_loc.htm) - ClientToScreen(hDlg) is that origin.  A
+   control is a CHILD window, though, and SetWindowPos interprets x/y of a
+   child as offsets from the PARENT'S CLIENT AREA, not screen coordinates:
+   SET passes the plain offsets while GET subtracts the origin.  (Batch 175
+   first added the origin on both sides, i.e. twice, so SET LOC 20,30 landed
+   at 64,75.)
+   Negative and off-dialog coordinates are legal and simply clip or hide
+   the control (control_set_loc.htm).
+
+   GET SIZE returns the OVERALL size (borders included, GetWindowRect);
+   GET CLIENT returns the client area (GetClientRect); SET CLIENT grows the
+   window rectangle by the control's own non-client allowance first, which
+   is why a bordered control reports a client area a few pixels smaller.
+   =================================================================== */
+
+/* CONTROL GET CLIENT hDlg, id& TO nWide&, nHigh& */
+void pb_control_get_client(void* hDlg, long long id, long long* pw, long long* ph) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    pb_rect_t rc;
+    if (!h) { if (pw) *pw = 0; if (ph) *ph = 0; return; }
+    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    GetClientRect(h, &rc);
+    if (pw) *pw = (long long)(((rc.right - rc.left) * 4) / PB_CTL_DLU_X);
+    if (ph) *ph = (long long)(((rc.bottom - rc.top) * 8) / PB_CTL_DLU_Y);
+}
+
+/* CONTROL GET SIZE hDlg, id& TO nWide&, nHigh& - overall, borders included */
+void pb_control_get_size(void* hDlg, long long id, long long* pw, long long* ph) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    pb_rect_t rc;
+    if (!h) { if (pw) *pw = 0; if (ph) *ph = 0; return; }
+    rc.left = 0; rc.top = 0; rc.right = 0; rc.bottom = 0;
+    GetWindowRect(h, &rc);
+    if (pw) *pw = (long long)(((rc.right - rc.left) * 4) / PB_CTL_DLU_X);
+    if (ph) *ph = (long long)(((rc.bottom - rc.top) * 8) / PB_CTL_DLU_Y);
+}
+
+/* CONTROL GET LOC hDlg, id& TO x&, y& - from the parent's client origin */
+void pb_control_get_loc(void* hDlg, long long id, long long* px, long long* py) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    pb_rect_t wr;
+    pb_point_t org;
+    if (px) *px = 0;
+    if (py) *py = 0;
+    if (!h) return;
+    wr.left = 0; wr.top = 0; wr.right = 0; wr.bottom = 0;
+    GetWindowRect(h, &wr);
+    org.x = 0; org.y = 0;
+    if (hDlg) ClientToScreen(hDlg, &org);
+    if (px) *px = (long long)(((wr.left - org.x) * 4) / PB_CTL_DLU_X);
+    if (py) *py = (long long)(((wr.top - org.y) * 8) / PB_CTL_DLU_Y);
+}
+
+/* CONTROL SET LOC hDlg, id&, x&, y& */
+void pb_control_set_loc(void* hDlg, long long id, long long x, long long y) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return;
+    /* Child window: x/y are relative to the parent's client area, so the
+       ClientToScreen origin must NOT be added here (it belongs in
+       DIALOG SET LOC, where the window is top-level and x/y are screen
+       coordinates). */
+    SetWindowPos(h, 0, (int)((x * PB_CTL_DLU_X) / 4), (int)((y * PB_CTL_DLU_Y) / 8),
+                 0, 0, 0x0001u | 0x0004u /* SWP_NOSIZE | SWP_NOZORDER */);
+}
+
+/* CONTROL SET SIZE hDlg, id&, nWide&, nHigh& - overall size */
+void pb_control_set_size(void* hDlg, long long id, long long w, long long nHigh) {
+    void* hc = pb_pb_hwnd(hDlg, id);
+    if (!hc) return;
+    SetWindowPos(hc, 0, 0, 0,
+                 (int)((w * PB_CTL_DLU_X) / 4), (int)((nHigh * PB_CTL_DLU_Y) / 8),
+                 0x0002u | 0x0004u /* SWP_NOMOVE | SWP_NOZORDER */);
+}
+
+/* CONTROL SET CLIENT hDlg, id&, nWide&, nHigh& - grow the window rectangle by
+   the control's own border allowance so the CLIENT area ends up w x h.
+   AdjustWindowRectEx handles child windows: it adds whatever WS_BORDER /
+   WS_EX_CLIENTEDGE the control's style implies. */
+void pb_control_set_client(void* hDlg, long long id, long long w, long long nHigh) {
+    void* hc = pb_pb_hwnd(hDlg, id);
+    pb_rect_t rc;
+    unsigned long style, exstyle;
+    if (!hc) return;
+    rc.left = 0; rc.top = 0;
+    rc.right = (long)((w * PB_CTL_DLU_X) / 4);
+    rc.bottom = (long)((nHigh * PB_CTL_DLU_Y) / 8);
+    style = (unsigned long)pb_get_winlong(hc, -16 /* GWL_STYLE */);
+    exstyle = (unsigned long)pb_get_winlong(hc, -20 /* GWL_EXSTYLE */);
+    AdjustWindowRectEx(&rc, style, 0, exstyle);
+    SetWindowPos(hc, 0, 0, 0, (int)(rc.right - rc.left), (int)(rc.bottom - rc.top),
+                 0x0002u | 0x0004u /* SWP_NOMOVE | SWP_NOZORDER */);
 }
 
 /* --- DIALOG SET COLOR hDlg, foreclr&, backclr& ----------------------
