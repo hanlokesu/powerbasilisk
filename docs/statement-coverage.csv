@@ -1,4 +1,4 @@
-# Last updated from batch 172 (v0.2.029) - 2026-09-25,,,,
+# Last updated from batch 173 (v0.2.030) - 2026-09-25,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -384,14 +384,14 @@ HYPOT,FUNCTION,C runtime (MSVCRT),Implemented
 IF,STATEMENT,PB/Win + PB/CC,Established
 IF/END IF,BLOCK,PB/Win + PB/CC,Established
 IIF,FUNCTION,codegen builtin,Implemented
-IMAGELIST ADD BITMAP,STATEMENT,PB/Win only,Tier-3 DDT
-IMAGELIST ADD ICON,STATEMENT,PB/Win only,Tier-3 DDT
-IMAGELIST ADD MASKED,STATEMENT,PB/Win only,Tier-3 DDT
+IMAGELIST ADD BITMAP,STATEMENT,PB/Win only,Implemented
+IMAGELIST ADD ICON,STATEMENT,PB/Win only,Implemented
+IMAGELIST ADD MASKED,STATEMENT,PB/Win only,Implemented
 IMAGELIST GET COUNT,STATEMENT,PB/Win only,Implemented
 IMAGELIST KILL,STATEMENT,PB/Win only,Implemented
 IMAGELIST NEW BITMAP,STATEMENT,PB/Win only,Implemented
-IMAGELIST NEW ICON,STATEMENT,PB/Win only,Tier-3 DDT
-IMAGELIST SET OVERLAY,STATEMENT,PB/Win only,Tier-3 DDT
+IMAGELIST NEW ICON,STATEMENT,PB/Win only,Implemented
+IMAGELIST SET OVERLAY,STATEMENT,PB/Win only,Implemented
 IMAGELIST_COUNT,FUNCTION,codegen builtin,Implemented
 IMAGELIST_NEW,FUNCTION,codegen builtin,Implemented
 IMP,FUNCTION,PB/Win + PB/CC,Implemented

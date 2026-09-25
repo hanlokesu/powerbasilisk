@@ -5247,6 +5247,12 @@ impl Parser {
                     if op == "NEW" {
                         self.advance(); // consume NEW
                         let kind = self.peek_plain_upper();
+                        // The BITMAP / ICON word selects the statement name, so
+                        // the two documented forms stay distinguishable in the
+                        // IR.  An ICON list is not a different comctl32 object
+                        // (see pb_imagelist_new in the runtime), but the word
+                        // must not be thrown away on the way through either.
+                        let is_icon = kind == "ICON";
                         if kind == "BITMAP" || kind == "ICON" {
                             self.advance();
                         }
@@ -5255,13 +5261,30 @@ impl Parser {
                             self.advance();
                             args.push(self.parse_expression()?);
                         }
-                        if matches!(self.peek(), Token::To) {
+                        // has_to travels as an explicit argument.  Deriving the
+                        // TO target from the last argument broke the legal
+                        // `IMAGELIST NEW BITMAP 16, 16, 32, n` form (no TO): the
+                        // handle would have been stored into n.
+                        let has_to = matches!(self.peek(), Token::To);
+                        if has_to {
                             self.advance();
-                            args.push(self.parse_expression()?);
+                        }
+                        let to_arg = if has_to {
+                            Some(self.parse_expression()?)
+                        } else {
+                            None
+                        };
+                        args.push(Expr::IntegerLit(if has_to { 1 } else { 0 }));
+                        if let Some(t) = to_arg {
+                            args.push(t);
                         }
                         self.consume_to_eol();
                         return Ok(Statement::Call(CallStmt {
-                            name: "IMAGELIST_NEW".to_string(),
+                            name: if is_icon {
+                                "IMAGELIST_NEW_ICON".to_string()
+                            } else {
+                                "IMAGELIST_NEW".to_string()
+                            },
                             args,
                             line,
                         }));
@@ -5292,6 +5315,134 @@ impl Parser {
                             args,
                             line,
                         }));
+                    }
+                    // IMAGELIST ADD BITMAP hLst, hBmp [, hMsk] [TO dataValue&]
+                    // IMAGELIST ADD BITMAP hLst, Bmp$ [, Msk$] [TO dataValue&]
+                    // IMAGELIST ADD ICON   hLst, hIcn [TO dataValue&]
+                    // IMAGELIST ADD ICON   hLst, Icn$  [TO dataValue&]
+                    // IMAGELIST ADD MASKED hLst, hBmp, rgbColor& [TO dataValue&]
+                    // IMAGELIST ADD MASKED hLst, Bmp$, rgbColor& [TO dataValue&]
+                    // IMAGELIST SET OVERLAY hLst, image&, overlay&
+                    if op == "ADD" || op == "SET" {
+                        // The verb after ADD / SET is an identifier in every
+                        // documented form, so the narrow peek is safe here.
+                        let sub = match self.peek_at(1) {
+                            Some(Token::Identifier(w)) => w.to_uppercase(),
+                            _ => String::new(),
+                        };
+                        let form = if op == "ADD" {
+                            match sub.as_str() {
+                                "BITMAP" => 1,
+                                "ICON" => 2,
+                                "MASKED" => 3,
+                                _ => 0,
+                            }
+                        } else if sub == "OVERLAY" {
+                            4
+                        } else {
+                            0
+                        };
+                        if form == 4 {
+                            self.advance(); // consume SET
+                            self.advance(); // consume OVERLAY
+                            let mut ops = vec![self.parse_expression()?]; // hLst
+                            while self.peek() == &Token::Comma {
+                                self.advance();
+                                ops.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            if ops.len() != 3 {
+                                return Err(PbError::parser(
+                                    "IMAGELIST SET OVERLAY: expected hLst, image&, overlay&"
+                                        .to_string(),
+                                    None,
+                                    line,
+                                ));
+                            }
+                            return Ok(Statement::Call(CallStmt {
+                                name: "IMAGELIST_SET_OVERLAY".to_string(),
+                                args: ops,
+                                line,
+                            }));
+                        }
+                        if form != 0 {
+                            self.advance(); // consume ADD
+                            self.advance(); // consume BITMAP / ICON / MASKED
+                            let mut ops = vec![self.parse_expression()?]; // hLst
+                            while self.peek() == &Token::Comma {
+                                self.advance();
+                                ops.push(self.parse_expression()?);
+                            }
+                            if ops.len() < 2 {
+                                return Err(PbError::parser(
+                                    "IMAGELIST ADD: expected a handle and an image".to_string(),
+                                    None,
+                                    line,
+                                ));
+                            }
+                            let has_to = matches!(self.peek(), Token::To);
+                            let to_arg = if has_to {
+                                self.advance();
+                                Some(self.parse_expression()?)
+                            } else {
+                                None
+                            };
+                            self.consume_to_eol();
+                            // A literal string operand selects the resource /
+                            // disk-file form; anything else is a handle.
+                            let is_name = matches!(ops.get(1), Some(Expr::StringLit(_)));
+                            let stmt_name = match form {
+                                1 => {
+                                    if is_name {
+                                        "IMAGELIST_ADD_BITMAP_FILE"
+                                    } else {
+                                        "IMAGELIST_ADD_BITMAP"
+                                    }
+                                }
+                                2 => {
+                                    if is_name {
+                                        "IMAGELIST_ADD_ICON_FILE"
+                                    } else {
+                                        "IMAGELIST_ADD_ICON"
+                                    }
+                                }
+                                _ => {
+                                    if is_name {
+                                        "IMAGELIST_ADD_MASKED_FILE"
+                                    } else {
+                                        "IMAGELIST_ADD_MASKED"
+                                    }
+                                }
+                            };
+                            let mut it = ops.into_iter();
+                            let h_lst = it.next().unwrap_or(Expr::IntegerLit(0));
+                            let img = it.next().unwrap_or(Expr::IntegerLit(0));
+                            let third = it.next();
+                            let mut args = vec![h_lst, img];
+                            match form {
+                                1 => args.push(match third {
+                                    Some(e) => e,
+                                    None => {
+                                        if is_name {
+                                            Expr::StringLit(String::new())
+                                        } else {
+                                            Expr::IntegerLit(0)
+                                        }
+                                    }
+                                }),
+                                3 => args.push(third.unwrap_or(Expr::IntegerLit(0))),
+                                _ => {}
+                            }
+                            args.push(Expr::IntegerLit(if has_to { 1 } else { 0 }));
+                            if let Some(t) = to_arg {
+                                args.push(t);
+                            }
+                            return Ok(Statement::Call(CallStmt {
+                                name: stmt_name.to_string(),
+                                args,
+                                line,
+                            }));
+                        }
                     }
                 }
 

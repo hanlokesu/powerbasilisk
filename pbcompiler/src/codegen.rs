@@ -2998,7 +2998,55 @@ impl Compiler {
         self.module.declare_function(
             "pb_imagelist_new",
             &IrType::I64,
-            &[IrType::I32, IrType::I32, IrType::I32, IrType::I32],
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_bitmap",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_bitmap_file",
+            &IrType::I32,
+            &[IrType::I64, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_icon",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_icon_file",
+            &IrType::I32,
+            &[IrType::I64, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_masked",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_add_masked_file",
+            &IrType::I32,
+            &[IrType::I64, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_imagelist_set_overlay",
+            &IrType::I32,
+            &[IrType::I64, IrType::I32, IrType::I32],
             false,
         );
         self.module
@@ -6601,6 +6649,30 @@ impl Compiler {
 
     // ========== CALL ==========
 
+    /// Store the result of an IMAGELIST ADD form into its TO target.
+    ///
+    /// The TO clause travels as an explicit `has_to` flag at `flag_index`,
+    /// with the target one slot after it, instead of being inferred from the
+    /// last argument: `IMAGELIST ADD BITMAP h, hbmp` with no TO clause at all
+    /// would otherwise look like a TO target named `hbmp`.
+    fn store_imagelist_add_result(
+        &mut self,
+        fb: &mut FunctionBuilder,
+        call: &CallStmt,
+        val: &Val,
+        flag_index: usize,
+    ) -> PbResult<()> {
+        if !matches!(call.args.get(flag_index), Some(Expr::IntegerLit(1))) {
+            return Ok(());
+        }
+        if let Some(t) = call.args.get(flag_index + 1) {
+            let target = self.compile_lvalue_ptr(fb, t)?;
+            let converted = self.convert_value(fb, val, &target.0.ty, &target.1);
+            fb.store(&converted, &target.0);
+        }
+        Ok(())
+    }
+
     fn compile_call_stmt(&mut self, fb: &mut FunctionBuilder, call: &CallStmt) -> PbResult<()> {
         let name = normalize_name(&call.name);
 
@@ -6735,15 +6807,16 @@ impl Compiler {
                 }
             }
 
-            "IMAGELIST_NEW" => {
-                // args: w, h, depth, initial, to_var
+            "IMAGELIST_NEW" | "IMAGELIST_NEW_ICON" => {
+                // args: w, h, depth, initial, has_to [, to]
+                let is_icon = name == "IMAGELIST_NEW_ICON";
                 let w = self.compile_expr(fb, &call.args[0])?;
                 let w2 = self.convert_value(fb, &w, &IrType::I32, &PbType::Long);
                 let mut h2 = fb.const_i32(0);
                 let mut depth = fb.const_i32(24);
                 let mut initial = fb.const_i32(4);
                 let mut i = 1;
-                while i < call.args.len() {
+                while i < call.args.len() && i < 4 {
                     match i {
                         1 => h2 = self.compile_expr(fb, &call.args[i])?,
                         2 => depth = self.compile_expr(fb, &call.args[i])?,
@@ -6752,15 +6825,18 @@ impl Compiler {
                     }
                     i += 1;
                 }
-                let to_var: Option<String> = call.args.last().and_then(|e| match e {
-                    Expr::Variable(v) => Some(v.clone()),
-                    _ => None,
-                });
-                let hh = fb.call(&IrType::I64, "pb_imagelist_new", &[w2, h2, depth, initial]);
-                if let Some(tv) = to_var {
-                    let target = self.compile_lvalue_ptr(fb, &Expr::Variable(tv))?;
-                    let converted = self.convert_value(fb, &hh, &target.0.ty, &target.1);
-                    fb.store(&converted, &target.0);
+                let kind = fb.const_i32(if is_icon { 1 } else { 0 });
+                let hh = fb.call(
+                    &IrType::I64,
+                    "pb_imagelist_new",
+                    &[w2, h2, depth, initial, kind],
+                );
+                if matches!(call.args.get(4), Some(Expr::IntegerLit(1))) {
+                    if let Some(t) = call.args.get(5) {
+                        let target = self.compile_lvalue_ptr(fb, t)?;
+                        let converted = self.convert_value(fb, &hh, &target.0.ty, &target.1);
+                        fb.store(&converted, &target.0);
+                    }
                 }
             }
             "IMAGELIST_COUNT" => {
@@ -6783,6 +6859,80 @@ impl Compiler {
                     let h2 = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_imagelist_kill", &[h2]);
                 }
+            }
+
+            // ---- IMAGELIST ADD / SET OVERLAY (batch 173) -------------------
+            // Every ADD form assigns the 1-based index of the first image
+            // added, or 0 when the operation fails; the runtime wrappers do
+            // that mapping (the raw Win32 calls are 0-based and return -1 on
+            // failure).  IMAGELIST SET OVERLAY has no TO clause.
+            "IMAGELIST_ADD_BITMAP" => {
+                // args: hLst, hBmp, hMsk(0), has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let bv = self.compile_expr(fb, &call.args[1])?;
+                let bb = self.convert_value(fb, &bv, &IrType::I64, &PbType::Quad);
+                let mv = self.compile_expr(fb, &call.args[2])?;
+                let mm = self.convert_value(fb, &mv, &IrType::I64, &PbType::Quad);
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_bitmap", &[hh, bb, mm]);
+                self.store_imagelist_add_result(fb, call, &idx, 3)?;
+            }
+            "IMAGELIST_ADD_BITMAP_FILE" => {
+                // args: hLst, Bmp$, Msk$(""), has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let nm = self.compile_expr(fb, &call.args[1])?;
+                let mk = self.compile_expr(fb, &call.args[2])?;
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_bitmap_file", &[hh, nm, mk]);
+                self.store_imagelist_add_result(fb, call, &idx, 3)?;
+            }
+            "IMAGELIST_ADD_ICON" => {
+                // args: hLst, hIcn, has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let iv = self.compile_expr(fb, &call.args[1])?;
+                let ii = self.convert_value(fb, &iv, &IrType::I64, &PbType::Quad);
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_icon", &[hh, ii]);
+                self.store_imagelist_add_result(fb, call, &idx, 2)?;
+            }
+            "IMAGELIST_ADD_ICON_FILE" => {
+                // args: hLst, Icn$, has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let nm = self.compile_expr(fb, &call.args[1])?;
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_icon_file", &[hh, nm]);
+                self.store_imagelist_add_result(fb, call, &idx, 2)?;
+            }
+            "IMAGELIST_ADD_MASKED" => {
+                // args: hLst, hBmp, rgbColor&, has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let bv = self.compile_expr(fb, &call.args[1])?;
+                let bb = self.convert_value(fb, &bv, &IrType::I64, &PbType::Quad);
+                let rv = self.compile_expr(fb, &call.args[2])?;
+                let rr = self.convert_value(fb, &rv, &IrType::I32, &PbType::Long);
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_masked", &[hh, bb, rr]);
+                self.store_imagelist_add_result(fb, call, &idx, 3)?;
+            }
+            "IMAGELIST_ADD_MASKED_FILE" => {
+                // args: hLst, Bmp$, rgbColor&, has_to [, to]
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let nm = self.compile_expr(fb, &call.args[1])?;
+                let rv = self.compile_expr(fb, &call.args[2])?;
+                let rr = self.convert_value(fb, &rv, &IrType::I32, &PbType::Long);
+                let idx = fb.call(&IrType::I32, "pb_imagelist_add_masked_file", &[hh, nm, rr]);
+                self.store_imagelist_add_result(fb, call, &idx, 3)?;
+            }
+            "IMAGELIST_SET_OVERLAY" => {
+                // args: hLst, image&, overlay&
+                let hv = self.compile_expr(fb, &call.args[0])?;
+                let hh = self.convert_value(fb, &hv, &IrType::I64, &PbType::Quad);
+                let iv = self.compile_expr(fb, &call.args[1])?;
+                let ii = self.convert_value(fb, &iv, &IrType::I32, &PbType::Long);
+                let ov = self.compile_expr(fb, &call.args[2])?;
+                let oo = self.convert_value(fb, &ov, &IrType::I32, &PbType::Long);
+                fb.call_void("pb_imagelist_set_overlay", &[hh, ii, oo]);
             }
 
             "COLOR" => {

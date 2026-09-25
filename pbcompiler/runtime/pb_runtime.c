@@ -164,6 +164,12 @@ __declspec(dllimport) int __stdcall DeleteObject(void* hObject);
 __declspec(dllimport) void* __stdcall ImageList_Create(int cx, int cy, unsigned int flags, int cInitial, int cGrow);
 __declspec(dllimport) int __stdcall ImageList_GetImageCount(void* himl);
 __declspec(dllimport) int __stdcall ImageList_Destroy(void* himl);
+__declspec(dllimport) int __stdcall ImageList_Add(void* himl, void* hbmImage, void* hbmMask);
+__declspec(dllimport) int __stdcall ImageList_AddMasked(void* himl, void* hbmImage, unsigned long crMask);
+__declspec(dllimport) int __stdcall ImageList_ReplaceIcon(void* himl, int i, void* hicon);
+__declspec(dllimport) int __stdcall ImageList_SetOverlayImage(void* himl, int iImage, int iOverlay);
+__declspec(dllimport) int __stdcall ImageList_GetIconSize(void* himl, int* cx, int* cy);
+__declspec(dllimport) int __stdcall DestroyIcon(void* hIcon);
 __declspec(dllimport) void* __stdcall GetStdHandle(unsigned int nStdHandle);
 __declspec(dllimport) int __stdcall SetConsoleTextAttribute(void* hConsoleOutput, unsigned short wAttributes);
 __declspec(dllimport) void* __stdcall CreateMenu(void);
@@ -6039,7 +6045,7 @@ void pb_color(int fore, int back) {
 }
 
 /* IMAGELIST � comctl32 image list objects (batch 48) */
-long long pb_imagelist_new(int width, int height, int depth, int initial) {
+long long pb_imagelist_new(int width, int height, int depth, int initial, int is_icon) {
     unsigned int flags = 0;
     switch (depth) {
         case 0: flags = 1 | 0; break;          /* ILC_MASK | ILC_COLOR */
@@ -6049,6 +6055,13 @@ long long pb_imagelist_new(int width, int height, int depth, int initial) {
         case 32: flags = 1 | 0x20; break;      /* ILC_COLOR32 */
         default: flags = 1 | 0x18; break;      /* ILC_COLOR24 */
     }
+    /* ILC_MASK (bit 0) is set for both forms.  comctl32 has no separate
+       "bitmap list" mode: the IMAGELIST NEW BITMAP / NEW ICON words select
+       which ADD forms the program intends, and the ImageList object itself is
+       built the same way either way.  `is_icon` is carried through so the two
+       documented forms stay distinct in the IR and in the coverage CSV - a
+       documented equivalence, not a discarded keyword. */
+    (void)is_icon;
     void* h = ImageList_Create(width, height, flags, initial, 4);
     return (long long)(intptr_t)h;
 }
@@ -6057,6 +6070,129 @@ int pb_imagelist_count(long long h) {
 }
 int pb_imagelist_kill(long long h) {
     return ImageList_Destroy((void*)(intptr_t)h) ? 1 : 0;
+}
+
+/* IMAGELIST ADD / SET OVERLAY - batch 173.
+   The Win32 calls return the 0-based index of the first image added, or -1
+   when the operation fails.  The official PB page documents the value the TO
+   clause receives as "the index position of the first added bitmap (starting
+   with 1)", and 0 on failure - so the wrappers below shift by one and fold
+   every failure into 0, which keeps the two ranges disjoint. */
+
+static const char* pb_il_res_id(const char* name) {
+    /* Mirrors pb_dialog_set_icon(): a name that begins with '#' is an
+       integral resource id rather than a resource name. */
+    if (name && name[0] == '#') {
+        long id = 0;
+        const char* q = name + 1;
+        while (*q >= '0' && *q <= '9') { id = id * 10 + (*q - '0'); q++; }
+        return (const char*)(long long)id;
+    }
+    return name ? name : "";
+}
+
+/* Official rule for the Bmp$ / Icn$ / Msk$ forms: a name containing a period
+   is a disk file; otherwise the resource is tried first and the disk file is
+   the fallback.  LR_SHARED (0x8000) keeps the resource handle owned by the
+   system, so it must never be freed; a handle loaded with LR_LOADFROMFILE
+   (0x10) is a private copy, and *owned reports that. */
+static void* pb_il_load_name(const char* name, unsigned int type, int cx, int cy, int* owned) {
+    if (owned) *owned = 0;
+    if (!name || !name[0]) return 0;
+    if (strchr(name, '.')) {
+        void* h = LoadImageA(0, name, type, cx, cy, 0x10);
+        if (h && owned) *owned = 1;
+        return h;
+    }
+    /* LoadImageA consults the calling module's resources only when the module
+       handle is passed; with a NULL instance it looks at the system image, so a
+       resource compiled into this very EXE (the documented `#id` form) would
+       never be found.  The NULL retry preserves the previous behaviour; a
+       handle obtained with LR_SHARED stays owned by the system. */
+    void* h = LoadImageA(GetModuleHandleA(0), pb_il_res_id(name), type, cx, cy, 0x8000);
+    if (!h) h = LoadImageA(0, pb_il_res_id(name), type, cx, cy, 0x8000);
+    if (h) return h;
+    h = LoadImageA(0, name, type, cx, cy, 0x10);
+    if (h && owned) *owned = 1;
+    return h;
+}
+
+static void pb_il_free(void* h, unsigned int type, int owned) {
+    if (!h || !owned) return;
+    if (type == 1) DestroyIcon(h);   /* IMAGE_ICON */
+    else DeleteObject(h);            /* IMAGE_BITMAP */
+}
+
+int pb_imagelist_add_bitmap(long long h, long long hbmpImage, long long hbmpMask) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !hbmpImage) return 0;
+    int idx = ImageList_Add(himl, (void*)(intptr_t)hbmpImage,
+                            hbmpMask ? (void*)(intptr_t)hbmpMask : 0);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_add_bitmap_file(long long h, const char* bmp, const char* msk) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !bmp || !bmp[0]) return 0;
+    int own_bmp = 0, own_msk = 0;
+    void* hb = pb_il_load_name(bmp, 0, 0, 0, &own_bmp);
+    if (!hb) return 0;
+    void* hm = 0;
+    if (msk && msk[0]) hm = pb_il_load_name(msk, 0, 0, 0, &own_msk);
+    int idx = ImageList_Add(himl, hb, hm);
+    pb_il_free(hm, 0, own_msk);
+    pb_il_free(hb, 0, own_bmp);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_add_icon(long long h, long long hicon) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !hicon) return 0;
+    /* ImageList_ReplaceIcon(himl, -1, hicon) appends an icon, and is the
+       documented way to do it: the legacy ImageList_AddIcon macro
+       (ImageList_Add with an icon handle) returns -1 for a modern icon
+       handle - measured on this machine, batch 173. */
+    int idx = ImageList_ReplaceIcon(himl, -1, (void*)(intptr_t)hicon);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_add_icon_file(long long h, const char* icn) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !icn || !icn[0]) return 0;
+    /* Load the icon at the size the list stores, so nothing needs scaling. */
+    int cx = 0, cy = 0;
+    ImageList_GetIconSize(himl, &cx, &cy);
+    int owned = 0;
+    void* hi = pb_il_load_name(icn, 1, cx, cy, &owned);
+    if (!hi) return 0;
+    int idx = ImageList_ReplaceIcon(himl, -1, hi);
+    pb_il_free(hi, 1, owned);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_add_masked(long long h, long long hbmpImage, unsigned long rgb) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !hbmpImage) return 0;
+    int idx = ImageList_AddMasked(himl, (void*)(intptr_t)hbmpImage, rgb);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_add_masked_file(long long h, const char* bmp, unsigned long rgb) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl || !bmp || !bmp[0]) return 0;
+    int owned = 0;
+    void* hb = pb_il_load_name(bmp, 0, 0, 0, &owned);
+    if (!hb) return 0;
+    int idx = ImageList_AddMasked(himl, hb, rgb);
+    pb_il_free(hb, 0, owned);
+    return idx < 0 ? 0 : idx + 1;
+}
+
+int pb_imagelist_set_overlay(long long h, int image, int overlay) {
+    void* himl = (void*)(intptr_t)h;
+    if (!himl) return 0;
+    /* Overlay indexes are 1..15; anything else is reported as a failure. */
+    return ImageList_SetOverlayImage(himl, image, overlay) ? 1 : 0;
 }
 
 /* FONT NEW / FONT END � GDI logical font objects (batch 47) */
