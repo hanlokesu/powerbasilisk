@@ -5130,6 +5130,63 @@ impl Parser {
                             }));
                         }
                     }
+                    if op == "ATTACH" {
+                        // MENU ATTACH hMenu, hDlg - attach a menu to a dialog (replacing
+                        // any existing one; the dialog is redrawn to make room for it).
+                        self.advance();
+                        if matches!(self.peek(), Token::Comma) {
+                            self.advance();
+                        }
+                        let hmenu = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let hdlg = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "MENU_ATTACH".to_string(),
+                            args: vec![hmenu, hdlg],
+                            line,
+                        }));
+                    }
+                    if op == "CONTEXT" {
+                        // MENU CONTEXT hContext, x&, y&, flags& TO CmdVar& - floating popup
+                        // menu; the id the user picked comes back in CmdVar&.
+                        self.advance();
+                        if matches!(self.peek(), Token::Comma) {
+                            self.advance();
+                        }
+                        let hmenu = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let x = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let y = self.parse_expression()?;
+                        self.expect(&Token::Comma)?;
+                        let flags = self.parse_expression()?;
+                        self.expect(&Token::To)?;
+                        let dst = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "MENU_CONTEXT".to_string(),
+                            args: vec![hmenu, x, y, flags, dst],
+                            line,
+                        }));
+                    }
+                    if op == "DRAW" {
+                        // MENU DRAW BAR hDlg - redraw a dialog's menu bar after it changed.
+                        self.advance();
+                        if self.peek_plain_upper() == "BAR" {
+                            self.advance();
+                        }
+                        if matches!(self.peek(), Token::Comma) {
+                            self.advance();
+                        }
+                        let hdlg = self.parse_expression()?;
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "MENU_DRAW_BAR".to_string(),
+                            args: vec![hdlg],
+                            line,
+                        }));
+                    }
                 }
 
                 // COLOR fore& [, back&] — console text attribute (PB/CC, batch 49)
@@ -9686,8 +9743,17 @@ impl Parser {
         if let Token::Identifier(w) = self.peek() {
             if w.eq_ignore_ascii_case("USING") {
                 self.advance();
-                // proto name — parse as primary (may be a plain identifier)
-                let _proto = self.parse_primary()?;
+                // Proto name: consume a PLAIN IDENTIFIER only.  parse_primary()
+                // would swallow the "(args)" list as a call expression, which is
+                // exactly what used to happen here: the argument list was never
+                // collected and CALL DWORD always called the target with zero
+                // arguments (measured: IsWindow(hwnd) returned 0 for a live hwnd,
+                // while the no-argument GetTickCount() worked).
+                if matches!(self.peek(), Token::Identifier(_)) {
+                    self.advance();
+                } else {
+                    let _proto = self.parse_primary()?;
+                }
                 if self.peek() == &Token::LParen {
                     self.advance();
                     while !self.at_eol_or_eof() && self.peek() != &Token::RParen {

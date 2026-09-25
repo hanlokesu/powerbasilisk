@@ -1,4 +1,4 @@
-# Last updated from batch 173 (v0.2.030) - 2026-09-25,,,,
+# Last updated from batch 174 (v0.2.031) - 2026-09-25,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -508,10 +508,10 @@ MEMORY_FILL,FUNCTION,codegen builtin,Implemented
 MEMORY_FILLS,FUNCTION,codegen builtin,Implemented
 MENU ADD POPUP,STATEMENT,PB/Win only,Implemented
 MENU ADD STRING,STATEMENT,PB/Win only,Implemented
-MENU ATTACH,STATEMENT,PB/Win only,Tier-3 DDT
-MENU CONTEXT,STATEMENT,PB/Win only,Tier-3 DDT
+MENU ATTACH,STATEMENT,PB/Win only,Implemented
+MENU CONTEXT,STATEMENT,PB/Win only,Implemented
 MENU DELETE,STATEMENT,PB/Win only,Implemented
-MENU DRAW BAR,STATEMENT,PB/Win only,Tier-3 DDT
+MENU DRAW BAR,STATEMENT,PB/Win only,Implemented
 MENU GET STATE,STATEMENT,PB/Win only,Implemented
 MENU GET TEXT,STATEMENT,PB/Win only,Implemented
 MENU NEW BAR,STATEMENT,PB/Win only,Implemented

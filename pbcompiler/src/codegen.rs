@@ -3088,6 +3088,26 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_menu_attach",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64],
+            false,
+        );
+        self.module
+            .declare_function("pb_menu_draw_bar", &IrType::I32, &[IrType::I64], false);
+        self.module.declare_function(
+            "pb_menu_context",
+            &IrType::I32,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_menu_set_state",
             &IrType::I32,
             &[IrType::I64, IrType::I32, IrType::I32, IrType::I32],
@@ -6997,6 +7017,40 @@ impl Compiler {
                 let pos = self.compile_expr(fb, &call.args[1])?;
                 let p2 = self.convert_value(fb, &pos, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_menu_delete", &[h2, p2]);
+                return Ok(());
+            }
+
+            "MENU_ATTACH" => {
+                // args: hMenu, hDlg  (official: MENU ATTACH hMenu, hDlg)
+                // Attaches the menu to the dialog, replacing any existing menu; the
+                // dialog is redrawn so the new menu bar has room.
+                let hm = self.compile_expr(fb, &call.args[0])?;
+                let hm2 = self.convert_value(fb, &hm, &IrType::I64, &PbType::Quad);
+                let hd = self.compile_expr(fb, &call.args[1])?;
+                let hd2 = self.convert_value(fb, &hd, &IrType::I64, &PbType::Quad);
+                fb.call_void("pb_menu_attach", &[hm2, hd2]);
+                return Ok(());
+            }
+            "MENU_CONTEXT" => {
+                // args: hMenu, x&, y&, flags&, dst   - dst receives the chosen id
+                let hm = self.compile_expr(fb, &call.args[0])?;
+                let x = self.compile_expr(fb, &call.args[1])?;
+                let y = self.compile_expr(fb, &call.args[2])?;
+                let fl = self.compile_expr(fb, &call.args[3])?;
+                if let Some((dst, _, _)) = self.lvalue_ptr(fb, &call.args[4]) {
+                    let hm2 = self.convert_value(fb, &hm, &IrType::I64, &PbType::Quad);
+                    let x2 = self.convert_value(fb, &x, &IrType::I32, &PbType::Long);
+                    let y2 = self.convert_value(fb, &y, &IrType::I32, &PbType::Long);
+                    let f2 = self.convert_value(fb, &fl, &IrType::I32, &PbType::Long);
+                    fb.call_void("pb_menu_context", &[hm2, x2, y2, f2, dst]);
+                }
+                return Ok(());
+            }
+            "MENU_DRAW_BAR" => {
+                // args: hDlg - redraw the dialog's menu bar
+                let hd = self.compile_expr(fb, &call.args[0])?;
+                let hd2 = self.convert_value(fb, &hd, &IrType::I64, &PbType::Quad);
+                fb.call_void("pb_menu_draw_bar", &[hd2]);
                 return Ok(());
             }
             "GRAPHIC_BITMAP_NEW" => {

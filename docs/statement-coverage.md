@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 173 (v0.2.030)** — 2026-09-25. All statements through batch 173 are reflected in this matrix.
+> **Last updated from batch 174 (v0.2.031)** — 2026-09-25. All statements through batch 174 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **792** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **63** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **795** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **60** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 644 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 647 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **792** | Implemented + Established |
+| ✅ **Total available** | **795** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -40,7 +42,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 63 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 60 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -561,10 +563,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | MEMORY_FILLS | FUNCTION | codegen builtin | Implemented |
 | MENU ADD POPUP | STATEMENT | PB/Win only | Implemented |
 | MENU ADD STRING | STATEMENT | PB/Win only | Implemented |
-| MENU ATTACH | STATEMENT | PB/Win only | Tier-3 DDT |
-| MENU CONTEXT | STATEMENT | PB/Win only | Tier-3 DDT |
+| MENU ATTACH | STATEMENT | PB/Win only | Implemented |
+| MENU CONTEXT | STATEMENT | PB/Win only | Implemented |
 | MENU DELETE | STATEMENT | PB/Win only | Implemented |
-| MENU DRAW BAR | STATEMENT | PB/Win only | Tier-3 DDT |
+| MENU DRAW BAR | STATEMENT | PB/Win only | Implemented |
 | MENU GET STATE | STATEMENT | PB/Win only | Implemented |
 | MENU GET TEXT | STATEMENT | PB/Win only | Implemented |
 | MENU NEW BAR | STATEMENT | PB/Win only | Implemented |

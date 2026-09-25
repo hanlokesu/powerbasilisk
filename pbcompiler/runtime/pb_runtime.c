@@ -179,6 +179,8 @@ __declspec(dllimport) int __stdcall DeleteMenu(void* hMenu, unsigned int uPositi
 __declspec(dllimport) int __stdcall DestroyMenu(void* hMenu);
 __declspec(dllimport) int __stdcall SetMenu(void* hWnd, void* hMenu);
 __declspec(dllimport) int __stdcall DrawMenuBar(void* hWnd);
+__declspec(dllimport) int __stdcall TrackPopupMenu(void* hMenu, unsigned int uFlags, int x, int y, int nReserved, void* hWnd, const void* prcRect);
+__declspec(dllimport) void* __stdcall GetActiveWindow(void);
 __declspec(dllimport) int __stdcall InvalidateRect(void* hWnd, const void* lpRect, int bErase);
 __declspec(dllimport) int __stdcall UpdateWindow(void* hWnd);
 __declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
@@ -5993,6 +5995,36 @@ int pb_dialog_menu(void* hDlg, void* hMenu) {
     DrawMenuBar(hDlg);
     InvalidateRect(hDlg, 0, 1);
     UpdateWindow(hDlg);
+    return 1;
+}
+
+/* MENU ATTACH / MENU CONTEXT / MENU DRAW BAR (batch 174) */
+int pb_menu_attach(long long hMenu, long long hDlg) {
+    /* Official page: "Attaches a menu to a dialog, replacing any existing
+       menu.  The dialog is redrawn to accommodate the new menu." - that is
+       exactly what the DIALOG SET MENU path already does, so share it. */
+    return pb_dialog_menu((void*)(intptr_t)hDlg, (void*)(intptr_t)hMenu);
+}
+int pb_menu_draw_bar(long long hDlg) {
+    /* Official page: redraw a dialog's menu bar after it was altered
+       dynamically.  DrawMenuBar returns non-zero on success. */
+    return DrawMenuBar((void*)(intptr_t)hDlg) ? 1 : 0;
+}
+int pb_menu_context(long long hMenu, int x, int y, unsigned int flags, long* cmd) {
+    if (!cmd) return 0;
+    *cmd = 0;
+    /* The official statement has no owner-window parameter - PowerBASIC
+       tracks the current dialog itself - so the active window is the
+       closest runtime equivalent. */
+    void* owner = GetActiveWindow();
+    /* TPM_RETURNCMD returns the chosen id instead of posting WM_COMMAND, and
+       TPM_NONOTIFY suppresses the notifications.  Together they reproduce the
+       documented MENU CONTEXT behaviour: an item callback is ignored and the id
+       comes back in the target variable.  0 means dismissed with no choice. */
+    int id = TrackPopupMenu((void*)(intptr_t)hMenu,
+                            flags | 0x0100u /* TPM_RETURNCMD */ | 0x0080u /* TPM_NONOTIFY */,
+                            x, y, 0, owner, 0);
+    *cmd = (long)id;
     return 1;
 }
 
