@@ -6862,6 +6862,132 @@ void* pb_control_add_frame(void* parent, long id, const char* text,
                            (void*)(long long)id, GetModuleHandleA(0), 0);
 }
 
+/* ---- the resource-image control family (batch 178) ---------------------
+   CONTROL ADD IMAGE / IMAGEX display a bitmap or icon in a STATIC;
+   CONTROL ADD IMGBUTTON / IMGBUTTONX do the same in a BUTTON.  The X form
+   resizes the image to fit the control, the plain form draws it at its
+   natural size (official help: control_add_image.htm, control_add_imagex.htm,
+   control_add_imgbutton.htm, control_add_imgbuttonx.htm - "The bitmap or icon
+   used in the image is not resized to fit the control" / "...is resized to
+   fit the control").
+
+   The image is named the way the IMAGELIST statements name theirs, because
+   the policy already lives in pb_il_load_name() above: a leading '#' is the
+   integral resource id, a name containing a period is a disk file, anything
+   else is a resource name tried before the disk file.  The documented form is
+   the resource form, whose handle is shared and therefore never leaked; a disk
+   file is loaded as a private copy (LR_LOADFROMFILE) that the control does not
+   own, so it stays alive for the life of the process.
+
+   Format.  The help lets the caller name the format - %SS_ICON(0x3) /
+   %SS_BITMAP(0xE) for the STATIC forms, %BS_ICON(0x40) / %BS_BITMAP(0x80) for
+   the BUTTON forms - and says that when it is not named, "PowerBASIC will
+   examine the file to determine the correct image format".  The style clause
+   is not reachable from the parser yet (every CONTROL ADD form in this fork
+   stops at the eight documented operands), so the format is always discovered:
+   icon first, then bitmap, the same order the IMAGELIST loaders use.  The
+   discovered bit is then ADDED to the window style, because a STATIC or a
+   BUTTON only paints an image when its style says which kind it is holding.
+
+   Stretch.  A STATIC gets %SS_REALSIZECONTROL(0x40) for the X form, which
+   keeps the bitmap fitted even if the control is resized later; a BUTTON has
+   no such style bit, so the X form asks LoadImage to scale the resource to the
+   control's pixel rectangle instead.
+
+   style == -1 means the clause was omitted: %WS_EX_LEFT(0) for the extended
+   style, no primary style for a STATIC, and the documented %WS_TABSTOP
+   default for IMGBUTTON.  %WS_CHILD | %WS_VISIBLE are always added, the same
+   way every other CONTROL ADD helper in this file does it. */
+__declspec(dllimport) long __stdcall GetWindowLongA(void* hWnd, int nIndex);
+
+static void* pb_image_probe(const char* name, unsigned int* type_out, int cx, int cy) {
+    int owned = 0;
+    void* h = pb_il_load_name(name, 1, cx, cy, &owned);   /* IMAGE_ICON */
+    if (h) { *type_out = 1; return h; }
+    h = pb_il_load_name(name, 0, cx, cy, &owned);         /* IMAGE_BITMAP */
+    *type_out = 0;
+    return h;
+}
+
+void* pb_control_add_image(void* parent, long id, const char* name,
+                           int x, int y, int w, int h,
+                           int style, int exstyle, int is_button, int is_x) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long st = (style < 0) ? 0 : (unsigned long)style;
+    unsigned long ex = (exstyle < 0) ? 0 : (unsigned long)exstyle;  /* %WS_EX_LEFT */
+    int cx = is_x ? w : 0;
+    int cy = is_x ? h : 0;
+    unsigned int type = 0;
+    int named = 0;
+    void* img = 0;
+
+    if (is_button) {
+        if (st & 0x80) { type = 0; named = 1; }          /* %BS_BITMAP */
+        else if (st & 0x40) { type = 1; named = 1; }     /* %BS_ICON */
+    } else {
+        unsigned long fmt = st & 0x1F;                   /* %SS_TYPEMASK */
+        if (fmt == 0x03) { type = 1; named = 1; }        /* %SS_ICON */
+        else if (fmt == 0x0E) { type = 0; named = 1; }   /* %SS_BITMAP */
+    }
+    if (named) {
+        int owned = 0;
+        img = pb_il_load_name(name, type, cx, cy, &owned);
+    } else {
+        img = pb_image_probe(name, &type, cx, cy);
+        if (img) {
+            if (is_button) st |= (type == 1) ? 0x40 : 0x80;
+            else st |= (type == 1) ? 0x03 : 0x0E;
+        }
+    }
+    /* %WS_TABSTOP is the documented default PRIMARY style of an image button,
+       and it has to be applied whenever the caller named no primary style.
+       Testing `st == 0` instead misses it: the format discovery above has
+       already set %BS_ICON / %BS_BITMAP by the time this line runs. */
+    if (is_button && style < 0) st |= 0x10000;           /* %WS_TABSTOP default */
+    st |= 0x40000000 | 0x10000000;                       /* %WS_CHILD | %WS_VISIBLE */
+    if (!is_button && is_x) st |= 0x40;                  /* %SS_REALSIZECONTROL */
+
+    void* hwnd = CreateWindowExA(ex, is_button ? "BUTTON" : "STATIC", "",
+                                 st, x, y, w, h, parent,
+                                 (void*)(long long)id, GetModuleHandleA(0), 0);
+    if (hwnd && img) {
+        /* %STM_SETIMAGE(0x172) is the STATIC message, %BM_SETIMAGE(0xF7) the
+           BUTTON one; wParam names the kind of image being handed over. */
+        SendMessageA(hwnd, is_button ? 0xF7 : 0x172,
+                     (pb_wparam_t)type, (pb_lparam_t)(intptr_t)img);
+    }
+    return hwnd;
+}
+
+int pb_control_set_image(void* parent, long id, const char* name,
+                         int is_button, int is_x) {
+    void* hwnd = pb_pb_hwnd(parent, id);
+    if (!hwnd || !name || !name[0]) return 0;
+    long st = GetWindowLongA(hwnd, -16);                 /* %GWL_STYLE */
+    /* The help restricts a replacement to the format already displayed, so the
+       format is read back off the control rather than discovered again. */
+    unsigned int type;
+    if (is_button) type = (st & 0x40) ? 1 : 0;           /* %BS_ICON  else %BS_BITMAP */
+    else type = ((st & 0x1F) == 0x03) ? 1 : 0;           /* %SS_ICON  else %SS_BITMAP */
+    int cx = 0, cy = 0;
+    if (is_x) {
+        long rc[4];
+        if (GetClientRect(hwnd, rc)) { cx = (int)(rc[2] - rc[0]); cy = (int)(rc[3] - rc[1]); }
+    }
+    int owned = 0;
+    void* img = pb_il_load_name(name, type, cx, cy, &owned);
+    if (!img) return 0;
+    void* old = (void*)SendMessageA(hwnd, is_button ? 0xF7 : 0x172,
+                                    (pb_wparam_t)type, (pb_lparam_t)(intptr_t)img);
+    if (old && old != img) {
+        /* Both SET statements document this: "When an image is changed,
+           CONTROL SET IMAGE automatically releases the old image from
+           memory."  A shared resource handle simply fails the delete. */
+        if (type == 1) DestroyIcon(old); else DeleteObject(old);
+    }
+    return 1;
+}
+
 /* CONTROL ADD TEXTBOX - a text box, i.e. DDT's bordered edit control.
    Default style %WS_TABSTOP | %WS_BORDER(0x800000) | %ES_LEFT(0) |
    %ES_AUTOHSCROLL(0x80); default extended style %WS_EX_CLIENTEDGE(0x200)

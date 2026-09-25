@@ -6978,6 +6978,258 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD IMAGE, hWnd, id, image$, x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 178)  Official source: control_add_image.htm.
+                //   image$ is "#998" for an integral resource id, otherwise the
+                //   resource name; the format is discovered at run time.  As with every
+                //   other CONTROL ADD form in this fork, a CALL clause is consumed and
+                //   ignored - control callbacks are not wired to the parser yet.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMAGE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_IMAGE".to_string(),
+                        args: vec![hwnd, id, image, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD IMAGEX, hWnd, id, image$, x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 178)  Official source: control_add_imagex.htm.
+                //   image$ is "#998" for an integral resource id, otherwise the
+                //   resource name; the format is discovered at run time.  As with every
+                //   other CONTROL ADD form in this fork, a CALL clause is consumed and
+                //   ignored - control callbacks are not wired to the parser yet.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMAGEX")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_IMAGEX".to_string(),
+                        args: vec![hwnd, id, image, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD IMGBUTTON, hWnd, id, image$, x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 178)  Official source: control_add_imgbutton.htm.
+                //   image$ is "#998" for an integral resource id, otherwise the
+                //   resource name; the format is discovered at run time.  As with every
+                //   other CONTROL ADD form in this fork, a CALL clause is consumed and
+                //   ignored - control callbacks are not wired to the parser yet.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMGBUTTON")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_IMGBUTTON".to_string(),
+                        args: vec![hwnd, id, image, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD IMGBUTTONX, hWnd, id, image$, x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 178)  Official source: control_add_imgbuttonx.htm.
+                //   image$ is "#998" for an integral resource id, otherwise the
+                //   resource name; the format is discovered at run time.  As with every
+                //   other CONTROL ADD form in this fork, a CALL clause is consumed and
+                //   ignored - control callbacks are not wired to the parser yet.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMGBUTTONX")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_IMGBUTTONX".to_string(),
+                        args: vec![hwnd, id, image, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL SET IMAGE hDlg, id&, newimage$   (batch 178)
+                //   Official source: control_set_image.htm.  The replacement must be the same format
+                //   as the image already displayed; both SET forms are otherwise alike,
+                //   the X form re-sizing the image to the control.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMAGE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_IMAGE".to_string(),
+                        args: vec![hwnd, id, image],
+                        line,
+                    }));
+                }
+                // CONTROL SET IMAGEX hDlg, id&, newimage$   (batch 178)
+                //   Official source: control_set_imagex.htm.  The replacement must be the same format
+                //   as the image already displayed; both SET forms are otherwise alike,
+                //   the X form re-sizing the image to the control.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMAGEX")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_IMAGEX".to_string(),
+                        args: vec![hwnd, id, image],
+                        line,
+                    }));
+                }
+                // CONTROL SET IMGBUTTON hDlg, id&, newimage$   (batch 178)
+                //   Official source: control_set_imgbutton.htm.  The replacement must be the same format
+                //   as the image already displayed; both SET forms are otherwise alike,
+                //   the X form re-sizing the image to the control.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMGBUTTON")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_IMGBUTTON".to_string(),
+                        args: vec![hwnd, id, image],
+                        line,
+                    }));
+                }
+                // CONTROL SET IMGBUTTONX hDlg, id&, newimage$   (batch 178)
+                //   Official source: control_set_imgbuttonx.htm.  The replacement must be the same format
+                //   as the image already displayed; both SET forms are otherwise alike,
+                //   the X form re-sizing the image to the control.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="IMGBUTTONX")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let image = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_IMGBUTTONX".to_string(),
+                        args: vec![hwnd, id, image],
+                        line,
+                    }));
+                }
                 // CONTROL ADD TEXTBOX, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
                 //   (batch 177)  Official source: control_add_textbox.htm.
                 //   The TO clause is optional (the official syntax shows only

@@ -3785,6 +3785,34 @@ impl Compiler {
                 ][..],
             ),
             (
+                "pb_control_add_image",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_set_image",
+                &IrType::Void,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
                 "pb_control_set_option",
                 &IrType::Void,
                 &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
@@ -12527,6 +12555,92 @@ impl Compiler {
                     let hi = self.compile_expr(fb, &call.args[3])?;
                     let hi64 = self.convert_value(fb, &hi, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_control_set_option", &[hdlg64, id64, lo64, hi64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_IMAGE"
+            | "CONTROL_ADD_IMAGEX"
+            | "CONTROL_ADD_IMGBUTTON"
+            | "CONTROL_ADD_IMGBUTTONX" => {
+                // batch 178: the resource-image family.  All four statements
+                // share one runtime helper; the two compile-time flags say
+                // whether the control is a BUTTON and whether it is the X
+                // (resize-to-fit) form.  The style and exstyle clauses are not
+                // reachable from the parser, so -1 is passed for both and the
+                // documented defaults apply.
+                if call.args.len() >= 8 {
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let image = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let is_button = if call.name.contains("IMGBUTTON") {
+                        1
+                    } else {
+                        0
+                    };
+                    let is_x = if call.name.ends_with('X') { 1 } else { 0 };
+                    let style = fb.const_i32(-1);
+                    let exstyle = fb.const_i32(-1);
+                    let flag_button = fb.const_i32(is_button);
+                    let flag_x = fb.const_i32(is_x);
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_image",
+                        &[
+                            hwnd,
+                            id,
+                            image,
+                            x,
+                            y,
+                            w,
+                            h,
+                            style,
+                            exstyle,
+                            flag_button,
+                            flag_x,
+                        ],
+                    );
+                    if let Some(t) = call.args.get(7) {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_IMAGE"
+            | "CONTROL_SET_IMAGEX"
+            | "CONTROL_SET_IMGBUTTON"
+            | "CONTROL_SET_IMGBUTTONX" => {
+                // CONTROL SET <IMAGE|IMAGEX|IMGBUTTON|IMGBUTTONX> hDlg, id&, newimage$
+                // (batch 178).  The helper reads the format already displayed
+                // off the control, releases the image it replaces, and scales
+                // the new one for the X forms.
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let image = self.compile_expr(fb, &call.args[2])?;
+                    let is_button = if call.name.contains("IMGBUTTON") {
+                        1
+                    } else {
+                        0
+                    };
+                    let flag_button = fb.const_i32(is_button);
+                    let flag_x = fb.const_i32(if call.name.ends_with('X') { 1 } else { 0 });
+                    fb.call_void(
+                        "pb_control_set_image",
+                        &[hd, id, image, flag_button, flag_x],
+                    );
                 }
                 return Ok(());
             }
