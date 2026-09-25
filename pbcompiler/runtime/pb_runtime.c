@@ -5379,13 +5379,18 @@ int pb_udp_notify(int socket, int eventmask) {
 }
 
 /* PROGRESSBAR: Win32 progress bar control (comctl32) */
-/* lParam is 32-bit on i686 (must match _SendMessageA@16), 64-bit on x64. */
+/* lParam and wParam are pointer-width on x64 and 32-bit on i686.  On i686 the
+   __stdcall decorated name (_SendMessageA@16) counts 4+4+4+4 bytes, so
+   pb_wparam_t has to stay 'unsigned int' there: widening it unconditionally
+   would ask the linker for _SendMessageA@20 and break the 32-bit build. */
 #if defined(_WIN64)
 typedef unsigned long long pb_lparam_t;
+typedef unsigned long long pb_wparam_t;
 #else
 typedef unsigned int pb_lparam_t;
+typedef unsigned int pb_wparam_t;
 #endif
-__declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, unsigned int wParam, pb_lparam_t lParam);
+__declspec(dllimport) void* __stdcall SendMessageA(void* hWnd, unsigned int Msg, pb_wparam_t wParam, pb_lparam_t lParam);
 __declspec(dllimport) void* __stdcall GetDlgItem(void* hDlg, int nId);
 __declspec(dllimport) unsigned long __stdcall RegisterClassExA(const void* lpwcx);
 __declspec(dllimport) void* __stdcall CreateWindowExA(unsigned long dwExStyle, const char* lpClassName, const char* lpWindowName, unsigned long dwStyle, int x, int y, int nWidth, int nHeight, void* hWndParent, void* hMenu, void* hInstance, void* lpParam);
@@ -5492,7 +5497,7 @@ static int pb_hdr_idx(long long pb_index) {
 long long pb_header_send(void* hWin, long long id, long long msg, long long wparam, long long lparam) {
     void* h = pb_pb_hwnd(hWin, id);
     if (!h) return 0;
-    return (long long)SendMessageA(h, (unsigned int)msg, (unsigned int)wparam, (pb_lparam_t)lparam);
+    return (long long)SendMessageA(h, (unsigned int)msg, (pb_wparam_t)wparam, (pb_lparam_t)lparam);
 }
 
 long long pb_header_get_count(void* hWin, long long id) {
@@ -6985,7 +6990,7 @@ void pb_dialog_set_size(void* hDlg, long long w, long long h) {
 typedef struct { long x; long y; } pb_point_t;
 
 __declspec(dllimport) int __stdcall RedrawWindow(void*, const void*, void*, unsigned long);
-__declspec(dllimport) int __stdcall PostMessageA(void*, unsigned long, unsigned int, pb_lparam_t);
+__declspec(dllimport) int __stdcall PostMessageA(void*, unsigned long, pb_wparam_t, pb_lparam_t);
 __declspec(dllimport) int __stdcall AdjustWindowRectEx(pb_rect_t*, unsigned long, int, unsigned long);
 __declspec(dllimport) void* __stdcall GetMenu(void*);
 __declspec(dllimport) void* __stdcall GetParent(void*);
@@ -7046,12 +7051,12 @@ void pb_dialog_stabilize(void* hDlg, int stable) {
 
 /* --- DIALOG SEND hDlg, msg&, wParam&, lParam& [TO lResult&] --------- */
 long long pb_dialog_send(void* hDlg, long long msg, long long wp, long long lp) {
-    return (long long)SendMessageA(hDlg, (unsigned int)msg, (unsigned int)wp, (pb_lparam_t)lp);
+    return (long long)SendMessageA(hDlg, (unsigned int)msg, (pb_wparam_t)wp, (pb_lparam_t)lp);
 }
 
 /* --- DIALOG POST hDlg, msg&, wParam&, lParam& ----------------------- */
 void pb_dialog_post(void* hDlg, long long msg, long long wp, long long lp) {
-    PostMessageA(hDlg, (unsigned long)msg, (unsigned int)wp, (pb_lparam_t)lp);
+    PostMessageA(hDlg, (unsigned long)msg, (pb_wparam_t)wp, (pb_lparam_t)lp);
 }
 
 /* --- DIALOG SET ICON hDlg, newicon$ ---------------------------------
@@ -7108,6 +7113,99 @@ long long pb_dialog_get_user(void* hDlg, long long index) {
     slot = pb_dlg_user_slot(hDlg, 0);
     if (slot < 0) return 0;
     return pb_dlg_user_v[slot][index - 1];
+}
+
+/* --- CONTROL messages and state (batch 176) ------------------------------
+   Every statement in this family names its target as the (hDlg, id) pair, so
+   each function resolves the HWND through pb_pb_hwnd() - the same resolver
+   the geometry statements use.  A control that does not exist yields 0 or a
+   do-nothing call instead of a dereference. */
+
+/* CONTROL HANDLE hDlg, id& TO hCtl& - the window handle Windows assigned
+   when CONTROL ADD created the control.  Some API functions need a handle
+   where a DDT statement would take the id. */
+void* pb_control_handle(void* hDlg, long long id) {
+    return pb_pb_hwnd(hDlg, id);
+}
+
+/* CONTROL SEND hDlg, id&, Msg&, wParam&, lParam& [TO lResult&] - the
+   synchronous form: by the time this returns, the target's callback has
+   processed the message, so a result is available. */
+long long pb_control_send(void* hDlg, long long id, long long msg, long long wp, long long lp) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)SendMessageA(h, (unsigned int)msg, (pb_wparam_t)wp, (pb_lparam_t)lp);
+}
+
+/* CONTROL POST hDlg, id&, Msg&, wParam&, lParam& - the asynchronous form:
+   the message only joins the queue and this returns at once, so - unlike
+   CONTROL SEND - no result can exist. */
+void pb_control_post(void* hDlg, long long id, long long msg, long long wp, long long lp) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return;
+    PostMessageA(h, (unsigned long)msg, (pb_wparam_t)wp, (pb_lparam_t)lp);
+}
+
+/* CONTROL REDRAW hDlg, id& - invalidate the control and schedule the
+   repaint (a low-priority event, as the manual warns). */
+void pb_control_redraw(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return;
+    InvalidateRect(h, 0, 1);
+    UpdateWindow(h);
+}
+
+/* CONTROL SET FOCUS hDlg, id& - keyboard focus moves to that control, and
+   Windows makes its parent dialog the foreground window. */
+void pb_control_set_focus(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (h) SetFocus(h);
+}
+
+/* CONTROL SET FONT hDlg, id&, FontHndl& - a FontHndl& of zero restores the
+   default font, which is the one DIALOG DEFAULT FONT recorded in
+   pb_default_font; if the program never chose one, the dialog's own current
+   font is the closest thing to "the original default". */
+void pb_control_set_font(void* hDlg, long long id, long long hFont) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return;
+    if (!hFont) {
+        hFont = (long long)(size_t)pb_default_font;
+        if (!hFont) hFont = (long long)(size_t)SendMessageA(hDlg, 0x0031 /* WM_GETFONT */, 0, 0);
+    }
+    SendMessageA(h, 0x0030 /* WM_SETFONT */, (pb_wparam_t)(size_t)hFont, 1 /* redraw */);
+}
+
+/* CONTROL SHOW STATE hDlg, id&, showstate& [TO lResult&] - ShowWindow()
+   returns the PREVIOUS visibility state, which is exactly what the optional
+   TO clause is documented to report (zero = the control was not visible). */
+long long pb_control_show_state(void* hDlg, long long id, long long state) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return (long long)ShowWindow(h, (int)state);
+}
+
+/* CONTROL NORMALIZE hDlg, id& - make the control visible. */
+void pb_control_normalize(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (h) ShowWindow(h, 1 /* SW_SHOWNORMAL */);
+}
+
+/* CONTROL SET USER / GET USER hDlg, id&, index& [, usrval&] - eight Long
+   slots per control, index 1..8, held separately from %GWL_USERDATA.  The
+   storage is the side table DIALOG SET/GET USER already uses; keying it by
+   the control's HWND is what keeps one control's slots apart from another's
+   and from its dialog's.  The values die with the control. */
+void pb_control_set_user(void* hDlg, long long id, long long index, long long value) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return;
+    pb_dialog_set_user(h, index, value);
+}
+
+long long pb_control_get_user(void* hDlg, long long id, long long index) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h) return 0;
+    return pb_dialog_get_user(h, index);
 }
 
 /* --- geometry: GET/SET CLIENT, GET/SET LOC, PIXELS, UNITS -----------
@@ -8892,9 +8990,11 @@ void pb_listview_visible(void* hDlg, long id, int item) {
    that shared encoding and is not a Win32 constant.
 
    Windows sorts through a callback that receives only the two item
-   lParams and the sort lParam.  wParam of SendMessageA is declared
-   32-bit in this runtime, so a pointer cannot travel that way; the sort
-   state lives in a file-scope struct instead.  LVM_SORTITEMS is
+   lParams and the sort lParam, so the comparison routine reaches its state
+   through the file-scope struct below.  (That struct predates batch 176,
+   when wParam of SendMessageA was still declared 32-bit and a pointer could
+   not travel that way.  wParam is pointer-width since batch 176, but the
+   struct stays: it is measured, and nothing here needs the extra channel.  LVM_SORTITEMS is
    synchronous, so a single shared slot is safe as long as nothing sorts
    re-entrantly from inside the comparison callback.
 

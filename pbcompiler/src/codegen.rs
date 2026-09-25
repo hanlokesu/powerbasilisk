@@ -3655,6 +3655,73 @@ impl Compiler {
             self.module
                 .declare_function(fname, &IrType::Void, params, false);
         }
+        // Batch 176 - CONTROL messages / state: by (hDlg, id).
+        for (fname, ret, params) in [
+            (
+                "pb_control_handle",
+                &IrType::Ptr,
+                &[IrType::Ptr, IrType::I64][..],
+            ),
+            (
+                "pb_control_send",
+                &IrType::I64,
+                &[
+                    IrType::Ptr,
+                    IrType::I64,
+                    IrType::I64,
+                    IrType::I64,
+                    IrType::I64,
+                ][..],
+            ),
+            (
+                "pb_control_post",
+                &IrType::Void,
+                &[
+                    IrType::Ptr,
+                    IrType::I64,
+                    IrType::I64,
+                    IrType::I64,
+                    IrType::I64,
+                ][..],
+            ),
+            (
+                "pb_control_redraw",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64][..],
+            ),
+            (
+                "pb_control_set_focus",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64][..],
+            ),
+            (
+                "pb_control_set_font",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64, IrType::I64][..],
+            ),
+            (
+                "pb_control_show_state",
+                &IrType::I64,
+                &[IrType::Ptr, IrType::I64, IrType::I64][..],
+            ),
+            (
+                "pb_control_normalize",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64][..],
+            ),
+            (
+                "pb_control_set_user",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
+            ),
+            (
+                "pb_control_get_user",
+                &IrType::I64,
+                &[IrType::Ptr, IrType::I64, IrType::I64][..],
+            ),
+        ] {
+            self.module.declare_function(fname, ret, params, false);
+        }
         self.module.declare_function(
             "pb_dialog_set_color",
             &IrType::Void,
@@ -12075,6 +12142,170 @@ impl Compiler {
                     let b = self.compile_expr(fb, &call.args[3])?;
                     let b64 = self.convert_value(fb, &b, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_control_set_size", &[hdlg64, id64, a64, b64]);
+                }
+                return Ok(());
+            }
+            // --- Batch 176: CONTROL messages / state (official hDlg + id syntax) ---
+            "CONTROL_HANDLE" => {
+                // CONTROL HANDLE hDlg, id& TO hCtl&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let hctl = fb.call(&IrType::Ptr, "pb_control_handle", &[hdlg64, id64]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[2]) {
+                        let cv = self.convert_value(fb, &hctl, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SEND" => {
+                // CONTROL SEND hDlg, id&, Msg&, wParam&, lParam& [TO lResult&]
+                if call.args.len() >= 5 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let msg = self.compile_expr(fb, &call.args[2])?;
+                    let msg64 = self.convert_value(fb, &msg, &IrType::I64, &PbType::Quad);
+                    let wp = self.compile_expr(fb, &call.args[3])?;
+                    let wp64 = self.convert_value(fb, &wp, &IrType::I64, &PbType::Quad);
+                    let lp = self.compile_expr(fb, &call.args[4])?;
+                    let lp64 = self.convert_value(fb, &lp, &IrType::I64, &PbType::Quad);
+                    let res = fb.call(
+                        &IrType::I64,
+                        "pb_control_send",
+                        &[hdlg64, id64, msg64, wp64, lp64],
+                    );
+                    if let Some(tgt) = call.args.get(5) {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, tgt) {
+                            let cv = self.convert_value(fb, &res, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_POST" => {
+                // CONTROL POST hDlg, id&, Msg&, wParam&, lParam&
+                if call.args.len() >= 5 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let msg = self.compile_expr(fb, &call.args[2])?;
+                    let msg64 = self.convert_value(fb, &msg, &IrType::I64, &PbType::Quad);
+                    let wp = self.compile_expr(fb, &call.args[3])?;
+                    let wp64 = self.convert_value(fb, &wp, &IrType::I64, &PbType::Quad);
+                    let lp = self.compile_expr(fb, &call.args[4])?;
+                    let lp64 = self.convert_value(fb, &lp, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_post", &[hdlg64, id64, msg64, wp64, lp64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_REDRAW" | "CONTROL_NORMALIZE" | "CONTROL_SET_FOCUS" => {
+                // CONTROL REDRAW / NORMALIZE / SET FOCUS  hDlg, id&
+                if call.args.len() >= 2 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let fname = match call.name.as_str() {
+                        "CONTROL_REDRAW" => "pb_control_redraw",
+                        "CONTROL_NORMALIZE" => "pb_control_normalize",
+                        _ => "pb_control_set_focus",
+                    };
+                    fb.call_void(fname, &[hdlg64, id64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_FONT" => {
+                // CONTROL SET FONT hDlg, id&, FontHndl&
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let fnt = self.compile_expr(fb, &call.args[2])?;
+                    let fnt64 = self.convert_value(fb, &fnt, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_font", &[hdlg64, id64, fnt64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SHOW_STATE" => {
+                // CONTROL SHOW STATE hDlg, id&, showstate& [TO lResult&]
+                if call.args.len() >= 3 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let st = self.compile_expr(fb, &call.args[2])?;
+                    let st64 = self.convert_value(fb, &st, &IrType::I64, &PbType::Quad);
+                    let res = fb.call(&IrType::I64, "pb_control_show_state", &[hdlg64, id64, st64]);
+                    if let Some(tgt) = call.args.get(3) {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, tgt) {
+                            let cv = self.convert_value(fb, &res, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_USER" => {
+                // CONTROL SET USER hDlg, id&, index&, usrval&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let idx = self.compile_expr(fb, &call.args[2])?;
+                    let idx64 = self.convert_value(fb, &idx, &IrType::I64, &PbType::Quad);
+                    let val = self.compile_expr(fb, &call.args[3])?;
+                    let val64 = self.convert_value(fb, &val, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_user", &[hdlg64, id64, idx64, val64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_GET_USER" => {
+                // CONTROL GET USER hDlg, id&, index& TO retvar&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let idx = self.compile_expr(fb, &call.args[2])?;
+                    let idx64 = self.convert_value(fb, &idx, &IrType::I64, &PbType::Quad);
+                    let res = fb.call(&IrType::I64, "pb_control_get_user", &[hdlg64, id64, idx64]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[3]) {
+                        let cv = self.convert_value(fb, &res, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
                 }
                 return Ok(());
             }

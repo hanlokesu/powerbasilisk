@@ -6365,6 +6365,213 @@ impl Parser {
                         line,
                     }));
                 }
+                // --- Batch 176: CONTROL messages / state (official hDlg + id syntax) ---
+                // CONTROL HANDLE hDlg, id& TO hCtl&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="HANDLE")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let tgt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_HANDLE".to_string(),
+                        args: vec![hd, id, tgt],
+                        line,
+                    }));
+                }
+                // CONTROL SEND hDlg, id&, Msg&, wParam&, lParam& [TO lResult&]
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SEND")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let msg = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let wp = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let lp = self.parse_expression()?;
+                    let mut args = vec![hd, id, msg, wp, lp];
+                    if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SEND".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // CONTROL POST hDlg, id&, Msg&, wParam&, lParam&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="POST")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let msg = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let wp = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let lp = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_POST".to_string(),
+                        args: vec![hd, id, msg, wp, lp],
+                        line,
+                    }));
+                }
+                // CONTROL REDRAW hDlg, id&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="REDRAW")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_REDRAW".to_string(),
+                        args: vec![hd, id],
+                        line,
+                    }));
+                }
+                // CONTROL SET FOCUS hDlg, id&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="FOCUS")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_FOCUS".to_string(),
+                        args: vec![hd, id],
+                        line,
+                    }));
+                }
+                // CONTROL SET FONT hDlg, id&, FontHndl&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="FONT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let fnt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_FONT".to_string(),
+                        args: vec![hd, id, fnt],
+                        line,
+                    }));
+                }
+                // CONTROL SHOW STATE hDlg, id&, showstate& [TO lResult&]
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SHOW")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="STATE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let st = self.parse_expression()?;
+                    let mut args = vec![hd, id, st];
+                    if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SHOW_STATE".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // CONTROL NORMALIZE hDlg, id&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="NORMALIZE")
+                {
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_NORMALIZE".to_string(),
+                        args: vec![hd, id],
+                        line,
+                    }));
+                }
+                // CONTROL SET USER hDlg, id&, index&, usrval&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="USER")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let idx = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let val = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_USER".to_string(),
+                        args: vec![hd, id, idx, val],
+                        line,
+                    }));
+                }
+                // CONTROL GET USER hDlg, id&, index& TO retvar&
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="GET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="USER")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let idx = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let tgt = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_GET_USER".to_string(),
+                        args: vec![hd, id, idx, tgt],
+                        line,
+                    }));
+                }
                 // CONTROL SHOW/HIDE/ENABLE/DISABLE/FOCUS hCtrl&  (Tier-3 DDT GUI)
                 if name_upper == "CONTROL" {
                     if let Some(Token::Identifier(w)) = self.peek_at(1) {
