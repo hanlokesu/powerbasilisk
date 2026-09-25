@@ -18,11 +18,13 @@
 ' permanent guard; this example is the same case written for people
 ' rather than for the gate.
 '
-' Expected output as the compiler behaves today:
+' Expected output (run mode):
 '   batch 186 - PRINT links on both targets
-'   6 * 7 =
-'   42
+'   6 * 7 = 42
 '   done
+' The second line used to arrive as two lines (`6 * 7 = ` then `42`); batch 187
+' made the statement's trailing `;` suppress the newline, so this file's header
+' was updated with it.
 ' Exit code: 0
 '=====================================================================
 FUNCTION PBMAIN () AS LONG

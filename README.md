@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (857 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 186 (v0.2.041). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 187 (v0.2.042). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 187 (v0.2.042) - PRINT's trailing `;` / `,` suppresses the newline (PrintStmt::trailing carried through the parser; l14 regression test, both targets)
 > batch 186 (v0.2.041) - fix, no coverage change: a `PRINT` program now links for the 32-bit target (`legacy_stdio_definitions.lib` is passed to the linker for i686, in both the EXE and the DLL link step). Guarded by `pbcompiler/tests/l13_print_link.bas` through `scripts/link_smoke_32.py`.
 > batch 185 (v0.2.040) - the last seven Tier-3 statements implemented, which empties the Tier-3 list: GRAPHIC INSTAT, GRAPHIC INPUT, GRAPHIC INPUT FLUSH, GRAPHIC LINE INPUT, GRAPHIC INKEY$, GRAPHIC WAITKEY$ and GRAPHIC SPLIT (with its WORD variant). The graphic window's WM_CHAR / WM_KEYDOWN handlers now collect keys into a byte queue that reproduces the documented INKEY$ contract exactly - an empty string when nothing is pending, one ASCII byte for a normal key, and a leading NUL plus the scan code for an extended key - and every read statement pumps this thread's message queue first, because the graphic window in these programs has no message loop of its own to do it. GRAPHIC SPLIT was the one statement whose parser arm already existed while codegen emitted nothing at all, so it silently did nothing; it now measures the text with GetTextExtentPoint32A against the current font and keeps Part1Len in page units as the official page specifies rather than counting characters, and the WORD form backs up to the last space instead of cutting a word. Two limits are recorded rather than left to be discovered: the official syntax is ambiguous for the one spelling "GRAPHIC INPUT name$, age" (prompt is defined as a string, so a leading string operand followed by a comma is read as the prompt), and GRAPHIC INPUT / GRAPHIC LINE INPUT block until ENTER, so the sample compiles both but runs neither. 0 Tier-3 DDT keywords remain.
 > batch 182 (v0.2.039) - the six GRAPHIC image/capture statements implemented (GRAPHIC IMAGELIST / RENDER / SET SCROLLTEXT / GET SCROLLTEXT / STRETCH, including its PAGE form, plus GRAPHIC BITMAP CAPTURE, which the official help does not document and which the coverage table therefore records as a fork extension); four defects were found and fixed while verifying, and the sample is what found two of them - the STRETCH parser consumed only two of the four coordinate pairs so the target rectangle was dropped and the stretch silently drew nothing, none of the seven new runtime functions had a declare_function entry so the IR used an undefined value, handle operands were narrowed to i32 in IMAGELIST / STRETCH / STRETCH PAGE, and STRETCH / STRETCH PAGE passed the caller's HBITMAP where StretchBlt wants a DC so they painted nothing while the compiler and the linker both reported success. GRAPHIC SPLIT deliberately stays Tier-3: its parser branch is in place but codegen emits nothing for it. One defect is recorded rather than fixed - a graphic window still alive at process exit terminates the process with 0xC0000005, reproduced by a six-line window+box program that uses no batch-182 statement. 7 Tier-3 DDT keywords remain.
@@ -697,6 +698,37 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.042 (2026-09-25)
+
+**PRINT's trailing separator now suppresses the newline.** PowerBASIC documents
+`PRINT a;` - and `PRINT a,` - as leaving the cursor where it is, so the next PRINT
+continues the same line. The parser consumed the separator between arguments and
+threw the trailing one away, and the code generator emitted a newline
+unconditionally, so
+
+```
+PRINT "6 * 7 = ";
+PRINT 6 * 7
+```
+
+printed two lines instead of `6 * 7 = 42`. `PrintStmt` now carries the trailing
+separator, `parse_print_args` reports it, and both the compiler and the
+interpreter emit the newline only when there was none. Regression test:
+`pbcompiler/tests/l14_print_separators.bas`, which is linked for both targets by
+`scripts/link_smoke_32.py` and whose four output lines are checked; the same case
+is written for readers as `examples/batch187_test.bas`.
+
+Known divergence, stated rather than hidden: a trailing COMMA suppresses the
+newline exactly like a semicolon here, but PowerBASIC also advances the cursor to
+the next print zone (14 columns). Zone advance needs the current column, which
+this compiler does not track yet.
+
+Found while writing the batch 186 example: its header recorded the two-line
+output as today's behaviour, and it has been updated to the fixed output.
+
+(coverage: **706 implemented / 0 not implemented / 0 tier-3 DDT**) - no coverage
+change: `PRINT` was already implemented; this batch fixes its statement semantics.
+
 ### v0.2.041 (2026-09-25)
 
 **Fixed: `PRINT` did not link for the 32-bit target.** A program that printed

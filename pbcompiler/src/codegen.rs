@@ -15224,10 +15224,13 @@ impl Compiler {
                 fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val_f64]);
             }
         }
-        // Newline
-        let (nl_name, _) = self.module.add_string_constant("\n");
-        let nl_ptr = Val::new(nl_name, IrType::Ptr);
-        fb.call_variadic(&IrType::I32, "printf", &[nl_ptr]);
+        // A trailing `;` (or `,`) suppresses the newline, so the next PRINT
+        // continues on the same line - see PrintStmt::trailing.
+        if print_stmt.trailing.is_none() {
+            let (nl_name, _) = self.module.add_string_constant("\n");
+            let nl_ptr = Val::new(nl_name, IrType::Ptr);
+            fb.call_variadic(&IrType::I32, "printf", &[nl_ptr]);
+        }
         // Flush so console output is visible immediately (and survives
         // abnormal termination / redirection, not just process exit)
         fb.call_void("fflush", &[Val::new("null", IrType::Ptr)]);

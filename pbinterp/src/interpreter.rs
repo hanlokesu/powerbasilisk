@@ -818,8 +818,17 @@ impl Interpreter {
             let val = self.eval_expr(arg)?;
             output.push_str(&val.to_string_val());
         }
-        writeln!(self.stdout, "{}", output).ok();
-        println!("{}", output);
+        if print_stmt.trailing.is_some() {
+            // `PRINT x;` suppresses the newline; the next PRINT continues the
+            // line, so the partial line has to be flushed by hand.
+            write!(self.stdout, "{}", output).ok();
+            print!("{}", output);
+            self.stdout.flush().ok();
+            let _ = std::io::stdout().flush();
+        } else {
+            writeln!(self.stdout, "{}", output).ok();
+            println!("{}", output);
+        }
         Ok(())
     }
 

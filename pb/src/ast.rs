@@ -368,6 +368,13 @@ pub enum CaseOp {
 #[derive(Debug, Clone)]
 pub struct PrintStmt {
     pub args: Vec<Expr>,
+    /// Trailing separator of the statement, if the source ended with one.
+    ///
+    /// PowerBASIC documents `;` and `,` at the end of a PRINT as suppressing
+    /// the newline, so the next PRINT continues on the same line.  `None`
+    /// means the statement prints its own newline.  A separator *between* two
+    /// arguments is consumed by the parser and does not set this field.
+    pub trailing: Option<char>,
     pub line: usize,
 }
 

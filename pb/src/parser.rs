@@ -11240,7 +11240,7 @@ impl Parser {
             }
             _ => {
                 // LPRINT [expr][SPC(n)][TAB(n)][,][;] — same arg grammar as PRINT
-                let args = self.parse_print_args()?;
+                let (args, _trailing) = self.parse_print_args()?;
                 self.consume_to_eol();
                 Ok(Statement::Call(CallStmt {
                     name: "LPRINT".to_string(),
@@ -11801,7 +11801,7 @@ impl Parser {
             self.advance();
             let file_num = self.parse_expression()?;
             self.expect(&Token::Comma)?;
-            let args = self.parse_print_args()?;
+            let (args, _trailing) = self.parse_print_args()?;
             self.consume_to_eol();
             return Ok(Statement::PrintFile(PrintFileStmt {
                 file_num,
@@ -11810,24 +11810,44 @@ impl Parser {
             }));
         }
 
-        let args = self.parse_print_args()?;
+        let (args, trailing) = self.parse_print_args()?;
         self.consume_to_eol();
-        Ok(Statement::Print(PrintStmt { args, line }))
+        Ok(Statement::Print(PrintStmt {
+            args,
+            trailing,
+            line,
+        }))
     }
 
-    fn parse_print_args(&mut self) -> PbResult<Vec<Expr>> {
+    /// PRINT / LPRINT argument list, plus the statement's trailing separator.
+    ///
+    /// `PRINT a;` and `PRINT a,` suppress the newline so the next PRINT
+    /// continues on the same line.  A separator followed by another argument is
+    /// an inter-argument separator and does not set the flag - only one left at
+    /// the end of the statement does.
+    fn parse_print_args(&mut self) -> PbResult<(Vec<Expr>, Option<char>)> {
         let mut args = Vec::new();
+        let mut trailing: Option<char> = None;
         while !self.at_eol_or_eof() {
             args.push(self.parse_expression()?);
-            // PRINT uses ; or , for concatenation
+            // PRINT uses ; or , both between arguments and at the end
             match self.peek() {
-                Token::Semicolon | Token::Comma => {
+                Token::Semicolon => {
+                    trailing = Some(';');
+                    self.advance();
+                }
+                Token::Comma => {
+                    trailing = Some(',');
                     self.advance();
                 }
                 _ => break,
             }
+            // A separator followed by more input was an inter-argument one.
+            if !self.at_eol_or_eof() {
+                trailing = None;
+            }
         }
-        Ok(args)
+        Ok((args, trailing))
     }
 
     fn parse_open_statement(&mut self) -> PbResult<Statement> {
