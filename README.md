@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (857 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 185 (v0.2.040). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 186 (v0.2.041). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 186 (v0.2.041) - fix, no coverage change: a `PRINT` program now links for the 32-bit target (`legacy_stdio_definitions.lib` is passed to the linker for i686, in both the EXE and the DLL link step). Guarded by `pbcompiler/tests/l13_print_link.bas` through `scripts/link_smoke_32.py`.
 > batch 185 (v0.2.040) - the last seven Tier-3 statements implemented, which empties the Tier-3 list: GRAPHIC INSTAT, GRAPHIC INPUT, GRAPHIC INPUT FLUSH, GRAPHIC LINE INPUT, GRAPHIC INKEY$, GRAPHIC WAITKEY$ and GRAPHIC SPLIT (with its WORD variant). The graphic window's WM_CHAR / WM_KEYDOWN handlers now collect keys into a byte queue that reproduces the documented INKEY$ contract exactly - an empty string when nothing is pending, one ASCII byte for a normal key, and a leading NUL plus the scan code for an extended key - and every read statement pumps this thread's message queue first, because the graphic window in these programs has no message loop of its own to do it. GRAPHIC SPLIT was the one statement whose parser arm already existed while codegen emitted nothing at all, so it silently did nothing; it now measures the text with GetTextExtentPoint32A against the current font and keeps Part1Len in page units as the official page specifies rather than counting characters, and the WORD form backs up to the last space instead of cutting a word. Two limits are recorded rather than left to be discovered: the official syntax is ambiguous for the one spelling "GRAPHIC INPUT name$, age" (prompt is defined as a string, so a leading string operand followed by a comma is read as the prompt), and GRAPHIC INPUT / GRAPHIC LINE INPUT block until ENTER, so the sample compiles both but runs neither. 0 Tier-3 DDT keywords remain.
 > batch 182 (v0.2.039) - the six GRAPHIC image/capture statements implemented (GRAPHIC IMAGELIST / RENDER / SET SCROLLTEXT / GET SCROLLTEXT / STRETCH, including its PAGE form, plus GRAPHIC BITMAP CAPTURE, which the official help does not document and which the coverage table therefore records as a fork extension); four defects were found and fixed while verifying, and the sample is what found two of them - the STRETCH parser consumed only two of the four coordinate pairs so the target rectangle was dropped and the stretch silently drew nothing, none of the seven new runtime functions had a declare_function entry so the IR used an undefined value, handle operands were narrowed to i32 in IMAGELIST / STRETCH / STRETCH PAGE, and STRETCH / STRETCH PAGE passed the caller's HBITMAP where StretchBlt wants a DC so they painted nothing while the compiler and the linker both reported success. GRAPHIC SPLIT deliberately stays Tier-3: its parser branch is in place but codegen emits nothing for it. One defect is recorded rather than fixed - a graphic window still alive at process exit terminates the process with 0xC0000005, reproduced by a six-line window+box program that uses no batch-182 statement. 7 Tier-3 DDT keywords remain.
 > batch 181 (v0.2.038) - the six GRAPHIC viewport statements implemented (GRAPHIC REDRAW / SET FOCUS / SET LOC / SET CLIENT / SET OVERLAP / GET OVERLAP), the last of the GRAPHIC group to leave Tier-3; one defect found and fixed while verifying - GRAPHIC GET LOC had answered 0,0 unconditionally while the CSV called the row Implemented, and the help page reserves 0,0 for the "no Graphic Window selected" case, so it now reports the real screen position through GetWindowRect. Two limits are recorded in the source and the release notes rather than left to be discovered: the overlap flag is one runtime-wide switch because the runtime keeps a single current DC, and SET CLIENT treats its operands as pixels because the dialog-unit path of a DDT graphic control is not modelled. 13 Tier-3 DDT keywords remain.
@@ -696,6 +697,32 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.041 (2026-09-25)
+
+**Fixed: `PRINT` did not link for the 32-bit target.** A program that printed
+compiled for `i686-pc-windows-msvc` but failed at link time with
+
+    lld-link: error: undefined symbol: _printf
+
+while the very same source linked fine for x64. `printf`/`scanf` live in the
+universal CRT, and the legacy names are supplied by `legacy_stdio_definitions.lib`
+— a library MSVC's own link line adds and clang's does not. The compiler now
+locates that file (newest MSVC toolset under the standard install roots) and
+passes it by full path in both the EXE and the DLL link step, so the fix does not
+depend on the linker's library search path.
+
+Two dead ends are recorded instead of repeated: adding `-L<MSVC>/lib/x86` alone
+still reports `_printf`, and adding `-llibcmt -loldnames -lucrt` produces duplicate
+`__invalid_parameter_noinfo` / `__wctype` / `___pctype_func` symbols.
+
+`pbcompiler/tests/l13_print_link.bas` is the regression guard. `link_smoke_32.py`
+links `pbcompiler/tests/*.bas` for both targets, so a printing source now goes
+through the 32-bit link on every change — that step is what was missing when the
+defect was invisible to every local gate.
+
+No statement coverage changed in this release: the coverage table stays at
+706 implemented / 148 established / 0 not implemented / 0 Tier-3 DDT.
+
 ### v0.2.040 (2026-09-25)
 
 - **The last seven Tier-3 statements implemented - the GRAPHIC keyboard and text

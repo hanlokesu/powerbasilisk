@@ -354,6 +354,65 @@ fn generate_stub_module(original_ll: &Path, obj_path: &Path, target: &str) -> Pb
     compile_with_clang(&stub_ll, obj_path, "-O0", target)
 }
 
+/// Locate `legacy_stdio_definitions.lib` for the target architecture.
+///
+/// UCRT moved `printf`/`scanf` out of the static CRT into the universal CRT;
+/// MSVC's own link line pulls this shim in to provide the legacy names.  clang
+/// does not, so linking a 32-bit program that uses `PRINT` failed with
+/// `lld-link: error: undefined symbol: _printf` while the same source linked
+/// fine for x64.  The file is passed by full path so the fix does not depend on
+/// the linker's library search path.
+fn detect_legacy_stdio_lib(target: &str) -> Option<String> {
+    let arch = if target.contains("i686") || target.contains("i386") {
+        "x86"
+    } else {
+        "x64"
+    };
+    if arch != "x86" {
+        // x64 already resolves the CRT stdio symbols; keep that link line unchanged.
+        return None;
+    }
+    let roots = [
+        r"C:\BuildTools\VC\Tools\MSVC",
+        r"C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC",
+        r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC",
+        r"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC",
+        r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC",
+        r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC",
+        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC",
+    ];
+    let mut best: Option<(Vec<u64>, String)> = None;
+    for root in roots.iter() {
+        let entries = match std::fs::read_dir(root) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().into_owned();
+            // Toolset folders look like "14.44.35207"; skip non-version names.
+            let ver: Vec<u64> = name
+                .split('.')
+                .filter_map(|s| s.parse::<u64>().ok())
+                .collect();
+            if ver.is_empty() {
+                continue;
+            }
+            let lib = entry
+                .path()
+                .join("lib")
+                .join(arch)
+                .join("legacy_stdio_definitions.lib");
+            if !lib.is_file() {
+                continue;
+            }
+            if best.as_ref().is_none_or(|(bv, _)| ver > *bv) {
+                best = Some((ver, lib.to_string_lossy().into_owned()));
+            }
+        }
+    }
+    best.map(|(_, p)| p)
+}
+
 fn link_dll(obj_path: &Path, dll_path: &Path, opts: &CompileOptions) -> PbResult<()> {
     let mut args: Vec<String> = vec![
         "-shared".to_string(),
@@ -369,6 +428,12 @@ fn link_dll(obj_path: &Path, dll_path: &Path, opts: &CompileOptions) -> PbResult
     args.push("-o".to_string());
     args.push(dll_path.to_string_lossy().to_string());
     args.push("-loleaut32".to_string());
+    // 32-bit: UCRT keeps `printf`/`scanf` in the legacy stdio shim, which MSVC
+    // links but clang does not.  Without it a program that uses PRINT fails with
+    // `undefined symbol: _printf`.
+    if let Some(ref legacy) = detect_legacy_stdio_lib(&opts.target) {
+        args.push(legacy.clone());
+    }
 
     // Windows system libraries (same set as EXE linking)
     if let Some(ref lib_dir) = opts.lib_dir {
@@ -421,6 +486,12 @@ fn link_exe(obj_paths: &[&Path], exe_path: &Path, opts: &CompileOptions) -> PbRe
 
     // Always link oleaut32 (needed by pb_runtime for BSTR/SysAllocString)
     args.push("-loleaut32".to_string());
+    // 32-bit: UCRT keeps `printf`/`scanf` in the legacy stdio shim, which MSVC
+    // links but clang does not.  Without it a program that uses PRINT fails with
+    // `undefined symbol: _printf`.
+    if let Some(ref legacy) = detect_legacy_stdio_lib(&opts.target) {
+        args.push(legacy.clone());
+    }
 
     // Use Windows GUI subsystem (no console window)
     args.push("-Wl,/SUBSYSTEM:WINDOWS,/ENTRY:mainCRTStartup".to_string());
