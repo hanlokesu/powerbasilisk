@@ -3271,6 +3271,18 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "OVERLAP" {
+                            // GRAPHIC GET OVERLAP TO var&  (batch 181)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_OVERLAP".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
                         if sub == "CLIP" || sub == "VIEW" || sub == "LINES" || sub == "WRAP" {
                             // GRAPHIC GET CLIP TO w!, h! | GRAPHIC GET VIEW TO x!, y!
                             // GRAPHIC GET LINES TO n& | GRAPHIC GET WRAP TO w&  (batch 63)
@@ -3412,6 +3424,16 @@ impl Parser {
                                 line,
                             }));
                         }
+                    }
+                    if gop == "REDRAW" {
+                        // GRAPHIC REDRAW  (batch 181)
+                        self.advance();
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_REDRAW".to_string(),
+                            args: vec![],
+                            line,
+                        }));
                     }
                     if gop == "SET" {
                         // GRAPHIC SET MIX (mix&) | GRAPHIC SET PIXEL (x,y),color | GRAPHIC SET TEXTALIGN (align&)
@@ -3627,6 +3649,56 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "GRAPHIC_SET_MIX".to_string(),
                                 args: vec![mix],
+                                line,
+                            }));
+                        }
+                        if sub == "FOCUS" {
+                            // GRAPHIC SET FOCUS  (batch 181)
+                            self.advance();
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_FOCUS".to_string(),
+                                args: vec![],
+                                line,
+                            }));
+                        }
+                        if sub == "LOC" {
+                            // GRAPHIC SET LOC x&, y&  (batch 181)
+                            self.advance();
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_LOC".to_string(),
+                                args: vec![x, y],
+                                line,
+                            }));
+                        }
+                        if sub == "CLIENT" {
+                            // GRAPHIC SET CLIENT nWide&, nHigh&  (batch 181)
+                            self.advance();
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_CLIENT".to_string(),
+                                args: vec![w, h],
+                                line,
+                            }));
+                        }
+                        if sub == "OVERLAP" {
+                            // GRAPHIC SET OVERLAP [NumrExpr&]  (batch 181)
+                            self.advance();
+                            let mut args = Vec::new();
+                            if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_OVERLAP".to_string(),
+                                args,
                                 line,
                             }));
                         }

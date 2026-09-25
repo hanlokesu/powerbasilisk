@@ -1,26 +1,26 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 180 (v0.2.037)** — 2026-09-25. All statements through batch 180 are reflected in this matrix.
+> **Last updated from batch 181 (v0.2.038)** — 2026-09-25. All statements through batch 181 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **836** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **19** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **842** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **13** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 688 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 694 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **836** | Implemented + Established |
+| ✅ **Total available** | **842** | Implemented + Established |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 19 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 13 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (857 rows)
 
@@ -337,7 +337,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC GET LINES | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC GET LOC | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC GET MIX | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC GET OVERLAP | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC GET OVERLAP | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC GET PIXEL | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC GET POS | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC GET PPI | STATEMENT | PB/Win + PB/CC | Implemented |
@@ -361,21 +361,21 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC POLYGON | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC POLYLINE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC PRINT | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC REDRAW | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC REDRAW | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC RENDER | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
 | GRAPHIC SAVE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SCALE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET AUTOSIZE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET BITS | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET CAPTION | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC SET CLIENT | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC SET CLIENT | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET CLIP | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET FIXED | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC SET FOCUS | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC SET FOCUS | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET FONT | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC SET LOC | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC SET LOC | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET MIX | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC SET OVERLAP | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC SET OVERLAP | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET PIXEL | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET POS | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC SET SCROLLTEXT | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |

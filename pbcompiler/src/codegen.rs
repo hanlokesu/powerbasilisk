@@ -3154,6 +3154,31 @@ impl Compiler {
             &[IrType::Ptr, IrType::I64],
             false,
         );
+        // batch 181 - GRAPHIC REDRAW / SET FOCUS / SET LOC / SET CLIENT / SET OVERLAP / GET OVERLAP
+        self.module
+            .declare_function("pb_graphic_redraw", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_graphic_set_focus", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_graphic_set_loc",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_client",
+            &IrType::I32,
+            &[IrType::I64, IrType::I64],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_set_overlap",
+            &IrType::I32,
+            &[IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_get_overlap", &IrType::I32, &[], false);
         // batch 180 - the GRAPHIC WINDOW family
         self.module.declare_function(
             "pb_graphic_window_new",
@@ -8606,6 +8631,47 @@ impl Compiler {
                     }
                 }
                 fb.call_void("pb_graphic_paint", &a);
+            }
+            "GRAPHIC_REDRAW" => {
+                // batch 181
+                fb.call_void("pb_graphic_redraw", &[]);
+            }
+            "GRAPHIC_SET_FOCUS" => {
+                fb.call_void("pb_graphic_set_focus", &[]);
+            }
+            "GRAPHIC_SET_LOC" | "GRAPHIC_SET_CLIENT" => {
+                // both take a pair of coordinates / sizes
+                let f = if call.name == "GRAPHIC_SET_LOC" {
+                    "pb_graphic_set_loc"
+                } else {
+                    "pb_graphic_set_client"
+                };
+                if call.args.len() == 2 {
+                    let a0 = self.compile_expr(fb, &call.args[0])?;
+                    let a = self.convert_value(fb, &a0, &IrType::I64, &PbType::Quad);
+                    let b0 = self.compile_expr(fb, &call.args[1])?;
+                    let b = self.convert_value(fb, &b0, &IrType::I64, &PbType::Quad);
+                    fb.call_void(f, &[a, b]);
+                }
+            }
+            "GRAPHIC_SET_OVERLAP" => {
+                // the operand is optional; a missing one means "enable"
+                let v = if let Some(a0) = call.args.first() {
+                    let e = self.compile_expr(fb, a0)?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(1)
+                };
+                fb.call_void("pb_graphic_set_overlap", &[v]);
+            }
+            "GRAPHIC_GET_OVERLAP" => {
+                if let Some(a0) = call.args.first() {
+                    let r = fb.call(&IrType::I32, "pb_graphic_get_overlap", &[]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, a0) {
+                        let cv = self.convert_value(fb, &r, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
             }
             "GRAPHIC_GET_CLIENT" | "GRAPHIC_GET_LOC" => {
                 let f = if call.name == "GRAPHIC_GET_CLIENT" {

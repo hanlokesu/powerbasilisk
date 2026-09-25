@@ -4298,6 +4298,19 @@ static void* g_gr_bmp = 0;
 /* GRAPHIC WIDTH/STYLE/SAVE (batch 54) */
 static int g_gr_width = 1;
 static int g_gr_style = 0;
+/* GRAPHIC SET/GET OVERLAP (batch 181).  Off by default - that is Windows' own
+   RECT convention, where the right and bottom edges are exclusive.  When it is
+   on the RECT-based drawing statements grow their rectangle by one pixel so the
+   coordinates the program wrote are themselves painted. */
+static int g_gr_overlap = 0;
+int pb_graphic_set_overlap(int on) {
+    if (!g_gr_dc) return 0;
+    g_gr_overlap = on ? 1 : 0;
+    return 1;
+}
+int pb_graphic_get_overlap(void) {
+    return g_gr_overlap;
+}
 int pb_graphic_width(int w) {
     g_gr_width = w > 0 ? w : 1;
     return 1;
@@ -4767,10 +4780,15 @@ int pb_graphic_get_client(long* w, long* h) {
     *h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | (bm[11] << 24);
     return 1;
 }
+static int pb_graphic_win_rect(long* x, long* y);   /* batch 181 */
 int pb_graphic_get_loc(long* x, long* y) {
+    /* The help page: "If no graphic object is selected, or it is not a Graphic
+       Window, 0,0 is returned.  The location is specified in pixels, relative
+       to the upper left corner of the screen."  This used to answer 0,0 always,
+       which happened to be right only for the not-a-window case. */
     *x = 0;
     *y = 0;
-    return 1;
+    return pb_graphic_win_rect(x, y);
 }
 
 /* GRAPHIC COLOR / GET PIXEL / COPY (batch 55) */
@@ -4843,6 +4861,7 @@ int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
 }
 int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
+    if (g_gr_overlap) { x2 += 1; y2 += 1; }   /* batch 181 */
     pb_gw_touch();
     void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
@@ -4857,6 +4876,7 @@ int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int
 }
 int pb_graphic_ellipse(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
+    if (g_gr_overlap) { x2 += 1; y2 += 1; }   /* batch 181 */
     pb_gw_touch();
     void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
@@ -7119,6 +7139,75 @@ void pb_dialog_set_text(void* hDlg, const char* text) {
 }
 typedef struct { int left; int top; int right; int bottom; } pb_rect_t;
 __declspec(dllimport) int __stdcall GetWindowRect(void* hWnd, pb_rect_t* lpRect);
+/* batch 181 - GRAPHIC REDRAW / SET FOCUS / SET LOC / SET CLIENT.
+   Everything these need is declared by this point in the file (pb_rect_t just
+   above, the width-portable window-long helpers earlier), so the block lives
+   here rather than beside the other GRAPHIC WINDOW statements. */
+__declspec(dllimport) int __stdcall SetForegroundWindow(void* hWnd);
+__declspec(dllimport) int __stdcall AdjustWindowRectEx(pb_rect_t*, unsigned long, int, unsigned long);
+__declspec(dllimport) int __stdcall SetWindowPos(void*, void*, int, int, int, int, unsigned int);
+
+/* The statements say "the selected graphic window".  A GRAPHIC WINDOW window is
+   the usual target; failing that, a window/control attached with GRAPHIC ATTACH,
+   which is what g_gr_dc_win records.  A buffered bitmap has no window, so these
+   statements are the documented no-operation for it. */
+static void* pb_graphic_win_target(void) {
+    if (pb_gw_cur) return pb_gw_cur;
+    if (g_gr_dc_win) return g_gr_dc_win;
+    return 0;
+}
+
+static int pb_graphic_win_rect(long* x, long* y) {
+    void* w = pb_graphic_win_target();
+    pb_rect_t rc;
+    if (!w) return 0;
+    if (!GetWindowRect(w, &rc)) return 0;
+    *x = rc.left;
+    *y = rc.top;
+    return 1;
+}
+
+int pb_graphic_redraw(void) {
+    void* w = pb_graphic_win_target();
+    if (!w) return 0;                   /* nothing buffered: already on screen */
+    InvalidateRect(w, 0, 0);
+    UpdateWindow(w);
+    return 1;
+}
+
+int pb_graphic_set_focus(void) {
+    void* w = pb_graphic_win_target();
+    if (!w) return 0;
+    SetForegroundWindow(w);
+    SetFocus(w);
+    return 1;
+}
+
+int pb_graphic_set_loc(long long x, long long y) {
+    void* w = pb_graphic_win_target();
+    if (!w) return 0;
+    SetWindowPos(w, 0, (int)x, (int)y, 0, 0,
+                 0x0001u | 0x0004u /* SWP_NOSIZE | SWP_NOZORDER */);
+    return 1;
+}
+
+int pb_graphic_set_client(long long w, long long h) {
+    void* win = pb_graphic_win_target();
+    pb_rect_t rc;
+    unsigned long style, exstyle;
+    if (!win || w <= 0 || h <= 0) return 0;
+    rc.left = 0; rc.top = 0;
+    rc.right = (long)w; rc.bottom = (long)h;
+    style = (unsigned long)pb_get_winlong(win, -16 /* GWL_STYLE */);
+    exstyle = (unsigned long)pb_get_winlong(win, -20 /* GWL_EXSTYLE */);
+    AdjustWindowRectEx(&rc, style, 0, exstyle);
+    SetWindowPos(win, 0, 0, 0, (int)(rc.right - rc.left), (int)(rc.bottom - rc.top),
+                 0x0002u | 0x0004u /* SWP_NOMOVE | SWP_NOZORDER */);
+    /* The drawing buffer *is* the client area here, and GRAPHIC GET CLIENT
+       reports the buffer's dimensions, so it has to follow the window. */
+    if (g_gr_bmp) pb_graphic_set_size((int)w, (int)h);
+    return 1;
+}
 __declspec(dllimport) int __stdcall GetSystemMetrics(int nIndex);
 __declspec(dllimport) int __stdcall MoveWindow(void* hWnd, int X, int Y, int nWidth, int nHeight, int bRepaint);
 void pb_dialog_center(void* hDlg) {
