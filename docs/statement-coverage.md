@@ -1,60 +1,28 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 179 (v0.2.036)** — 2026-09-25. All statements through batch 179 are reflected in this matrix.
+> **Last updated from batch 180 (v0.2.037)** — 2026-09-25. All statements through batch 180 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **828** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **27** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **836** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **19** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 680 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 688 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **828** | Implemented + Established |
+| ✅ **Total available** | **836** | Implemented + Established |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
-| 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 27 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 19 | DDT GUI / window-callback framework, high effort, deferred |
 
-## All keywords (738 rows)
+## All keywords (857 rows)
 
 | Keyword | Kind | Platform | Status |
 |---------|------|----------|--------|
@@ -424,14 +392,14 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | GRAPHIC TEXT SIZE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC WAITKEY$ | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
 | GRAPHIC WIDTH | STATEMENT | PB/Win + PB/CC | Implemented |
-| GRAPHIC WINDOW | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW CLICK | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW END | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW HIDE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW MINIMIZE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW NONSTABLE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW NORMALIZE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
-| GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | Tier-3 DDT |
+| GRAPHIC WINDOW | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW CLICK | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW END | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW HIDE | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW MINIMIZE | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW NONSTABLE | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW NORMALIZE | STATEMENT | PB/Win + PB/CC | Implemented |
+| GRAPHIC WINDOW STABILIZE | STATEMENT | PB/Win + PB/CC | Implemented |
 | GRAPHIC_CIRCLE | FUNCTION | codegen builtin | Implemented |
 | GRAPHIC_SCALE_PIXELS | FUNCTION | codegen builtin | Implemented |
 | HEADER GET COUNT | STATEMENT | PB/Win only | Implemented |

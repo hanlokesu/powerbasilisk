@@ -3116,6 +3116,104 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "WINDOW" {
+                        // GRAPHIC WINDOW NEW|TEXT caption$, x&, y&, w&, h& [, hFont]
+                        //     TO hWin& [, HIDE|NORMALIZE]
+                        // GRAPHIC WINDOW CLICK [hWin&] TO click&, x!, y!
+                        // GRAPHIC WINDOW END|HIDE|MINIMIZE|NORMALIZE|STABILIZE|NONSTABLE [hWin&]
+                        // (batch 180; the standalone graphic window of the CC
+                        //  graphics model, not the DDT dialog)
+                        self.advance(); // consume WINDOW
+                        let sub = self.peek_plain_upper();
+                        if sub == "NEW" || sub == "TEXT" {
+                            self.advance(); // consume NEW / TEXT
+                            let cap = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let x = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let y = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let w = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let h = self.parse_expression()?;
+                            // the font is optional and only a font, never the TO target
+                            let font = if self.peek() == &Token::Comma
+                                && self.peek_at(1) != Some(&Token::To)
+                            {
+                                self.advance();
+                                self.parse_expression()?
+                            } else {
+                                Expr::IntegerLit(0)
+                            };
+                            self.expect(&Token::To)?;
+                            let target = self.parse_expression()?;
+                            // [, HIDE|NORMALIZE] - the default is a visible window
+                            let mut show = Expr::IntegerLit(1);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                            }
+                            if let Token::Identifier(kw) = self.peek() {
+                                let u = kw.to_uppercase();
+                                if u == "HIDE" {
+                                    show = Expr::IntegerLit(0);
+                                    self.advance();
+                                } else if u == "NORMALIZE" {
+                                    show = Expr::IntegerLit(1);
+                                    self.advance();
+                                }
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: if sub == "NEW" {
+                                    "GRAPHIC_WINDOW_NEW".to_string()
+                                } else {
+                                    "GRAPHIC_WINDOW_TEXT".to_string()
+                                },
+                                args: vec![cap, x, y, w, h, font, target, show],
+                                line,
+                            }));
+                        }
+                        if sub == "CLICK" {
+                            self.advance(); // consume CLICK
+                            let hw = if self.peek() == &Token::To {
+                                Expr::IntegerLit(0)
+                            } else {
+                                self.parse_expression()?
+                            };
+                            self.expect(&Token::To)?;
+                            let ck = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let px = self.parse_expression()?;
+                            self.expect(&Token::Comma)?;
+                            let py = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_WINDOW_CLICK".to_string(),
+                                args: vec![hw, ck, px, py],
+                                line,
+                            }));
+                        }
+                        if sub == "END"
+                            || sub == "HIDE"
+                            || sub == "MINIMIZE"
+                            || sub == "NORMALIZE"
+                            || sub == "STABILIZE"
+                            || sub == "NONSTABLE"
+                        {
+                            self.advance(); // consume the verb
+                            let hw = if self.at_eol_or_eof() {
+                                Expr::IntegerLit(0)
+                            } else {
+                                self.parse_expression()?
+                            };
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: format!("GRAPHIC_WINDOW_{}", sub),
+                                args: vec![hw],
+                                line,
+                            }));
+                        }
+                    }
                     if gop == "GET" {
                         // GRAPHIC GET CANVAS TO hbmp | GRAPHIC GET DC TO hdc | GRAPHIC GET MIX TO mix&
                         // GRAPHIC GET SIZE TO w,h | GRAPHIC GET TEXTALIGN TO align&

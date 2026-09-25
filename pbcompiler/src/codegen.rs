@@ -3154,6 +3154,67 @@ impl Compiler {
             &[IrType::Ptr, IrType::I64],
             false,
         );
+        // batch 180 - the GRAPHIC WINDOW family
+        self.module.declare_function(
+            "pb_graphic_window_new",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_window_text",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_window_end", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_graphic_window_hide",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_window_minimize",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_window_normalize",
+            &IrType::I32,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_window_stabilize",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_window_click",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr, IrType::Ptr, IrType::Ptr],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_attach", &IrType::I32, &[IrType::I64], false);
         self.module
@@ -8148,6 +8209,77 @@ impl Compiler {
             "GRAPHIC_SCALE_PIXELS" => {
                 fb.call_void("pb_graphic_scale_pixels", &[]);
                 return Ok(());
+            }
+            "GRAPHIC_WINDOW_NEW" | "GRAPHIC_WINDOW_TEXT" => {
+                // args: caption$, x&, y&, w&, h&, font, TO target, show
+                let cap = self.compile_expr(fb, &call.args[0])?;
+                let c = self.convert_value(fb, &cap, &IrType::Ptr, &PbType::String);
+                let x0 = self.compile_expr(fb, &call.args[1])?;
+                let x = self.to_i32(fb, &x0);
+                let y0 = self.compile_expr(fb, &call.args[2])?;
+                let y = self.to_i32(fb, &y0);
+                let w0 = self.compile_expr(fb, &call.args[3])?;
+                let w = self.to_i32(fb, &w0);
+                let h0 = self.compile_expr(fb, &call.args[4])?;
+                let h = self.to_i32(fb, &h0);
+                let f0 = self.compile_expr(fb, &call.args[5])?;
+                let fh = fb.inttoptr(&f0);
+                let s0 = self.compile_expr(fb, &call.args[7])?;
+                let show = self.to_i32(fb, &s0);
+                let fname = match call.name.as_str() {
+                    "GRAPHIC_WINDOW_NEW" => "pb_graphic_window_new",
+                    _ => "pb_graphic_window_text",
+                };
+                let hc = fb.call(&IrType::Ptr, fname, &[c, x, y, w, h, fh, show]);
+                // a window handle is a pointer: route it through the
+                // destination type before storing (the batch 166/168 family)
+                if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                    let cv = self.convert_value(fb, &hc, &ty, &pty);
+                    fb.store(&cv, &ptr);
+                }
+            }
+            "GRAPHIC_WINDOW_CLICK" => {
+                // args: hWin&, TO click&, x!, y!
+                if call.args.len() == 4 {
+                    let h0 = self.compile_expr(fb, &call.args[0])?;
+                    let hp = fb.inttoptr(&h0);
+                    let p1 = self.lvalue_ptr(fb, &call.args[1]);
+                    let p2 = self.lvalue_ptr(fb, &call.args[2]);
+                    let p3 = self.lvalue_ptr(fb, &call.args[3]);
+                    if let (Some((a, _, _)), Some((b, _, _)), Some((c, _, _))) = (p1, p2, p3) {
+                        fb.call_void("pb_graphic_window_click", &[hp, a, b, c]);
+                    }
+                }
+            }
+            "GRAPHIC_WINDOW_END"
+            | "GRAPHIC_WINDOW_HIDE"
+            | "GRAPHIC_WINDOW_MINIMIZE"
+            | "GRAPHIC_WINDOW_NORMALIZE"
+            | "GRAPHIC_WINDOW_STABILIZE"
+            | "GRAPHIC_WINDOW_NONSTABLE" => {
+                // args: [hWin&]; a missing or zero handle means the selected window
+                let fname = match call.name.as_str() {
+                    "GRAPHIC_WINDOW_END" => "pb_graphic_window_end",
+                    "GRAPHIC_WINDOW_HIDE" => "pb_graphic_window_hide",
+                    "GRAPHIC_WINDOW_MINIMIZE" => "pb_graphic_window_minimize",
+                    "GRAPHIC_WINDOW_NORMALIZE" => "pb_graphic_window_normalize",
+                    /* STABILIZE and NONSTABLE are the two sides of one switch */
+                    _ => "pb_graphic_window_stabilize",
+                };
+                let h0 = self.compile_expr(fb, &call.args[0])?;
+                let hp = fb.inttoptr(&h0);
+                if call.name.as_str() == "GRAPHIC_WINDOW_STABILIZE"
+                    || call.name.as_str() == "GRAPHIC_WINDOW_NONSTABLE"
+                {
+                    let on = if call.name.as_str() == "GRAPHIC_WINDOW_STABILIZE" {
+                        fb.const_i32(1)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    fb.call_void(fname, &[hp, on]);
+                } else {
+                    fb.call_void(fname, &[hp]);
+                }
             }
             "GRAPHIC_SET_SIZE" => {
                 // GRAPHIC SET SIZE nWide&, nHigh&  (batch 65)

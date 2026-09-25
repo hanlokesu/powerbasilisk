@@ -4291,6 +4291,7 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
 static void* g_gr_dc = 0;
 static void* g_gr_dc_win = 0;   /* set when g_gr_dc came from GetDC(control) */
 static void pb_graphic_release_dc(void);
+static void pb_gw_touch(void);   /* batch 180 - invalidate a graph window */
 static void* pb_pb_hwnd(void* hDlg, long long id);   /* defined with the CONTROL helpers below */
 __declspec(dllimport) int __stdcall GetClientRect(void*, void*);
 static void* g_gr_bmp = 0;
@@ -4784,6 +4785,7 @@ int pb_graphic_color(unsigned long fore, unsigned long back) {
 int pb_graphic_print_str(const char* s) {
     /* GRAPHIC PRINT - draw text on the attached graphic bitmap DC (batch 118) */
     if (!g_gr_dc) return 0;
+    pb_gw_touch();
     if (!s) s = "";
     int len = (int)strlen(s);
     SetTextColor(g_gr_dc, (unsigned long)(unsigned int)g_gr_fore);
@@ -4830,6 +4832,7 @@ int pb_graphic_copy(int x1, int y1, int x2, int y2, int x3, int y3) {
 /* GRAPHIC LINE/BOX/ELLIPSE � drawing on attached target (batch 53) */
 int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
     if (!g_gr_dc) return 0;
+    pb_gw_touch();
     void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* old = SelectObject(g_gr_dc, pen);
     MoveToEx(g_gr_dc, x1, y1, 0);
@@ -4840,6 +4843,7 @@ int pb_graphic_line(int x1, int y1, int x2, int y2, int color) {
 }
 int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
+    pb_gw_touch();
     void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
     void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5); /* NULL_BRUSH */
@@ -4853,6 +4857,7 @@ int pb_graphic_box(int x1, int y1, int x2, int y2, int color, int fillcolor, int
 }
 int pb_graphic_ellipse(int x1, int y1, int x2, int y2, int color, int fillcolor, int fillstyle) {
     if (!g_gr_dc) return 0;
+    pb_gw_touch();
     void* pen = CreatePen(g_gr_style, g_gr_width, (unsigned long)(unsigned int)color);
     void* oldp = SelectObject(g_gr_dc, pen);
     void* br = fillstyle ? CreateSolidBrush((unsigned long)(unsigned int)fillcolor) : GetStockObject(5);
@@ -4969,6 +4974,7 @@ int pb_graphic_attach_ctl(void* hDlg, long long id) {
 
 int pb_graphic_clear(int color) {
     if (!g_gr_dc) return 0;
+    pb_gw_touch();
     unsigned char rc[16];
     for (int i = 0; i < 16; i++) rc[i] = 0;
     int cw = 0, ch = 0;
@@ -6767,6 +6773,300 @@ void* pb_window_new(const char* title, int x, int y, int w, int h) {
         }
     }
     return hwnd;
+}
+
+/* ==================================================================
+   Batch 180 - the GRAPHIC WINDOW family
+   ------------------------------------------------------------------
+   GRAPHIC WINDOW NEW/TEXT....... creates a standalone graphic window
+   GRAPHIC WINDOW CLICK.......... 1 single / 2 double / 0 none + x!/y!
+   GRAPHIC WINDOW END............ close and destroy
+   GRAPHIC WINDOW HIDE........... ShowWindow SW_HIDE
+   GRAPHIC WINDOW NORMALIZE...... ShowWindow SW_RESTORE (clears HIDE and
+                                 MINIMIZE both, which is what the help
+                                 page promises)
+   GRAPHIC WINDOW MINIMIZE....... ShowWindow SW_MINIMIZE
+   GRAPHIC WINDOW STABILIZE...... close box greyed, WM_CLOSE and the
+                                 ALT-F4 path (SC_CLOSE) refused
+   GRAPHIC WINDOW NONSTABLE...... the default again
+
+   Each window keeps its own content buffer: a memory DC over a
+   compatible bitmap the size of its client area.  That buffer is what
+   the GRAPHIC drawing statements write into while the window is the
+   selected target, and WM_PAINT blits it back, which is what makes the
+   display persistent after the window is uncovered or restored
+   ("All PowerBASIC graphical displays are persistent", GRAPHIC WINDOW).
+
+   A window is addressed by its handle; when the handle is omitted or
+   zero the rule is the documented one - use the graphic window that was
+   created (and therefore selected) last, else a target attached with
+   GRAPHIC ATTACH.  */
+#define PB_GW_SLOTS 8
+#define PB_GW_CLASS "PBGRAPHIC_CLASS"
+#define PB_SC_CLOSE 0xF060u
+#define PB_GWLP_USERDATA (-21)
+#define PB_GW_STABLE 1
+#define PB_GW_SRCCOPY 0x00CC0020u
+
+static void* pb_gw_win[PB_GW_SLOTS];
+static void* pb_gw_dc[PB_GW_SLOTS];
+static void* pb_gw_bmp[PB_GW_SLOTS];
+static long long pb_gw_click[PB_GW_SLOTS];
+static int   pb_gw_cx[PB_GW_SLOTS];
+static int   pb_gw_cy[PB_GW_SLOTS];
+static void* pb_gw_cur = 0;              /* window created (selected) last */
+
+__declspec(dllimport) void* __stdcall BeginPaint(void* hWnd, void* lpPaint);
+__declspec(dllimport) int   __stdcall EndPaint(void* hWnd, const void* lpPaint);
+__declspec(dllimport) void* __stdcall CreateCompatibleBitmap(void* hdc, int cx, int cy);
+__declspec(dllimport) int   __stdcall IsIconic(void* hWnd);
+__declspec(dllimport) int   __stdcall IsWindowVisible(void* hWnd);
+__declspec(dllimport) void* __stdcall GetSystemMenu(void* hWnd, int bRevert);
+__declspec(dllimport) long long __stdcall GetWindowLongPtrA(void* hWnd, int nIndex);
+__declspec(dllimport) long long __stdcall SetWindowLongPtrA(void* hWnd, int nIndex, long long dwNewLong);
+/* Do NOT declare GetWindowRect, EnableMenuItem or LoadCursorA here:
+   GetWindowRect is declared further down with a pb_rect_t* parameter and a
+   second declaration with void* is a conflicting type, while the other two
+   are already declared above.  This block only calls GetClientRect. */
+
+/* the four ints of a RECT out of a 16-byte buffer written by Win32 */
+static void pb_gw_rect(void* buf, int* x, int* y, int* w, int* h) {
+    unsigned char* b = (unsigned char*)buf;
+    int l = b[0] | (b[1] << 8) | (b[2] << 16) | (b[3] << 24);
+    int t = b[4] | (b[5] << 8) | (b[6] << 16) | (b[7] << 24);
+    int r = b[8] | (b[9] << 8) | (b[10] << 16) | (b[11] << 24);
+    int bo = b[12] | (b[13] << 8) | (b[14] << 16) | (b[15] << 24);
+    *x = l; *y = t; *w = r - l; *h = bo - t;
+}
+
+static int pb_gw_find(void* h) {
+    for (int i = 0; i < PB_GW_SLOTS; i++) if (pb_gw_win[i] == h) return i;
+    return -1;
+}
+
+static void pb_gw_free_slot(int i) {
+    if (pb_gw_dc[i] && (g_gr_dc == pb_gw_dc[i])) { g_gr_dc = 0; g_gr_bmp = 0; }
+    if (pb_gw_bmp[i] && (g_gr_bmp == pb_gw_bmp[i])) { g_gr_dc = 0; g_gr_bmp = 0; }
+    if (pb_gw_dc[i]) { SelectObject(pb_gw_dc[i], GetStockObject(5)); DeleteDC(pb_gw_dc[i]); }
+    if (pb_gw_bmp[i]) DeleteObject(pb_gw_bmp[i]);
+    pb_gw_win[i] = 0; pb_gw_dc[i] = 0; pb_gw_bmp[i] = 0;
+    pb_gw_click[i] = 0; pb_gw_cx[i] = 0; pb_gw_cy[i] = 0;
+}
+
+static int pb_gw_alloc(int i) {
+    unsigned char rc[16];
+    for (int k = 0; k < 16; k++) rc[k] = 0;
+    if (!GetClientRect(pb_gw_win[i], (void*)rc)) return 0;
+    int x = 0, y = 0, w = 0, h = 0;
+    pb_gw_rect(rc, &x, &y, &w, &h);
+    if (w <= 0 || h <= 0) return 0;
+    void* sdc = GetDC(0);
+    void* dc = CreateCompatibleDC(sdc);
+    void* bmp = CreateCompatibleBitmap(sdc, w, h);
+    if (sdc) ReleaseDC(0, sdc);
+    if (!dc || !bmp) {
+        if (dc) DeleteDC(dc);
+        if (bmp) DeleteObject(bmp);
+        return 0;
+    }
+    SelectObject(dc, bmp);
+    /* start from white: an unpainted window should not show garbage */
+    unsigned char fr[16];
+    for (int k = 0; k < 16; k++) fr[k] = 0;
+    fr[8] = (unsigned char)(w & 255);         fr[9] = (unsigned char)((w >> 8) & 255);
+    fr[10] = (unsigned char)((w >> 16) & 255); fr[11] = (unsigned char)((w >> 24) & 255);
+    fr[12] = (unsigned char)(h & 255);        fr[13] = (unsigned char)((h >> 8) & 255);
+    fr[14] = (unsigned char)((h >> 16) & 255); fr[15] = (unsigned char)((h >> 24) & 255);
+    void* br = CreateSolidBrush(0x00FFFFFFu);
+    if (br) { FillRect(dc, (const void*)fr, br); DeleteObject(br); }
+    pb_gw_dc[i] = dc;
+    pb_gw_bmp[i] = bmp;
+    return 1;
+}
+
+static long long __stdcall pb_graphic_wndproc(void* hWnd, unsigned int Msg,
+                                              unsigned long long wParam,
+                                              unsigned long long lParam) {
+    if (Msg == 0x000F) {                       /* WM_PAINT */
+        unsigned char ps[64];
+        for (int k = 0; k < 64; k++) ps[k] = 0;
+        void* dc = BeginPaint(hWnd, (void*)ps);
+        int i = pb_gw_find(hWnd);
+        if (dc && i >= 0 && pb_gw_dc[i]) {
+            unsigned char rc[16];
+            for (int k = 0; k < 16; k++) rc[k] = 0;
+            if (GetClientRect(hWnd, (void*)rc)) {
+                int x = 0, y = 0, w = 0, h = 0;
+                pb_gw_rect(rc, &x, &y, &w, &h);
+                BitBlt(dc, x, y, w, h, pb_gw_dc[i], x, y, PB_GW_SRCCOPY);
+            }
+        }
+        EndPaint(hWnd, (void*)ps);
+        return 0;
+    }
+    if (Msg == 0x0002) {                       /* WM_DESTROY */
+        int i = pb_gw_find(hWnd);
+        if (i >= 0) pb_gw_free_slot(i);
+        if (pb_gw_cur == hWnd) pb_gw_cur = 0;
+        if (g_gr_dc_win == hWnd) pb_graphic_release_dc();
+        return 0;
+    }
+    if (Msg == 0x0010) {                       /* WM_CLOSE */
+        if (GetWindowLongPtrA(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
+        DestroyWindow(hWnd);
+        return 0;
+    }
+    if (Msg == 0x0112) {                       /* WM_SYSCOMMAND */
+        if ((wParam & 0xFFF0) == (unsigned long long)PB_SC_CLOSE
+            && GetWindowLongPtrA(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
+        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+    }
+    if (Msg == 0x0201 || Msg == 0x0203) {      /* WM_LBUTTONDOWN / WM_LBUTTONDBLCLK */
+        int i = pb_gw_find(hWnd);
+        if (i >= 0) {
+            if (Msg == 0x0203) pb_gw_click[i] = 2;
+            else if (pb_gw_click[i] != 2) pb_gw_click[i] = 1;
+            pb_gw_cx[i] = (int)(short)(lParam & 0xFFFF);
+            pb_gw_cy[i] = (int)(short)((lParam >> 16) & 0xFFFF);
+        }
+        return 0;
+    }
+    return DefWindowProcA(hWnd, Msg, wParam, lParam);
+}
+
+static void pb_gw_register(void) {
+    static int done = 0;
+    if (done) return;
+    pb_wndclassex_t wc;
+    memset(&wc, 0, sizeof(wc));
+    wc.cbSize = sizeof(wc);
+    wc.style = 0x0008;                 /* CS_DBLCLKS: GRAPHIC WINDOW CLICK's double */
+    wc.lpfnWndProc = (void*)pb_graphic_wndproc;
+    wc.hInstance = GetModuleHandleA(0);
+    wc.hCursor = LoadCursorA(0, (const char*)32512);
+    wc.lpszClassName = PB_GW_CLASS;
+    RegisterClassExA(&wc);
+    done = 1;
+}
+
+static void* pb_gw_create(const char* cap, int x, int y, int w, int h,
+                          void* font, int show) {
+    pb_gw_register();
+    int i = -1;
+    for (int k = 0; k < PB_GW_SLOTS; k++) if (!pb_gw_win[k]) { i = k; break; }
+    if (i < 0) return 0;
+    unsigned long style = 0x00CF0000u | (show ? 0x10000000u : 0u);
+    void* hwnd = CreateWindowExA(0, PB_GW_CLASS, cap, style, x, y, w, h,
+                                 0, 0, GetModuleHandleA(0), 0);
+    if (!hwnd) return 0;
+    pb_gw_win[i] = hwnd;
+    if (font) SendMessageA(hwnd, 0x0030 /* WM_SETFONT */,
+                           (pb_wparam_t)(size_t)font, 1);
+    if (!pb_gw_alloc(i)) { DestroyWindow(hwnd); return 0; }
+    if (show) { ShowWindow(hwnd, 5); UpdateWindow(hwnd); }
+    /* "if there is no selected graphic target at the time of creation, the
+       new Graphic Window is automatically attached and selected" */
+    g_gr_dc = pb_gw_dc[i];
+    g_gr_bmp = pb_gw_bmp[i];
+    g_gr_dc_win = 0;
+    pb_gw_cur = hwnd;
+    return hwnd;
+}
+
+void* pb_graphic_window_new(const char* cap, int x, int y, int w, int h,
+                            void* font, int show) {
+    return pb_gw_create(cap, x, y, w, h, font, show);
+}
+
+void* pb_graphic_window_text(const char* cap, int x, int y, int rows, int cols,
+                             void* font, int show) {
+    /* The TEXT form sizes the window in rows and columns.  The help page does
+       not name a cell size; 8x16 (the system fixed-pitch cell) is used so the
+       mapping is explicit rather than accidental. */
+    if (rows <= 0) rows = 1;
+    if (cols <= 0) cols = 1;
+    return pb_gw_create(cap, x, y, cols * 8, rows * 16, font, show);
+}
+
+static void* pb_gw_target(void* h) {
+    if (h) return h;
+    if (pb_gw_cur) return pb_gw_cur;
+    return g_gr_dc_win;                 /* a window attached with GRAPHIC ATTACH */
+}
+
+int pb_graphic_window_end(void* h) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    if (g_gr_dc_win == w) pb_graphic_release_dc();
+    if (pb_gw_cur == w) { pb_gw_cur = 0; g_gr_dc = 0; g_gr_bmp = 0; }
+    return DestroyWindow(w) ? 1 : 0;
+}
+
+int pb_graphic_window_hide(void* h) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    ShowWindow(w, 0);                   /* SW_HIDE */
+    return 1;
+}
+
+int pb_graphic_window_normalize(void* h) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    ShowWindow(w, 9);                   /* SW_RESTORE: clears HIDE and MINIMIZE */
+    return 1;
+}
+
+int pb_graphic_window_minimize(void* h) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    ShowWindow(w, 6);                   /* SW_MINIMIZE */
+    return 1;
+}
+
+int pb_graphic_window_stabilize(void* h, int on) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    SetWindowLongPtrA(w, PB_GWLP_USERDATA, on ? PB_GW_STABLE : 0);
+    void* menu = GetSystemMenu(w, 0);
+    /* MF_BYCOMMAND = 0, MF_GRAYED = 1, MF_ENABLED = 0 */
+    if (menu) EnableMenuItem(menu, PB_SC_CLOSE, on ? 0x00000001u : 0x00000000u);
+    return 1;
+}
+
+int pb_graphic_window_click(void* h, int* click, float* px, float* py) {
+    void* w = pb_gw_target(h);
+    if (!w) return 0;
+    int i = pb_gw_find(w);
+    long long c = 0;
+    int cx = 0, cy = 0;
+    if (i >= 0) {
+        c = pb_gw_click[i];
+        cx = pb_gw_cx[i];
+        cy = pb_gw_cy[i];
+        pb_gw_click[i] = 0;             /* "since the last time this statement ran" */
+    }
+    /* the help page types the three results as click& (LONG) and x!/y! (SINGLE);
+       each is written through its own width so no slot is over-written */
+    if (click) *click = (int)c;
+    if (px) *px = (float)cx;
+    if (py) *py = (float)cy;
+    return 1;
+}
+
+static void pb_gw_touch(void) {
+    /* A drawing statement has written into a graph window's own buffer, so the
+       window has to be marked dirty: nothing else in this runtime invalidates a
+       window, and without this the screen keeps showing what the last WM_PAINT
+       blitted (the sample caught exactly that - GRAPHIC CLEAR changed the
+       buffer while the window stayed white until it was uncovered).
+       The call sites are the GDI drawing statements, right after their DC
+       guard, so an invalidate also happens before the pixels are written -
+       harmless, the paint itself only runs on the next UpdateWindow or
+       message-loop turn, by which time the drawing is done. */
+    if (!pb_gw_cur) return;
+    int i = pb_gw_find(pb_gw_cur);
+    if (i < 0 || g_gr_dc != pb_gw_dc[i]) return;
+    InvalidateRect(pb_gw_cur, 0, 0);
 }
 
 void pb_message_loop(void) {
