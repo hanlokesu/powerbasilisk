@@ -3424,6 +3424,18 @@ impl Parser {
                                 line,
                             }));
                         }
+                        if sub == "SCROLLTEXT" {
+                            // GRAPHIC GET SCROLLTEXT TO ScrollVar&   (batch 182)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_GET_SCROLLTEXT".to_string(),
+                                args: vec![dst],
+                                line,
+                            }));
+                        }
                     }
                     if gop == "REDRAW" {
                         // GRAPHIC REDRAW  (batch 181)
@@ -3698,6 +3710,20 @@ impl Parser {
                             self.consume_to_eol();
                             return Ok(Statement::Call(CallStmt {
                                 name: "GRAPHIC_SET_OVERLAP".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                        if sub == "SCROLLTEXT" {
+                            // GRAPHIC SET SCROLLTEXT [NumrExpr&]   (batch 182)
+                            self.advance();
+                            let mut args = Vec::new();
+                            if self.peek() != &Token::Eol && self.peek() != &Token::Eof {
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_SET_SCROLLTEXT".to_string(),
                                 args,
                                 line,
                             }));
@@ -4132,6 +4158,178 @@ impl Parser {
                             line,
                         }));
                     }
+                    if gop == "IMAGELIST" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        // GRAPHIC IMAGELIST (x!,y!), hLst, index&, overlay&, style&
+                        if matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                        }
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_IMAGELIST".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "RENDER" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        // GRAPHIC RENDER [BITMAP | ICON] ImgName, (x1!,y1!)-(x2!,y2!)
+                        let mut icon = false;
+                        let director = self.peek_plain_upper();
+                        if director == "ICON" {
+                            icon = true;
+                            self.advance();
+                        } else if director == "BITMAP" {
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        if matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                        }
+                        if matches!(self.peek(), Token::Minus) {
+                            self.advance();
+                        }
+                        if matches!(self.peek(), Token::LParen) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                args.push(self.parse_expression()?);
+                            }
+                            if matches!(self.peek(), Token::RParen) {
+                                self.advance();
+                            }
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if icon {
+                                "GRAPHIC_RENDER_ICON".to_string()
+                            } else {
+                                "GRAPHIC_RENDER".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "SPLIT" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        // GRAPHIC SPLIT [WORD] MainStr, Part1Len To Part1Var, Part2Var
+                        let mut word = false;
+                        if self.peek_plain_upper() == "WORD" {
+                            word = true;
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if word {
+                                "GRAPHIC_SPLIT_WORD".to_string()
+                            } else {
+                                "GRAPHIC_SPLIT".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "STRETCH" {
+                        self.advance();
+                        let mut args = Vec::new();
+                        // GRAPHIC STRETCH [PAGE] hBmp, ID
+                        //     , (x1,y1)-(x2,y2) TO (x3,y3)-(x4,y4) [, Mix, Stretch]
+                        let mut page = false;
+                        if self.peek_plain_upper() == "PAGE" {
+                            page = true;
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                        }
+                        args.push(self.parse_expression()?);
+                        if !page {
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                            }
+                            // up to FOUR pairs:
+                            //   (x1,y1)-(x2,y2) TO (x3,y3)-(x4,y4)
+                            // The first cut stopped after two, so the TO tail was
+                            // discarded and the runtime got no destination rect.
+                            for _pair in 0..4 {
+                                if matches!(self.peek(), Token::LParen) {
+                                    self.advance();
+                                    args.push(self.parse_expression()?);
+                                    if self.peek() == &Token::Comma {
+                                        self.advance();
+                                        args.push(self.parse_expression()?);
+                                    }
+                                    if matches!(self.peek(), Token::RParen) {
+                                        self.advance();
+                                    }
+                                }
+                                if matches!(self.peek(), Token::Minus) {
+                                    self.advance();
+                                }
+                                if matches!(self.peek(), Token::To) {
+                                    self.advance();
+                                }
+                                if !matches!(self.peek(), Token::LParen) {
+                                    break;
+                                }
+                            }
+                        }
+                        while self.peek() == &Token::Comma {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: if page {
+                                "GRAPHIC_STRETCH_PAGE".to_string()
+                            } else {
+                                "GRAPHIC_STRETCH".to_string()
+                            },
+                            args,
+                            line,
+                        }));
+                    }
                     if gop == "CLEAR" {
                         self.advance();
                         let mut args = Vec::new();
@@ -4195,6 +4393,18 @@ impl Parser {
                             return Ok(Statement::Call(CallStmt {
                                 name: "GRAPHIC_BITMAP_END".to_string(),
                                 args,
+                                line,
+                            }));
+                        }
+                        if op == "CAPTURE" {
+                            // GRAPHIC BITMAP CAPTURE TO hBmp&   (batch 182, FORK EXTENSION)
+                            self.advance();
+                            self.expect(&Token::To)?;
+                            let dst = self.parse_expression()?;
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_BITMAP_CAPTURE".to_string(),
+                                args: vec![dst],
                                 line,
                             }));
                         }

@@ -4317,6 +4317,78 @@ impl Compiler {
             &[IrType::Ptr],
             false,
         );
+        self.module
+            .declare_function("pb_graphic_bitmap_capture", &IrType::I64, &[], false);
+        self.module.declare_function(
+            "pb_graphic_set_scrolltext",
+            &IrType::Void,
+            &[IrType::I32],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_get_scrolltext", &IrType::I32, &[], false);
+        self.module.declare_function(
+            "pb_graphic_imagelist",
+            &IrType::Void,
+            &[
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_render",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_render_icon",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_stretch",
+            &IrType::Void,
+            &[
+                IrType::I64,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_stretch_page",
+            &IrType::Void,
+            &[IrType::I64, IrType::I32, IrType::I32, IrType::I32],
+            false,
+        );
         self.module.declare_function(
             "pb_graphic_chr_size",
             &IrType::I32,
@@ -8485,6 +8557,13 @@ impl Compiler {
                 let mv = self.convert_value(fb, &m, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_graphic_set_mix", &[mv]);
             }
+            "GRAPHIC_BITMAP_CAPTURE" => {
+                // args: hbmp (out, QUAD)   (batch 182, FORK EXTENSION)
+                let h = fb.call(&IrType::I64, "pb_graphic_bitmap_capture", &[]);
+                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    fb.store(&h, &ptr);
+                }
+            }
             "GRAPHIC_BITMAP_LOAD" => {
                 // args: fname$, hbmp (out, QUAD)
                 let fname = self.compile_expr(fb, &call.args[0])?;
@@ -8671,6 +8750,120 @@ impl Compiler {
                         let cv = self.convert_value(fb, &r, &ty, &pty);
                         fb.store(&cv, &ptr);
                     }
+                }
+            }
+            "GRAPHIC_SET_SCROLLTEXT" => {
+                // the operand is optional; a missing one means "enable"
+                let v = if let Some(a0) = call.args.first() {
+                    let e = self.compile_expr(fb, a0)?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                } else {
+                    fb.const_i32(1)
+                };
+                fb.call_void("pb_graphic_set_scrolltext", &[v]);
+            }
+            "GRAPHIC_GET_SCROLLTEXT" => {
+                if let Some(a0) = call.args.first() {
+                    let r = fb.call(&IrType::I32, "pb_graphic_get_scrolltext", &[]);
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, a0) {
+                        let cv = self.convert_value(fb, &r, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+            }
+            "GRAPHIC_IMAGELIST" => {
+                // args: x, y, hLst(64-bit handle), index, overlay, style
+                let mut vals = Vec::new();
+                for (i, a) in call.args.iter().enumerate() {
+                    let v = self.compile_expr(fb, a)?;
+                    if i == 2 {
+                        // a handle must keep its width; narrowing it to i32
+                        // leaves the upper half of the register undefined
+                        vals.push(v);
+                    } else {
+                        vals.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                    }
+                }
+                while vals.len() < 6 {
+                    vals.push(fb.const_i32(0));
+                }
+                fb.call_void(
+                    "pb_graphic_imagelist",
+                    &[
+                        vals[0].clone(),
+                        vals[1].clone(),
+                        vals[2].clone(),
+                        vals[3].clone(),
+                        vals[4].clone(),
+                        vals[5].clone(),
+                    ],
+                );
+            }
+            "GRAPHIC_RENDER" | "GRAPHIC_RENDER_ICON" => {
+                let f = if call.name == "GRAPHIC_RENDER" {
+                    "pb_graphic_render"
+                } else {
+                    "pb_graphic_render_icon"
+                };
+                if !call.args.is_empty() {
+                    let nm = self.compile_expr(fb, &call.args[0])?;
+                    let mut vals = Vec::new();
+                    for a in call.args.iter().skip(1) {
+                        let v = self.compile_expr(fb, a)?;
+                        vals.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                    }
+                    while vals.len() < 4 {
+                        vals.push(fb.const_i32(0));
+                    }
+                    fb.call_void(
+                        f,
+                        &[
+                            nm,
+                            vals[0].clone(),
+                            vals[1].clone(),
+                            vals[2].clone(),
+                            vals[3].clone(),
+                        ],
+                    );
+                }
+            }
+            "GRAPHIC_STRETCH" | "GRAPHIC_STRETCH_PAGE" => {
+                let f = if call.name == "GRAPHIC_STRETCH" {
+                    "pb_graphic_stretch"
+                } else {
+                    "pb_graphic_stretch_page"
+                };
+                // args: hBmp(64-bit handle), ID, then the coordinates
+                let mut vals = Vec::new();
+                for (i, a) in call.args.iter().enumerate() {
+                    let v = self.compile_expr(fb, a)?;
+                    if i == 0 {
+                        vals.push(v);
+                    } else {
+                        vals.push(self.convert_value(fb, &v, &IrType::I32, &PbType::Long));
+                    }
+                }
+                while vals.len() < 12 {
+                    vals.push(fb.const_i32(0));
+                }
+                if call.name == "GRAPHIC_STRETCH" {
+                    let mut all = Vec::new();
+                    for v in vals.iter().take(12) {
+                        all.push(v.clone());
+                    }
+                    fb.call_void(f, &all);
+                } else {
+                    // the PAGE form parses hBmp, ID [, Mix, Stretch], so the
+                    // operands are indices 2 and 3 - 10/11 are only padding
+                    fb.call_void(
+                        f,
+                        &[
+                            vals[0].clone(),
+                            vals[1].clone(),
+                            vals[2].clone(),
+                            vals[3].clone(),
+                        ],
+                    );
                 }
             }
             "GRAPHIC_GET_CLIENT" | "GRAPHIC_GET_LOC" => {

@@ -4311,6 +4311,178 @@ int pb_graphic_set_overlap(int on) {
 int pb_graphic_get_overlap(void) {
     return g_gr_overlap;
 }
+
+/* ==================== batch 182: ScrollText / ImageList / Render / Stretch ====
+   This file deliberately does not include windows.h: every import is declared
+   here in the same style the rest of the file uses, with plain C types only. */
+
+#define PB_B182_IMAGE_BITMAP   0u
+#define PB_B182_IMAGE_ICON     1u
+#define PB_B182_LR_LOADFROMFILE 0x0010u
+#define PB_B182_LR_SHARED      0x8000u
+#define PB_B182_SRCCOPY        0x00CC0020u
+
+__declspec(dllimport) int __stdcall ImageList_GetImageCount(void* himl);
+__declspec(dllimport) int __stdcall ImageList_Draw(void* himl, int i, void* hdc,
+                                                   int x, int y, unsigned int f);
+__declspec(dllimport) void* __stdcall LoadImageA(void* hinst, const char* name,
+                                                 unsigned int type, int cx, int cy,
+                                                 unsigned int fu);
+__declspec(dllimport) int __stdcall StretchBlt(void* hdcDst, int x, int y, int w, int h,
+                                               void* hdcSrc, int sx, int sy, int sw,
+                                               int sh, unsigned long rop);
+__declspec(dllimport) int __stdcall SetStretchBltMode(void* hdc, int mode);
+__declspec(dllimport) void* __stdcall CreateCompatibleDC(void* hdc);
+__declspec(dllimport) int __stdcall DrawIconEx(void* hdc, int x, int y, void* hicon,
+                                               int cx, int cy, unsigned int istep,
+                                               void* hbr, unsigned int fu);
+__declspec(dllimport) int __stdcall DeleteDC(void* hdc);
+__declspec(dllimport) void* __stdcall SelectObject(void* hdc, void* h);
+__declspec(dllimport) int __stdcall DeleteObject(void* h);
+
+static int g_gr_scrolltext = 0;
+
+int pb_graphic_set_scrolltext(int on) {
+    if (!g_gr_dc) return 0;
+    g_gr_scrolltext = on ? 1 : 0;
+    return 1;
+}
+
+int pb_graphic_get_scrolltext(void) {
+    return g_gr_scrolltext;
+}
+
+int pb_graphic_imagelist(int x, int y, long long hl, int index, int overlay, int style) {
+    if (!g_gr_dc) return 0;
+    if (!hl) return 0;
+    int n = ImageList_GetImageCount((void*)(long long)hl);
+    if (index < 1 || index > n) return 0;
+    if (!ImageList_Draw((void*)(long long)hl, index - 1, g_gr_dc, x, y, (unsigned int)style))
+        return 0;
+    if (overlay >= 1 && overlay <= n)
+        ImageList_Draw((void*)(long long)hl, overlay - 1, g_gr_dc, x, y, (unsigned int)style);
+    return 1;
+}
+
+/* A period in the name means a disk file; otherwise try the resource first and
+   fall back to the disk.  want_icon picks LoadImageA's type. */
+int pb_graphic_render_common(char* name, int x1, int y1, int x2, int y2, int want_icon) {
+    if (!g_gr_dc || !name) return 0;
+    unsigned int type = want_icon ? PB_B182_IMAGE_ICON : PB_B182_IMAGE_BITMAP;
+    void* img = 0;
+    if (strchr(name, '.')) {
+        img = LoadImageA(0, name, type, 0, 0, PB_B182_LR_LOADFROMFILE);
+    } else {
+        img = LoadImageA(GetModuleHandleA(0), name, type, 0, 0, PB_B182_LR_SHARED);
+        if (!img) img = LoadImageA(0, name, type, 0, 0, PB_B182_LR_LOADFROMFILE);
+    }
+    if (!img) return 0;
+
+    int w = x2 - x1;
+    int h = y2 - y1;
+    if (!want_icon && (w <= 0 || h <= 0)) {
+        unsigned char bm[40];
+        for (int i = 0; i < 40; i++) bm[i] = 0;
+        if (GetObjectA(img, 40, (void*)bm)) {
+            w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | (bm[7] << 24);
+            h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | (bm[11] << 24);
+        }
+    }
+    if (w <= 0 || h <= 0) {
+        if (type == PB_B182_IMAGE_BITMAP || !type) return 0;
+        return 0;   /* an icon with no target rectangle: nothing sane to draw */
+    }
+
+    void* mdc = CreateCompatibleDC(g_gr_dc);
+    if (!mdc) return 0;
+    void* old = SelectObject(mdc, img);
+    int ok;
+    if (want_icon) {
+        ok = DrawIconEx(g_gr_dc, x1, y1, img, w, h, 0, 0, 3 /* DI_NORMAL */);
+    } else {
+        ok = StretchBlt(g_gr_dc, x1, y1, w, h, mdc, 0, 0, w, h, PB_B182_SRCCOPY);
+    }
+    SelectObject(mdc, old);
+    DeleteDC(mdc);
+    if (!want_icon) DeleteObject(img);
+    return ok ? 1 : 0;
+}
+
+int pb_graphic_render(char* name, int x1, int y1, int x2, int y2) {
+    return pb_graphic_render_common(name, x1, y1, x2, y2, 0);
+}
+
+int pb_graphic_render_icon(char* name, int x1, int y1, int x2, int y2) {
+    return pb_graphic_render_common(name, x1, y1, x2, y2, 1);
+}
+
+static void pb_gr_size(int* w, int* h) {
+    unsigned char bm[40];
+    *w = 0; *h = 0;
+    if (!g_gr_bmp) return;
+    for (int i = 0; i < 40; i++) bm[i] = 0;
+    if (!GetObjectA(g_gr_bmp, 40, (void*)bm)) return;
+    *w = bm[4] | (bm[5] << 8) | (bm[6] << 16) | (bm[7] << 24);
+    *h = bm[8] | (bm[9] << 8) | (bm[10] << 16) | (bm[11] << 24);
+}
+
+int pb_graphic_stretch(long long hb, int id, int x1, int y1, int x2, int y2,
+                       int x3, int y3, int x4, int y4, int mix, int stretch) {
+    (void)id;
+    if (!g_gr_dc || !hb) return 0;
+    /* hb is an HBITMAP, not a DC: StretchBlt's source must be a DC with the
+       bitmap selected into it - passing the bitmap handle itself painted
+       nothing at all. */
+    void* sdc = CreateCompatibleDC(g_gr_dc);
+    if (!sdc) return 0;
+    void* old = SelectObject(sdc, (void*)(long long)hb);
+    if (stretch) SetStretchBltMode(g_gr_dc, stretch);
+    unsigned long rop = mix ? (unsigned long)mix : PB_B182_SRCCOPY;
+    int ok = StretchBlt(g_gr_dc, x3, y3, x4 - x3, y4 - y3, sdc, x1, y1, x2 - x1, y2 - y1, rop);
+    SelectObject(sdc, old);
+    DeleteDC(sdc);
+    return ok ? 1 : 0;
+}
+
+int pb_graphic_stretch_page(long long hb, int id, int mix, int stretch) {
+    (void)id;
+    if (!g_gr_dc || !hb) return 0;
+    int tw, th;
+    pb_gr_size(&tw, &th);
+    if (tw <= 0 || th <= 0) return 0;
+    void* sdc = CreateCompatibleDC(g_gr_dc);
+    if (!sdc) return 0;
+    void* old = SelectObject(sdc, (void*)(long long)hb);
+    if (stretch) SetStretchBltMode(g_gr_dc, stretch);
+    unsigned long rop = mix ? (unsigned long)mix : PB_B182_SRCCOPY;
+    int ok = StretchBlt(g_gr_dc, 0, 0, tw, th, sdc, 0, 0, tw, th, rop);
+    SelectObject(sdc, old);
+    DeleteDC(sdc);
+    return ok ? 1 : 0;
+}
+
+/* ---- batch 182: GRAPHIC BITMAP CAPTURE (fork extension) ------------------ */
+
+__declspec(dllimport) void* __stdcall CreateCompatibleBitmap(void* hdc, int cx, int cy);
+__declspec(dllimport) int __stdcall BitBlt(void* hdcDst, int x, int y, int w, int h,
+                                           void* hdcSrc, int sx, int sy, unsigned long rop);
+
+long long pb_graphic_bitmap_capture(void) {
+    if (!g_gr_dc || !g_gr_bmp) return 0;
+    int w, h;
+    pb_gr_size(&w, &h);
+    if (w <= 0 || h <= 0) return 0;
+    void* nb = CreateCompatibleBitmap(g_gr_dc, w, h);
+    if (!nb) return 0;
+    void* mdc = CreateCompatibleDC(g_gr_dc);
+    if (!mdc) { DeleteObject(nb); return 0; }
+    void* old = SelectObject(mdc, nb);
+    int ok = BitBlt(mdc, 0, 0, w, h, g_gr_dc, 0, 0, PB_B182_SRCCOPY);
+    SelectObject(mdc, old);
+    DeleteDC(mdc);
+    if (!ok) { DeleteObject(nb); return 0; }
+    return (long long)(size_t)nb;
+}
 int pb_graphic_width(int w) {
     g_gr_width = w > 0 ? w : 1;
     return 1;
