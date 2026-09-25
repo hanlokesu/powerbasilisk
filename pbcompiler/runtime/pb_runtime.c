@@ -6822,8 +6822,13 @@ __declspec(dllimport) void* __stdcall CreateCompatibleBitmap(void* hdc, int cx, 
 __declspec(dllimport) int   __stdcall IsIconic(void* hWnd);
 __declspec(dllimport) int   __stdcall IsWindowVisible(void* hWnd);
 __declspec(dllimport) void* __stdcall GetSystemMenu(void* hWnd, int bRevert);
-__declspec(dllimport) long long __stdcall GetWindowLongPtrA(void* hWnd, int nIndex);
-__declspec(dllimport) long long __stdcall SetWindowLongPtrA(void* hWnd, int nIndex, long long dwNewLong);
+/* GetWindowLongPtrA / SetWindowLongPtrA exist in 64-bit user32 only - in the
+   32-bit API they are macros over GetWindowLongA / SetWindowLongA.  Declaring
+   the *Ptr names directly linked for x64 and broke the 32-bit build
+   (_GetWindowLongPtrA@8 undefined), so the width-portable helpers defined
+   further down are used instead. */
+static long long pb_get_winlong(void* h, int idx);
+static long long pb_set_winlong(void* h, int idx, long long v);
 /* Do NOT declare GetWindowRect, EnableMenuItem or LoadCursorA here:
    GetWindowRect is declared further down with a pb_rect_t* parameter and a
    second declaration with void* is a conflicting type, while the other two
@@ -6912,13 +6917,13 @@ static long long __stdcall pb_graphic_wndproc(void* hWnd, unsigned int Msg,
         return 0;
     }
     if (Msg == 0x0010) {                       /* WM_CLOSE */
-        if (GetWindowLongPtrA(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
+        if (pb_get_winlong(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
         DestroyWindow(hWnd);
         return 0;
     }
     if (Msg == 0x0112) {                       /* WM_SYSCOMMAND */
         if ((wParam & 0xFFF0) == (unsigned long long)PB_SC_CLOSE
-            && GetWindowLongPtrA(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
+            && pb_get_winlong(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
         return DefWindowProcA(hWnd, Msg, wParam, lParam);
     }
     if (Msg == 0x0201 || Msg == 0x0203) {      /* WM_LBUTTONDOWN / WM_LBUTTONDBLCLK */
@@ -7026,7 +7031,7 @@ int pb_graphic_window_minimize(void* h) {
 int pb_graphic_window_stabilize(void* h, int on) {
     void* w = pb_gw_target(h);
     if (!w) return 0;
-    SetWindowLongPtrA(w, PB_GWLP_USERDATA, on ? PB_GW_STABLE : 0);
+    pb_set_winlong(w, PB_GWLP_USERDATA, on ? (long long)PB_GW_STABLE : 0);
     void* menu = GetSystemMenu(w, 0);
     /* MF_BYCOMMAND = 0, MF_GRAYED = 1, MF_ENABLED = 0 */
     if (menu) EnableMenuItem(menu, PB_SC_CLOSE, on ? 0x00000001u : 0x00000000u);
