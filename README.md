@@ -707,13 +707,21 @@ compiled for `i686-pc-windows-msvc` but failed at link time with
 while the very same source linked fine for x64. `printf`/`scanf` live in the
 universal CRT, and the legacy names are supplied by `legacy_stdio_definitions.lib`
 — a library MSVC's own link line adds and clang's does not. The compiler now
-locates that file (newest MSVC toolset under the standard install roots) and
-passes it by full path in both the EXE and the DLL link step, so the fix does not
-depend on the linker's library search path.
+locates that file (newest MSVC toolset, found by reading the Visual Studio
+install level instead of a hard-coded year, plus `VCToolsInstallDir` when
+vcvars set it) and passes it by full path in both the EXE and the DLL link
+step, so the fix does not depend on the linker's library search path. Reading
+the install level is the point: CI runs on an image whose Visual Studio is
+newer than any year this code could name, and a hard-coded list found nothing
+there — which is exactly how the first attempt at this fix passed every local
+gate and still failed in CI.
 
-Two dead ends are recorded instead of repeated: adding `-L<MSVC>/lib/x86` alone
-still reports `_printf`, and adding `-llibcmt -loldnames -lucrt` produces duplicate
-`__invalid_parameter_noinfo` / `__wctype` / `___pctype_func` symbols.
+Three dead ends are recorded instead of repeated: adding `-L<MSVC>/lib/x86` alone
+still reports `_printf`; adding `-llibcmt -loldnames -lucrt` produces duplicate
+`__invalid_parameter_noinfo` / `__wctype` / `___pctype_func` symbols; and passing
+the bare name `legacy_stdio_definitions.lib` fails with `no such file or
+directory`, because the clang driver treats a bare archive name as an input file
+rather than a library to search for.
 
 `pbcompiler/tests/l13_print_link.bas` is the regression guard. `link_smoke_32.py`
 links `pbcompiler/tests/*.bas` for both targets, so a printing source now goes

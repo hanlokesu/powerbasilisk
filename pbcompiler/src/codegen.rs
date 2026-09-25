@@ -360,8 +360,11 @@ fn generate_stub_module(original_ll: &Path, obj_path: &Path, target: &str) -> Pb
 /// MSVC's own link line pulls this shim in to provide the legacy names.  clang
 /// does not, so linking a 32-bit program that uses `PRINT` failed with
 /// `lld-link: error: undefined symbol: _printf` while the same source linked
-/// fine for x64.  The file is passed by full path so the fix does not depend on
-/// the linker's library search path.
+/// fine for x64.  The archive is passed by full path: the clang driver treats a
+/// bare `foo.lib` argument as an input file rather than a library to search for,
+/// so there is no name-only fallback to fall back on.  The toolset is discovered
+/// by reading the Visual Studio install level rather than a hard-coded year - CI
+/// moved to Visual Studio 2026 and the old year list found nothing there.
 fn detect_legacy_stdio_lib(target: &str) -> Option<String> {
     let arch = if target.contains("i686") || target.contains("i386") {
         "x86"
@@ -372,15 +375,44 @@ fn detect_legacy_stdio_lib(target: &str) -> Option<String> {
         // x64 already resolves the CRT stdio symbols; keep that link line unchanged.
         return None;
     }
-    let roots = [
-        r"C:\BuildTools\VC\Tools\MSVC",
-        r"C:\Program Files\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC",
-        r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC",
-        r"C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC",
-        r"C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC",
-        r"C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC",
-        r"C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Tools\MSVC",
-    ];
+    // Windows SDK-style environment (vcvars sets this); it already points at the
+    // toolset folder, so its lib directory is checked directly.
+    if let Ok(vct) = std::env::var("VCToolsInstallDir") {
+        let lib = std::path::PathBuf::from(vct)
+            .join("lib")
+            .join(arch)
+            .join("legacy_stdio_definitions.lib");
+        if lib.is_file() {
+            return Some(lib.to_string_lossy().into_owned());
+        }
+    }
+    // Read the Visual Studio install level instead of hard-coding a year: the
+    // layout is <base>\<year>\<edition>\VC\Tools\MSVC, and the year changes with
+    // the runner image (VS 2026 in CI at the time of writing).  Hard-coding it
+    // meant the scan silently found nothing there and the link failed.
+    let mut roots: Vec<std::path::PathBuf> =
+        vec![std::path::PathBuf::from(r"C:\BuildTools\VC\Tools\MSVC")];
+    for base in [
+        r"C:\Program Files\Microsoft Visual Studio",
+        r"C:\Program Files (x86)\Microsoft Visual Studio",
+    ] {
+        let years = match std::fs::read_dir(base) {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        for year in years.flatten() {
+            let editions = match std::fs::read_dir(year.path()) {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            for edition in editions.flatten() {
+                let candidate = edition.path().join("VC").join("Tools").join("MSVC");
+                if candidate.is_dir() {
+                    roots.push(candidate);
+                }
+            }
+        }
+    }
     let mut best: Option<(Vec<u64>, String)> = None;
     for root in roots.iter() {
         let entries = match std::fs::read_dir(root) {
