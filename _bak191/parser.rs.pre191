@@ -2045,12 +2045,6 @@ impl Parser {
                 Ok(Statement::Noop("LISTVIEW DELETE".to_string(), line))
             }
             _ => {
-                let bad = self.peek_word_upper();
-                eprintln!(
-                    "Error: LISTVIEW: unknown sub-command \"{}\" on line {}",
-                    bad, line
-                );
-                self.error_count += 1;
                 self.consume_to_eol();
                 Ok(Statement::Noop("LISTVIEW".to_string(), line))
             }
@@ -2239,12 +2233,6 @@ impl Parser {
                 }))
             }
             _ => {
-                let bad = self.peek_word_upper();
-                eprintln!(
-                    "Error: TREEVIEW: unknown sub-command \"{}\" on line {}",
-                    bad, line
-                );
-                self.error_count += 1;
                 self.consume_to_eol();
                 Ok(Statement::Noop("TREEVIEW".to_string(), line))
             }
@@ -2265,22 +2253,12 @@ impl Parser {
         self.advance(); // SCROLLBAR
         let verb = self.peek_word_upper();
         if verb != "GET" && verb != "SET" {
-            eprintln!(
-                "Error: SCROLLBAR: expected GET or SET, found \"{}\" on line {}",
-                verb, line
-            );
-            self.error_count += 1;
             self.consume_to_eol();
             return Ok(Statement::Noop("SCROLLBAR".to_string(), line));
         }
         self.advance(); // verb
         let noun = self.peek_word_upper();
         if !matches!(noun.as_str(), "POS" | "RANGE" | "PAGESIZE" | "TRACKPOS") {
-            eprintln!(
-                "Error: SCROLLBAR: unknown sub-command \"{}\" on line {}",
-                noun, line
-            );
-            self.error_count += 1;
             self.consume_to_eol();
             return Ok(Statement::Noop("SCROLLBAR".to_string(), line));
         }

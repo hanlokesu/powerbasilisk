@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 190 (v0.2.044). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 191 (v0.2.045). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 191 (v0.2.045): DDT unknown sub-commands now hard-fail (LISTVIEW / TREEVIEW / SCROLLBAR); no coverage change.
 > batch 190 (v0.2.044) - +3 official keywords: CONTROL ADD MONTHCAL / ANIMATE / RICHEDIT (parser + codegen + runtime, class names SysMonthCal32, SysAnimate32, RICHEDIT50W with msftedit.dll loaded). examples/batch190_test.bas = 12 checks, FAILURES:0.
 > batch 189 (v0.2.043) - CONTROL ADD TRACKBAR / UPDOWN / HOTKEY / IPADDRESS: parser + codegen + runtime for four more common-control types, witnessed by class name, GWL_STYLE and a SendMessageA round trip in examples/batch189_test.bas.
 > batch 187 (v0.2.042) - PRINT's trailing `;` / `,` suppresses the newline (PrintStmt::trailing carried through the parser; l14 regression test, both targets)
@@ -704,6 +705,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.045 (2026-09-25)
+
+- The three DDT families' *unknown sub-command* fallbacks are hard errors now.
+  `LISTVIEW BOGUS` / `TREEVIEW BOGUS` / `SCROLLBAR BOGUS FOO` / `SCROLLBAR GET BOGUS`
+  print the offending token and the line, then stop the build. Before this they
+  parsed into `Statement::Noop`: the compiler reported success, produced an EXE,
+  and the statement did nothing at run time.
+- Positive coverage proved by `examples/batch191_test.bas` (19 assertions,
+  `=== FAILURES: 0 ===`): every LISTVIEW / TREEVIEW / SCROLLBAR form this fork
+  implements still parses and still works.
+- Open item recorded, not hidden: `SCROLLBAR SET/GET TRACKPOS` parse (the noun
+  whitelist accepts TRACKPOS) but have no codegen arm; they now fail loudly with
+  `unknown statement/subroutine SCROLLBAR_SET_TRACKPOS`.
+
 ### v0.2.044 (2026-09-25)
 
 - **Tier-3 DDT: `CONTROL ADD MONTHCAL`, `CONTROL ADD ANIMATE`, `CONTROL ADD RICHEDIT`**
