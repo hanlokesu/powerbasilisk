@@ -3102,6 +3102,7 @@ impl Parser {
                 if name_upper == "GRAPHIC" {
                     self.advance(); // consume GRAPHIC
                     let gop = self.peek_plain_upper();
+                    let gop_kw = self.peek_graphic_word_upper();
                     if gop == "ATTACH" {
                         self.advance();
                         let mut args = vec![self.parse_expression()?];
@@ -4326,6 +4327,130 @@ impl Parser {
                             } else {
                                 "GRAPHIC_STRETCH".to_string()
                             },
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "INSTAT" {
+                        // GRAPHIC INSTAT TO NumericVar   (batch 185)
+                        self.advance();
+                        let mut args = Vec::new();
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_INSTAT".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "INKEY$" || gop == "INKEY" {
+                        // GRAPHIC INKEY$ TO InkeyVar$   (batch 185)
+                        self.advance();
+                        let mut args = Vec::new();
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_INKEY".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "WAITKEY$" || gop == "WAITKEY" {
+                        // GRAPHIC WAITKEY$ [(KeyMask$ [, TimeOut&])] [TO WaitVar$]
+                        // Always two fixed slots plus the optional destination, so the codegen
+                        // arm can tell "no mask" (empty string = any key) from "no timeout"
+                        // (-1 = wait indefinitely).
+                        self.advance();
+                        let mut mask = Expr::StringLit(String::new());
+                        let mut timeout = Expr::IntegerLit(-1);
+                        if self.peek() == &Token::LParen {
+                            self.advance();
+                            mask = self.parse_expression()?;
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                timeout = self.parse_expression()?;
+                            }
+                            if self.peek() == &Token::RParen {
+                                self.advance();
+                            }
+                        }
+                        let mut args = vec![mask, timeout];
+                        if matches!(self.peek(), Token::To) {
+                            self.advance();
+                            args.push(self.parse_expression()?);
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_WAITKEY".to_string(),
+                            args,
+                            line,
+                        }));
+                    }
+                    if gop == "LINE" {
+                        // GRAPHIC LINE INPUT ["prompt"] string_variable   (batch 185)
+                        self.advance();
+                        if self.peek_graphic_word_upper() == "INPUT" {
+                            self.advance();
+                            let mut args = Vec::new();
+                            args.push(self.parse_expression()?);
+                            if !matches!(self.peek(), Token::Eol | Token::Eof) {
+                                args.push(self.parse_expression()?);
+                            }
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_LINE_INPUT".to_string(),
+                                args,
+                                line,
+                            }));
+                        }
+                    }
+                    if gop_kw == "INPUT" {
+                        // GRAPHIC INPUT FLUSH            (no operands)
+                        // GRAPHIC INPUT [prompt,] varlist
+                        // (batch 185)
+                        self.advance();
+                        if self.peek_plain_upper() == "FLUSH" {
+                            self.advance();
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "GRAPHIC_INPUT_FLUSH".to_string(),
+                                args: Vec::new(),
+                                line,
+                            }));
+                        }
+                        // The docs define prompt as a quoted string or a string equate, and
+                        // varlist as comma delimited, so a leading string operand followed by a
+                        // comma is the prompt.  `GRAPHIC INPUT name$, age` is the one ambiguous
+                        // spelling in the official syntax; it is read as a prompt.
+                        let mut string_lead = matches!(self.peek(), Token::StringLiteral(_));
+                        if let Token::Identifier(w) = self.peek() {
+                            string_lead = w.ends_with('$');
+                        }
+                        let mut args = Vec::new();
+                        if string_lead {
+                            let first = self.parse_expression()?;
+                            args.push(first);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                            }
+                        }
+                        loop {
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                continue;
+                            }
+                            break;
+                        }
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "GRAPHIC_INPUT".to_string(),
                             args,
                             line,
                         }));
@@ -11011,6 +11136,21 @@ impl Parser {
         match self.peek() {
             Token::Identifier(w) => w.to_uppercase(),
             Token::Select => "SELECT".to_string(),
+            _ => String::new(),
+        }
+    }
+
+    /// Uppercase spelling of the next word for the GRAPHIC verb slot.
+    ///
+    /// `INPUT` is `Token::Input` - a keyword, not an identifier - so
+    /// `peek_plain_upper()` reports "" for `GRAPHIC INPUT FLUSH` and the whole
+    /// statement fell through to "unknown statement `GRAPHIC`".  Scoped to the
+    /// GRAPHIC family on purpose, following `peek_treeview_word_upper()`: the
+    /// plain helper drives ~50 dispatch sites and must not be widened.
+    fn peek_graphic_word_upper(&self) -> String {
+        match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Input => "INPUT".to_string(),
             _ => String::new(),
         }
     }

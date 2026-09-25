@@ -26,3 +26,5 @@ release_pkg_full/
 PowerBasilisk-Enhanced-*/
 *.obj.tmp
 *.out
+# Scratch pre-edit copies written by the patch scripts - never commit
+_bak/

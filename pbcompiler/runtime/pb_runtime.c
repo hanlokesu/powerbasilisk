@@ -4972,6 +4972,57 @@ int pb_graphic_color(unsigned long fore, unsigned long back) {
     return 1;
 }
 
+#ifndef PB_GR_LINECAP
+#define PB_GR_LINECAP 260
+#endif
+/* GRAPHIC SPLIT / SPLIT_WORD: how much of MainStr fits in a print field that is
+   Part1Len page units wide.  Width comes from the graphic DC's current font; with
+   no attached graphic target there is nothing to measure, so a nominal 8 units
+   per character is used and that fallback is what the headless example sees. */
+static int pb_gr_measure_ok(const char* buf, int len) {
+    long sz[2];
+    sz[0] = 0;
+    sz[1] = 0;
+    if (!GetTextExtentPoint32A(g_gr_dc, buf, len, (void*)sz)) return -1;
+    return (int)sz[0];
+}
+
+static void pb_graphic_split_core(const char* src, int fieldw,
+                                  char** out1, char** out2, int word) {
+    int n = (int)strlen(src);
+    int best = 0, i, k;
+    char buf[PB_GR_LINECAP];
+    if (n >= PB_GR_LINECAP) n = PB_GR_LINECAP - 1;
+    if (g_gr_dc) {
+        for (i = 1; i <= n; i++) {
+            int w;
+            for (k = 0; k < i; k++) buf[k] = src[k];
+            buf[i] = '\0';
+            w = pb_gr_measure_ok(buf, i);
+            if (w < 0 || w > fieldw) break;
+            best = i;
+        }
+    } else {
+        best = fieldw > 0 ? fieldw / 8 : 0;
+        if (best > n) best = n;
+    }
+    if (word && best > 0 && best < n) {
+        k = best;
+        while (k > 0 && src[k - 1] != ' ') k--;
+        if (k > 0) best = k;
+    }
+    if (out1) *out1 = pb_bstr_alloc(src, (unsigned int)best);
+    if (out2) *out2 = pb_bstr_alloc(src + best, (unsigned int)(n - best));
+}
+int pb_graphic_split(const char* src, int fieldw, char** out1, char** out2) {
+    pb_graphic_split_core(src ? src : "", fieldw, out1, out2, 0);
+    return 1;
+}
+int pb_graphic_split_word(const char* src, int fieldw, char** out1, char** out2) {
+    pb_graphic_split_core(src ? src : "", fieldw, out1, out2, 1);
+    return 1;
+}
+
 int pb_graphic_print_str(const char* s) {
     /* GRAPHIC PRINT - draw text on the attached graphic bitmap DC (batch 118) */
     if (!g_gr_dc) return 0;
@@ -7081,6 +7132,204 @@ static int pb_gw_alloc(int i) {
     return 1;
 }
 
+/* ==== batch 185: the GRAPHIC keyboard family ==============================
+   GRAPHIC INKEY$ is specified to return a string of 0, 1 or 2 characters: an
+   empty string when the buffer is empty, one ASCII byte for a normal key (1..31
+   are control codes), and a leading NUL plus the scan code for an extended key.
+   The queue below stores exactly that byte stream, so INSTAT is simply "is
+   anything queued" and INKEY$ is a single pop.
+
+   The read statements pump this thread's message queue first: the graphic
+   window in these programs has no explicit message loop of its own. */
+#define PB_GR_KEYCAP 256
+static unsigned char g_gr_keys[PB_GR_KEYCAP];
+static int g_gr_kn = 0;
+
+/* forward declarations; these must match the definitions already in this file */
+__declspec(dllimport) int __stdcall TranslateMessage(const void* lpMsg);
+__declspec(dllimport) unsigned long __stdcall DispatchMessageA(const void* lpMsg);
+__declspec(dllimport) long __stdcall PeekMessageA(void*, void*, unsigned long,
+                                                  unsigned long, unsigned long);
+/* not declared elsewhere in this file */
+__declspec(dllimport) void __stdcall Sleep(unsigned long dwMilliseconds);
+
+static void pb_gr_key_push(unsigned char c) {
+    if (g_gr_kn < PB_GR_KEYCAP) g_gr_keys[g_gr_kn++] = c;
+}
+static int pb_gr_is_ext_key(unsigned int vk) {
+    if (vk >= 0x21 && vk <= 0x28) return 1;   /* PgUp PgDn End Home  arrows */
+    if (vk == 0x2D || vk == 0x2E) return 1;   /* Insert  Delete */
+    if (vk >= 0x70 && vk <= 0x7B) return 1;   /* F1 .. F12 */
+    return 0;
+}
+static void pb_gr_pump(void) {
+    unsigned char msg[64];
+    int guard = 0;
+    while (PeekMessageA((void*)msg, 0, 0, 0, 1u) && guard++ < 256) {
+        TranslateMessage((void*)msg);
+        DispatchMessageA((void*)msg);
+    }
+}
+
+/* GRAPHIC INSTAT - non-zero when a character is ready; consumes nothing. */
+int pb_graphic_instat(void) {
+    pb_gr_pump();
+    return g_gr_kn > 0 ? 1 : 0;
+}
+/* GRAPHIC INPUT FLUSH - remove all buffered keyboard data. */
+int pb_graphic_input_flush(void) {
+    pb_gr_pump();
+    g_gr_kn = 0;
+    return 0;
+}
+
+/* ---- batch 185 part 2: key reads, line reads, text splitting ------------- */
+
+/* Pop one key: 0, 1 or 2 bytes, extended keys keeping the leading NUL. */
+static int pb_gr_key_pop(unsigned char* out) {
+    int i;
+    if (g_gr_kn <= 0) return 0;
+    out[0] = g_gr_keys[0];
+    if (g_gr_keys[0] == 0 && g_gr_kn >= 2) {
+        out[1] = g_gr_keys[1];
+        for (i = 2; i < g_gr_kn; i++) g_gr_keys[i - 2] = g_gr_keys[i];
+        g_gr_kn -= 2;
+        return 2;
+    }
+    for (i = 1; i < g_gr_kn; i++) g_gr_keys[i - 1] = g_gr_keys[i];
+    g_gr_kn -= 1;
+    return 1;
+}
+
+/* GRAPHIC INKEY$ - reads a key if one is ready, otherwise the null string. */
+char* pb_graphic_inkey(void) {
+    unsigned char b[2];
+    int n;
+    pb_gr_pump();
+    n = pb_gr_key_pop(b);
+    return pb_bstr_alloc((const char*)b, (unsigned int)n);
+}
+
+static int pb_gr_mask_ok(const unsigned char* mask, unsigned char c) {
+    int i;
+    if (!mask || mask[0] == '\0') return 1;   /* empty mask: any key */
+    for (i = 0; mask[i]; i++) if (mask[i] == c) return 1;
+    return 0;
+}
+
+/* GRAPHIC WAITKEY$ (KeyMask$, TimeOut&) - timeout_ms < 0 waits forever, which
+   is what the bare syntax asks for.  Keys the mask rejects are discarded, as
+   the official page states, and the slice is released while waiting. */
+char* pb_graphic_waitkey(const char* mask, int timeout_ms) {
+    unsigned char b[2];
+    int waited = 0, n;
+    for (;;) {
+        pb_gr_pump();
+        if (g_gr_kn > 0) {
+            unsigned char ch = (g_gr_keys[0] == 0 && g_gr_kn >= 2)
+                             ? g_gr_keys[1] : g_gr_keys[0];
+            n = pb_gr_key_pop(b);
+            if (pb_gr_mask_ok((const unsigned char*)mask, ch)) {
+                return pb_bstr_alloc((const char*)b, (unsigned int)n);
+            }
+            continue;
+        }
+        if (timeout_ms >= 0 && waited >= timeout_ms) return pb_bstr_alloc("", 0);
+        Sleep(1);
+        waited += 1;
+    }
+}
+
+/* ---- line input ----------------------------------------------------------
+   GRAPHIC LINE INPUT and GRAPHIC INPUT both read a whole line; INPUT then
+   splits it on commas, one field per destination variable. */
+#define PB_GR_LINECAP 260
+#define PB_GR_MAXFIELD 32
+static char g_gr_line[PB_GR_LINECAP];
+static int  g_gr_field_start[PB_GR_MAXFIELD];
+static int  g_gr_field_len[PB_GR_MAXFIELD];
+static int  g_gr_field_count = 0;
+
+static void pb_gr_echo_char(char c) {
+    char buf[2];
+    buf[0] = c;
+    buf[1] = '\0';
+    pb_graphic_print_str(buf);
+}
+
+/* Blocking, like the statement it backs.  ENTER ends the line, backspace
+   edits it, extended keys are ignored. */
+static int pb_gr_read_line(int echo) {
+    unsigned char b[2];
+    int n, len = 0;
+    for (;;) {
+        pb_gr_pump();
+        if (g_gr_kn <= 0) { Sleep(1); continue; }
+        n = pb_gr_key_pop(b);
+        if (n != 1) continue;
+        if (b[0] == 13 || b[0] == 10) break;
+        if (b[0] == 8 || b[0] == 127) {
+            if (len > 0) len--;
+            continue;
+        }
+        if (b[0] < 32) continue;
+        if (len < PB_GR_LINECAP - 1) {
+            g_gr_line[len++] = (char)b[0];
+            if (echo) pb_gr_echo_char((char)b[0]);
+        }
+    }
+    g_gr_line[len] = '\0';
+    return len;
+}
+
+static void pb_gr_split_fields(void) {
+    int i = 0, f = 0, start = 0;
+    for (;;) {
+        if (g_gr_line[i] == ',' || g_gr_line[i] == '\0') {
+            if (f < PB_GR_MAXFIELD) {
+                g_gr_field_start[f] = start;
+                g_gr_field_len[f] = i - start;
+                f++;
+            }
+            if (g_gr_line[i] == '\0') break;
+            start = i + 1;
+        }
+        i++;
+    }
+    g_gr_field_count = f;
+}
+
+/* GRAPHIC LINE INPUT ["prompt"] var$ - the whole line, up to 255 characters. */
+char* pb_graphic_line_input(const char* prompt) {
+    if (prompt && prompt[0]) pb_graphic_print_str(prompt);
+    pb_gr_read_line(1);
+    return pb_bstr_alloc(g_gr_line, (unsigned int)strlen(g_gr_line));
+}
+
+/* GRAPHIC INPUT [prompt,] varlist - reads the line, then hands out one field
+   per call so each destination keeps its own type. */
+int pb_graphic_input_begin(const char* prompt) {
+    if (prompt && prompt[0]) pb_graphic_print_str(prompt);
+    pb_gr_read_line(1);
+    pb_gr_split_fields();
+    return g_gr_field_count;
+}
+char* pb_graphic_input_field(int idx) {
+    if (idx < 0 || idx >= g_gr_field_count) return pb_bstr_alloc("", 0);
+    return pb_bstr_alloc(g_gr_line + g_gr_field_start[idx],
+                         (unsigned int)g_gr_field_len[idx]);
+}
+double pb_graphic_input_field_num(int idx) {
+    char buf[64];
+    int k, n;
+    if (idx < 0 || idx >= g_gr_field_count) return 0.0;
+    n = g_gr_field_len[idx];
+    if (n > 63) n = 63;
+    for (k = 0; k < n; k++) buf[k] = g_gr_line[g_gr_field_start[idx] + k];
+    buf[n] = '\0';
+    return atof(buf);
+}
+
 static long long __stdcall pb_graphic_wndproc(void* hWnd, unsigned int Msg,
                                               unsigned long long wParam,
                                               unsigned long long lParam) {
@@ -7116,6 +7365,20 @@ static long long __stdcall pb_graphic_wndproc(void* hWnd, unsigned int Msg,
     if (Msg == 0x0112) {                       /* WM_SYSCOMMAND */
         if ((wParam & 0xFFF0) == (unsigned long long)PB_SC_CLOSE
             && pb_get_winlong(hWnd, PB_GWLP_USERDATA) == PB_GW_STABLE) return 0;
+        return DefWindowProcA(hWnd, Msg, wParam, lParam);
+    }
+    if (Msg == 0x0102) {                       /* WM_CHAR (batch 185) */
+        unsigned int ch = (unsigned int)(wParam & 0xFFFF);
+        if (ch >= 0x20 || (ch >= 0x01 && ch <= 0x1F)) pb_gr_key_push((unsigned char)ch);
+        return 0;                              /* no echo, no system beep */
+    }
+    if (Msg == 0x0100) {                       /* WM_KEYDOWN (batch 185) */
+        unsigned int vk = (unsigned int)(wParam & 0xFFFF);
+        if (pb_gr_is_ext_key(vk)) {
+            pb_gr_key_push(0);                 /* extended key: NUL + scan code */
+            pb_gr_key_push((unsigned char)vk);
+            return 0;
+        }
         return DefWindowProcA(hWnd, Msg, wParam, lParam);
     }
     if (Msg == 0x0201 || Msg == 0x0203) {      /* WM_LBUTTONDOWN / WM_LBUTTONDBLCLK */

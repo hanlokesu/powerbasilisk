@@ -4318,6 +4318,50 @@ impl Compiler {
             false,
         );
         self.module
+            .declare_function("pb_graphic_instat", &IrType::I32, &[], false);
+        self.module
+            .declare_function("pb_graphic_input_flush", &IrType::Void, &[], false);
+        self.module
+            .declare_function("pb_graphic_inkey", &IrType::Ptr, &[], false);
+        self.module.declare_function(
+            "pb_graphic_waitkey",
+            &IrType::Ptr,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_split",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_split_word",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_graphic_line_input", &IrType::Ptr, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_graphic_input_begin",
+            &IrType::Void,
+            &[IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_input_field",
+            &IrType::Ptr,
+            &[IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_graphic_input_field_num",
+            &IrType::Double,
+            &[IrType::I32],
+            false,
+        );
+        self.module
             .declare_function("pb_graphic_bitmap_capture", &IrType::I64, &[], false);
         self.module.declare_function(
             "pb_graphic_set_scrolltext",
@@ -8556,6 +8600,127 @@ impl Compiler {
                 let m = self.compile_expr(fb, &call.args[0])?;
                 let mv = self.convert_value(fb, &m, &IrType::I32, &PbType::Long);
                 fb.call_void("pb_graphic_set_mix", &[mv]);
+            }
+            "GRAPHIC_INSTAT" => {
+                let r = fb.call(&IrType::I32, "pb_graphic_instat", &[]);
+                if let Some(a0) = call.args.first().cloned() {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &a0) {
+                        let cv = self.convert_value(fb, &r, &ty, &pty);
+                        fb.store(&cv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "GRAPHIC_INPUT_FLUSH" => {
+                fb.call_void("pb_graphic_input_flush", &[]);
+                return Ok(());
+            }
+            "GRAPHIC_INKEY" => {
+                // GRAPHIC INKEY$ TO var$ - a BSTR is stored straight into the string slot
+                let v = fb.call(&IrType::Ptr, "pb_graphic_inkey", &[]);
+                if let Some(a0) = call.args.first().cloned() {
+                    if let Some((ptr, _ty, _pty)) = self.lvalue_ptr(fb, &a0) {
+                        fb.store(&v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "GRAPHIC_WAITKEY" => {
+                // args: [KeyMask$, TimeOut&, dest?] - both slots always present
+                let m = self.compile_expr(fb, &call.args[0])?;
+                let t = {
+                    let e = self.compile_expr(fb, &call.args[1])?;
+                    self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                };
+                let v = fb.call(&IrType::Ptr, "pb_graphic_waitkey", &[m, t]);
+                if let Some(a2) = call.args.get(2).cloned() {
+                    if let Some((ptr, _ty, _pty)) = self.lvalue_ptr(fb, &a2) {
+                        fb.store(&v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "GRAPHIC_SPLIT" | "GRAPHIC_SPLIT_WORD" => {
+                // GRAPHIC SPLIT [WORD] MainStr, Part1Len TO Part1Var, Part2Var
+                // Nothing was emitted for these two before: the parser built the call and
+                // the codegen dropped it silently.
+                if call.args.len() >= 4 {
+                    let src = self.compile_expr(fb, &call.args[0])?;
+                    let w = {
+                        let e = self.compile_expr(fb, &call.args[1])?;
+                        self.convert_value(fb, &e, &IrType::I32, &PbType::Long)
+                    };
+                    let p1 = self.lvalue_ptr(fb, &call.args[2]);
+                    let p2 = self.lvalue_ptr(fb, &call.args[3]);
+                    if let (Some((a, _, _)), Some((b, _, _))) = (p1, p2) {
+                        let f = if call.name == "GRAPHIC_SPLIT_WORD" {
+                            "pb_graphic_split_word"
+                        } else {
+                            "pb_graphic_split"
+                        };
+                        fb.call_void(f, &[src, w, a, b]);
+                    }
+                }
+                return Ok(());
+            }
+            "GRAPHIC_LINE_INPUT" => {
+                // args: [prompt, dest] or [dest]
+                let (prompt, dest) = if call.args.len() >= 2 {
+                    (
+                        self.compile_expr(fb, &call.args[0])?,
+                        call.args.get(1).cloned(),
+                    )
+                } else {
+                    (fb.const_null_ptr(), call.args.first().cloned())
+                };
+                let v = fb.call(&IrType::Ptr, "pb_graphic_line_input", &[prompt]);
+                if let Some(a) = dest {
+                    if let Some((ptr, _ty, _pty)) = self.lvalue_ptr(fb, &a) {
+                        fb.store(&v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "GRAPHIC_INPUT" => {
+                // args: [prompt?, var...] - the same leading-string rule the parser used
+                let mut prompt = fb.const_null_ptr();
+                let mut start = 0;
+                let is_prompt = if call.args.len() >= 2 {
+                    match call.args.first() {
+                        Some(Expr::StringLit(_)) => true,
+                        Some(Expr::Variable(v)) => v.ends_with('$'),
+                        _ => false,
+                    }
+                } else {
+                    false
+                };
+                if is_prompt {
+                    prompt = self.compile_expr(fb, &call.args[0])?;
+                    start = 1;
+                }
+                fb.call_void("pb_graphic_input_begin", &[prompt]);
+                for (k, a) in call.args[start..].iter().enumerate() {
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, a) {
+                        let is_str = matches!(pty, PbType::String | PbType::FixedString(_));
+                        if is_str {
+                            let v = fb.call(
+                                &IrType::Ptr,
+                                "pb_graphic_input_field",
+                                &[fb.const_i32(k as i32)],
+                            );
+                            fb.store(&v, &ptr);
+                        } else {
+                            let v = fb.call(
+                                &IrType::Double,
+                                "pb_graphic_input_field_num",
+                                &[fb.const_i32(k as i32)],
+                            );
+                            let cv = self.convert_value(fb, &v, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
             }
             "GRAPHIC_BITMAP_CAPTURE" => {
                 // args: hbmp (out, QUAD)   (batch 182, FORK EXTENSION)
