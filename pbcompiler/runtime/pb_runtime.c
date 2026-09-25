@@ -7975,6 +7975,42 @@ void* pb_control_add_progressbar(void* parent, long id, int x, int y, int w, int
                            (void*)(long long)id, GetModuleHandleA(0), 0);
 }
 
+/* CONTROL ADD TRACKBAR (batch 189) - class "msctls_trackbar32" */
+void* pb_control_add_trackbar(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x0001 | 0x40000000 | 0x10000000 | 0x00010000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "msctls_trackbar32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD UPDOWN (batch 189) - class "msctls_updown32" */
+void* pb_control_add_updown(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x0002 | 0x0004 | 0x40000000 | 0x10000000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "msctls_updown32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD HOTKEY (batch 189) - class "msctls_hotkey32" */
+void* pb_control_add_hotkey(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x40000000 | 0x10000000 | 0x00010000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "msctls_hotkey32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD IPADDRESS (batch 189) - class "SysIPAddress32" */
+void* pb_control_add_ipaddress(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x40000000 | 0x10000000 | 0x00010000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "SysIPAddress32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
 /* PROGRESSBAR SET RANGE/POS */
 void pb_progress_set_range(void* h, int lo, int hi) {
     SendMessageA(h, 0x0401, (unsigned long long)lo, (unsigned long long)hi);
