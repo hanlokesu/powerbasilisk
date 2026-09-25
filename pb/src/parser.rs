@@ -2050,73 +2050,145 @@ impl Parser {
             }
         }
     }
-    /// TREEVIEW <sub-command> ...  -- batch 158 (common control, Tier-3 DDT GUI)
+    /// TREEVIEW <sub-command> ...  -- batch 158, completed in batch 172
     ///
-    /// Syntax per the official PowerBASIC documentation. Sub-commands
-    /// implemented here:
-    ///   TREEVIEW RESET        hDlg, id&
-    ///   TREEVIEW GET COUNT    hDlg, id& TO datav&
-    ///   TREEVIEW GET TEXT     hDlg, id&, hItem TO txtv$
-    ///   TREEVIEW INSERT ITEM  hDlg, id&, hPrnt, hIAftr, image&, simage&, txt$ TO hItem
-    ///   TREEVIEW DELETE       hDlg, id&, hItem
+    /// Syntax and semantics per the official PowerBASIC `TREEVIEW statement`
+    /// help page. Everything the page documents is implemented here:
+    ///   TREEVIEW DELETE        hDlg, id&, hItem
+    ///   TREEVIEW GET BOLD      hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET CHECK     hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET CHILD     hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET COUNT     hDlg, id& TO datav&
+    ///   TREEVIEW GET EXPANDED  hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET NEXT      hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET PARENT    hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET PREVIOUS  hDlg, id&, hItem TO datav&
+    ///   TREEVIEW GET ROOT      hDlg, id& TO datav&
+    ///   TREEVIEW GET SELECT    hDlg, id& TO datav&
+    ///   TREEVIEW GET TEXT      hDlg, id&, hItem TO txtv$
+    ///   TREEVIEW GET USER      hDlg, id&, hItem TO datav&
+    ///   TREEVIEW INSERT ITEM   hDlg, id&, hPrnt, hIAftr, image&, simage&, txt$ TO hItem
+    ///   TREEVIEW RESET         hDlg, id&
+    ///   TREEVIEW SELECT        hDlg, id&, hItem
+    ///   TREEVIEW SET BOLD      hDlg, id&, hItem, flag&
+    ///   TREEVIEW SET CHECK     hDlg, id&, hItem, flag&
+    ///   TREEVIEW SET EXPANDED  hDlg, id&, hItem, flag&
+    ///   TREEVIEW SET IMAGELIST hDlg, id&, hLst
+    ///   TREEVIEW SET TEXT      hDlg, id&, hItem, txt$
+    ///   TREEVIEW SET USER      hDlg, id&, hItem, NumExpr
+    ///   TREEVIEW UNSELECT      hDlg, id&
+    ///
+    /// `SELECT` is lexed as `Token::Select`, so the verb and noun lookups go
+    /// through `peek_word_upper()`: `peek_plain_upper()` does not report that
+    /// token, and both `TREEVIEW SELECT` and `TREEVIEW GET SELECT` would fall
+    /// through to statement-level expression parsing ("Unexpected token in
+    /// expression: Select"). That is the batch 168 COMBOBOX defect, same shape.
     fn parse_treeview_statement(&mut self, line: usize) -> PbResult<Statement> {
         self.advance(); // consume TREEVIEW
-        let sub = self.peek_plain_upper();
+        let sub = self.peek_treeview_word_upper();
         match sub.as_str() {
-            "RESET" => {
+            "RESET" | "UNSELECT" => {
                 self.advance();
+                let name = format!("TREEVIEW_{}", sub);
                 let h = self.parse_expression()?;
                 self.expect(&Token::Comma)?;
                 let id = self.parse_expression()?;
                 self.consume_to_eol();
                 Ok(Statement::Call(CallStmt {
-                    name: "TREEVIEW_RESET".to_string(),
+                    name,
                     args: vec![h, id],
+                    line,
+                }))
+            }
+            "SELECT" => {
+                self.advance();
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let item = self.parse_expression()?;
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: "TREEVIEW_SELECT".to_string(),
+                    args: vec![h, id, item],
                     line,
                 }))
             }
             "GET" => {
                 self.advance();
-                let what = self.peek_plain_upper();
+                let what = self.peek_treeview_word_upper();
                 self.advance();
-                if what == "COUNT" {
-                    let h = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    let id = self.parse_expression()?;
-                    if self.peek() == &Token::To {
-                        self.advance();
-                    }
-                    let target = self.parse_expression()?;
+                // COUNT / ROOT / SELECT take no item handle; the other nine
+                // selectors all name one specific item.
+                let itemless = matches!(what.as_str(), "COUNT" | "ROOT" | "SELECT");
+                let known = itemless
+                    || matches!(
+                        what.as_str(),
+                        "BOLD"
+                            | "CHECK"
+                            | "CHILD"
+                            | "EXPANDED"
+                            | "NEXT"
+                            | "PARENT"
+                            | "PREVIOUS"
+                            | "TEXT"
+                            | "USER"
+                    );
+                if !known {
                     self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "TREEVIEW_GET_COUNT".to_string(),
-                        args: vec![h, id, target],
-                        line,
-                    }));
+                    return Ok(Statement::Noop("TREEVIEW GET".to_string(), line));
                 }
-                if what == "TEXT" {
-                    let h = self.parse_expression()?;
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                let mut args = vec![h, id];
+                if !itemless {
                     self.expect(&Token::Comma)?;
-                    let id = self.parse_expression()?;
-                    self.expect(&Token::Comma)?;
-                    let item = self.parse_expression()?;
-                    if self.peek() == &Token::To {
-                        self.advance();
-                    }
-                    let target = self.parse_expression()?;
-                    self.consume_to_eol();
-                    return Ok(Statement::Call(CallStmt {
-                        name: "TREEVIEW_GET_TEXT".to_string(),
-                        args: vec![h, id, item, target],
-                        line,
-                    }));
+                    args.push(self.parse_expression()?);
                 }
+                if self.peek() == &Token::To {
+                    self.advance();
+                }
+                args.push(self.parse_expression()?);
                 self.consume_to_eol();
-                Ok(Statement::Noop("TREEVIEW GET".to_string(), line))
+                Ok(Statement::Call(CallStmt {
+                    name: format!("TREEVIEW_GET_{}", what),
+                    args,
+                    line,
+                }))
+            }
+            "SET" => {
+                self.advance();
+                let what = self.peek_treeview_word_upper();
+                self.advance();
+                if !matches!(
+                    what.as_str(),
+                    "BOLD" | "CHECK" | "EXPANDED" | "IMAGELIST" | "TEXT" | "USER"
+                ) {
+                    self.consume_to_eol();
+                    return Ok(Statement::Noop("TREEVIEW SET".to_string(), line));
+                }
+                let h = self.parse_expression()?;
+                self.expect(&Token::Comma)?;
+                let id = self.parse_expression()?;
+                let mut args = vec![h, id];
+                // SET IMAGELIST is the only form without an item handle.
+                if what != "IMAGELIST" {
+                    self.expect(&Token::Comma)?;
+                    args.push(self.parse_expression()?);
+                }
+                self.expect(&Token::Comma)?;
+                args.push(self.parse_expression()?);
+                self.consume_to_eol();
+                Ok(Statement::Call(CallStmt {
+                    name: format!("TREEVIEW_SET_{}", what),
+                    args,
+                    line,
+                }))
             }
             "INSERT" => {
                 self.advance();
-                let what = self.peek_plain_upper();
+                let what = self.peek_treeview_word_upper();
                 self.advance();
                 if what == "ITEM" {
                     let h = self.parse_expression()?;
@@ -6470,12 +6542,28 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
+                    // Optional [, [style&] [, [exstyle&]]] per the official
+                    // CONTROL ADD TREEVIEW syntax. An explicit primary style
+                    // REPLACES the documented default, which is how a caller
+                    // reaches %TVS_CHECKBOXES for TREEVIEW SET/GET CHECK.
+                    // target keeps slot 6 either way, so the codegen arm reads
+                    // the same positions whether or not a style was supplied.
+                    let mut style = Expr::IntegerLit(0);
+                    let mut exstyle = Expr::IntegerLit(0);
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                        style = self.parse_expression()?;
+                        if self.peek() == &Token::Comma {
+                            self.advance();
+                            exstyle = self.parse_expression()?;
+                        }
+                    }
                     self.expect(&Token::To)?;
                     let target = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_TREEVIEW".to_string(),
-                        args: vec![hwnd, id, x, y, w, h, target],
+                        args: vec![hwnd, id, x, y, w, h, target, style, exstyle],
                         line,
                     }));
                 }
@@ -9251,6 +9339,28 @@ impl Parser {
         }
     }
 
+    /// Uppercase spelling of the next word for the TREEVIEW verb/noun slots.
+    ///
+    /// Two TREEVIEW nouns are keyword tokens rather than identifiers:
+    /// `NEXT` is `Token::Next` (the FOR/NEXT keyword) and `SELECT` is
+    /// `Token::Select`. Neither `peek_plain_upper()` nor the wider
+    /// `peek_word_upper()` reports `NEXT`, so `TREEVIEW GET NEXT ...` parsed
+    /// as `Statement::Noop("TREEVIEW GET")` - the compiler reported
+    /// "success" while the statement silently did nothing, which is exactly
+    /// the defect class this fork exists to remove.
+    ///
+    /// Kept local to the TREEVIEW family instead of widening
+    /// `peek_word_upper()`: that one drives the COMBOBOX/LISTBOX dispatch,
+    /// and a new `NEXT` spelling there would be an unrelated behaviour
+    /// change. `SELECT` is reported by both on purpose.
+    fn peek_treeview_word_upper(&self) -> String {
+        match self.peek() {
+            Token::Identifier(w) => w.to_uppercase(),
+            Token::Next => "NEXT".to_string(),
+            Token::Select => "SELECT".to_string(),
+            _ => String::new(),
+        }
+    }
     /// Like `peek_plain_upper()`, but also reports the STRING keyword token as
     /// the word "STRING".  The lexer emits Token::String_ for the word STRING
     /// (it is a type keyword, not an identifier), so plain identifier matching

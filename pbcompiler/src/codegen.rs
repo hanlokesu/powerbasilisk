@@ -1863,6 +1863,8 @@ impl Compiler {
                 IrType::I32,
                 IrType::I32,
                 IrType::I32,
+                IrType::I32,
+                IrType::I32,
             ],
             false,
         );
@@ -2550,6 +2552,49 @@ impl Compiler {
             "pb_treeview_reset",
             &IrType::Void,
             &[IrType::Ptr, IrType::I32],
+            false,
+        );
+
+        self.module.declare_function(
+            "pb_treeview_get_attr",
+            &IrType::I64,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_set_attr",
+            &IrType::Void,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I64,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_select",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_unselect",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_set_text",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_treeview_set_imagelist",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
             false,
         );
         self.module.declare_function(
@@ -10187,10 +10232,26 @@ impl Compiler {
                     let y = self.compile_expr(fb, &call.args[3])?;
                     let w = self.compile_expr(fb, &call.args[4])?;
                     let h = self.compile_expr(fb, &call.args[5])?;
+                    // Optional style&/exstyle& occupy slots 7 and 8; the parser
+                    // always emits them, but stay tolerant of a bare 7-operand
+                    // form so hand-built ASTs keep working. 0 means "omitted",
+                    // which is how the runtime selects the documented default.
+                    let style = if call.args.len() >= 9 {
+                        let v = self.compile_expr(fb, &call.args[7])?;
+                        self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                    } else {
+                        fb.const_i32(0)
+                    };
+                    let exstyle = if call.args.len() >= 9 {
+                        let v = self.compile_expr(fb, &call.args[8])?;
+                        self.convert_value(fb, &v, &IrType::I32, &PbType::Long)
+                    } else {
+                        fb.const_i32(0)
+                    };
                     let hc = fb.call(
                         &IrType::Ptr,
                         "pb_control_add_treeview",
-                        &[parent, id, x, y, w, h],
+                        &[parent, id, x, y, w, h, style, exstyle],
                     );
                     if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
                         let hc_i = fb.ptrtoint64(&hc);
@@ -11030,6 +11091,153 @@ impl Compiler {
                         let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[bp, len]);
                         fb.store(&bstr, &ptr);
                     }
+                }
+                return Ok(());
+            }
+            // ---- TREEVIEW attribute getters (batch 172) ----
+            // All ten share one runtime entry point; the trailing `which`
+            // selector (PB_TV_ATTR_* in pb_runtime.c; the numbers are repeated
+            // here because codegen can only emit an integer literal - change
+            // the two lists together) picks the field. The parser normalises
+            // the operand list, so ROOT and SELECT arrive with three operands
+            // and every other getter with four. PB promises 0 for "no such
+            // item", which is exactly what the runtime returns.
+            "TREEVIEW_GET_BOLD"
+            | "TREEVIEW_GET_CHECK"
+            | "TREEVIEW_GET_CHILD"
+            | "TREEVIEW_GET_EXPANDED"
+            | "TREEVIEW_GET_NEXT"
+            | "TREEVIEW_GET_PARENT"
+            | "TREEVIEW_GET_PREVIOUS"
+            | "TREEVIEW_GET_ROOT"
+            | "TREEVIEW_GET_SELECT"
+            | "TREEVIEW_GET_USER" => {
+                if call.args.len() >= 3 {
+                    let which: i32 = match call.name.as_str() {
+                        "TREEVIEW_GET_BOLD" => 1,
+                        "TREEVIEW_GET_CHECK" => 2,
+                        "TREEVIEW_GET_CHILD" => 3,
+                        "TREEVIEW_GET_EXPANDED" => 4,
+                        "TREEVIEW_GET_NEXT" => 5,
+                        "TREEVIEW_GET_PARENT" => 6,
+                        "TREEVIEW_GET_PREVIOUS" => 7,
+                        "TREEVIEW_GET_ROOT" => 8,
+                        "TREEVIEW_GET_SELECT" => 9,
+                        _ => 10,
+                    };
+                    let has_item = call.args.len() >= 4;
+                    let target_idx = if has_item { 3 } else { 2 };
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let hitem = if has_item {
+                        let mut v = self.compile_expr(fb, &call.args[2])?;
+                        if v.ty != IrType::Ptr {
+                            v = fb.inttoptr(&v);
+                        }
+                        v
+                    } else {
+                        // ROOT / SELECT ignore the handle; pass a null pointer.
+                        let zero = fb.const_i32(0);
+                        fb.inttoptr(&zero)
+                    };
+                    let n = fb.call(
+                        &IrType::I64,
+                        "pb_treeview_get_attr",
+                        &[hd, id, hitem, fb.const_i32(which)],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[target_idx]) {
+                        let vv = self.convert_value(fb, &n, &ty, &pty);
+                        fb.store(&vv, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "TREEVIEW_SELECT" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hitem = self.compile_expr(fb, &call.args[2])?;
+                    if hitem.ty != IrType::Ptr {
+                        hitem = fb.inttoptr(&hitem);
+                    }
+                    fb.call_void("pb_treeview_select", &[hd, id, hitem]);
+                }
+                return Ok(());
+            }
+            "TREEVIEW_UNSELECT" => {
+                if call.args.len() >= 2 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    fb.call_void("pb_treeview_unselect", &[hd, id]);
+                }
+                return Ok(());
+            }
+            "TREEVIEW_SET_BOLD"
+            | "TREEVIEW_SET_CHECK"
+            | "TREEVIEW_SET_EXPANDED"
+            | "TREEVIEW_SET_USER" => {
+                if call.args.len() >= 4 {
+                    let which: i32 = match call.name.as_str() {
+                        "TREEVIEW_SET_BOLD" => 1,
+                        "TREEVIEW_SET_CHECK" => 2,
+                        "TREEVIEW_SET_EXPANDED" => 4,
+                        _ => 10,
+                    };
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hitem = self.compile_expr(fb, &call.args[2])?;
+                    if hitem.ty != IrType::Ptr {
+                        hitem = fb.inttoptr(&hitem);
+                    }
+                    let flag = self.compile_expr(fb, &call.args[3])?;
+                    let flag64 = self.to_i64(fb, &flag);
+                    fb.call_void(
+                        "pb_treeview_set_attr",
+                        &[hd, id, hitem, fb.const_i32(which), flag64],
+                    );
+                }
+                return Ok(());
+            }
+            "TREEVIEW_SET_TEXT" => {
+                if call.args.len() >= 4 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hitem = self.compile_expr(fb, &call.args[2])?;
+                    if hitem.ty != IrType::Ptr {
+                        hitem = fb.inttoptr(&hitem);
+                    }
+                    let text = self.compile_str_payload(fb, &call.args[3])?;
+                    fb.call_void("pb_treeview_set_text", &[hd, id, hitem, text]);
+                }
+                return Ok(());
+            }
+            "TREEVIEW_SET_IMAGELIST" => {
+                if call.args.len() >= 3 {
+                    let mut hd = self.compile_expr(fb, &call.args[0])?;
+                    if hd.ty != IrType::Ptr {
+                        hd = fb.inttoptr(&hd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let mut hl = self.compile_expr(fb, &call.args[2])?;
+                    if hl.ty != IrType::Ptr {
+                        hl = fb.inttoptr(&hl);
+                    }
+                    fb.call_void("pb_treeview_set_imagelist", &[hd, id, hl]);
                 }
                 return Ok(());
             }

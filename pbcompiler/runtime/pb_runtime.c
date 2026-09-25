@@ -7185,6 +7185,48 @@ typedef struct {
 #define PB_TVIF_TEXT           0x0001
 #define PB_TVIF_IMAGE          0x0002
 #define PB_TVIF_SELECTEDIMAGE  0x0020
+/* ---- TreeView messages / flags added in batch 172 (commctrl.inc) ---- */
+#define PB_TVM_EXPAND         (PB_TV_FIRST + 2)   /* 0x1102 */
+#define PB_TVM_SETIMAGELIST   (PB_TV_FIRST + 9)   /* 0x1109 */
+#define PB_TVM_GETNEXTITEM    (PB_TV_FIRST + 10)  /* 0x110A */
+#define PB_TVM_SELECTITEM     (PB_TV_FIRST + 11)  /* 0x110B */
+#define PB_TVM_SETITEMA       (PB_TV_FIRST + 13)  /* 0x110D */
+
+#define PB_TVIF_PARAM          0x0004
+#define PB_TVIF_STATE          0x0008
+
+#define PB_TVIS_BOLD           0x0010
+#define PB_TVIS_EXPANDED       0x0020
+#define PB_TVIS_STATEIMAGEMASK 0xF000
+
+/* TVGN_* selectors for TVM_GETNEXTITEM and TVM_SELECTITEM */
+#define PB_TVGN_ROOT      0x0000
+#define PB_TVGN_NEXT      0x0001
+#define PB_TVGN_PREVIOUS  0x0002
+#define PB_TVGN_PARENT    0x0003
+#define PB_TVGN_CHILD     0x0004
+#define PB_TVGN_CARET     0x0009
+
+/* TVE_* actions for TVM_EXPAND */
+#define PB_TVE_COLLAPSE   0x0001
+#define PB_TVE_EXPAND     0x0002
+
+/* TVSIL_* image-list selector for TVM_SETIMAGELIST */
+#define PB_TVSIL_NORMAL   0x0000
+
+/* Attribute selectors shared by pb_treeview_get_attr / pb_treeview_set_attr.
+   codegen.rs duplicates these numbers on purpose (it can only emit an integer
+   literal); the two lists must be changed together. */
+#define PB_TV_ATTR_BOLD       1
+#define PB_TV_ATTR_CHECK      2
+#define PB_TV_ATTR_CHILD      3
+#define PB_TV_ATTR_EXPANDED   4
+#define PB_TV_ATTR_NEXT       5
+#define PB_TV_ATTR_PARENT     6
+#define PB_TV_ATTR_PREVIOUS   7
+#define PB_TV_ATTR_ROOT       8
+#define PB_TV_ATTR_SELECT     9
+#define PB_TV_ATTR_USER      10
 
 /* TreeView special handles. commctrl.inc declares these as
    %TVI_ROOT = &HFFFF0000, i.e. (HTREEITEM)(LONG_PTR)-0x10000.
@@ -7287,14 +7329,29 @@ void* pb_control_add_listview(void* parent, long id, int x, int y, int w, int ht
 }
 
 /* ---------------- CONTROL ADD TREEVIEW ---------------- */
-void* pb_control_add_treeview(void* parent, long id, int x, int y, int w, int ht) {
+/* ---------------- CONTROL ADD TREEVIEW ----------------
+   The official statement accepts optional style&/exstyle& operands, and an
+   explicit primary style REPLACES the documented default:
+     "default TreeView style comprises %WS_TABSTOP, %TVS_HASBUTTONS,
+      %TVS_LINESATROOT, %TVS_HASLINES, and %TVS_SHOWSELALWAYS"
+     "If you include explicit style values, they replace the default values."
+   style 0 therefore means "caller omitted them" and selects the default;
+   anything else is used verbatim apart from WS_CHILD|WS_VISIBLE, which are
+   what make it a visible child control at all.  That is how a caller reaches
+   %TVS_CHECKBOXES (0x0100), which TREEVIEW SET/GET CHECK requires. */
+void* pb_control_add_treeview(void* parent, long id, int x, int y, int w, int ht,
+                              int style_ovr, int exstyle_ovr) {
     /* TVS_HASBUTTONS=1 | TVS_HASLINES=2 | TVS_LINESATROOT=4 |
        TVS_SHOWSELALWAYS=0x20 | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP */
-    unsigned long style = 0x1 | 0x2 | 0x4 | 0x20
-                        | 0x40000000 | 0x10000000 | 0x00800000 | 0x00010000;
+    unsigned long style = (style_ovr != 0)
+        ? ((unsigned long)style_ovr | 0x40000000u | 0x10000000u)
+        : (0x1u | 0x2u | 0x4u | 0x20u | 0x40000000u | 0x10000000u
+           | 0x00800000u | 0x00010000u);
+    unsigned long exstyle = (exstyle_ovr != 0) ? (unsigned long)exstyle_ovr
+                                               : 0x00000200u /* WS_EX_CLIENTEDGE */;
     pb_icc(PB_ICC_TREEVIEW_CLASSES);
     pb_dlu_to_px(&x, &y, &w, &ht);
-    return CreateWindowExA(0x00000200 /* WS_EX_CLIENTEDGE */, "SysTreeView32", "",
+    return CreateWindowExA(exstyle, "SysTreeView32", "",
                            style, x, y, w, ht, parent,
                            (void*)(long long)id, GetModuleHandleA(0), 0);
 }
@@ -8734,4 +8791,139 @@ void pb_treeview_reset(void* hDlg, long id) {
     void* h = GetDlgItem(hDlg, (int)id);
     if (!h) return;
     SendMessageA(h, PB_TVM_DELETEITEM, 0, (pb_lparam_t)PB_TVI_ROOT);
+}
+/* ---------------- TREEVIEW attribute get / set (batch 172) ----------------
+   `which` is one of the PB_TV_ATTR_* selectors defined above, duplicated as
+   integer literals in codegen.rs - the two lists must be changed together.
+
+   PB semantics come straight from the official `TREEVIEW statement` help:
+     GET BOLD / CHECK / EXPANDED              -> true (-1) / false (0)
+     GET CHILD / NEXT / PARENT / PREVIOUS /
+         ROOT / SELECT                        -> item handle, 0 when no such item
+     GET USER                                 -> the LONG stored by SET USER
+   Every "no such item" path therefore returns 0, which is what the help page
+   promises, and the Win32 control already returns 0 for a NULL handle. */
+
+long long pb_treeview_get_attr(void* hDlg, long id, void* hItem, int which) {
+    PB_TVITEM it;
+    void* h = GetDlgItem(hDlg, (int)id);
+    unsigned int gn;
+    if (!h) return 0;
+
+    /* ROOT / SELECT take no item handle; the other navigators take one. */
+    switch (which) {
+    case PB_TV_ATTR_ROOT:     gn = PB_TVGN_ROOT;     break;
+    case PB_TV_ATTR_SELECT:   gn = PB_TVGN_CARET;    break;
+    case PB_TV_ATTR_CHILD:    gn = PB_TVGN_CHILD;    break;
+    case PB_TV_ATTR_NEXT:     gn = PB_TVGN_NEXT;     break;
+    case PB_TV_ATTR_PARENT:   gn = PB_TVGN_PARENT;   break;
+    case PB_TV_ATTR_PREVIOUS: gn = PB_TVGN_PREVIOUS; break;
+    default:                  gn = 0xFFFFFFFFu;      break;
+    }
+    if (gn != 0xFFFFFFFFu) {
+        return (long long)(intptr_t)SendMessageA(
+            h, PB_TVM_GETNEXTITEM, gn,
+            (which == PB_TV_ATTR_ROOT || which == PB_TV_ATTR_SELECT)
+                ? 0 : (pb_lparam_t)hItem);
+    }
+
+    memset(&it, 0, sizeof(it));
+    it.hItem = hItem;
+    switch (which) {
+    case PB_TV_ATTR_BOLD:
+    case PB_TV_ATTR_EXPANDED:
+        it.mask      = PB_TVIF_STATE;
+        it.stateMask = (which == PB_TV_ATTR_BOLD) ? PB_TVIS_BOLD
+                                                  : PB_TVIS_EXPANDED;
+        SendMessageA(h, PB_TVM_GETITEMA, 0, (pb_lparam_t)&it);
+        return (it.state & it.stateMask) ? -1 : 0;
+    case PB_TV_ATTR_CHECK:
+        /* With %TVS_CHECKBOXES the state image index is 1 = clear, 2 = checked.
+           A control built without that style reports index 0, and that must
+           read back as "not checked" - hence >= 2, not "!= 1". */
+        it.mask      = PB_TVIF_STATE;
+        it.stateMask = PB_TVIS_STATEIMAGEMASK;
+        SendMessageA(h, PB_TVM_GETITEMA, 0, (pb_lparam_t)&it);
+        return (((it.state & PB_TVIS_STATEIMAGEMASK) >> 12) >= 2) ? -1 : 0;
+    case PB_TV_ATTR_USER:
+        it.mask = PB_TVIF_PARAM;
+        SendMessageA(h, PB_TVM_GETITEMA, 0, (pb_lparam_t)&it);
+        return it.lParam;
+    default:
+        return 0;
+    }
+}
+
+void pb_treeview_set_attr(void* hDlg, long id, void* hItem, int which,
+                          long long flag) {
+    PB_TVITEM it;
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+
+    if (which == PB_TV_ATTR_EXPANDED) {
+        /* commctrl.inc implements TreeView_Expand as TVM_EXPAND + TVE_* */
+        SendMessageA(h, PB_TVM_EXPAND,
+                     flag ? PB_TVE_EXPAND : PB_TVE_COLLAPSE, (pb_lparam_t)hItem);
+        return;
+    }
+    memset(&it, 0, sizeof(it));
+    it.hItem = hItem;
+    switch (which) {
+    case PB_TV_ATTR_BOLD:
+        it.mask      = PB_TVIF_STATE;
+        it.stateMask = PB_TVIS_BOLD;
+        it.state     = flag ? PB_TVIS_BOLD : 0;
+        break;
+    case PB_TV_ATTR_CHECK:
+        /* index 1 = clear, 2 = checked, expressed in bits 12..15 */
+        it.mask      = PB_TVIF_STATE;
+        it.stateMask = PB_TVIS_STATEIMAGEMASK;
+        it.state     = (flag ? 2u : 1u) << 12;
+        break;
+    case PB_TV_ATTR_USER:
+        it.mask   = PB_TVIF_PARAM;
+        it.lParam = flag;
+        break;
+    default:
+        return;
+    }
+    SendMessageA(h, PB_TVM_SETITEMA, 0, (pb_lparam_t)&it);
+}
+
+/* ---------------- TREEVIEW SELECT / UNSELECT ---------------- */
+void pb_treeview_select(void* hDlg, long id, void* hItem) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_TVM_SELECTITEM, PB_TVGN_CARET, (pb_lparam_t)hItem);
+}
+
+/* PB: "All items in the TREEVIEW control are set to an unselected state."
+   TVM_SELECTITEM with a NULL item is the only way the Win32 control offers
+   to drop the current selection. */
+void pb_treeview_unselect(void* hDlg, long id) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_TVM_SELECTITEM, PB_TVGN_CARET, 0);
+}
+
+/* ---------------- TREEVIEW SET TEXT ---------------- */
+void pb_treeview_set_text(void* hDlg, long id, void* hItem, const char* text) {
+    PB_TVITEM it;
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    memset(&it, 0, sizeof(it));
+    it.mask       = PB_TVIF_TEXT;
+    it.hItem      = hItem;
+    it.pszText    = (const char*)text;
+    it.cchTextMax = 0;
+    SendMessageA(h, PB_TVM_SETITEMA, 0, (pb_lparam_t)&it);
+}
+
+/* ---------------- TREEVIEW SET IMAGELIST ---------------- */
+/* commctrl.inc implements TreeView_SetImageList as
+   SendMessage(hWnd, %TVM_SETIMAGELIST, %TVSIL_NORMAL, hLst). */
+void pb_treeview_set_imagelist(void* hDlg, long id, void* hLst) {
+    void* h = GetDlgItem(hDlg, (int)id);
+    if (!h) return;
+    SendMessageA(h, PB_TVM_SETIMAGELIST, PB_TVSIL_NORMAL, (pb_lparam_t)hLst);
 }

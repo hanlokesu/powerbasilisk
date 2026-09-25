@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 171 (v0.2.028)** — 2026-09-24. All statements through batch 171 are reflected in this matrix.
+> **Last updated from batch 172 (v0.2.029)** — 2026-09-25. All statements through batch 172 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **769** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **86** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **787** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **68** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 621 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 639 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **769** | Implemented + Established |
+| ✅ **Total available** | **787** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -36,7 +38,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 86 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 68 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -765,28 +767,28 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | TOOLBAR SET STATE | STATEMENT | PB/Win only | Implemented |
 | TRACE | STATEMENT | PB/Win + PB/CC | Established |
 | TREEVIEW DELETE | STATEMENT | PB/Win only | Implemented |
-| TREEVIEW GET BOLD | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET CHECK | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET CHILD | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET BOLD | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET CHECK | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET CHILD | STATEMENT | PB/Win only | Implemented |
 | TREEVIEW GET COUNT | STATEMENT | PB/Win only | Implemented |
-| TREEVIEW GET EXPANDED | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET NEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET PARENT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET PREVIOUS | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET ROOT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW GET SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET EXPANDED | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET NEXT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET PARENT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET PREVIOUS | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET ROOT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW GET SELECT | STATEMENT | PB/Win only | Implemented |
 | TREEVIEW GET TEXT | STATEMENT | PB/Win only | Implemented |
-| TREEVIEW GET USER | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW GET USER | STATEMENT | PB/Win only | Implemented |
 | TREEVIEW INSERT ITEM | STATEMENT | PB/Win only | Implemented |
 | TREEVIEW RESET | STATEMENT | PB/Win only | Implemented |
-| TREEVIEW SELECT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET BOLD | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET CHECK | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET EXPANDED | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET IMAGELIST | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET TEXT | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW SET USER | STATEMENT | PB/Win only | Tier-3 DDT |
-| TREEVIEW UNSELECT | STATEMENT | PB/Win only | Tier-3 DDT |
+| TREEVIEW SELECT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET BOLD | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET CHECK | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET EXPANDED | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET IMAGELIST | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET TEXT | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW SET USER | STATEMENT | PB/Win only | Implemented |
+| TREEVIEW UNSELECT | STATEMENT | PB/Win only | Implemented |
 | TRIM | FUNCTION | codegen builtin | Implemented |
 | TRIM$ | FUNCTION | Win32 | Implemented |
 | TRUNC | FUNCTION | LLVM intrinsic | Implemented |
