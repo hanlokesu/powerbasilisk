@@ -6148,9 +6148,11 @@ impl Parser {
                     }));
                 }
                 // CONTROL ADD EDITBOX, hWnd, id, "text", x, y, w, h TO hCtrl&  (Tier-3 DDT GUI #3)
+                //   NOTE: TEXTBOX is NOT an alias here - it has its own branch below
+                //   (batch 177).  Re-adding it silently kills that branch again.
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="EDITBOX" || w.to_uppercase()=="TEXTBOX")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="EDITBOX")
                 {
                     self.advance();
                     self.advance();
@@ -6850,6 +6852,242 @@ impl Parser {
                 {
                     return self.parse_tab_statement(line);
                 }
+                // CONTROL ADD OPTION, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 177)  Official source: control_add_option.htm.
+                //   The TO clause is optional (the official syntax shows only
+                //   [[,] CALL callback]); txt$ may be omitted for a LINE.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="OPTION")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = if matches!(self.peek(), Token::Comma) {
+                        Expr::StringLit(String::new())
+                    } else {
+                        self.parse_expression()?
+                    };
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_OPTION".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD CHECK3STATE, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 177)  Official source: control_add_check3state.htm.
+                //   The TO clause is optional (the official syntax shows only
+                //   [[,] CALL callback]); txt$ may be omitted for a LINE.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="CHECK3STATE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = if matches!(self.peek(), Token::Comma) {
+                        Expr::StringLit(String::new())
+                    } else {
+                        self.parse_expression()?
+                    };
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_CHECK3STATE".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD FRAME, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 177)  Official source: control_add_frame.htm.
+                //   The TO clause is optional (the official syntax shows only
+                //   [[,] CALL callback]); txt$ may be omitted for a LINE.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="FRAME")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = if matches!(self.peek(), Token::Comma) {
+                        Expr::StringLit(String::new())
+                    } else {
+                        self.parse_expression()?
+                    };
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_FRAME".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD TEXTBOX, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 177)  Official source: control_add_textbox.htm.
+                //   The TO clause is optional (the official syntax shows only
+                //   [[,] CALL callback]); txt$ may be omitted for a LINE.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="TEXTBOX")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = if matches!(self.peek(), Token::Comma) {
+                        Expr::StringLit(String::new())
+                    } else {
+                        self.parse_expression()?
+                    };
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_TEXTBOX".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD LINE, hWnd, id, "text", x, y, w, h [[,] CALL cb] [TO hCtrl&]
+                //   (batch 177)  Official source: control_add_line.htm.
+                //   The TO clause is optional (the official syntax shows only
+                //   [[,] CALL callback]); txt$ may be omitted for a LINE.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="LINE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = if matches!(self.peek(), Token::Comma) {
+                        Expr::StringLit(String::new())
+                    } else {
+                        self.parse_expression()?
+                    };
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    let target = if matches!(self.peek(), Token::To) {
+                        self.advance();
+                        self.parse_expression()?
+                    } else {
+                        Expr::Variable("_ctl_dummy".to_string())
+                    };
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_LINE".to_string(),
+                        args: vec![hwnd, id, text, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL SET OPTION hDlg, id&, minid&, maxid&   (batch 177)
+                //   Official source: control_set_option.htm.  Note there is no
+                //   comma between OPTION and hDlg and no TO clause: the
+                //   statement sets the check state of id& and clears every
+                //   other OPTION whose id falls in minid&..maxid& inclusive.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="OPTION")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let minid = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let maxid = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_OPTION".to_string(),
+                        args: vec![hwnd, id, minid, maxid],
+                        line,
+                    }));
+                }
                 // CONTROL ADD CHECKBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
@@ -6888,7 +7126,7 @@ impl Parser {
                 // CONTROL ADD RADIOBUTTON, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="RADIOBUTTON" || w.to_uppercase()=="OPTION")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="RADIOBUTTON")
                 {
                     self.advance();
                     self.advance();
@@ -6919,7 +7157,7 @@ impl Parser {
                 // CONTROL ADD GROUPBOX, hWnd, id, "text", x, y, w, h TO hCtrl&
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
-                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="GROUPBOX" || w.to_uppercase()=="FRAME")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="GROUPBOX")
                 {
                     self.advance();
                     self.advance();

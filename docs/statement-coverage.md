@@ -1,22 +1,24 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 176 (v0.2.033)** — 2026-09-25. All statements through batch 176 are reflected in this matrix.
+> **Last updated from batch 177 (v0.2.034)** — 2026-09-25. All statements through batch 177 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **857** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 587 STATEMENT, 2 FORK EXTENSION).
-- **811** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **44** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
+- **817** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **0** documented keywords still not implemented; **38** Tier-3 DDT GUI items deferred; **2** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 663 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 669 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **811** | Implemented + Established |
+| ✅ **Total available** | **817** | Implemented + Established |
+| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 2 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER) |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
@@ -46,7 +48,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 1 | Implemented here but not an official PB keyword (ARRAY SELECT) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
-| 🛠 Tier-3 DDT (deferred) | 44 | DDT GUI / window-callback framework, high effort, deferred |
+| 🛠 Tier-3 DDT (deferred) | 38 | DDT GUI / window-callback framework, high effort, deferred |
 
 ## All keywords (738 rows)
 
@@ -156,10 +158,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | COMMAND$ | FUNCTION | Win32 | Implemented |
 | CONTROL ADD | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD BUTTON | STATEMENT | PB/Win only | Implemented
-| CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD CHECKBOX | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD COMBOBOX | STATEMENT | PB/Win only | Implemented
-| CONTROL ADD FRAME | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD FRAME | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD GRAPHIC | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD HEADER | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD IMAGE | STATEMENT | PB/Win only | Tier-3 DDT |
@@ -167,15 +169,15 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL ADD IMGBUTTON | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD IMGBUTTONX | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL ADD LABEL | STATEMENT | PB/Win only | Implemented
-| CONTROL ADD LINE | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD LINE | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD LISTBOX | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD LISTVIEW | STATEMENT | PB/Win only | Implemented
-| CONTROL ADD OPTION | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD OPTION | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | Implemented
 | CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TAB | STATEMENT | PB/Win only | Implemented |
-| CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL ADD TEXTBOX | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TOOLBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TREEVIEW | STATEMENT | PB/Win only | Implemented
 | CONTROL DISABLE | STATEMENT | PB/Win only | Implemented
@@ -203,7 +205,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL SET IMGBUTTON | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL SET IMGBUTTONX | STATEMENT | PB/Win only | Tier-3 DDT |
 | CONTROL SET LOC | STATEMENT | PB/Win only | Implemented |
-| CONTROL SET OPTION | STATEMENT | PB/Win only | Tier-3 DDT |
+| CONTROL SET OPTION | STATEMENT | PB/Win only | Implemented |
 | CONTROL SET SIZE | STATEMENT | PB/Win only | Implemented |
 | CONTROL SET TEXT | STATEMENT | PB/Win only | Implemented
 | CONTROL SET USER | STATEMENT | PB/Win only | Implemented |

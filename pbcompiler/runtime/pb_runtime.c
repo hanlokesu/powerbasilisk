@@ -6705,7 +6705,7 @@ void* pb_control_add_editbox(void* parent, long id, const char* text,
                               int x, int y, int w, int h) {
     pb_dlu_to_px(&x, &y, &w, &h);
     unsigned long style = 0x80 | 0x40000000 | 0x10000000 | 0x800000 | 0x10000;
-    void* hEdit = CreateWindowExA(0, "EDIT", text, style,
+    void* hEdit = CreateWindowExA(0x200, "EDIT", text, style,
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
     return hEdit;
@@ -6791,6 +6791,7 @@ void* pb_control_add_listbox(void* parent, long id, int x, int y, int w, int h) 
 
 void* pb_control_add_checkbox(void* parent, long id, const char* text,
                                 int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
     /* BS_AUTOCHECKBOX=0x3, WS_CHILD=0x40000000, WS_VISIBLE=0x10000000,
        WS_TABSTOP=0x10000 */
     unsigned long style = 0x3 | 0x40000000 | 0x10000000 | 0x10000;
@@ -6801,6 +6802,7 @@ void* pb_control_add_checkbox(void* parent, long id, const char* text,
 
 void* pb_control_add_radiobutton(void* parent, long id, const char* text,
                                 int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
     unsigned long style = 0x9 | 0x40000000 | 0x10000000 | 0x10000;
     return CreateWindowExA(0, "BUTTON", text, style,
                             x, y, w, h, parent,
@@ -6809,10 +6811,91 @@ void* pb_control_add_radiobutton(void* parent, long id, const char* text,
 
 void* pb_control_add_groupbox(void* parent, long id, const char* text,
                                int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
     unsigned long style = 0x7 | 0x40000000 | 0x10000000;
     return CreateWindowExA(0, "BUTTON", text, style,
                             x, y, w, h, parent,
                             (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* === batch 177: the plain and static CONTROL family ==================
+   Sources: control_add_option.htm, control_add_check3state.htm,
+   control_add_frame.htm, control_add_textbox.htm, control_add_line.htm,
+   control_set_option.htm.  Each helper spells out the documented default
+   style set, and every one runs pb_dlu_to_px() so that creation and the
+   CONTROL GET/SET geometry helpers (which divide by PB_CTL_DLU_X/Y) agree. */
+
+/* CONTROL ADD OPTION - DDT's radio button ("just like a conventional
+   'radio button' control").  Class BUTTON, type BS_AUTORADIOBUTTON=0x9;
+   default style %WS_TABSTOP | %BS_LEFT(0x100) | %BS_VCENTER(0xC00). */
+void* pb_control_add_option(void* parent, long id, const char* text,
+                            int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x9 | 0x100 | 0xC00 | 0x40000000 | 0x10000000 | 0x10000;
+    return CreateWindowExA(0, "BUTTON", text, style,
+                           x, y, w, h, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD CHECK3STATE - auto 3-state checkbox (True / False /
+   Indeterminate).  Class BUTTON, type BS_AUTO3STATE=0x6; default style
+   %BS_LEFT | %BS_VCENTER | %WS_TABSTOP. */
+void* pb_control_add_check3state(void* parent, long id, const char* text,
+                                 int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x6 | 0x100 | 0xC00 | 0x40000000 | 0x10000000 | 0x10000;
+    return CreateWindowExA(0, "BUTTON", text, style,
+                           x, y, w, h, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD FRAME - the "group" box.  Class BUTTON, type
+   BS_GROUPBOX=0x7; default style %BS_LEFT | %BS_TOP(0x400).  Two details
+   straight from the help page: the syntax has NO CALL callback operand for
+   FRAME, and %BS_TOP is persistent - FRAME does not support %BS_BOTTOM. */
+void* pb_control_add_frame(void* parent, long id, const char* text,
+                           int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x7 | 0x100 | 0x400 | 0x40000000 | 0x10000000;
+    return CreateWindowExA(0, "BUTTON", text, style,
+                           x, y, w, h, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD TEXTBOX - a text box, i.e. DDT's bordered edit control.
+   Default style %WS_TABSTOP | %WS_BORDER(0x800000) | %ES_LEFT(0) |
+   %ES_AUTOHSCROLL(0x80); default extended style %WS_EX_CLIENTEDGE(0x200)
+   with %WS_EX_LEFT(0).  txt$ may be empty. */
+void* pb_control_add_textbox(void* parent, long id, const char* text,
+                             int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x800000 | 0x80 | 0x10000 | 0x40000000 | 0x10000000;
+    unsigned long ex = 0x200;
+    return CreateWindowExA(ex, "EDIT", text, style,
+                           x, y, w, h, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD LINE - a line, or an empty/filled rectangle.  Class STATIC;
+   the single documented default style is %SS_ETCHEDFRAME(0x12), which is
+   what makes the two "line" look.  A LINE never displays its text; the
+   string is carried so the program can use it, exactly as documented. */
+void* pb_control_add_line(void* parent, long id, const char* text,
+                          int x, int y, int w, int h) {
+    pb_dlu_to_px(&x, &y, &w, &h);
+    unsigned long style = 0x12 | 0x40000000 | 0x10000000;
+    return CreateWindowExA(0, "STATIC", text, style,
+                           x, y, w, h, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL SET OPTION hDlg, id&, minid&, maxid& -- CheckRadioButton() *is*
+   this statement: it checks the button whose id is id& and clears the check
+   state of every other button in the inclusive range minid&..maxid&. */
+__declspec(dllimport) int __stdcall CheckRadioButton(void* hDlg, int nIDFirstButton,
+                                                     int nIDLastButton, int nIDCheckButton);
+void pb_control_set_option(void* hDlg, long long id, long long minid, long long maxid) {
+    CheckRadioButton(hDlg, (int)minid, (int)maxid, (int)id);
 }
 
 /* CONTROL ADD SCROLLBAR */

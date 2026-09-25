@@ -3719,6 +3719,76 @@ impl Compiler {
                 &IrType::I64,
                 &[IrType::Ptr, IrType::I64, IrType::I64][..],
             ),
+            (
+                "pb_control_add_option",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_add_check3state",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_add_frame",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_add_textbox",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_add_line",
+                &IrType::Ptr,
+                &[
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::Ptr,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                    IrType::I32,
+                ][..],
+            ),
+            (
+                "pb_control_set_option",
+                &IrType::Void,
+                &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64][..],
+            ),
         ] {
             self.module.declare_function(fname, ret, params, false);
         }
@@ -12399,6 +12469,64 @@ impl Compiler {
                             fb.store(&cv, &ptr);
                         }
                     }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_OPTION"
+            | "CONTROL_ADD_CHECK3STATE"
+            | "CONTROL_ADD_FRAME"
+            | "CONTROL_ADD_TEXTBOX"
+            | "CONTROL_ADD_LINE" => {
+                // batch 177: the plain and static CONTROL family.  Same
+                // argument shape as every other typed CONTROL ADD arm:
+                // (hDlg, id, txt$, x, y, w, h, TO-target).
+                if call.args.len() >= 8 {
+                    let mut hwnd = self.compile_expr(fb, &call.args[0])?;
+                    if hwnd.ty != IrType::Ptr {
+                        hwnd = fb.inttoptr(&hwnd);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let text = self.compile_expr(fb, &call.args[2])?;
+                    let x = self.compile_expr(fb, &call.args[3])?;
+                    let y = self.compile_expr(fb, &call.args[4])?;
+                    let w = self.compile_expr(fb, &call.args[5])?;
+                    let h = self.compile_expr(fb, &call.args[6])?;
+                    let fname = if call.name == "CONTROL_ADD_OPTION" {
+                        "pb_control_add_option"
+                    } else if call.name == "CONTROL_ADD_CHECK3STATE" {
+                        "pb_control_add_check3state"
+                    } else if call.name == "CONTROL_ADD_FRAME" {
+                        "pb_control_add_frame"
+                    } else if call.name == "CONTROL_ADD_TEXTBOX" {
+                        "pb_control_add_textbox"
+                    } else {
+                        "pb_control_add_line"
+                    };
+                    let hc = fb.call(&IrType::Ptr, fname, &[hwnd, id, text, x, y, w, h]);
+                    if let Some(t) = call.args.get(7) {
+                        if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, t) {
+                            let cv = self.convert_value(fb, &hc, &ty, &pty);
+                            fb.store(&cv, &ptr);
+                        }
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_OPTION" => {
+                // CONTROL SET OPTION hDlg, id&, minid&, maxid&
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = match hd.ty {
+                        IrType::Ptr => hd,
+                        _ => fb.inttoptr(&hd),
+                    };
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let lo = self.compile_expr(fb, &call.args[2])?;
+                    let lo64 = self.convert_value(fb, &lo, &IrType::I64, &PbType::Quad);
+                    let hi = self.compile_expr(fb, &call.args[3])?;
+                    let hi64 = self.convert_value(fb, &hi, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_option", &[hdlg64, id64, lo64, hi64]);
                 }
                 return Ok(());
             }
