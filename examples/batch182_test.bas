@@ -59,6 +59,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL gpH    AS QUAD
     LOCAL hdc    AS QUAD
     LOCAL hb     AS QUAD
+    LOCAL hbL    AS LONG
+    LOCAL guard  AS LONG
     LOCAL st     AS LONG
     LOCAL px     AS LONG
     LOCAL sv     AS LONG
@@ -172,6 +174,35 @@ FUNCTION PBMAIN () AS LONG
 
     IF hdc <> 0 THEN
         CALL DWORD rdA USING ReleaseDC(hGr, hdc) TO st
+    END IF
+
+    ' ---- a LONG destination must not write past its slot ---------------
+    ' The handle is an i64.  Until batch 183 it was stored straight through the
+    ' destination pointer, so a LONG received an eight-byte store into a
+    ' four-byte slot: the target still read back its low half, and the four
+    ' bytes past it silently clobbered whatever alloca sat next door - which is
+    ' why the QUAD destination used above never showed anything.
+    '
+    ' Two things are asserted, and they are not equally strong: hbL <> 0 proves
+    ' the truncation kept the handle, while guard = 12345 only reports the
+    ' clobber when the two allocas happen to land adjacently.  The deterministic
+    ' proof of this fix is the scanner self-test - sweep_handle_width.py was fed
+    ' the pre-fix backup and named exactly these two arms (L8564 capture,
+    ' L8572 load); with the fix in place it reports none.
+    guard = 12345
+    hbL = 0
+    GRAPHIC BITMAP CAPTURE TO hbL
+    IF hbL <> 0 THEN
+        PRINT "ok   BITMAP CAPTURE into a LONG destination kept its low half"
+    ELSE
+        fail = fail + 1
+        PRINT "FAIL BITMAP CAPTURE into a LONG destination read back 0"
+    END IF
+    IF guard = 12345 THEN
+        PRINT "ok   the LONG next to the destination was not written past"
+    ELSE
+        fail = fail + 1
+        PRINT "FAIL the destination's i64 store ran into its neighbour: guard ="; guard
     END IF
 
     ' ---- close the window before returning -----------------------------

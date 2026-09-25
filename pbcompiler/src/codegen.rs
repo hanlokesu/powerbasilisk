@@ -8560,16 +8560,22 @@ impl Compiler {
             "GRAPHIC_BITMAP_CAPTURE" => {
                 // args: hbmp (out, QUAD)   (batch 182, FORK EXTENSION)
                 let h = fb.call(&IrType::I64, "pb_graphic_bitmap_capture", &[]);
-                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[0]) {
-                    fb.store(&h, &ptr);
+                if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[0]) {
+                    // route through convert_value: a LONG destination must get
+                    // a 4-byte store, not the low half of this i64 (batch 183 fix)
+                    let cv = self.convert_value(fb, &h, &ty, &pty);
+                    fb.store(&cv, &ptr);
                 }
             }
             "GRAPHIC_BITMAP_LOAD" => {
                 // args: fname$, hbmp (out, QUAD)
                 let fname = self.compile_expr(fb, &call.args[0])?;
                 let h = fb.call(&IrType::I64, "pb_graphic_bitmap_load", &[fname]);
-                if let Some((ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
-                    fb.store(&h, &ptr);
+                if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[1]) {
+                    // route through convert_value: a LONG destination must get
+                    // a 4-byte store, not the low half of this i64 (batch 183 fix)
+                    let cv = self.convert_value(fb, &h, &ty, &pty);
+                    fb.store(&cv, &ptr);
                 }
             }
             "GRAPHIC_CHR_SIZE" => {
