@@ -4289,6 +4289,10 @@ char* pb_pathscan(const char* director, const char* filespec, const char* pathsp
 
 
 static void* g_gr_dc = 0;
+static void* g_gr_dc_win = 0;   /* set when g_gr_dc came from GetDC(control) */
+static void pb_graphic_release_dc(void);
+static void* pb_pb_hwnd(void* hDlg, long long id);   /* defined with the CONTROL helpers below */
+__declspec(dllimport) int __stdcall GetClientRect(void*, void*);
 static void* g_gr_bmp = 0;
 /* GRAPHIC WIDTH/STYLE/SAVE (batch 54) */
 static int g_gr_width = 1;
@@ -4918,8 +4922,8 @@ int pb_graphic_paint(int x, int y, int fillcolor, int border, int fillstyle) {
 
 /* GRAPHIC ATTACH/DETACH/CLEAR � bitmap graphic target (batch 52) */
 int pb_graphic_attach(long long h) {
+    pb_graphic_release_dc();
     g_gr_bmp = (void*)(intptr_t)h;
-    if (g_gr_dc) { DeleteDC(g_gr_dc); g_gr_dc = 0; }
     if (!g_gr_bmp) return 0;
     g_gr_dc = CreateCompatibleDC(0);
     if (!g_gr_dc) return 0;
@@ -4927,17 +4931,59 @@ int pb_graphic_attach(long long h) {
     return 1;
 }
 int pb_graphic_detach(void) {
-    if (g_gr_dc) { DeleteDC(g_gr_dc); g_gr_dc = 0; }
+    pb_graphic_release_dc();
     g_gr_bmp = 0;
     return 1;
 }
+/* Batch 179 - a GRAPHIC target may be a control, not only a memory bitmap.
+   GRAPHIC ATTACH hDlg, id& was parsed and then the id operand was dropped,
+   so that form attached to nothing at all; pb_graphic_attach_ctl is what it
+   calls now.  CreateCompatibleDC + SelectObject is the right recipe for a
+   bitmap and the wrong one for a window, so the two targets are told apart
+   here and the DC is released the matching way on detach.
+   The DIB-section statements (GET BITS / SET PIXEL / COPY / GET PIXEL ...)
+   still require g_gr_bmp and so decline on a control target; the plain GDI
+   drawing statements (CLEAR / LINE / BOX / CIRCLE / COLOR / SET ...) work. */
+__declspec(dllimport) void* __stdcall GetDC(void* hWnd);
+__declspec(dllimport) int __stdcall ReleaseDC(void* hWnd, void* hDC);
+__declspec(dllimport) int __stdcall IsWindow(void* hWnd);
+
+static void pb_graphic_release_dc(void) {
+    if (!g_gr_dc) return;
+    if (g_gr_dc_win) ReleaseDC(g_gr_dc_win, g_gr_dc);
+    else DeleteDC(g_gr_dc);
+    g_gr_dc = 0;
+    g_gr_dc_win = 0;
+}
+
+int pb_graphic_attach_ctl(void* hDlg, long long id) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    if (!h || !IsWindow(h)) return 0;
+    pb_graphic_release_dc();
+    g_gr_bmp = 0;
+    g_gr_dc = GetDC(h);
+    if (!g_gr_dc) return 0;
+    g_gr_dc_win = h;
+    return 1;
+}
+
 int pb_graphic_clear(int color) {
     if (!g_gr_dc) return 0;
     unsigned char rc[16];
     for (int i = 0; i < 16; i++) rc[i] = 0;
-    rc[8] = 0xff; rc[9] = 0x4f; rc[10] = 0xff; rc[11] = 0xff; /* right = 0xffff4f00-ish; use 0xffffffff */
-    rc[8] = 0xff; rc[9] = 0xff; rc[10] = 0xff; rc[11] = 0xff; /* right = 0xffffffff */
-    rc[12] = 0xff; rc[13] = 0xff; rc[14] = 0xff; rc[15] = 0xff; /* bottom = 0xffffffff */
+    int cw = 0, ch = 0;
+    if (g_gr_dc_win) {
+        /* a window or control DC: the target is its client area */
+        if (!GetClientRect(g_gr_dc_win, (void*)rc)) return 0;
+    } else if (g_gr_bmp && gr_bmp_dim(g_gr_bmp, &cw, &ch)) {
+        /* a memory DC over a DIB: the target is the bitmap's own size */
+        rc[8]  = (unsigned char)(cw & 255);         rc[9]  = (unsigned char)((cw >> 8) & 255);
+        rc[10] = (unsigned char)((cw >> 16) & 255); rc[11] = (unsigned char)((cw >> 24) & 255);
+        rc[12] = (unsigned char)(ch & 255);         rc[13] = (unsigned char)((ch >> 8) & 255);
+        rc[14] = (unsigned char)((ch >> 16) & 255); rc[15] = (unsigned char)((ch >> 24) & 255);
+    } else {
+        return 0;                     /* nothing to clear: no known target */
+    }
     void* br = CreateSolidBrush((unsigned long)(unsigned int)color);
     int ok = FillRect(g_gr_dc, (const void*)rc, br);
     if (br) DeleteObject(br);
@@ -6544,6 +6590,40 @@ static void pb_tab_apply_selection(void* hTab);
 static void* pb_dlg_bg_h[PB_DLG_BG_SLOTS];
 static long  pb_dlg_bg_v[PB_DLG_BG_SLOTS];
 static int   pb_dlg_bg_set[PB_DLG_BG_SLOTS];
+
+/* ------------------------------------------------------------------
+   Batch 179 - CONTROL SET COLOR hDlg, id&, foreclr&, backclr&
+   ------------------------------------------------------------------
+   The DDT engine answers the colour question from inside the dialog's
+   own window procedure: Windows sends %WM_CTLCOLORSTATIC (and the rest
+   of the %WM_CTLCOLOR* family) to the control's PARENT before a control
+   paints, and the brush handed back is what paints that control's
+   background.  pb_wndproc below is that parent procedure, so the table
+   and its lookup live here, next to the dialog-background table the
+   same procedure already consults for %WM_ERASEBKGND.
+
+   Slots are keyed by the CONTROL's window handle, and the parent window
+   is remembered too so the whole group can be dropped when the dialog
+   goes away: Windows recycles window handles, and a stale entry would
+   otherwise colour an unrelated control created later.
+
+   backclr&:  -1 = the control's default background (per class: an EDIT
+                     or LISTBOX paints on COLOR_WINDOW, a STATIC on the
+                     dialog face COLOR_BTNFACE),
+              -2 = the text background is not painted at all
+                     (SetBkMode TRANSPARENT + the stock NULL_BRUSH),
+             >=0 = that solid colour.
+   foreclr&:  -1 = the default text colour, otherwise that colour.
+   ------------------------------------------------------------------ */
+#define PB_CTL_COLOR_SLOTS 64
+static void* pb_ctl_clr_ctl[PB_CTL_COLOR_SLOTS];
+static void* pb_ctl_clr_par[PB_CTL_COLOR_SLOTS];
+static long  pb_ctl_clr_fg[PB_CTL_COLOR_SLOTS];
+static long  pb_ctl_clr_bg[PB_CTL_COLOR_SLOTS];
+static void* pb_ctl_clr_br[PB_CTL_COLOR_SLOTS];
+static int   pb_ctl_clr_set[PB_CTL_COLOR_SLOTS];
+static void* pb_ctlcolor_brush(void* hCtl, void* hdc);
+static void  pb_ctl_color_forget(void* hWnd);
 static int pb_dlg_bg_lookup(void* hWnd, unsigned long* rgb);
 /* DIALOG DEFAULT FONT installs this into every dialog created afterwards */
 static void* pb_default_font = 0;
@@ -6553,7 +6633,7 @@ __declspec(dllimport) int __stdcall FillRect(void*, const void*, void*);
 __declspec(dllimport) int __stdcall DeleteObject(void*);
 
 static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned long long wParam, unsigned long long lParam) {
-    if (Msg == 0x0002) /* WM_DESTROY */ { PostQuitMessage(0); return 0; }
+    if (Msg == 0x0002) /* WM_DESTROY */ { pb_ctl_color_forget(hWnd); PostQuitMessage(0); return 0; }
         if (Msg == 0x0111) /* WM_COMMAND */ {
         cb_msg = Msg;
         cb_hwnd = hWnd;
@@ -6587,6 +6667,17 @@ static long long __stdcall pb_wndproc(void* hWnd, unsigned int Msg, unsigned lon
             }
         }
         return 0;
+    }
+    /* PB_CTLCOLOR branch - batch 179.  0x0132..0x0138 is the whole
+       %WM_CTLCOLOR* family (MSGBOX, EDIT, LISTBOX, BTN, DLG, SCROLLBAR,
+       STATIC).  lParam is the control those colours belong to and wParam
+       is the DC it is about to paint with; the brush returned from here is
+       what Windows fills that control's background with.  Zero means "no
+       colour is registered for that control", and the message then falls
+       through to the default handling below, exactly as before. */
+    if (Msg >= 0x0132 && Msg <= 0x0138) {
+        void* br = pb_ctlcolor_brush((void*)lParam, (void*)wParam);
+        if (br) return (long long)(size_t)br;
     }
     if (Msg == 0x0014) /* WM_ERASEBKGND */ {
         unsigned long rgb;
@@ -7635,6 +7726,120 @@ static int pb_dlg_bg_lookup(void* hWnd, unsigned long* rgb) {
     return 0;
 }
 
+/* pb_ctlcolor_brush - the %WM_CTLCOLOR* answer for one control.  A NULL
+   return means "nothing registered here", which lets pb_wndproc pass the
+   message on to DefWindowProc just as it did before batch 179. */
+__declspec(dllimport) unsigned long __stdcall GetSysColor(int nIndex);
+__declspec(dllimport) void* __stdcall GetSysColorBrush(int nIndex);
+__declspec(dllimport) int __stdcall GetClassNameA(void* hWnd, char* lpClassName, int nMaxCount);
+
+#define PB_COLOR_WINDOW     5   /* COLOR_WINDOW      - EDIT / LISTBOX face */
+#define PB_COLOR_BTNFACE    15  /* COLOR_BTNFACE     - dialog face          */
+#define PB_COLOR_WINDOWTEXT 8   /* COLOR_WINDOWTEXT  - default text colour  */
+
+static void pb_ctl_color_forget(void* hWnd) {
+    int i;
+    for (i = 0; i < PB_CTL_COLOR_SLOTS; i++) {
+        if (pb_ctl_clr_set[i] && (pb_ctl_clr_ctl[i] == hWnd || pb_ctl_clr_par[i] == hWnd)) {
+            if (pb_ctl_clr_br[i]) DeleteObject(pb_ctl_clr_br[i]);
+            pb_ctl_clr_ctl[i] = 0;
+            pb_ctl_clr_par[i] = 0;
+            pb_ctl_clr_br[i] = 0;
+            pb_ctl_clr_set[i] = 0;
+        }
+    }
+}
+
+/* The default background is a per-class question: the help page says -1
+   selects "the default background text color", and for a STATIC (or a
+   button) that default is the dialog face, while a text-bearing control
+   paints on COLOR_WINDOW.  Asking the control for its class keeps the two
+   apart without guessing from the id. */
+static void* pb_ctl_default_brush(void* hCtl) {
+    char cls[32];
+    int i;
+    if (!hCtl) return GetSysColorBrush(PB_COLOR_BTNFACE);
+    cls[0] = 0;
+    if (GetClassNameA(hCtl, cls, (int)sizeof(cls) - 1) > 0) {
+        for (i = 0; cls[i]; i++) {
+            if (cls[i] >= 'a' && cls[i] <= 'z') cls[i] = (char)(cls[i] - 32);
+        }
+        if ((cls[0] == 'E' && cls[1] == 'D' && cls[2] == 'I' && cls[3] == 'T') ||
+            (cls[0] == 'L' && cls[1] == 'I' && cls[2] == 'S' && cls[3] == 'T') ||
+            (cls[0] == 'S' && cls[1] == 'C' && cls[2] == 'R') ||
+            (cls[0] == 'C' && cls[1] == 'O' && cls[2] == 'M' && cls[3] == 'B')) {
+            return GetSysColorBrush(PB_COLOR_WINDOW);
+        }
+    }
+    return GetSysColorBrush(PB_COLOR_BTNFACE);
+}
+
+static void* pb_ctlcolor_brush(void* hCtl, void* hdc) {
+    int i;
+    if (!hCtl || !hdc) return 0;
+    for (i = 0; i < PB_CTL_COLOR_SLOTS; i++) {
+        if (!pb_ctl_clr_set[i] || pb_ctl_clr_ctl[i] != hCtl) continue;
+        if (pb_ctl_clr_fg[i] >= 0) SetTextColor(hdc, (unsigned long)pb_ctl_clr_fg[i]);
+        else SetTextColor(hdc, GetSysColor(PB_COLOR_WINDOWTEXT));
+        if (pb_ctl_clr_bg[i] == -2) {
+            SetBkMode(hdc, 1 /* TRANSPARENT */);
+            return GetStockObject(5 /* NULL_BRUSH */);
+        }
+        if (pb_ctl_clr_bg[i] < 0) {
+            SetBkMode(hdc, 2 /* OPAQUE */);
+            return pb_ctl_default_brush(hCtl);
+        }
+        if (!pb_ctl_clr_br[i]) {
+            pb_ctl_clr_br[i] = CreateSolidBrush((unsigned long)pb_ctl_clr_bg[i]);
+            if (!pb_ctl_clr_br[i]) return 0;
+        }
+        SetBkMode(hdc, 2 /* OPAQUE */);
+        return pb_ctl_clr_br[i];
+    }
+    return 0;
+}
+
+/* CONTROL SET COLOR hDlg, id&, foreclr&, backclr&
+     The colour is remembered, not painted: the help page is explicit that
+     a program changing colours after DIALOG SHOW must follow with CONTROL
+     REDRAW (or DIALOG REDRAW for several controls at once), so this
+     function deliberately does not redraw behind the program's back.
+   The pair (-1, -1) means "both defaults", which is the same as never
+   having coloured the control, so the slot is released. */
+void pb_control_set_color(void* hDlg, long long id, long long fore, long long back) {
+    void* h = pb_pb_hwnd(hDlg, id);
+    int i, free_i = -1;
+    if (!h) return;
+    for (i = 0; i < PB_CTL_COLOR_SLOTS; i++) {
+        if (pb_ctl_clr_set[i] && pb_ctl_clr_ctl[i] == h) {
+            /* only the exact pair (-1, -1) means "both defaults"; -2 is a */
+            /* value of its own, meaning "do not paint the text background". */
+            if (fore == -1 && back == -1) {
+                if (pb_ctl_clr_br[i]) DeleteObject(pb_ctl_clr_br[i]);
+                pb_ctl_clr_ctl[i] = 0;
+                pb_ctl_clr_par[i] = 0;
+                pb_ctl_clr_br[i] = 0;
+                pb_ctl_clr_set[i] = 0;
+                return;
+            }
+            if (pb_ctl_clr_bg[i] != (long)back && pb_ctl_clr_br[i]) {
+                DeleteObject(pb_ctl_clr_br[i]);
+                pb_ctl_clr_br[i] = 0;
+            }
+            pb_ctl_clr_fg[i] = (long)fore;
+            pb_ctl_clr_bg[i] = (long)back;
+            return;
+        }
+        if (!pb_ctl_clr_set[i] && free_i < 0) free_i = i;
+    }
+    if (free_i < 0 || (fore == -1 && back == -1)) return;
+    pb_ctl_clr_ctl[free_i] = h;
+    pb_ctl_clr_par[free_i] = hDlg;
+    pb_ctl_clr_fg[free_i] = (long)fore;
+    pb_ctl_clr_bg[free_i] = (long)back;
+    pb_ctl_clr_set[free_i] = 1;
+}
+
 void pb_dialog_set_color(void* hDlg, long long fore, long long back) {
     int i, free_i = -1;
     (void)fore;
@@ -7697,6 +7902,7 @@ __declspec(dllimport) int __stdcall InitCommonControlsEx(const PB_ICC*);
 #define PB_ICC_LISTVIEW_CLASSES 0x00000001
 #define PB_ICC_TREEVIEW_CLASSES 0x00000002
 #define PB_ICC_BAR_CLASSES      0x00000004
+#define PB_ICC_WIN95_CLASSES    0x000000FF
 
 static void pb_icc(unsigned long flags) {
     PB_ICC icc;
@@ -8003,6 +8209,58 @@ void* pb_control_add_statusbar(void* parent, long id, const char* text,
                         x, y, w, ht, parent, (void*)(long long)id,
                         GetModuleHandleA(0), 0);
     return h;
+}
+
+/* CONTROL ADD GRAPHIC, hDlg, ID, Txt$, x, y, nWide, nHigh
+                     [,style] [,exstyle] [,CALL CallBack] [TO hCtrl&]
+   Official source: control_add_graphic.htm.  A graphic control is a STATIC
+   the program draws into with the GRAPHIC statements; the help page's
+   documented default style is
+       %WS_CHILD | %WS_VISIBLE | %SS_OWNERDRAW(0x0B)
+   and, exactly as for every other CONTROL ADD form here, a style the
+   program supplies REPLACES that default rather than adding to it.
+   Txt$ is carried on the window but never painted: a %SS_OWNERDRAW static
+   draws nothing itself, and the help page says outright that a graphic
+   control does not display its text. */
+void* pb_control_add_graphic(void* parent, long id, const char* text,
+                             int x, int y, int w, int ht,
+                             int style, int exstyle) {
+    /* DDT always creates the control as a visible child, whatever extra
+       style the program passes; a supplied style only replaces the TYPE
+       bits (omit the style and %SS_OWNERDRAW is the documented default). */
+    unsigned long s = (unsigned long)style;
+    if (!s) s = 0x0000000Bu /* SS_OWNERDRAW */;
+    s |= 0x40000000u /* WS_CHILD */ | 0x10000000u /* WS_VISIBLE */;
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    return CreateWindowExA((unsigned long)exstyle, "STATIC", text, s,
+                           x, y, w, ht, parent, (void*)(long long)id,
+                           GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD HEADER, hDlg, ID, Txt$, x, y, wide, high
+                    [,style] [,exstyle] [,CALL CallBack] [TO hCtrl&]
+   Official source: CONTROL_ADD_HEADER_statement.htm.  A free-standing
+   header control - the common control whose window class is SysHeader32,
+   the same class a LISTVIEW creates for its column headings, except that
+   here the header belongs to the dialog itself.  Its documented default
+   style is %WS_CHILD | %WS_VISIBLE, and the help page recommends id values
+   of 1..65535, 100 and up in practice.
+   A header displays no text, but the string is still handed to the window
+   so a program can read its own label back with CONTROL GET TEXT.
+   ICC_WIN95_CLASSES is the InitCommonControlsEx set that registers the
+   header class; the legacy InitCommonControls() call in pb_window_new
+   happens to cover it as well, but relying on that would be luck. */
+void* pb_control_add_header(void* parent, long id, const char* text,
+                            int x, int y, int w, int ht,
+                            int style, int exstyle) {
+    /* A supplied style is additive here too: always a visible child. */
+    unsigned long s = (unsigned long)style
+                      | 0x40000000u /* WS_CHILD */ | 0x10000000u /* WS_VISIBLE */;
+    pb_icc(PB_ICC_WIN95_CLASSES);
+    pb_dlu_to_px(&x, &y, &w, &ht);
+    return CreateWindowExA((unsigned long)exstyle, "SysHeader32", text, s,
+                           x, y, w, ht, parent, (void*)(long long)id,
+                           GetModuleHandleA(0), 0);
 }
 
 /* CONTROL ADD classname$ - the generic custom-control form (batch 166).

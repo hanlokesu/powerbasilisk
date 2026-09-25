@@ -1870,7 +1870,12 @@ impl Compiler {
         );
 
         // ---- TOOLBAR / STATUSBAR (batch 164) ----
-        for ctl in ["pb_control_add_toolbar", "pb_control_add_statusbar"] {
+        for ctl in [
+            "pb_control_add_toolbar",
+            "pb_control_add_statusbar",
+            "pb_control_add_graphic",
+            "pb_control_add_header",
+        ] {
             self.module.declare_function(
                 ctl,
                 &IrType::Ptr,
@@ -1888,6 +1893,13 @@ impl Compiler {
                 false,
             );
         }
+        // CONTROL SET COLOR hDlg, id&, foreclr&, backclr&
+        self.module.declare_function(
+            "pb_control_set_color",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I64, IrType::I64, IrType::I64],
+            false,
+        );
         self.module.declare_function(
             "pb_toolbar_add_button",
             &IrType::I64,
@@ -3135,6 +3147,13 @@ impl Compiler {
         );
         self.module
             .declare_function("pb_gdi_bitmap_end", &IrType::I32, &[IrType::I64], false);
+        // batch 179 - the two-operand GRAPHIC ATTACH form needs its own helper
+        self.module.declare_function(
+            "pb_graphic_attach_ctl",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::I64],
+            false,
+        );
         self.module
             .declare_function("pb_graphic_attach", &IrType::I32, &[IrType::I64], false);
         self.module
@@ -7273,10 +7292,24 @@ impl Compiler {
                 fb.call_void("pb_gdi_bitmap_end", &[h2]);
             }
             "GRAPHIC_ATTACH" => {
-                // args: hTarget [, id] — target may be a memory bitmap handle
-                let h = self.compile_expr(fb, &call.args[0])?;
-                let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
-                fb.call_void("pb_graphic_attach", &[h2]);
+                // args: hTarget [, id] - a memory-bitmap handle, or a dialog/control
+                //   pair.  The two-operand form used to be parsed and then dropped, so
+                //   it attached to nothing; batch 179 routes it to pb_graphic_attach_ctl,
+                //   which puts the control's own DC (GetDC) behind the GRAPHIC statements
+                //   instead of a bitmap DC.
+                if call.args.len() >= 2 {
+                    let h = self.compile_expr(fb, &call.args[0])?;
+                    // the declaration takes a pointer, so the dialog handle goes
+                    // through inttoptr exactly as the DIALOG SET COLOR arm does
+                    let hp = fb.inttoptr(&h);
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_graphic_attach_ctl", &[hp, id64]);
+                } else {
+                    let h = self.compile_expr(fb, &call.args[0])?;
+                    let h2 = self.convert_value(fb, &h, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_graphic_attach", &[h2]);
+                }
             }
             "GRAPHIC_DETACH" => {
                 fb.call_void("pb_graphic_detach", &[]);
@@ -10664,7 +10697,10 @@ impl Compiler {
             // ---- TOOLBAR / STATUSBAR (batch 164) ----
             // The parser normalises every optional operand into a fixed slot, so
             // these arms read positions rather than guessing at the arity.
-            "CONTROL_ADD_TOOLBAR" | "CONTROL_ADD_STATUSBAR" => {
+            "CONTROL_ADD_TOOLBAR"
+            | "CONTROL_ADD_STATUSBAR"
+            | "CONTROL_ADD_GRAPHIC"
+            | "CONTROL_ADD_HEADER" => {
                 if call.args.len() >= 10 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -10682,10 +10718,11 @@ impl Compiler {
                     // here: a %CCS_* equate or a LONG variable both land in i32.
                     let style = self.convert_value(fb, &style_v, &IrType::I32, &PbType::Long);
                     let exstyle = self.convert_value(fb, &exstyle_v, &IrType::I32, &PbType::Long);
-                    let fname = if call.name == "CONTROL_ADD_TOOLBAR" {
-                        "pb_control_add_toolbar"
-                    } else {
-                        "pb_control_add_statusbar"
+                    let fname = match call.name.as_str() {
+                        "CONTROL_ADD_STATUSBAR" => "pb_control_add_statusbar",
+                        "CONTROL_ADD_GRAPHIC" => "pb_control_add_graphic",
+                        "CONTROL_ADD_HEADER" => "pb_control_add_header",
+                        _ => "pb_control_add_toolbar",
                     };
                     let hc = fb.call(
                         &IrType::Ptr,
@@ -11922,6 +11959,25 @@ impl Compiler {
                     let y = self.compile_expr(fb, &call.args[2])?;
                     let y64 = self.convert_value(fb, &y, &IrType::I64, &PbType::Quad);
                     fb.call_void("pb_dialog_set_loc", &[hdlg64, x64, y64]);
+                }
+                return Ok(());
+            }
+            "CONTROL_SET_COLOR" => {
+                // CONTROL SET COLOR hDlg, id&, foreclr&, backclr&
+                //   The colour is recorded here and answered later, when Windows
+                //   asks the dialog for a brush with a %WM_CTLCOLOR* message,
+                //   which is why this arm only has to hand the four operands to
+                //   the runtime.
+                if call.args.len() >= 4 {
+                    let hd = self.compile_expr(fb, &call.args[0])?;
+                    let hdlg64 = fb.inttoptr(&hd);
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let id64 = self.convert_value(fb, &id, &IrType::I64, &PbType::Quad);
+                    let fg = self.compile_expr(fb, &call.args[2])?;
+                    let fg64 = self.convert_value(fb, &fg, &IrType::I64, &PbType::Quad);
+                    let bg = self.compile_expr(fb, &call.args[3])?;
+                    let bg64 = self.convert_value(fb, &bg, &IrType::I64, &PbType::Quad);
+                    fb.call_void("pb_control_set_color", &[hdlg64, id64, fg64, bg64]);
                 }
                 return Ok(());
             }

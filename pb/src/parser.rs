@@ -7138,6 +7138,33 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL SET COLOR hDlg, id&, foreclr&, backclr&   (batch 179)
+                //   Official source: control_set_color.htm.  Four operands and, as
+                //   for every other CONTROL SET <noun> form, no comma between the
+                //   noun and hDlg.  foreclr& = -1& and backclr& = -1& mean "use the
+                //   default colour"; backclr& = -2& means the text background is
+                //   not painted at all, so whatever is behind the text shows.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="SET")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="COLOR")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let fore = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let back = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_SET_COLOR".to_string(),
+                        args: vec![hwnd, id, fore, back],
+                        line,
+                    }));
+                }
                 // CONTROL SET IMAGE hDlg, id&, newimage$   (batch 178)
                 //   Official source: control_set_image.htm.  The replacement must be the same format
                 //   as the image already displayed; both SET forms are otherwise alike,
@@ -7636,22 +7663,44 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    let target = if self.peek() == &Token::To {
-                        self.advance();
-                        self.parse_expression()?
-                    } else {
-                        Expr::IntegerLit(0)
-                    };
-                    let mut args = vec![hwnd, id, text, x, y, w, h, target];
-                    let mut extra = 0;
-                    while self.peek() == &Token::Comma {
-                        if matches!(self.peek_at(1), Some(Token::Call)) {
+                    // Optional operands in the order the help pages print them:
+                    //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                    // The TO clause used to be read before style and exstyle, so a
+                    // program that passed a style AND a TO target handed the style
+                    // to the TO slot.  That slot is not an lvalue, so no store
+                    // happened and the statement quietly did nothing (batch 179).
+                    let mut target: Option<Expr> = None;
+                    let mut extras: Vec<Expr> = Vec::new();
+                    loop {
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            if target.is_none() {
+                                target = Some(t);
+                            }
+                            continue;
+                        }
+                        if self.peek() != &Token::Comma
+                            || matches!(self.peek_at(1), Some(Token::Call))
+                            || extras.len() >= 2
+                        {
                             break;
                         }
                         self.advance();
-                        args.push(self.parse_expression()?);
-                        extra += 1;
+                        extras.push(self.parse_expression()?);
                     }
+                    let mut args = vec![
+                        hwnd,
+                        id,
+                        text,
+                        x,
+                        y,
+                        w,
+                        h,
+                        target.unwrap_or(Expr::IntegerLit(0)),
+                    ];
+                    let mut extra = extras.len();
+                    args.extend(extras);
                     if self.peek() == &Token::Comma {
                         self.advance();
                     }
@@ -7662,6 +7711,11 @@ impl Parser {
                     if self.peek() == &Token::Call {
                         self.advance();
                         args.push(self.parse_expression()?);
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            args[7] = t;
+                        }
                     }
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
@@ -7691,22 +7745,44 @@ impl Parser {
                     let w = self.parse_expression()?;
                     self.expect(&Token::Comma)?;
                     let h = self.parse_expression()?;
-                    let target = if self.peek() == &Token::To {
-                        self.advance();
-                        self.parse_expression()?
-                    } else {
-                        Expr::IntegerLit(0)
-                    };
-                    let mut args = vec![hwnd, id, text, x, y, w, h, target];
-                    let mut extra = 0;
-                    while self.peek() == &Token::Comma {
-                        if matches!(self.peek_at(1), Some(Token::Call)) {
+                    // Optional operands in the order the help pages print them:
+                    //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                    // The TO clause used to be read before style and exstyle, so a
+                    // program that passed a style AND a TO target handed the style
+                    // to the TO slot.  That slot is not an lvalue, so no store
+                    // happened and the statement quietly did nothing (batch 179).
+                    let mut target: Option<Expr> = None;
+                    let mut extras: Vec<Expr> = Vec::new();
+                    loop {
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            if target.is_none() {
+                                target = Some(t);
+                            }
+                            continue;
+                        }
+                        if self.peek() != &Token::Comma
+                            || matches!(self.peek_at(1), Some(Token::Call))
+                            || extras.len() >= 2
+                        {
                             break;
                         }
                         self.advance();
-                        args.push(self.parse_expression()?);
-                        extra += 1;
+                        extras.push(self.parse_expression()?);
                     }
+                    let mut args = vec![
+                        hwnd,
+                        id,
+                        text,
+                        x,
+                        y,
+                        w,
+                        h,
+                        target.unwrap_or(Expr::IntegerLit(0)),
+                    ];
+                    let mut extra = extras.len();
+                    args.extend(extras);
                     if self.peek() == &Token::Comma {
                         self.advance();
                     }
@@ -7717,10 +7793,193 @@ impl Parser {
                     if self.peek() == &Token::Call {
                         self.advance();
                         args.push(self.parse_expression()?);
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            args[7] = t;
+                        }
                     }
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "CONTROL_ADD_STATUSBAR".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // CONTROL ADD GRAPHIC, hDlg, id&, txt$, x, y, xx, yy
+                //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                //   (batch 179)  Official source: control_add_graphic.htm.  The eight-operand
+                //   shape is the one the toolbar/statusbar branches above already
+                //   use, so their operand handling is reused here verbatim: eight
+                //   operands, style and exstyle in their own slots, an optional
+                //   CALL clause, then TO hCtrl&.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="GRAPHIC")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    // Optional operands in the order the help pages print them:
+                    //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                    // The TO clause used to be read before style and exstyle, so a
+                    // program that passed a style AND a TO target handed the style
+                    // to the TO slot.  That slot is not an lvalue, so no store
+                    // happened and the statement quietly did nothing (batch 179).
+                    let mut target: Option<Expr> = None;
+                    let mut extras: Vec<Expr> = Vec::new();
+                    loop {
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            if target.is_none() {
+                                target = Some(t);
+                            }
+                            continue;
+                        }
+                        if self.peek() != &Token::Comma
+                            || matches!(self.peek_at(1), Some(Token::Call))
+                            || extras.len() >= 2
+                        {
+                            break;
+                        }
+                        self.advance();
+                        extras.push(self.parse_expression()?);
+                    }
+                    let mut args = vec![
+                        hwnd,
+                        id,
+                        text,
+                        x,
+                        y,
+                        w,
+                        h,
+                        target.unwrap_or(Expr::IntegerLit(0)),
+                    ];
+                    let mut extra = extras.len();
+                    args.extend(extras);
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    while extra < 2 {
+                        args.push(Expr::IntegerLit(0));
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Call {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            args[7] = t;
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_GRAPHIC".to_string(),
+                        args,
+                        line,
+                    }));
+                }
+                // CONTROL ADD HEADER, hDlg, id&, txt$, x, y, xx, yy
+                //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                //   (batch 179)  Official source: CONTROL_ADD_HEADER_statement.htm.  The eight-operand
+                //   shape is the one the toolbar/statusbar branches above already
+                //   use, so their operand handling is reused here verbatim: eight
+                //   operands, style and exstyle in their own slots, an optional
+                //   CALL clause, then TO hCtrl&.
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="HEADER")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let text = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    // Optional operands in the order the help pages print them:
+                    //   [, [style&] [, [exstyle&]]] [[,] CALL callback] [TO hCtrl&]
+                    // The TO clause used to be read before style and exstyle, so a
+                    // program that passed a style AND a TO target handed the style
+                    // to the TO slot.  That slot is not an lvalue, so no store
+                    // happened and the statement quietly did nothing (batch 179).
+                    let mut target: Option<Expr> = None;
+                    let mut extras: Vec<Expr> = Vec::new();
+                    loop {
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            if target.is_none() {
+                                target = Some(t);
+                            }
+                            continue;
+                        }
+                        if self.peek() != &Token::Comma
+                            || matches!(self.peek_at(1), Some(Token::Call))
+                            || extras.len() >= 2
+                        {
+                            break;
+                        }
+                        self.advance();
+                        extras.push(self.parse_expression()?);
+                    }
+                    let mut args = vec![
+                        hwnd,
+                        id,
+                        text,
+                        x,
+                        y,
+                        w,
+                        h,
+                        target.unwrap_or(Expr::IntegerLit(0)),
+                    ];
+                    let mut extra = extras.len();
+                    args.extend(extras);
+                    if self.peek() == &Token::Comma {
+                        self.advance();
+                    }
+                    while extra < 2 {
+                        args.push(Expr::IntegerLit(0));
+                        extra += 1;
+                    }
+                    if self.peek() == &Token::Call {
+                        self.advance();
+                        args.push(self.parse_expression()?);
+                        if self.peek() == &Token::To {
+                            self.advance();
+                            let t = self.parse_expression()?;
+                            args[7] = t;
+                        }
+                    }
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_HEADER".to_string(),
                         args,
                         line,
                     }));

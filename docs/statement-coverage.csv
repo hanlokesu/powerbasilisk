@@ -1,4 +1,4 @@
-# Last updated from batch 178 (v0.2.035) - 2026-09-25,,,,
+# Last updated from batch 179 (v0.2.036) - 2026-09-25,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -106,8 +106,8 @@ CONTROL ADD CHECK3STATE,STATEMENT,PB/Win only,Implemented
 CONTROL ADD CHECKBOX,STATEMENT,PB/Win only,Implemented
 CONTROL ADD COMBOBOX,STATEMENT,PB/Win only,Implemented
 CONTROL ADD FRAME,STATEMENT,PB/Win only,Implemented
-CONTROL ADD GRAPHIC,STATEMENT,PB/Win only,Tier-3 DDT
-CONTROL ADD HEADER,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL ADD GRAPHIC,STATEMENT,PB/Win only,Implemented
+CONTROL ADD HEADER,STATEMENT,PB/Win only,Implemented
 CONTROL ADD IMAGE,STATEMENT,PB/Win only,Implemented
 CONTROL ADD IMAGEX,STATEMENT,PB/Win only,Implemented
 CONTROL ADD IMGBUTTON,STATEMENT,PB/Win only,Implemented
@@ -141,7 +141,7 @@ CONTROL REDRAW,STATEMENT,PB/Win only,Implemented
 CONTROL SEND,STATEMENT,PB/Win only,Implemented
 CONTROL SET CHECK,STATEMENT,PB/Win only,Implemented
 CONTROL SET CLIENT,STATEMENT,PB/Win only,Implemented
-CONTROL SET COLOR,STATEMENT,PB/Win only,Tier-3 DDT
+CONTROL SET COLOR,STATEMENT,PB/Win only,Implemented
 CONTROL SET FOCUS,STATEMENT,PB/Win only,Implemented
 CONTROL SET FONT,STATEMENT,PB/Win only,Implemented
 CONTROL SET IMAGE,STATEMENT,PB/Win only,Implemented
