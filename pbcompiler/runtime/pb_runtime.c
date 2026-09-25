@@ -7975,6 +7975,34 @@ void* pb_control_add_progressbar(void* parent, long id, int x, int y, int w, int
                            (void*)(long long)id, GetModuleHandleA(0), 0);
 }
 
+/* CONTROL ADD MONTHCAL (batch 190) - class "SysMonthCal32" */
+void* pb_control_add_monthcal(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x40000000 | 0x10000000 | 0x00010000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "SysMonthCal32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD ANIMATE (batch 190) - class "SysAnimate32" */
+void* pb_control_add_animate(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x40000000 | 0x10000000;
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "SysAnimate32", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
+/* CONTROL ADD RICHEDIT (batch 190) - class "RICHEDIT50W" */
+void* pb_control_add_richedit(void* parent, long id, int x, int y, int w, int ht) {
+    unsigned long style = 0x40000000 | 0x10000000 | 0x00010000 | 0x00800000 | 0x4 | 0x40;
+    LoadLibraryA("msftedit.dll");  /* registers RICHEDIT50W */
+    pb_dlu_to_px(&x,&y,&w,&ht);
+    return CreateWindowExA(0, "RICHEDIT50W", "", style,
+                           x, y, w, ht, parent,
+                           (void*)(long long)id, GetModuleHandleA(0), 0);
+}
+
 /* CONTROL ADD TRACKBAR (batch 189) - class "msctls_trackbar32" */
 void* pb_control_add_trackbar(void* parent, long id, int x, int y, int w, int ht) {
     unsigned long style = 0x0001 | 0x40000000 | 0x10000000 | 0x00010000;

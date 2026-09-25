@@ -1931,6 +1931,45 @@ impl Compiler {
             false,
         );
         self.module.declare_function(
+            "pb_control_add_monthcal",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_animate",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
+            "pb_control_add_richedit",
+            &IrType::Ptr,
+            &[
+                IrType::Ptr,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+                IrType::I32,
+            ],
+            false,
+        );
+        self.module.declare_function(
             "pb_control_add_trackbar",
             &IrType::Ptr,
             &[
@@ -11313,6 +11352,78 @@ impl Compiler {
                     let hc = fb.call(
                         &IrType::Ptr,
                         "pb_control_add_progressbar",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_MONTHCAL" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_monthcal",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_ANIMATE" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_animate",
+                        &[parent, id, x, y, w, h],
+                    );
+                    if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {
+                        let hc_i = fb.ptrtoint64(&hc);
+                        let hc_i_v = self.convert_value(fb, &hc_i, &ty, &pty);
+                        fb.store(&hc_i_v, &ptr);
+                    }
+                }
+                return Ok(());
+            }
+            "CONTROL_ADD_RICHEDIT" => {
+                if call.args.len() >= 7 {
+                    let mut parent = self.compile_expr(fb, &call.args[0])?;
+                    if parent.ty != IrType::Ptr {
+                        parent = fb.inttoptr(&parent);
+                    }
+                    let id = self.compile_expr(fb, &call.args[1])?;
+                    let x = self.compile_expr(fb, &call.args[2])?;
+                    let y = self.compile_expr(fb, &call.args[3])?;
+                    let w = self.compile_expr(fb, &call.args[4])?;
+                    let h = self.compile_expr(fb, &call.args[5])?;
+                    let hc = fb.call(
+                        &IrType::Ptr,
+                        "pb_control_add_richedit",
                         &[parent, id, x, y, w, h],
                     );
                     if let Some((ptr, ty, pty)) = self.lvalue_ptr(fb, &call.args[6]) {

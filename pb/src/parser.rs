@@ -8033,6 +8033,93 @@ impl Parser {
                         line,
                     }));
                 }
+                // CONTROL ADD MONTHCAL, hWnd, id, x, y, w, h TO hCtrl&  (batch 190)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="MONTHCAL")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_MONTHCAL".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD ANIMATE, hWnd, id, x, y, w, h TO hCtrl&  (batch 190)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="ANIMATE")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_ANIMATE".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
+                // CONTROL ADD RICHEDIT, hWnd, id, x, y, w, h TO hCtrl&  (batch 190)
+                if name_upper == "CONTROL"
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")
+                    && matches!(self.peek_at(2), Some(Token::Identifier(w)) if w.to_uppercase()=="RICHEDIT")
+                {
+                    self.advance();
+                    self.advance();
+                    self.advance();
+                    self.expect(&Token::Comma)?;
+                    let hwnd = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let id = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let x = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let y = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let w = self.parse_expression()?;
+                    self.expect(&Token::Comma)?;
+                    let h = self.parse_expression()?;
+                    self.expect(&Token::To)?;
+                    let target = self.parse_expression()?;
+                    self.consume_to_eol();
+                    return Ok(Statement::Call(CallStmt {
+                        name: "CONTROL_ADD_RICHEDIT".to_string(),
+                        args: vec![hwnd, id, x, y, w, h, target],
+                        line,
+                    }));
+                }
                 // CONTROL ADD TRACKBAR, hWnd, id, x, y, w, h TO hCtrl&  (batch 189)
                 if name_upper == "CONTROL"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase()=="ADD")

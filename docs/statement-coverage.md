@@ -1,28 +1,28 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 189 (v0.2.043)** — 2026-09-25. All statements through batch 189 are reflected in this matrix.
+> **Last updated from batch 190 (v0.2.044)** — 2026-09-25. All statements through batch 190 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
-- Rows in this matrix: **861** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 590 STATEMENT, 3 FORK EXTENSION).
-- **858** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- Rows in this matrix: **864** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 593 STATEMENT, 3 FORK EXTENSION).
+- **861** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
 - **0** documented keywords still not implemented; **0** Tier-3 DDT GUI items deferred; **3** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 710 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 713 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **858** | Implemented + Established |
+| ✅ **Total available** | **861** | Implemented + Established |
 | ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
 | 🔧 Fork extension | 3 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 0 | DDT GUI / window-callback framework, high effort, deferred |
 
-## All keywords (861 rows)
+## All keywords (864 rows)
 
 | Keyword | Kind | Platform | Status |
 |---------|------|----------|--------|
@@ -129,6 +129,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | COMMAND | FUNCTION | codegen builtin | Implemented |
 | COMMAND$ | FUNCTION | Win32 | Implemented |
 | CONTROL ADD | STATEMENT | PB/Win only | Implemented |
+| CONTROL ADD ANIMATE | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD BUTTON | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD CHECK3STATE | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD CHECKBOX | STATEMENT | PB/Win only | Implemented |
@@ -146,8 +147,10 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | CONTROL ADD LINE | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD LISTBOX | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD LISTVIEW | STATEMENT | PB/Win only | Implemented |
+| CONTROL ADD MONTHCAL | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD OPTION | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD PROGRESSBAR | STATEMENT | PB/Win only | Implemented |
+| CONTROL ADD RICHEDIT | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD SCROLLBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD STATUSBAR | STATEMENT | PB/Win only | Implemented |
 | CONTROL ADD TAB | STATEMENT | PB/Win only | Implemented |
