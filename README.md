@@ -709,6 +709,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.053 (2026-09-26)
+- **`THREAD CREATE MyThread` with the `TO` clause omitted was a silent no-op.** The
+  codegen arm opened with `if call.args.len() >= 2`, while the parser emits the second
+  argument only when `TO` is present - so the statement parsed, compiled and linked
+  cleanly and the thread never started. One argument is now accepted and the
+  out-pointer is passed as `null`; the runtime already guarded `if (out_id)`.
+- New example `examples/batch202_thread_create_test.bas` asserts that both spellings
+  really start their thread and prints `=== FAILURES: 0`.
+- Correction to the batch 201 notes: `TCP OPEN` / `UDP OPEN` bind a file number
+  (`AS #f`) and store no handle; `COMM OPEN` takes the channel number as an *input*;
+  and the `THREAD CREATE ... TO h` handle is a **zero-based slot index**, so the first
+  thread reading 0 is correct semantics, not a failure. The batch 201 claim that these
+  three families were defective because "the handle read 0" was a measurement error.
+
 ### v0.2.052 (2026-09-26)
 
 - **The 64-bit-handle defect is fixed at its root.** Storing a call result into a variable went
