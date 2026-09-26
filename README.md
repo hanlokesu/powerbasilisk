@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 191 (v0.2.045). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 192 (v0.2.046). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Batch 192 (v0.2.046): 23 statement forms that used to be compiled as silent no-ops now report an error, including the top-level catch-all for unrecognised statements.
 > batch 191 (v0.2.045): DDT unknown sub-commands now hard-fail (LISTVIEW / TREEVIEW / SCROLLBAR); no coverage change.
 > batch 190 (v0.2.044) - +3 official keywords: CONTROL ADD MONTHCAL / ANIMATE / RICHEDIT (parser + codegen + runtime, class names SysMonthCal32, SysAnimate32, RICHEDIT50W with msftedit.dll loaded). examples/batch190_test.bas = 12 checks, FAILURES:0.
 > batch 189 (v0.2.043) - CONTROL ADD TRACKBAR / UPDOWN / HOTKEY / IPADDRESS: parser + codegen + runtime for four more common-control types, witnessed by class name, GWL_STYLE and a SendMessageA round trip in examples/batch189_test.bas.
@@ -705,6 +706,25 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.046 (2026-09-26)
+
+- **Silently dropped statements now report an error.** An audit of the parser's
+  `Statement::Noop` sites found 38 forms that were accepted and then ignored with no
+  diagnostic at all. 23 of them now say what they are ignoring: unsupported
+  `LISTVIEW FIT/GET/SET/INSERT/DELETE` and `TREEVIEW GET/SET/INSERT` sub-commands,
+  `TAB`, `ON ERROR GOTO` / `ON CALL` / `ON` / `ON GOTO-GOSUB`, `REMOVE`,
+  `END` (mismatched block), `LINE`, `LET`, `COMM`, `COMM LINE`, `THREAD`, `TRACE`,
+  `IMPORT`, and the top-level catch-all, which now reports
+  `Error: unrecognised statement on line N` instead of compiling a program that
+  quietly does nothing there. The remaining sites are either documented as
+  deliberate (bare `TYPE`, a late `#INCLUDE`) or still under review (`MAT`,
+  `CLIPBOARD`, `XPRINT_`, `%CONSTANT`, `GLOBALMEM`, `NET`, `OPEN`/`CLOSE` tails).
+- `SCROLLBAR SET TRACKPOS` is rejected at parse time with the reason
+  (`TRACKPOS is a GET-only sub-command`); `SET/GET RANGE`, `SET/GET POS` and
+  `SET/GET PAGESIZE` remain implemented and verified.
+- New sample `examples/batch192_test.bas`; the audit is reproducible with
+  `scripts/audit_noop_sites.py`.
+
 ### v0.2.045 (2026-09-25)
 
 - The three DDT families' *unknown sub-command* fallbacks are hard errors now.
