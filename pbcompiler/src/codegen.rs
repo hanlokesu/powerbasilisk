@@ -14774,12 +14774,13 @@ impl Compiler {
                     if v.ty == IrType::Ptr {
                         fb.call_void("pb_trace_print", std::slice::from_ref(&v));
                     } else {
-                        // Non-string: format via num_to_string, then skip the
-                        // 4-byte BSTR prefix (runtime expects a C-string payload)
+                        // Non-string: format with num_to_string, which returns a BSTR -
+                        // a pointer that ALREADY addresses the character data (the 4-byte
+                        // length sits at bstr[-4], SysAllocStringByteLen semantics).  The
+                        // old code skipped a further 4 bytes, walked past the terminator
+                        // and printed uninitialised heap: `TRACE PRINT 42` wrote "s".
                         let s = self.num_to_string(fb, &v);
-                        let off = fb.const_i32(4);
-                        let payload = fb.gep_byte(&s, &off);
-                        fb.call_void("pb_trace_print", std::slice::from_ref(&payload));
+                        fb.call_void("pb_trace_print", std::slice::from_ref(&s));
                     }
                 }
                 return Ok(());

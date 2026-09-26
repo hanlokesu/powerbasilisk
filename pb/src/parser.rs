@@ -11807,6 +11807,17 @@ impl Parser {
         }
         self.advance(); // consume op
         let mut args = vec![self.parse_expression()?];
+        // Official syntax puts TO directly after the first argument, with no comma:
+        //   GLOBALMEM ALLOC 64 TO h     GLOBALMEM LOCK m TO p
+        // Only the comma form was consumed, so the official spelling parsed to a single
+        // argument, failed the `args.len() >= 2` guard in codegen, and became a silent
+        // no-op (probe: `mem handle = 0`).
+        if matches!(self.peek(), Token::To) {
+            self.advance();
+            if !matches!(self.peek(), Token::Eol | Token::Colon) {
+                args.push(self.parse_expression()?);
+            }
+        }
         // Parse remaining comma-separated args
         while self.peek() == &Token::Comma {
             self.advance();
