@@ -1611,7 +1611,9 @@ void pb_kill(const char* path) {
     if (path) remove(path);
 }
 
-/* pb_err is defined later in this file (global ERR variable) */
+/* pb_err is defined later in this file (global ERR variable);
+   batch 207 wired it into the socket / serial / thread / file / sound
+   failure paths, so those failures are observable as ERR. */
 extern int pb_err;
 
 /* CLS: clear the console screen (PB/CC) */
@@ -1978,16 +1980,16 @@ int pb_chdrive(const char* drv) {
         return _chdrive(toupper((unsigned char)drv[0]) - 'A' + 1);
     }
 #endif
-    return -1;
+    pb_err = 76; return -1;
 }
 
 /* SETEOF #f � truncate file at current position */
 int pb_seteof(int f) {
-    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) { pb_err = 52; return -1; }
 #ifdef _WIN32
     int fd = _fileno(file_handles[f]);
     void* h = (void*)_get_osfhandle(fd);
-    if (h == (void*)-1) return -1;
+    if (h == (void*)-1) { pb_err = 57; return -1; }
     return SetEndOfFile(h) ? 0 : -1;
 #else
     long cur = ftell(file_handles[f]);
@@ -2000,7 +2002,7 @@ int pb_play_wave(const char* path) {
 #ifdef _WIN32
     return PlaySoundA(path, NULL, PB_SND_FILENAME) ? 0 : -1;
 #else
-    return -1;
+    pb_err = 68; return -1;
 #endif
 }
 
@@ -2030,11 +2032,11 @@ typedef struct { char* data; unsigned offset; unsigned len; unsigned kind; } pb_
 
 /* OPEN ... FOR RANDOM AS #n LEN=reclen � open r+b (keep existing) else w+b, alloc record buffer */
 int pb_open_random(const char* path, int filenum, unsigned reclen) {
-    if (filenum < 1 || filenum >= MAX_FILE_HANDLES) return -1;
+    if (filenum < 1 || filenum >= MAX_FILE_HANDLES) { pb_err = 52; return -1; }
     if (reclen == 0) reclen = 128;
     FILE* f = fopen(path, "r+b");
     if (!f) f = fopen(path, "w+b");
-    if (!f) return -1;
+    if (!f) { pb_err = 53; return -1; }
     file_handles[filenum] = f;
     file_modes[filenum] = 4;
     if (rec_buf[filenum]) free(rec_buf[filenum]);
@@ -2073,10 +2075,10 @@ void pb_seek_record(int filenum, long long recnum) {
 
 /* FIELD #n, size AS var � bind field var to file record buffer sub-section */
 int pb_field_bind_file(int filenum, long long offset, unsigned len, pb_field_t* fv) {
-    if (!fv) return -1;
+    if (!fv) { pb_err = 5; return -1; }
     if (filenum < 1 || filenum >= MAX_FILE_HANDLES || !rec_buf[filenum]) {
         fv->data = NULL; fv->offset = 0; fv->len = 0; fv->kind = 0;
-        return -1;
+        pb_err = 5; return -1;
     }
     if (offset + (long long)len > (long long)rec_len[filenum]) {
         len = (unsigned)((long long)rec_len[filenum] - offset > 0 ? (long long)rec_len[filenum] - offset : 0);
@@ -2092,7 +2094,7 @@ int pb_field_bind_file(int filenum, long long offset, unsigned len, pb_field_t* 
    slot (char**). The payload is resolved at every get/set, so reassigning the
    string variable follows automatically. */
 int pb_field_bind_str(char** slot, long long offset, unsigned len, pb_field_t* fv) {
-    if (!fv) return -1;
+    if (!fv) { pb_err = 5; return -1; }
     fv->data = (char*)slot;
     fv->offset = (unsigned)(offset > 0 ? offset : 0);
     fv->len = len;
@@ -2644,8 +2646,8 @@ void pb_field_tostr(pb_field_t* fv) {
 }
 
 /* PUT$ #f, str$ � write ANSI string at current file position */
-int pb_put_string(int f, const char* s) {    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
-    if (!s) return -1;
+int pb_put_string(int f, const char* s) {    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) pb_err = 52; return -1;
+    if (!s) { pb_err = 5; return -1; }
     size_t n = strlen(s);
     if (n == 0) return 0;
     return fwrite(s, 1, n, file_handles[f]) == n ? 0 : -1;
@@ -2653,10 +2655,10 @@ int pb_put_string(int f, const char* s) {    if (f < 1 || f >= MAX_FILE_HANDLES 
 
 /* GET$ #f, count, dest$: read count bytes from a binary file into a BSTR */
 int pb_get_string(int f, long long count, char** dest) {
-    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
-    if (count < 0 || count > 0x7FFFFFFFLL) return -1;
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) { pb_err = 52; return -1; }
+    if (count < 0 || count > 0x7FFFFFFFLL) { pb_err = 5; return -1; }
     char* buf = (char*)malloc((size_t)count + 1);
-    if (!buf) return -1;
+    if (!buf) { pb_err = 5; return -1; }
     size_t got = fread(buf, 1, (size_t)count, file_handles[f]);
     *dest = pb_bstr_alloc(buf, (unsigned int)got);
     free(buf);
@@ -2668,14 +2670,14 @@ int pb_get_string(int f, long long count, char** dest) {
 
 /* PUT$$ #f, StrgExpr: write a WIDE (UTF-16LE) string at the file position */
 int pb_put_wstring(int f, const char* s) {
-    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
-    if (!s) return -1;
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) { pb_err = 52; return -1; }
+    if (!s) { pb_err = 5; return -1; }
     size_t n = strlen(s);
     if (n == 0) return 0;
     int wlen = MultiByteToWideChar(PB_CP_ACP, 0, s, (int)n, NULL, 0);
-    if (wlen <= 0) return -1;
+    if (wlen <= 0) { pb_err = 5; return -1; }
     short* wbuf = (short*)malloc((size_t)wlen * 2);
-    if (!wbuf) return -1;
+    if (!wbuf) { pb_err = 5; return -1; }
     MultiByteToWideChar(PB_CP_ACP, 0, s, (int)n, wbuf, wlen);
     size_t written = fwrite(wbuf, 2, (size_t)wlen, file_handles[f]);
     free(wbuf);
@@ -2684,18 +2686,18 @@ int pb_put_wstring(int f, const char* s) {
 
 /* GET\$\$ #f, Count&, StrgVar: read Count WIDE chars (Count*2 bytes), convert to ANSI */
 int pb_get_wstring(int f, long long count, char** dest) {
-    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) return -1;
-    if (count < 0 || count > 0x3FFFFFFFLL) return -1;
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) { pb_err = 52; return -1; }
+    if (count < 0 || count > 0x3FFFFFFFLL) { pb_err = 5; return -1; }
     size_t bytes = (size_t)count * 2;
     char* buf = (char*)malloc(bytes + 2);
-    if (!buf) return -1;
+    if (!buf) { pb_err = 5; return -1; }
     size_t got = fread(buf, 1, bytes, file_handles[f]);
     size_t wchars = got / 2;
     int ansi_len = WideCharToMultiByte(PB_CP_ACP, 0, (const short*)buf, (int)wchars,
                                        NULL, 0, NULL, NULL);
     if (ansi_len < 0) ansi_len = 0;
     char* out = (char*)malloc((size_t)ansi_len + 1);
-    if (!out) { free(buf); return -1; }
+    if (!out) { free(buf); pb_err = 5; return -1; }
     if (ansi_len > 0) {
         WideCharToMultiByte(PB_CP_ACP, 0, (const short*)buf, (int)wchars,
                             out, ansi_len, NULL, NULL);
@@ -2741,7 +2743,7 @@ int pb_play_sound(long freq, long dur) {
 #ifdef _WIN32
     return Beep((unsigned long)freq, (unsigned long)dur) ? 0 : -1;
 #else
-    return -1;
+    pb_err = 68; return -1;
 #endif
 }
 
@@ -3483,61 +3485,61 @@ static void pb_net_fill_addr(struct pb_sockaddr_in* a, unsigned long ip, int por
 }
 
 int pb_tcp_open(int mode, int port, const char* addr, int filenum, long timeout) {
-    if (pb_winsock_init() != 0) return -1;
-    if (filenum < 1 || filenum >= PB_MAX_SOCK) return -1;
-    if (pb_sock_state[filenum] != 0) return -1;
+    if (pb_winsock_init() != 0) { pb_err = 57; return -1; }
+    if (filenum < 1 || filenum >= PB_MAX_SOCK) { pb_err = 52; return -1; }
+    if (pb_sock_state[filenum] != 0) { pb_err = 52; return -1; }
     pb_sock_t s = socket(2, 1, 6); /* AF_INET, SOCK_STREAM, TCP */
-    if (s == PB_SOCK_INVALID) return -1;
+    if (s == PB_SOCK_INVALID) { pb_err = 57; return -1; }
     struct pb_sockaddr_in a;
     if (mode == 1) {
         /* server: bind + listen */
         pb_net_fill_addr(&a, 0, port);
-        if (bind(s, &a, sizeof(a)) != 0 || listen(s, 8) != 0) { closesocket(s); return -1; }
+        if (bind(s, &a, sizeof(a)) != 0 || listen(s, 8) != 0) { closesocket(s); pb_err = 57; return -1; }
         pb_sock[filenum] = s;
         pb_sock_state[filenum] = 3;
         return 0;
     }
     /* client: connect */
     unsigned long ip = pb_net_ip(addr);
-    if (ip == (unsigned long)-1) { closesocket(s); return -1; }
+    if (ip == (unsigned long)-1) { closesocket(s); pb_err = 57; return -1; }
     if (timeout > 0) {
         int t = (int)timeout;
         setsockopt(s, 0xFFFF, 0x1006, (const char*)&t, 4); /* SO_RCVTIMEO */
         setsockopt(s, 0xFFFF, 0x1005, (const char*)&t, 4); /* SO_SNDTIMEO */
     }
     pb_net_fill_addr(&a, ip, port);
-    if (connect(s, &a, sizeof(a)) != 0) { closesocket(s); return -1; }
+    if (connect(s, &a, sizeof(a)) != 0) { closesocket(s); pb_err = 57; return -1; }
     pb_sock[filenum] = s;
     pb_sock_state[filenum] = 1;
     return 0;
 }
 
 int pb_tcp_accept(int srv, int newf) {
-    if (srv < 1 || srv >= PB_MAX_SOCK || pb_sock_state[srv] != 3) return -1;
-    if (newf < 1 || newf >= PB_MAX_SOCK || pb_sock_state[newf] != 0) return -1;
+    if (srv < 1 || srv >= PB_MAX_SOCK || pb_sock_state[srv] != 3) { pb_err = 52; return -1; }
+    if (newf < 1 || newf >= PB_MAX_SOCK || pb_sock_state[newf] != 0) { pb_err = 52; return -1; }
     struct pb_sockaddr_in a;
     int alen = sizeof(a);
     pb_sock_t s = accept(pb_sock[srv], &a, &alen);
-    if (s == PB_SOCK_INVALID) return -1;
+    if (s == PB_SOCK_INVALID) { pb_err = 57; return -1; }
     pb_sock[newf] = s;
     pb_sock_state[newf] = 1;
     return 0;
 }
 
 int pb_tcp_send(int f, const char* data) {
-    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) { pb_err = 52; return -1; }
     int len = (int)strlen(data ? data : "");
     int off = 0;
     while (off < len) {
         int n = send(pb_sock[f], data + off, len - off, 0);
-        if (n <= 0) return -1;
+        if (n <= 0) { pb_err = 57; return -1; }
         off += n;
     }
     return 0;
 }
 
 int pb_tcp_recv(int f, long count, char** out) {
-    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) { pb_err = 52; return -1; }
     if (count < 0) count = 0;
     char* buf = pb_bstr_alloc(NULL, (unsigned int)count);
     int n = recv(pb_sock[f], buf, (int)count, 0);
@@ -3548,7 +3550,7 @@ int pb_tcp_recv(int f, long count, char** out) {
 }
 
 int pb_tcp_line_input(int f, char** out) {
-    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || (pb_sock_state[f] != 1 && pb_sock_state[f] != 3)) { pb_err = 52; return -1; }
     char tmp[4096];
     int n = 0;
     while (n < 4095) {
@@ -3566,31 +3568,31 @@ int pb_tcp_line_input(int f, char** out) {
 }
 
 int pb_tcp_print(int f, const char* data, int newline) {
-    if (pb_tcp_send(f, data) != 0) return -1;
+    if (pb_tcp_send(f, data) != 0) { pb_err = 57; return -1; }
     if (newline) return pb_tcp_send(f, "\r\n");
     return 0;
 }
 
 int pb_tcp_close(int f) {
-    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) { pb_err = 52; return -1; }
     closesocket(pb_sock[f]);
     pb_sock_state[f] = 0;
     return 0;
 }
 
 int pb_udp_open(int port, int filenum, long timeout) {
-    if (pb_winsock_init() != 0) return -1;
-    if (filenum < 1 || filenum >= PB_MAX_SOCK) return -1;
-    if (pb_sock_state[filenum] != 0) return -1;
+    if (pb_winsock_init() != 0) { pb_err = 57; return -1; }
+    if (filenum < 1 || filenum >= PB_MAX_SOCK) { pb_err = 52; return -1; }
+    if (pb_sock_state[filenum] != 0) { pb_err = 52; return -1; }
     pb_sock_t s = socket(2, 2, 17); /* AF_INET, SOCK_DGRAM, UDP */
-    if (s == PB_SOCK_INVALID) return -1;
+    if (s == PB_SOCK_INVALID) { pb_err = 57; return -1; }
     struct pb_sockaddr_in a;
     pb_net_fill_addr(&a, 0, port);
     if (timeout > 0) {
         int t = (int)timeout;
         setsockopt(s, 0xFFFF, 0x1006, (const char*)&t, 4);
     }
-    if (bind(s, &a, sizeof(a)) != 0) { closesocket(s); return -1; }
+    if (bind(s, &a, sizeof(a)) != 0) { closesocket(s); pb_err = 57; return -1; }
     pb_sock[filenum] = s;
     pb_sock_state[filenum] = 2;
     return 0;
@@ -3603,12 +3605,12 @@ int pb_udp_send_str(int f, const char* ipstr, int port, const char* data) {
 }
 
 int pb_udp_send(int f, unsigned long ip, int port, const char* data) {
-    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) { pb_err = 52; return -1; }
     struct pb_sockaddr_in a;
     pb_net_fill_addr(&a, ip, port);
     int len = (int)strlen(data ? data : "");
     int n = sendto(pb_sock[f], data, len, 0, &a, sizeof(a));
-    return (n < 0) ? -1 : 0;
+    if (n < 0) { pb_err = 57; return -1; } return 0;
 }
 
 
@@ -3617,7 +3619,7 @@ static unsigned short ntohs_s(unsigned short v) {
 }
 
 int pb_udp_recv(int f, unsigned long* ip, int* port, char** out) {
-    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] != 2) { pb_err = 52; return -1; }
     char tmp[65536];
     struct pb_sockaddr_in a;
     int alen = sizeof(a);
@@ -3633,7 +3635,7 @@ int pb_udp_recv(int f, unsigned long* ip, int* port, char** out) {
 }
 
 int pb_udp_close(int f) {
-    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) return -1;
+    if (f < 1 || f >= PB_MAX_SOCK || pb_sock_state[f] == 0) { pb_err = 52; return -1; }
     closesocket(pb_sock[f]);
     pb_sock_state[f] = 0;
     return 0;
@@ -3703,7 +3705,7 @@ int pb_comm_open(const char* port, int channel, int baud, const char* parity, in
     HANDLE h;
     pb_dcb dcb;
     pb_commtimeouts to;
-    if (channel < 0 || channel > 255 || port == NULL) return -1;
+    if (channel < 0 || channel > 255 || port == NULL) { pb_err = 5; return -1; }
     if (pb_comm_ok[channel]) {
         CloseHandle(pb_comm_h[channel]);
         pb_comm_ok[channel] = 0;
@@ -3718,7 +3720,7 @@ int pb_comm_open(const char* port, int channel, int baud, const char* parity, in
                 port, channel);
         fflush(stderr);
         pb_comm_reported[channel] = 1;
-        return -1;
+        pb_err = 57; return -1;
     }
     memset(&dcb, 0, sizeof(dcb));
     dcb.DCBlength = sizeof(dcb);
@@ -3743,7 +3745,7 @@ int pb_comm_open(const char* port, int channel, int baud, const char* parity, in
 int pb_comm_close(int channel) {
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) {
         pb_comm_report("CLOSE", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     CloseHandle(pb_comm_h[channel]);
     pb_comm_h[channel] = NULL;
@@ -3762,7 +3764,7 @@ int pb_comm_send(int channel, const char* s) {
     unsigned long written = 0;
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || s == NULL) {
         pb_comm_report("SEND", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     WriteFile(pb_comm_h[channel], s, (unsigned long)strlen(s), &written, NULL);
     FlushFileBuffers(pb_comm_h[channel]);
@@ -3775,13 +3777,13 @@ int pb_comm_recv(int channel, long long bytes, char** dest) {
     long long n = (bytes > 0) ? bytes : 1;
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) {
         pb_comm_report("RECV", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     buf = (char*)malloc((size_t)n + 1);
-    if (buf == NULL) return -1;
+    if (buf == NULL) { pb_err = 5; return -1; }
     if (!ReadFile(pb_comm_h[channel], buf, (unsigned long)n, &got, NULL)) {
         free(buf);
-        return -1;
+        pb_err = 57; return -1;
     }
     buf[got] = '\0';
     {
@@ -3798,10 +3800,10 @@ int pb_comm_line_input(int channel, char** dest) {
     char* buf;
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) {
         pb_comm_report("LINE INPUT", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     buf = (char*)malloc((size_t)cap);
-    if (buf == NULL) return -1;
+    if (buf == NULL) { pb_err = 5; return -1; }
     while (1) {
         unsigned long got = 0;
         char ch;
@@ -3812,7 +3814,7 @@ int pb_comm_line_input(int channel, char** dest) {
         if (n + 1 >= cap) {
             cap *= 2;
             buf = (char*)realloc(buf, (size_t)cap);
-            if (buf == NULL) return -1;
+            if (buf == NULL) { pb_err = 5; return -1; }
         }
         buf[n++] = (char)c;
     }
@@ -3853,7 +3855,7 @@ int pb_comm_set(int channel, const char* option, int on) {
     int i = 0;
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || option == NULL) {
         pb_comm_report("SET", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     while (option[i] && i < 7) {
         opt[i] = (char)toupper((unsigned char)option[i]);
@@ -3863,7 +3865,7 @@ int pb_comm_set(int channel, const char* option, int on) {
     if (strcmp(opt, "DTR") == 0) fn = on ? PB_SETDTR : PB_CLRDTR;
     else if (strcmp(opt, "RTS") == 0) fn = on ? PB_SETRTS : PB_CLRRTS;
     else if (strcmp(opt, "BREAK") == 0) fn = on ? PB_SETBREAK : PB_CLRBREAK;
-    else return -1;
+    else { pb_err = 5; return -1; }
     return EscapeCommFunction(pb_comm_h[channel], fn) ? 0 : -1;
 }
 
@@ -3871,7 +3873,7 @@ int pb_comm_timeout(int channel, long long ms) {
     pb_commtimeouts to;
     if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) {
         pb_comm_report("TIMEOUT", channel);
-        return -1;
+        pb_err = 52; return -1;
     }
     memset(&to, 0, sizeof(to));
     if (ms > 0) {
@@ -3898,14 +3900,14 @@ static pb_thread_slot pb_thr[256];
 int pb_thread_create(void* func, unsigned long* out_id) {
     int i;
     unsigned long tid = 0;
-    if (func == NULL) return -1;
+    if (func == NULL) { pb_err = 5; return -1; }
 #ifdef _WIN64
     for (i = 0; i < 256; i++) {
         if (!pb_thr[i].h) break;
     }
-    if (i >= 256) return -1;
+    if (i >= 256) { pb_err = 5; return -1; }
     pb_thr[i].h = CreateThread(NULL, 0, (void* (__stdcall*)(void*))func, NULL, 0, &tid);
-    if (!pb_thr[i].h) return -1;
+    if (!pb_thr[i].h) { pb_err = 7; return -1; }
     pb_thr[i].tid = tid;
     pb_thr[i].state = 1;
     if (out_id) *out_id = (unsigned long)i;
@@ -3914,7 +3916,7 @@ int pb_thread_create(void* func, unsigned long* out_id) {
     /* 32-bit: PB functions use cdecl but CreateThread requires stdcall �
        calling a cdecl function through a stdcall pointer corrupts the stack. */
     if (out_id) *out_id = 0;
-    return -1;
+    pb_err = 7; return -1;
 #endif
 }
 
@@ -3969,7 +3971,7 @@ int pb_thread_get_priority(unsigned long id) {
 
 int pb_thread_set_priority(unsigned long id, int prio) {
     pb_thread_slot* t = pb_thread_slot_of(id);
-    if (t == NULL) return -1;
+    if (t == NULL) { pb_err = 5; return -1; }
     return SetThreadPriority(t->h, prio) ? 0 : -1;
 }
 
@@ -4025,7 +4027,7 @@ int pb_lprint_attach(char* device) {
     path[sizeof(path) - 1] = '\0';
     HANDLE h = CreateFileA(path, PB_GENERIC_WRITE, PB_FILE_SHARE_WRITE, NULL,
                            PB_OPEN_ALWAYS, 0, NULL);
-    if (h == PB_INVALID_HANDLE) return -1;
+    if (h == PB_INVALID_HANDLE) { pb_err = 68; return -1; }
     pb_lpt_handle = h;
     return 0;
 }
@@ -4117,9 +4119,9 @@ int pb_import_addr(char* procname, char* libname, void** out_addr, void** out_hn
     strncpy(lname, libname ? libname : "", sizeof(lname) - 1);
     lname[sizeof(lname) - 1] = '\0';
     void* m = LoadLibraryA(lname);
-    if (!m) return -1;
+    if (!m) { pb_err = 53; return -1; }
     void* fp = GetProcAddress(m, pname);
-    if (!fp) { FreeLibrary(m); return -1; }
+    if (!fp) { FreeLibrary(m); pb_err = 53; return -1; }
     if (out_addr) *out_addr = fp;
     if (out_hndl) *out_hndl = m;
     return 0;
@@ -6564,9 +6566,11 @@ int pb_imagelist_add_masked_file(long long h, const char* bmp, unsigned long rgb
 
 int pb_imagelist_set_overlay(long long h, int image, int overlay) {
     void* himl = (void*)(intptr_t)h;
-    if (!himl) return 0;
+    if (!himl) { pb_err = 5; return 0; }
     /* Overlay indexes are 1..15; anything else is reported as a failure. */
-    return ImageList_SetOverlayImage(himl, image, overlay) ? 1 : 0;
+    if (ImageList_SetOverlayImage(himl, image, overlay)) return 1;
+    pb_err = 5;
+    return 0;
 }
 
 /* FONT NEW / FONT END � GDI logical font objects (batch 47) */
