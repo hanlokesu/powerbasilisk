@@ -14959,6 +14959,7 @@ impl Compiler {
             || fam.starts_with("XPRINT_")
             || fam.starts_with("DISPLAY_")
             || fam.starts_with("FONT_")
+            || fam.starts_with("IMAGELIST_")
             || fam.starts_with("ARRAY_")
             || fam.starts_with("TCP_")
             || fam.starts_with("UDP_")
