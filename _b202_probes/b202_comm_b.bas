@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    COMM OPEN "COM1", 1, 9600
+    PRINT "comm open returned"
+    COMM CLOSE 1
+    FUNCTION = 0
+END FUNCTION

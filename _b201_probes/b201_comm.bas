@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    LOCAL h AS LONG
+    COMM OPEN "COM1" TO h
+    PRINT "comm handle = "; h
+    FUNCTION = 0
+END FUNCTION

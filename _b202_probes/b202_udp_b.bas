@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    UDP OPEN 8123 AS #1
+    PRINT "udp open returned"
+    UDP CLOSE #1
+    FUNCTION = 0
+END FUNCTION

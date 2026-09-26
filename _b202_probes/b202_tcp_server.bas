@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    TCP OPEN SERVER PORT 8125 AS #1
+    PRINT "tcp server open returned"
+    TCP CLOSE #1
+    FUNCTION = 0
+END FUNCTION

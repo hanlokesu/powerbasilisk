@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    LOCAL h AS LONG
+    TCP OPEN "127.0.0.1", 80 TO h
+    PRINT "tcp handle = "; h
+    FUNCTION = 0
+END FUNCTION

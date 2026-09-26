@@ -1,0 +1,7 @@
+FUNCTION PBMAIN () AS LONG
+    TRACE ON
+    PRINT "trace on"
+    TRACE OFF
+    PRINT "trace off"
+    FUNCTION = 0
+END FUNCTION

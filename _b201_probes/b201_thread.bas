@@ -1,0 +1,6 @@
+FUNCTION PBMAIN () AS LONG
+    LOCAL h AS LONG
+    THREAD CREATE 0, 0 TO h
+    PRINT "thread handle = "; h
+    FUNCTION = 0
+END FUNCTION

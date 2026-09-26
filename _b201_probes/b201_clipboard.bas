@@ -1,0 +1,9 @@
+FUNCTION PBMAIN () AS LONG
+    LOCAL s AS STRING
+    CLIPBOARD SET TEXT "pb-clipboard-probe"
+    CLIPBOARD GET TEXT TO s
+    PRINT "got: "; s
+    CLIPBOARD RESET
+    PRINT "clipboard done"
+    FUNCTION = 0
+END FUNCTION

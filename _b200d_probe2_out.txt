@@ -1,0 +1,5 @@
+﻿runtime pb_imagelist_new bitmap = 0x17635ACDFE0  (1607218290656)
+runtime pb_imagelist_new icon   = 0x17635ACE630  (1607218292272)
+runtime low 32 bits bitmap      = 900521952
+count(bitmap) = 0   count(icon) = 0
+kill(bitmap)  = 1   kill(icon)  = 1

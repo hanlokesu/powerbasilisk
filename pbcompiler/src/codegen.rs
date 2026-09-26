@@ -14642,7 +14642,7 @@ impl Compiler {
                 return Ok(());
             }
             "THREAD CREATE" => {
-                if call.args.len() >= 2 {
+                if !call.args.is_empty() {
                     let func_name = match &call.args[0] {
                         Expr::Variable(n) => normalize_name(n),
                         Expr::FunctionCall(n, _) => normalize_name(n),
@@ -14662,8 +14662,13 @@ impl Compiler {
                         return Ok(());
                     }
                     let fp = Val::new(format!("@{}", ir_name), IrType::Ptr);
-                    if let Some((id_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
-                        fb.call_void("pb_thread_create", &[fp, id_ptr]);
+                    if call.args.len() >= 2 {
+                        if let Some((id_ptr, _, _)) = self.lvalue_ptr(fb, &call.args[1]) {
+                            fb.call_void("pb_thread_create", &[fp, id_ptr]);
+                        }
+                    } else {
+                        let nul = Val::new("null".to_string(), IrType::Ptr);
+                        fb.call_void("pb_thread_create", &[fp, nul]);
                     }
                 }
                 return Ok(());
