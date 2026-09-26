@@ -1,5 +1,5 @@
 FUNCTION PBMAIN () AS LONG
-    COMM OPEN "COM1", 1
+    COMM OPEN "COM1" AS #1
     PRINT "comm open returned"
     COMM CLOSE 1
     PRINT "comm close returned"

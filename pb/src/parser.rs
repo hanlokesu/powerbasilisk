@@ -11140,7 +11140,20 @@ impl Parser {
                 // COMM OPEN "COM1:" AS #1 [, BAUD n] [, PARITY p$] [, DATA n] [, STOP n]
                 let port = self.parse_expression()?;
                 let mut args = vec![port];
-                if matches!(self.peek(), Token::As) {
+                if !matches!(self.peek(), Token::As) {
+                    // Batch 206: the channel is not optional.  Without `AS #` this used to
+                    // leave the channel out of the argument list, codegen then read the BAUD
+                    // slot as the channel, and the port was silently opened on channel 0 -
+                    // a session on the wrong channel looked exactly like success.
+                    self.consume_to_eol();
+                    eprintln!(
+                        "Error: COMM OPEN needs its channel - write COMM OPEN \"COM1\" AS #1 [, BAUD n] [, PARITY p$] [, DATA n] [, STOP n] on line {}",
+                        line
+                    );
+                    self.error_count += 1;
+                    return Ok(Statement::Noop("COMM OPEN".to_string(), line));
+                }
+                {
                     self.advance();
                     if self.peek() == &Token::Hash {
                         self.advance();

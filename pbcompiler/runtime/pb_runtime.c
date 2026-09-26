@@ -3683,6 +3683,22 @@ typedef struct _pb_commtimeouts {
 static HANDLE pb_comm_h[256];
 static int pb_comm_ok[256];
 
+/* Batch 206: COMM failures used to be completely silent.  A port that does not
+   exist (or is already in use) gave the program no signal whatsoever - the return
+   value was discarded by the compiler and nothing was printed.  Every COMM failure
+   now reports here, at most once per channel so that a loop cannot flood the
+   console; a successful COMM OPEN re-arms the message for that channel. */
+static int pb_comm_reported[256] = {0};
+
+static void pb_comm_report(const char* what, int channel) {
+    if (channel < 0 || channel > 255) return;
+    if (pb_comm_reported[channel]) return;
+    pb_comm_reported[channel] = 1;
+    fprintf(stderr, "Runtime error: COMM %s on channel %d - the port is not open "
+                    "(COMM OPEN failed or was never called)\n", what, channel);
+    fflush(stderr);
+}
+
 int pb_comm_open(const char* port, int channel, int baud, const char* parity, int data, int stop) {
     HANDLE h;
     pb_dcb dcb;
@@ -3697,6 +3713,11 @@ int pb_comm_open(const char* port, int channel, int baud, const char* parity, in
     if (h == PB_INVALID_HANDLE) {
         pb_comm_h[channel] = NULL;
         pb_comm_ok[channel] = 0;
+        fprintf(stderr, "Runtime error: COMM OPEN \"%s\" failed on channel %d - the port "
+                        "does not exist, is already in use, or the name is wrong\n",
+                port, channel);
+        fflush(stderr);
+        pb_comm_reported[channel] = 1;
         return -1;
     }
     memset(&dcb, 0, sizeof(dcb));
@@ -3715,11 +3736,15 @@ int pb_comm_open(const char* port, int channel, int baud, const char* parity, in
     SetCommTimeouts(h, &to);
     pb_comm_h[channel] = h;
     pb_comm_ok[channel] = 1;
+    pb_comm_reported[channel] = 0;   /* re-arm: this channel now works */
     return 0;
 }
 
 int pb_comm_close(int channel) {
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) {
+        pb_comm_report("CLOSE", channel);
+        return -1;
+    }
     CloseHandle(pb_comm_h[channel]);
     pb_comm_h[channel] = NULL;
     pb_comm_ok[channel] = 0;
@@ -3735,7 +3760,10 @@ void pb_comm_reset(void) {
 
 int pb_comm_send(int channel, const char* s) {
     unsigned long written = 0;
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || s == NULL) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || s == NULL) {
+        pb_comm_report("SEND", channel);
+        return -1;
+    }
     WriteFile(pb_comm_h[channel], s, (unsigned long)strlen(s), &written, NULL);
     FlushFileBuffers(pb_comm_h[channel]);
     return (int)written;
@@ -3745,7 +3773,10 @@ int pb_comm_recv(int channel, long long bytes, char** dest) {
     unsigned long got = 0;
     char* buf;
     long long n = (bytes > 0) ? bytes : 1;
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) {
+        pb_comm_report("RECV", channel);
+        return -1;
+    }
     buf = (char*)malloc((size_t)n + 1);
     if (buf == NULL) return -1;
     if (!ReadFile(pb_comm_h[channel], buf, (unsigned long)n, &got, NULL)) {
@@ -3765,7 +3796,10 @@ int pb_comm_recv(int channel, long long bytes, char** dest) {
 int pb_comm_line_input(int channel, char** dest) {
     int n = 0, cap = 64, c;
     char* buf;
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || dest == NULL) {
+        pb_comm_report("LINE INPUT", channel);
+        return -1;
+    }
     buf = (char*)malloc((size_t)cap);
     if (buf == NULL) return -1;
     while (1) {
@@ -3796,6 +3830,8 @@ void pb_comm_print_str(int channel, const char* s) {
     if (channel >= 0 && channel <= 255 && pb_comm_ok[channel] && s != NULL) {
         unsigned long written = 0;
         WriteFile(pb_comm_h[channel], s, (unsigned long)strlen(s), &written, NULL);
+    } else {
+        pb_comm_report("PRINT", channel);
     }
 }
 
@@ -3815,7 +3851,10 @@ int pb_comm_set(int channel, const char* option, int on) {
     unsigned long fn;
     char opt[8];
     int i = 0;
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || option == NULL) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel] || option == NULL) {
+        pb_comm_report("SET", channel);
+        return -1;
+    }
     while (option[i] && i < 7) {
         opt[i] = (char)toupper((unsigned char)option[i]);
         i++;
@@ -3830,7 +3869,10 @@ int pb_comm_set(int channel, const char* option, int on) {
 
 int pb_comm_timeout(int channel, long long ms) {
     pb_commtimeouts to;
-    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) return -1;
+    if (channel < 0 || channel > 255 || !pb_comm_ok[channel]) {
+        pb_comm_report("TIMEOUT", channel);
+        return -1;
+    }
     memset(&to, 0, sizeof(to));
     if (ms > 0) {
         to.ReadIntervalTimeout = PB_MAXDWORD;

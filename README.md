@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 205 (v0.2.056). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 206 (v0.2.057). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,21 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.057 (2026-09-26)
+- **Two silent failures in COMM, both fixed.**
+  1. `pb_comm_open` returned -1 when the port could not be opened, but the compiler emits
+     that call as `call_void`, so opening a serial port that does not exist gave the program
+     no signal at all - and every later COMM statement on that channel was silent too. Every
+     COMM failure now reports on stderr (once per channel, re-armed by a successful open).
+  2. `COMM OPEN`'s channel is written `AS #1`. Written as `COMM OPEN "COM1", 1` the channel
+     was never pushed into the argument list, codegen read the BAUD slot as the channel, and
+     the port was **silently opened on channel 0** while the rest of the program talked to
+     channel 1. That form is now a loud compile error, and `examples/batch021_test.bas` -
+     which relied on the old binding - uses the real grammar.
+- New example `examples/batch206_comm_error_loud_test.bas`.
+- **COMM byte exchange is still unproven**: this machine has only COM1 with no peer and no
+  virtual serial pair, so the honest status is "failure path proven, data path unproven".
+
 ### v0.2.056 (2026-09-26)
 - **The single-process TCP loopback from batch 204 is explained, not merely observed**:
   `TCP LINE INPUT` reads until a line terminator, and batch 204 sent `TCP SEND #3, "ping"`

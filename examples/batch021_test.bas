@@ -3,7 +3,7 @@ FUNCTION PBMAIN() AS LONG
     LOCAL id AS LONG, st AS LONG, p AS LONG
 
     PRINT "== COMM (no real COM port: expect graceful failure, no crash) =="
-    COMM OPEN "COM1", 0, 9600, "N", 8, 1
+    COMM OPEN "COM1" AS #0, BAUD 9600, PARITY "N", DATA 8, STOP 1
     COMM RESET
     PRINT "COMM OK (no crash)"
 

@@ -1,6 +1,6 @@
 FUNCTION PBMAIN () AS LONG
-    COMM OPEN "COM1" AS #1, BAUD 9600
-    PRINT "comm open returned"
+    COMM OPEN "COM1" AS #1
+    PRINT "opened COM1 (or not - see stderr)"
     COMM CLOSE 1
     FUNCTION = 0
 END FUNCTION
