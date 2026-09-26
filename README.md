@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 202 (v0.2.053). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 203 (v0.2.054). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,22 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.054 (2026-09-26)
+- **UDP is now proven end-to-end.** `UDP OPEN PORT p AS #1` +
+  `UDP SEND #1, AT "127.0.0.1", p, "self-ping"` + `UDP RECV #1, FROM ip, pnum, buf`
+  really moves a datagram through the OS socket layer: the program receives its own
+  payload and the sender port. Driven from outside as well - a Python socket sent one
+  datagram to the same port while the program sat inside `UDP RECV`, and the program
+  printed the foreign payload. New example `examples/batch203_udp_loopback_test.bas`
+  (self-check prints `=== FAILURES: 0`).
+- **`TCP OPEN SERVER` really listens**: an external TCP client connected to the port
+  the program bound. The data path over an accepted connection is not exercised yet.
+- **Closed a batch 201 open item**: all four parser shapes that consume `TO` after a
+  comma loop (`GRAPHIC BITMAP NEW`, `FONT NEW`, `DISPLAY ... TO`, `GLOBALMEM`) do handle
+  a bare `TO`; there is no silent-drop defect left in that shape.
+- `COMM OPEN` still compiles and returns but is **not** proven: that needs a real serial
+  port (or a virtual loopback pair), so no claim is made here.
+
 ### v0.2.053 (2026-09-26)
 - **`THREAD CREATE MyThread` with the `TO` clause omitted was a silent no-op.** The
   codegen arm opened with `if call.args.len() >= 2`, while the parser emits the second
