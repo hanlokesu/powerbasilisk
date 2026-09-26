@@ -1707,6 +1707,8 @@ impl Parser {
                     }));
                 }
                 self.consume_to_eol();
+                eprintln!("Error: LISTVIEW FIT: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("LISTVIEW FIT".to_string(), line))
             }
             "GET" => {
@@ -1864,6 +1866,8 @@ impl Parser {
                     _ => {}
                 }
                 self.consume_to_eol();
+                eprintln!("Error: LISTVIEW GET: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("LISTVIEW GET".to_string(), line))
             }
             "SET" => {
@@ -1966,6 +1970,8 @@ impl Parser {
                     _ => {}
                 }
                 self.consume_to_eol();
+                eprintln!("Error: LISTVIEW SET: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("LISTVIEW SET".to_string(), line))
             }
             "INSERT" => {
@@ -2009,6 +2015,8 @@ impl Parser {
                     }));
                 }
                 self.consume_to_eol();
+                eprintln!("Error: LISTVIEW INSERT: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("LISTVIEW INSERT".to_string(), line))
             }
             "DELETE" => {
@@ -2042,6 +2050,8 @@ impl Parser {
                     }));
                 }
                 self.consume_to_eol();
+                eprintln!("Error: LISTVIEW DELETE: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("LISTVIEW DELETE".to_string(), line))
             }
             _ => {
@@ -2142,6 +2152,8 @@ impl Parser {
                     );
                 if !known {
                     self.consume_to_eol();
+                    eprintln!("Error: TREEVIEW GET: unsupported form on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("TREEVIEW GET".to_string(), line));
                 }
                 let h = self.parse_expression()?;
@@ -2172,6 +2184,8 @@ impl Parser {
                     "BOLD" | "CHECK" | "EXPANDED" | "IMAGELIST" | "TEXT" | "USER"
                 ) {
                     self.consume_to_eol();
+                    eprintln!("Error: TREEVIEW SET: unsupported form on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("TREEVIEW SET".to_string(), line));
                 }
                 let h = self.parse_expression()?;
@@ -2222,6 +2236,8 @@ impl Parser {
                     }));
                 }
                 self.consume_to_eol();
+                eprintln!("Error: TREEVIEW INSERT: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("TREEVIEW INSERT".to_string(), line))
             }
             "DELETE" => {
@@ -2413,6 +2429,8 @@ impl Parser {
         );
         if !known {
             self.consume_to_eol();
+            eprintln!("Error: TAB: unsupported form on line {}", line);
+            self.error_count += 1;
             return Ok(Statement::Noop("TAB".to_string(), line));
         }
         self.advance(); // verb
@@ -2766,6 +2784,11 @@ impl Parser {
                             }
                             _ => {
                                 self.consume_to_eol();
+                                eprintln!(
+                                    "Error: ON ERROR GOTO: unsupported form on line {}",
+                                    line
+                                );
+                                self.error_count += 1;
                                 return Ok(Statement::Noop("ON ERROR GOTO".to_string(), line));
                             }
                         };
@@ -2815,6 +2838,8 @@ impl Parser {
                     }
                     self.consume_to_eol();
                     if targets.is_empty() {
+                        eprintln!("Error: ON CALL: unsupported form on line {}", line);
+                        self.error_count += 1;
                         return Ok(Statement::Noop("ON CALL".to_string(), line));
                     }
                     return Ok(Statement::OnCall {
@@ -2833,6 +2858,8 @@ impl Parser {
                     }
                     _ => {
                         self.consume_to_eol();
+                        eprintln!("Error: ON: unsupported form on line {}", line);
+                        self.error_count += 1;
                         return Ok(Statement::Noop("ON".to_string(), line));
                     }
                 };
@@ -2857,6 +2884,8 @@ impl Parser {
                 }
                 self.consume_to_eol();
                 if labels.is_empty() {
+                    eprintln!("Error: ON GOTO/GOSUB: unsupported form on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("ON GOTO/GOSUB".to_string(), line));
                 }
                 if is_gosub {
@@ -2909,6 +2938,8 @@ impl Parser {
                 // REMOVE$ is usually a function but REMOVE can be a statement
                 self.advance();
                 self.consume_to_eol();
+                eprintln!("Error: REMOVE: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("REMOVE".to_string(), line))
             }
             Token::Resume => {
@@ -3035,6 +3066,11 @@ impl Parser {
                     Some(Token::If) | Some(Token::Select) | Some(Token::Type) => {
                         // Mismatched block-end — consume and skip
                         self.consume_to_eol();
+                        eprintln!(
+                            "Error: END (mismatched block): unsupported form on line {}",
+                            line
+                        );
+                        self.error_count += 1;
                         Ok(Statement::Noop("END (mismatched block)".to_string(), line))
                     }
                     _ => {
@@ -3126,6 +3162,8 @@ impl Parser {
                     // LINE (not INPUT) — DDT drawing or other, consume
                     self.advance();
                     self.consume_to_eol();
+                    eprintln!("Error: LINE: unsupported form on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("LINE".to_string(), line));
                 }
 
@@ -9968,6 +10006,8 @@ impl Parser {
                         }));
                     }
                     self.consume_to_eol();
+                    eprintln!("Error: LET: unsupported form on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("LET".to_string(), line));
                 }
                 // LET *ptr = obj / LET *ptr = variant — object/variant pointer assign (accepted; no-op)
@@ -10653,6 +10693,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: unrecognised statement on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("<unknown token>".to_string(), line))
             }
         }
@@ -11067,6 +11109,8 @@ impl Parser {
             Token::Print => "PRINT".to_string(),
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: COMM: unsupported form on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("COMM".to_string(), line));
             }
         };
@@ -11134,6 +11178,8 @@ impl Parser {
                     }));
                 }
                 self.consume_to_eol();
+                eprintln!("Error: COMM LINE: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("COMM LINE".to_string(), line))
             }
             "PRINT" => {
@@ -11261,6 +11307,8 @@ impl Parser {
             Token::Resume => "RESUME".to_string(),
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: THREAD: unsupported form on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("THREAD".to_string(), line));
             }
         };
@@ -11539,6 +11587,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: TRACE: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("TRACE".to_string(), line))
             }
         }
@@ -11583,6 +11633,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: IMPORT: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("IMPORT".to_string(), line))
             }
         }
