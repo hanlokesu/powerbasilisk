@@ -2364,6 +2364,11 @@ impl Parser {
         );
         if !known {
             self.consume_to_eol();
+            eprintln!(
+                "Error: COMBOBOX/LISTBOX: unknown sub-command on line {}",
+                line
+            );
+            self.error_count += 1;
             return Ok(Statement::Noop(head.to_string(), line));
         }
         self.advance(); // verb
@@ -3049,6 +3054,8 @@ impl Parser {
             Token::PercentConstant(_) => {
                 // %CONSTANT = value inside a sub
                 self.consume_to_eol();
+                eprintln!("Error: %CONSTANT: defining a constant inside a SUB is not supported on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("%CONSTANT".to_string(), line))
             }
             Token::End => {
@@ -3995,6 +4002,11 @@ impl Parser {
                                 } else {
                                     format!("GRAPHIC GET {}", sub)
                                 };
+                                eprintln!(
+                                    "Error: GRAPHIC GET: expected an argument list on line {}",
+                                    line
+                                );
+                                self.error_count += 1;
                                 return Ok(Statement::Noop(gname, line));
                             }
                             self.advance(); // (
@@ -5582,6 +5594,8 @@ impl Parser {
                     }
                     // fallback: consume rest as noop for unimplemented XPRINT verbs
                     self.consume_to_eol();
+                    eprintln!("Error: XPRINT: unsupported verb on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop("XPRINT_".to_string() + &xop, line));
                 }
 
@@ -10533,6 +10547,8 @@ impl Parser {
                 ) {
                     self.advance();
                     self.consume_to_eol();
+                    eprintln!("Error: DIALOG/CONTROL/MENU/TREEVIEW: statement has no sub-command on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop(name_upper.clone(), line));
                 }
 
@@ -10577,6 +10593,8 @@ impl Parser {
                         }));
                     }
                     self.consume_to_eol();
+                    eprintln!("Error: unrecognised statement on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop(name_clone.clone(), line));
                 }
 
@@ -10610,6 +10628,8 @@ impl Parser {
                     }
 
                     self.consume_to_eol();
+                    eprintln!("Error: unrecognised statement on line {}", line);
+                    self.error_count += 1;
                     return Ok(Statement::Noop(name_clone.clone(), line));
                 }
 
@@ -11294,6 +11314,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: COMM: unsupported sub-command on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop(format!("COMM {op}"), line))
             }
         }
@@ -11395,6 +11417,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: THREAD: unsupported sub-command on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop(format!("THREAD {op}"), line))
             }
         }
@@ -11713,6 +11737,8 @@ impl Parser {
                     }
                 }
                 self.consume_to_eol();
+                eprintln!("Error: CLIPBOARD SET: unsupported form on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("CLIPBOARD SET".to_string(), line))
             }
             Token::Identifier(s) if s.eq_ignore_ascii_case("GET") => {
@@ -11735,6 +11761,11 @@ impl Parser {
                     }
                 }
                 self.consume_to_eol();
+                eprintln!(
+                    "Error: CLIPBOARD GET TEXT: unsupported form on line {}",
+                    line
+                );
+                self.error_count += 1;
                 Ok(Statement::Noop("CLIPBOARD GET TEXT".to_string(), line))
             }
             Token::Identifier(s) if s.eq_ignore_ascii_case("RESET") => {
@@ -11750,6 +11781,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: CLIPBOARD: unknown sub-command on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop("CLIPBOARD".to_string(), line))
             }
         }
@@ -11761,11 +11794,15 @@ impl Parser {
             Token::Identifier(w) => w.to_uppercase(),
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: GLOBALMEM: expected a sub-command on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("GLOBALMEM".to_string(), line));
             }
         };
         if !matches!(op.as_str(), "ALLOC" | "FREE" | "LOCK" | "SIZE" | "UNLOCK") {
             self.consume_to_eol();
+            eprintln!("Error: GLOBALMEM: unsupported sub-command on line {}", line);
+            self.error_count += 1;
             return Ok(Statement::Noop(format!("GLOBALMEM {op}"), line));
         }
         self.advance(); // consume op
@@ -11808,6 +11845,11 @@ impl Parser {
             w.to_uppercase()
         } else {
             self.consume_to_eol();
+            eprintln!(
+                "Error: NET: expected TCP or UDP followed by a sub-command on line {}",
+                line
+            );
+            self.error_count += 1;
             return Ok(Statement::Noop("NET".to_string(), line));
         };
         self.advance(); // consume TCP/UDP
@@ -11818,6 +11860,11 @@ impl Parser {
             Token::Close => "CLOSE".to_string(),
             _ => {
                 self.consume_to_eol();
+                eprintln!(
+                    "Error: NET: expected a sub-command after the protocol on line {}",
+                    line
+                );
+                self.error_count += 1;
                 return Ok(Statement::Noop(proto.clone(), line));
             }
         };
@@ -12055,6 +12102,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: NET: unsupported sub-command on line {}", line);
+                self.error_count += 1;
                 Ok(Statement::Noop(format!("{proto} {op}"), line))
             }
         }
@@ -12179,6 +12228,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: OPEN: unknown file mode on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("OPEN (unknown mode)".to_string(), line));
             }
         };
@@ -12224,6 +12275,11 @@ impl Parser {
         if self.at_eol_or_eof() {
             // Bare CLOSE with no file number — close all files
             self.consume_to_eol();
+            eprintln!(
+                "Error: CLOSE: bare CLOSE (close all files) is not implemented on line {}",
+                line
+            );
+            self.error_count += 1;
             return Ok(Statement::Noop("CLOSE (no file)".to_string(), line));
         }
         let file_num = self.parse_expression()?;
@@ -12246,6 +12302,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: MAT: expected an array destination on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("MAT".to_string(), line));
             }
         };
@@ -12347,6 +12405,8 @@ impl Parser {
             }
             _ => {
                 self.consume_to_eol();
+                eprintln!("Error: MAT: unsupported form on line {}", line);
+                self.error_count += 1;
                 return Ok(Statement::Noop("MAT".to_string(), line));
             }
         }
