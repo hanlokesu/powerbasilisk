@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 204 (v0.2.055). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 205 (v0.2.056). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.056 (2026-09-26)
+- **The single-process TCP loopback from batch 204 is explained, not merely observed**:
+  `TCP LINE INPUT` reads until a line terminator, and batch 204 sent `TCP SEND #3, "ping"`
+  / `TCP SEND #2, "pong"` - bare bytes with no CR/LF - so both ends waited forever for a
+  newline. The runtime was never at fault: `pb_tcp_open` and `pb_tcp_accept` are plain
+  blocking calls with no lock, and batch 204's external-peer probes passed because the
+  Python peer terminated its line.
+- **A one-program TCP conversation now works and is shipped as an example**:
+  `examples/batch205_tcp_loopback_test.bas` - server + accept thread + client in one
+  process, line-oriented on both sides via `TCP PRINT` (which appends CR/LF), self-check
+  prints `=== FAILURES: 0` and asserts the round trip (`client got: pong`, `server read: ping`).
+- **Lesson recorded**: line-oriented protocols need `TCP PRINT` (or an explicit CR/LF);
+  a bare `TCP SEND` followed by `TCP LINE INPUT` deadlocks by design, not by defect.
+
 ### v0.2.055 (2026-09-26)
 - **`THREAD STATUS` / `THREAD CLOSE` measured**: `1` while the worker runs, `3` after it
   finishes, the worker's global really changed, and `THREAD CLOSE` returns cleanly on a
