@@ -2751,8 +2751,15 @@ impl Parser {
                         line,
                     }));
                 }
-                // Bare TYPE (no SET) inside a body: skip the line
+                // Bare TYPE (no SET) inside a body.  PB declares UDTs at module level,
+                // so this is not a declaration site - and silently skipping the line
+                // made a misplaced declaration vanish without a word (batch 208).
                 self.consume_to_eol();
+                eprintln!(
+                    "Error: bare TYPE is not a statement - a UDT declaration belongs at module level (line {})",
+                    line
+                );
+                self.error_count += 1;
                 Ok(Statement::Noop("TYPE".to_string(), line))
             }
             Token::Global => {

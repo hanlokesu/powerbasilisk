@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 207 (v0.2.058). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 208 (v0.2.059). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,21 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.059 (2026-09-26)
+- **The 26 silent no-ops are settled: none of them is silently dropped.** The new
+  `classify_noop_names.py` reads each name's parser block and sorts the list into loud
+  refusals (14), verb/lookahead fragments (11, e.g. `"CLOSE"` inside `THREAD CLOSE`) and one
+  lone entry, `TYPE`. An A/B run against the pre-change compiler settled that last one:
+  `TYPE` alone inside a body was **already refused**, by codegen's generic fallback
+  (`Error: statement `TYPE` on line 2 is NOT implemented - no code generated`). So the
+  sweep's premise - "a name codegen never mentions is a guaranteed no-op" - is wrong, and
+  the two tools now say so.
+- Small message fix that came out of it: that refusal now names the rule instead of the
+  generic one - `Error: bare TYPE is not a statement - a UDT declaration belongs at module
+  level (line N)`.
+- `classify_noop_names.py` is new; reverse-verified that a module-level UDT still compiles
+  and runs (`_b208_probes/b208_module_type.bas`).
+
 ### v0.2.058 (2026-09-26)
 - **A failed socket / serial / thread / random-file / sound statement is now observable.**
   `sweep_silent_calls.py` (new gate script) asked which runtime functions can fail while

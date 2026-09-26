@@ -1,0 +1,5 @@
+FUNCTION PBMAIN () AS LONG
+    TYPE Foo
+    PRINT "reached"
+    FUNCTION = 0
+END FUNCTION
