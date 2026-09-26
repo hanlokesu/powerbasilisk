@@ -8406,10 +8406,6 @@ impl Compiler {
             "ACCEL_ATTACH" | "EVENT_SOURCE" | "EVENTS" | "RAISEEVENT" | "INSTANCE" => {
                 // batch 195: this arm stays empty on purpose (batch 121 parked it),
                 // but the drop is now reported instead of being invisible.
-                self.warnings.push(format!(
-                    "statement `{}` on line {} is accepted but emits no code",
-                    call.name, call.line
-                ));
             }
             "XPRINT_GET_MARGIN" => {
                 let mut ps = Vec::new();
@@ -14975,8 +14971,6 @@ impl Compiler {
             || fam == "LET_PTR"
             || fam == "DEF_FN"
         {
-            // batch 195: known family, no arm of its own - report the drop
-            // instead of returning silently.
             self.warnings.push(format!(
                 "statement `{}` on line {} is accepted but emits no code",
                 call.name, call.line
