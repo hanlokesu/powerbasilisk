@@ -292,13 +292,18 @@ FUNCTION PBMAIN () AS LONG
     PRINT "sb pagesize -> "; n
     IF n <> 10 THEN fail = fail + 1
 
-    ' NOTE - open item, recorded rather than hidden:
-    '   SCROLLBAR SET TRACKPOS parses (the noun whitelist accepts TRACKPOS)
-    '   but codegen has no arm for it yet, so using it now fails with
-    '       unknown statement/subroutine `SCROLLBAR_SET_TRACKPOS` on line N
-    '   That is the batch-191 hard-fail path doing its job - before this
-    '   batch the same line would have compiled to a silent no-op.  Working
-    '   forms exercised above: SET/GET RANGE, SET/GET POS, SET/GET PAGESIZE.
+    ' NOTE - corrected in batch 192 after a probe run:
+    '   SCROLLBAR GET TRACKPOS is implemented (codegen arm + runtime reader)
+    '   and returns the last tracking position - it is exercised in
+    '   examples/batch192_test.bas, not here.
+    '   SCROLLBAR SET TRACKPOS is NOT an official form (the syntax note in
+    '   parser.rs lists six forms, none of them SET TRACKPOS; the coverage
+    '   CSV has no such row; Win32 SIF_TRACKPOS is read-only).  Since
+    '   batch 192 the parser rejects it directly with
+    '       Error: SCROLLBAR SET: TRACKPOS is a GET-only sub-command on line N
+    '   instead of falling through to codegen and reporting an 'unknown
+    '   statement/subroutine' at the wrong layer.
+    '   Forms exercised above: SET/GET RANGE, SET/GET POS, SET/GET PAGESIZE.
     DIALOG END hDlg, fail
     PRINT
     PRINT "=== FAILURES:"; fail; "==="

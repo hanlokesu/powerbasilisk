@@ -715,9 +715,13 @@ exit code 0:
 - Positive coverage proved by `examples/batch191_test.bas` (19 assertions,
   `=== FAILURES: 0 ===`): every LISTVIEW / TREEVIEW / SCROLLBAR form this fork
   implements still parses and still works.
-- Open item recorded, not hidden: `SCROLLBAR SET/GET TRACKPOS` parse (the noun
-  whitelist accepts TRACKPOS) but have no codegen arm; they now fail loudly with
-  `unknown statement/subroutine SCROLLBAR_SET_TRACKPOS`.
+- Corrected in batch 192 (a probe disproved half of what this entry used to say):
+  `SCROLLBAR GET TRACKPOS` **is implemented** - codegen arm plus a runtime reader
+  over `SIF_TRACKPOS` - and returns the last tracking position.  `SCROLLBAR SET
+  TRACKPOS` is **not an official form** (six forms are documented, none is SET
+  TRACKPOS; no coverage row exists; Win32 `SIF_TRACKPOS` is read-only), so the
+  parser now rejects it up front with `Error: SCROLLBAR SET: TRACKPOS is a
+  GET-only sub-command on line N`.
 
 ### v0.2.044 (2026-09-25)
 

@@ -2261,6 +2261,9 @@ impl Parser {
     ///   SCROLLBAR SET PAGESIZE hDlg, id&, page&
     ///   SCROLLBAR SET POS      hDlg, id&, pos&
     ///   SCROLLBAR SET RANGE    hDlg, id&, lo&, hi&
+    ///
+    /// TRACKPOS is GET-only - there is no official `SCROLLBAR SET TRACKPOS`,
+    /// so the SET side is rejected below with a message that says so (batch 192).
     fn parse_scrollbar_statement(&mut self, line: usize) -> PbResult<Statement> {
         self.advance(); // SCROLLBAR
         let verb = self.peek_word_upper();
@@ -2275,11 +2278,29 @@ impl Parser {
         }
         self.advance(); // verb
         let noun = self.peek_word_upper();
-        if !matches!(noun.as_str(), "POS" | "RANGE" | "PAGESIZE" | "TRACKPOS") {
-            eprintln!(
-                "Error: SCROLLBAR: unknown sub-command \"{}\" on line {}",
-                noun, line
-            );
+        // TRACKPOS exists on the GET side only: the parser's own syntax note above
+        // lists six official forms and `SCROLLBAR SET TRACKPOS` is not one of them,
+        // there is no `SCROLLBAR SET TRACKPOS` row in docs/statement-coverage.csv,
+        // and Win32 SIF_TRACKPOS is a read-only member.  Rejecting it here - instead
+        // of letting it fall through to a codegen "unknown statement" - keeps the
+        // diagnosis at the layer where the mistake was made.
+        let noun_ok = match noun.as_str() {
+            "POS" | "RANGE" | "PAGESIZE" => true,
+            "TRACKPOS" => verb == "GET",
+            _ => false,
+        };
+        if !noun_ok {
+            if noun == "TRACKPOS" {
+                eprintln!(
+                    "Error: SCROLLBAR SET: TRACKPOS is a GET-only sub-command on line {}",
+                    line
+                );
+            } else {
+                eprintln!(
+                    "Error: SCROLLBAR: unknown sub-command \"{}\" on line {}",
+                    noun, line
+                );
+            }
             self.error_count += 1;
             self.consume_to_eol();
             return Ok(Statement::Noop("SCROLLBAR".to_string(), line));
