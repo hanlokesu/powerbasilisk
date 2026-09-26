@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 198 (v0.2.049). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 199 (v0.2.050). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,22 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.050 (2026-09-26)
+
+- **IMAGELIST works; my warning was the defect.**  `IMAGELIST NEW BITMAP 16,16,32,4 TO h`
+  leaves a non-zero handle, so the arms in `compile_call_stmt` (L7441-7566) are reached and
+  emit code.  What went wrong was the `self.warnings.push(...)` that batch 195 added to the
+  "handled family" guard at the end of that same function: the guard exists to catch an arm's
+  fall-through, so the push reported every such statement as "accepted but emits no code"
+  while it was emitting code.  The push is removed; the guard still returns silently.
+- **Two wrong turns corrected, with the evidence.**  (a) A "false alarm" claim was published in
+  v0.2.049, then retracted in favour of the witness - but the witness itself was broken: it
+  used `TO hil` without declaring `hil`, so it printed 0 for any program.  The corrected
+  witness (`examples/batch199_witness.bas`) declares its targets and reports a non-zero handle.
+  The earlier retraction was therefore wrong twice over; both release notes are updated.
+- **Inventory corrected.**  With the false report gone, the silently-dropped list shrinks to
+  the statements that really are inert.
+
 ### v0.2.049 (2026-09-26)
 
 - **Removed a false alarm I introduced in v0.2.047.**  The "known family, no arm of
