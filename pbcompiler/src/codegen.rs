@@ -14971,10 +14971,6 @@ impl Compiler {
             || fam == "LET_PTR"
             || fam == "DEF_FN"
         {
-            self.warnings.push(format!(
-                "statement `{}` on line {} is accepted but emits no code",
-                call.name, call.line
-            ));
             return Ok(());
         }
 
@@ -17054,6 +17050,23 @@ impl Compiler {
         target_ir: &IrType,
         target_pb: &PbType,
     ) -> Val {
+        // Callers that store into an lvalue pass the *pointer's* IR type here
+        // (IrType::Ptr) together with the variable's PB type.  For a numeric
+        // destination the real width comes from the PB type; without resolving it
+        // the conversion is a no-op and an i64 call result is stored into a 32-bit
+        // slot - an 8-byte out-of-bounds store that LLVM then drops, so the
+        // assignment silently never happens (batch 200e: IMAGELIST NEW ... TO h).
+        let resolved: IrType;
+        let target_ir: &IrType = {
+            let from_pb = Self::ir_type_for(target_pb);
+            if *target_ir == IrType::Ptr && (from_pb.is_int() || from_pb.is_float()) {
+                resolved = from_pb;
+                &resolved
+            } else {
+                target_ir
+            }
+        };
+
         if val.ty == *target_ir {
             return val.clone();
         }

@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 199 (v0.2.050). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 200 (v0.2.051). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,30 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.051 (2026-09-26)
+
+- **The 64-bit-handle defect is fixed at its root.** Storing a call result into a variable went
+  through `convert_value(fb, value, &target.0.ty, &target.1)`, where `target.0.ty` is the
+  *pointer's* IR type (`IrType::Ptr`). `convert_value` therefore never recognised a numeric
+  destination, returned the i64 handle untouched, and `store` wrote **eight bytes into a 4-byte
+  `LONG` slot**. LLVM treats that as an out-of-bounds store and deletes it, so the assignment
+  never happened - disassembling the object showed the `call` with correct arguments and no
+  write-back at all, which is why `IMAGELIST NEW ... TO h` left `h` at 0.
+  `convert_value` now resolves a `Ptr` destination from the variable's PB type (numeric targets
+  only, so string and user-defined paths are untouched), and the i64 result is truncated to the
+  variable's real width.
+- **The false "accepted but emits no code" warning is gone.** The generated IR proves the
+  IMAGELIST arms are reached and do emit `call` + `store`; the guard keeps its original job of
+  catching an arm's fall-through but no longer reports working code as dropped.
+- **Acceptance**: `examples/batch200_test.bas` (LONG handle non-zero, `GET COUNT` works after it),
+  `examples/batch199c_witness.bas` (both handles non-zero, no warning), full example corpus
+  compiles with zero failures.
+- **Method note that made this findable**: three earlier measurements of this defect were
+  invalid (an undeclared `TO` target, a `LOCAL` after an executable statement, and an edit that
+  was measured without rebuilding). The gate is now: patch -> `cargo fmt` -> build and check rc
+  -> delete the stale `.unimplemented.log` -> measure -> corpus, and the final arbiter for
+  "was the value actually used" is the **object disassembly**, not the `.ll`.
+
 ### v0.2.050 (2026-09-26)
 
 - **IMAGELIST works; my warning was the defect.**  `IMAGELIST NEW BITMAP 16,16,32,4 TO h`
