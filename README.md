@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 196 (v0.2.048). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 197 (v0.2.049). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
 > Batch 192 (v0.2.046): 23 statement forms that used to be compiled as silent no-ops now report an error, including the top-level catch-all for unrecognised statements.
@@ -708,6 +709,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.049 (2026-09-26)
+
+- **Removed a false alarm I introduced in v0.2.047.**  The "known family, no arm of
+  its own" early return in `compile_call` was made to push
+  `statement \`NAME\` ... is accepted but emits no code`.  Recon showed the families it
+  covers are largely implemented (`IMAGELIST_*` has both declarations and arms), so the
+  warning fired for statements that do emit code, and it contaminated the
+  silently-dropped inventory.  That push is gone; the empty-arm group
+  (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`, which really
+  is empty) still reports.
+- Evidence for the correction is a runnable witness: `examples/batch197_witness.bas`
+  creates an image list and prints the handle.  The release notes carry the measured
+  handle value and the log contents before and after the fix.
+
 ### v0.2.048 (2026-09-26)
 
 - **Fixed the double report introduced by v0.2.047.**  Batch 195 pushed the
