@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 192 (v0.2.046). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 195 (v0.2.047). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
 > Batch 192 (v0.2.046): 23 statement forms that used to be compiled as silent no-ops now report an error, including the top-level catch-all for unrecognised statements.
 > batch 191 (v0.2.045): DDT unknown sub-commands now hard-fail (LISTVIEW / TREEVIEW / SCROLLBAR); no coverage change.
 > batch 190 (v0.2.044) - +3 official keywords: CONTROL ADD MONTHCAL / ANIMATE / RICHEDIT (parser + codegen + runtime, class names SysMonthCal32, SysAnimate32, RICHEDIT50W with msftedit.dll loaded). examples/batch190_test.bas = 12 checks, FAILURES:0.
@@ -706,6 +707,25 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.047 (2026-09-26)
+
+- **Accepted-but-no-code statements are now reported instead of dropped in
+  silence.**  The empty codegen arm shared by `ACCEL_ATTACH`, `EVENT_SOURCE`,
+  `EVENTS`, `RAISEEVENT` and `INSTANCE`, and the "known family, no arm of its own"
+  early return in `compile_call`, used to return without emitting anything at all.
+  Both now push a compiler warning:
+  `statement \`NAME\` on line N is accepted but emits no code`.
+- The same two sites were first turned into hard errors, and the full example
+  corpus rejected that: hard errors broke **2** examples for the empty arm and
+  **41** for the family early return.  They are deliberate, exercised no-ops, so
+  the fix is a visible warning - the existing warning channel - rather than a
+  build failure.
+- Corpus check for this batch: **203 / 203 examples compile, 0 failures.**
+- New scanner in the development skill: `_b195_noop_arms.py` walks every
+  `"NAME" => { ... }` codegen arm and reports the ones whose body contains no call,
+  no store and no control flow (555 arms, 6 hits: 4 were `builtin_*` delegation,
+  1 documented `CHRBYTES` constant, 1 the group above).
+
 ### v0.2.046 (2026-09-26)
 
 - **Silently dropped statements now report an error.** An audit of the parser's
