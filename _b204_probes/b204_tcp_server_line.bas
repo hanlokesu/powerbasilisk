@@ -1,0 +1,12 @@
+FUNCTION PBMAIN () AS LONG
+    LOCAL s AS STRING
+    TCP OPEN SERVER PORT 46222 AS #1
+    PRINT "listening"
+    TCP ACCEPT #1 AS #2
+    PRINT "accepted"
+    TCP LINE INPUT #2, s
+    PRINT "server got: "; s
+    TCP CLOSE #2
+    TCP CLOSE #1
+    FUNCTION = 0
+END FUNCTION

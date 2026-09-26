@@ -259,7 +259,7 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 203 (v0.2.054). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 204 (v0.2.055). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +709,20 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.055 (2026-09-26)
+- **`THREAD STATUS` / `THREAD CLOSE` measured**: `1` while the worker runs, `3` after it
+  finishes, the worker's global really changed, and `THREAD CLOSE` returns cleanly on a
+  finished thread. New example `examples/batch204_thread_status_test.bas` pins both codes
+  (self-check prints `=== FAILURES: 0`).
+- **The TCP data path is proven with an external peer on each side.** PB as the client
+  connected and sent a line that a Python server received; PB as the server read a line a
+  Python client sent - with `TCP ACCEPT` in the main thread *and* with `TCP ACCEPT` inside
+  a `THREAD CREATE` worker.
+- **Open item, stated as unknown**: a single program playing both ends of a TCP
+  conversation deadlocked. Each half works against a real peer, so the primitives are not
+  in question, but the single-process case is **not** claimed to work and no example ships
+  for it. Recorded rather than papered over.
+
 ### v0.2.054 (2026-09-26)
 - **UDP is now proven end-to-end.** `UDP OPEN PORT p AS #1` +
   `UDP SEND #1, AT "127.0.0.1", p, "self-ping"` + `UDP RECV #1, FROM ip, pnum, buf`
