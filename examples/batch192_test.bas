@@ -13,6 +13,12 @@
 '       Error: SCROLLBAR SET: TRACKPOS is a GET-only sub-command on line N
 '     instead of letting it fall through to a codegen "unknown statement".
 '
+' Batch-192 coverage note (added after v0.2.046):
+'   The 23 new parser diagnostics from this batch are COMPILE-TIME REJECTIONS.
+'   A runnable sample cannot assert them - anything that compiles did not hit one.
+'   Their negative probes live in the repository root folder _negative_probes/
+'   and are exercised by the skill script check_negative_probes.py.
+'   This file therefore covers only the TRACKPOS half of batch 192.
 ' This sample exercises the GET side positively (it must compile and print
 ' FAILURES: 0).  The SET side is a compile-time rejection, so it cannot be
 ' asserted from inside a program; the negative probe lives in the working
