@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **4** official keywords are not implemented yet (EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT); **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 211 (v0.2.061). **4 official keyword(s) remain unimplemented: EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT; all other non-Tier-3 official keywords are implemented.**
+> Updated through batch 214 (v0.2.062). **4 official keyword(s) remain unimplemented: EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT; all other non-Tier-3 official keywords are implemented.**
+> batch 214 (v0.2.062) - CLASS/METHOD part 2: METHOD blocks are real bodies. END METHOD terminates a method inside CLASS, the method leaves the parser as <Class>_<Method> (an ordinary function, so codegen needed nothing new), a top-level METHOD keeps its AS-type return value (batch 159 dropped it, so calls silently yielded 0), a method without a terminator is reported instead of swallowing the file, and the top-level driver no longer eats the next declaration's first token. Counts unchanged: 709 implemented / 148 established / 857 available / 4 not implemented.
 > batch 211 (v0.2.061) - ACCEL ATTACH gets a real runtime: the table is sized from the array's declared element count, created with CreateAcceleratorTableA, and consulted by both message pumps through TranslateAcceleratorA; the optional TO clause keeps the handle. INSTANCE / EVENTS / EVENT SOURCE / RAISEEVENT stay parked and reported, because they need a CLASS/INTERFACE/METHOD object model codegen does not have.
 > > batch 210 (v0.2.060) - coverage correction: `ACCEL ATTACH` / `EVENT SOURCE` / `EVENTS` / `INSTANCE` / `RAISEEVENT` were listed as Implemented although codegen emits no code for them (parked OOP/DDT arm). Status corrected to Not implemented, so the tables match the compiler; the sample corpus names exactly these five in its `.unimplemented.log` files.
 > > batch 209 (v0.2.060) - the 5 parked OOP/DDT drops (`ACCEL_ATTACH`/`EVENT_SOURCE`/`EVENTS`/`RAISEEVENT`/`INSTANCE`) are reported now: the arm pushes to compiler.warnings, producing the WARNING line and an `<output>.unimplemented.log` with statement + line. `sweep_noop_arms` no-op 2 -> 1.
@@ -710,6 +711,13 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.062 (2026-09-27)
+
+- **CLASS / METHOD part 2: METHOD blocks are real bodies (batch 214).** `METHOD Name [(params)] [AS type] ... END METHOD` written inside a `CLASS` is now parsed as a block instead of being skipped line by line, and the method leaves the parser as an ordinary function named `<Class>_<Method>` - the shape `register_function` already handles - so no new codegen machinery was required. A top-level `METHOD Triple(v AS LONG) AS LONG` keeps its return type: batch 159 routed that arm through `parse_sub_decl`, which has no `AS type` handling, so `Triple(10)` inside an expression silently evaluated to 0. A method whose terminator never matched is now reported (`Error: METHOD block starting on line N has no END METHOD terminator`) instead of swallowing the rest of the file.
+- **Parser driver fix the above depended on.** The top-level loop's no-progress guard treated a queued item (handed back without consuming a token) as a stuck step and advanced, eating the next declaration's first token, so `FUNCTION PBMAIN` arrived as `PBMAIN` alone. Only a step that produced nothing may be force-advanced now.
+- **Coverage counts are unchanged:** 709 implemented / 148 established / 857 available / 4 not implemented / 0 Tier-3. `CLASS` and `METHOD` were never CSV rows and no keyword changed status in this batch, so only the batch marker moved.
+- Witnesses: `examples/batch214_test.bas` (CLASS + METHOD -> `twice =42`, `=== FAILURES:0 ===`) and `examples/batch214b_toplevel_method.bas` (top-level METHOD -> `triple =30`, `=== FAILURES:0 ===`).
+
 ### v0.2.061 (2026-09-27)
 
 - **`ACCEL ATTACH` is real now.** It was the first of the five statements that parsed,

@@ -1,6 +1,6 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 211 (v0.2.061)** — 2026-09-27. All statements through batch 211 are reflected in this matrix.
+> **Last updated from batch 214 (v0.2.062)** — 2026-09-27. All statements through batch 214 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
