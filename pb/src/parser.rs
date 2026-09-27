@@ -299,6 +299,13 @@ impl Parser {
                                 }
                                 _ => break,
                             };
+                            // INSTANCE a(10) AS LONG needs an array-typed struct slot, which is not
+                            // supported yet.  Reject it loudly instead of skipping the line silently.
+                            if self.peek() == &Token::LParen {
+                                self.error_count += 1;
+                                self.consume_to_eol();
+                                break;
+                            }
                             let ftype = if self.peek() == &Token::As {
                                 self.advance();
                                 self.parse_type()?
