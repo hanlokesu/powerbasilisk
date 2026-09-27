@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 208 (v0.2.059). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 209 (v0.2.060). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> > batch 209 (v0.2.060) - the 5 parked OOP/DDT drops (`ACCEL_ATTACH`/`EVENT_SOURCE`/`EVENTS`/`RAISEEVENT`/`INSTANCE`) are reported now: the arm pushes to compiler.warnings, producing the WARNING line and an `<output>.unimplemented.log` with statement + line. `sweep_noop_arms` no-op 2 -> 1.
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
 > Batch 196 audit: fixed the duplicate "accepted but emits no code" warning that v0.2.047 introduced (both the empty arm and the family early return pushed it). Verification is the sample log line count: examples/batch196_test.bas uses 4 statements and the log must contain exactly 4 statement lines.
 > Batch 195 audit: codegen-side no-op groups (`INSTANCE` / `EVENTS` / `EVENT SOURCE` / `RAISEEVENT` / `ACCEL_ATTACH`) now emit a compiler warning instead of dropping the statement in silence. Turning them into hard errors was measured and rejected: it broke 2 and 41 shipped examples respectively. Baseline re-measured: all 203 examples compile with 0 failures.
@@ -709,6 +710,23 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.060 (2026-09-27)
+
+- **The 5 remaining silent drops are now reported.** `ACCEL_ATTACH`, `EVENT_SOURCE`,
+  `EVENTS`, `RAISEEVENT` and `INSTANCE` were accepted, emitted no code and produced no
+  report: the parked no-op arm also sat inside codegen's handled-family early-return
+  guard, so control returned before ever reaching the unimplemented report. That arm now
+  pushes to `compiler.warnings`, so any program using them gets
+  `[pbcompiler] WARNING: N statement(s) not implemented` plus an
+  `<output>.unimplemented.log` naming each statement and its line. The exit code stays 0 -
+  accepted-but-empty is a report, not a compile error.
+- batch 195's comment ("the drop is now reported instead of being invisible") was never
+  true; it is true as of this release. Evidence: `examples/batch195_test.bas` reports
+  4 statements (`line 18: INSTANCE`, `line 21: EVENTS`), `batch121_test.bas` 5,
+  `batch080_test.bas` 4.
+- Gate movement: `sweep_noop_arms` 484 arms / no-op **2 -> 1**; the remaining hit is
+  `CHRBYTES`, a documented ANSI-only constant, not a defect.
+
 ### v0.2.059 (2026-09-26)
 - **The 26 silent no-ops are settled: none of them is silently dropped.** The new
   `classify_noop_names.py` reads each name's parser block and sorts the list into loud
