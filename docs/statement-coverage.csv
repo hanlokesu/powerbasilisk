@@ -1,8 +1,8 @@
-# Last updated from batch 210 (v0.2.060) - 2026-09-27,,,,
+# Last updated from batch 211 (v0.2.061) - 2026-09-27,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
-ACCEL ATTACH,STATEMENT,PB/Win only,Not implemented
+ACCEL ATTACH,STATEMENT,PB/Win only,Implemented
 ACODE$,FUNCTION,Win32,Implemented
 ACOS,FUNCTION,LLVM intrinsic,Implemented
 ACOSH,FUNCTION,LLVM intrinsic,Implemented

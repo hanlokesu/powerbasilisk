@@ -9943,13 +9943,7 @@ impl Parser {
                     // Optional `TO hAccel`.  Recorded as a marker literal plus the
                     // target, the same convention IMAGELIST NEW uses, so codegen
                     // never has to guess whether the clause was written.
-                    // `TO` is the keyword token Token::To here, which
-                    // peek_plain_upper() does not map - that is why the first
-                    // version of this clause was silently swallowed by
-                    // consume_to_eol() and the handle never reached the caller.
-                    if self.peek() == &Token::To
-                        || matches!(self.peek(), Token::Identifier(id) if id.eq_ignore_ascii_case("TO"))
-                    {
+                    if self.peek_plain_upper() == "TO" {
                         self.advance();
                         let target = self.parse_expression()?;
                         args.push(Expr::IntegerLit(1));

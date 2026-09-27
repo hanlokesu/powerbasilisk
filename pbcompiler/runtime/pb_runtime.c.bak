@@ -7575,109 +7575,9 @@ static void pb_gw_touch(void) {
     InvalidateRect(pb_gw_cur, 0, 0);
 }
 
-/* ---------------------------------------------------------------------------
-   ACCEL ATTACH (batch 211)
-   The first of the five parked statements (ACCEL_ATTACH / EVENT_SOURCE /
-   EVENTS / RAISEEVENT / INSTANCE - one shared empty arm until batch 209 made
-   the drop visible) to get a real runtime.
-
-   Record layout: the program passes an array of QUAD records, one per key:
-       bits  0-15   fVirt   Win32 FVIRTKEY / FSHIFT / FCONTROL / FALT
-       bits 16-31   key     virtual key code
-       bits 32-47   cmd     command id, reported as WM_COMMAND's low word
-   The compiler passes the array's declared element count (ArrayInfo::
-   total_elements); the official form has no count argument because a compiler
-   is expected to know the size of a constant array.  NOTE: the machine's
-   official help carries no ACCEL_ATTACH page, so this layout is the fork's own
-   documented shape, not a transcription of a PowerBASIC page.
-
-   Attached tables are remembered as hDlg -> hAccel and offered to every message
-   the two pumps see, which is what makes a key actually fire; a table nobody
-   consults would be the same no-op the statement used to be.
-   ------------------------------------------------------------------------- */
-typedef struct {
-    unsigned short fVirt;
-    unsigned short key;
-    unsigned short cmd;
-} pb_accel_rec;
-
-__declspec(dllimport) void* __stdcall CreateAcceleratorTableA(void* lpaccel, int cAccel);
-__declspec(dllimport) int   __stdcall DestroyAcceleratorTable(void* hAccel);
-__declspec(dllimport) int   __stdcall TranslateAcceleratorA(void* hWnd, void* hAccTable, void* lpMsg);
-
-#define PB_ACCEL_MAX 8
-static void* pb_accel_tbl[PB_ACCEL_MAX];
-static void* pb_accel_dlg[PB_ACCEL_MAX];
-static int   pb_accel_n = 0;
-
-/* Build a table from the program's records; returns the handle, or 0 when the
-   array is unusable (null pointer, no elements, or the Win32 call failed). */
-long long pb_accel_attach(void* hDlg, unsigned long long* keys, long count) {
-    pb_accel_rec recs[32];
-    void* hAccel;
-    long i, n;
-    if (!keys || count <= 0) return 0;
-    n = count > 32 ? 32 : count;
-    for (i = 0; i < n; i++) {
-        unsigned long long v = keys[i];
-        recs[i].fVirt = (unsigned short)(v & 0xFFFF);
-        recs[i].key   = (unsigned short)((v >> 16) & 0xFFFF);
-        recs[i].cmd   = (unsigned short)((v >> 32) & 0xFFFF);
-    }
-    hAccel = CreateAcceleratorTableA(recs, (int)n);
-    if (!hAccel) return 0;
-    if (pb_accel_n < PB_ACCEL_MAX) {
-        pb_accel_dlg[pb_accel_n] = hDlg;
-        pb_accel_tbl[pb_accel_n] = hAccel;
-        pb_accel_n++;
-    }
-    return (long long)hAccel;
-}
-
-/* ACCEL DETACH hAccel - destroy one table and forget it. */
-long long pb_accel_detach(void* hAccel) {
-    int i;
-    if (!hAccel) return 0;
-    for (i = 0; i < pb_accel_n; i++) {
-        if (pb_accel_tbl[i] == hAccel) {
-            DestroyAcceleratorTable(hAccel);
-            pb_accel_n--;
-            pb_accel_tbl[i] = pb_accel_tbl[pb_accel_n];
-            pb_accel_dlg[i] = pb_accel_dlg[pb_accel_n];
-            pb_accel_tbl[pb_accel_n] = 0;
-            pb_accel_dlg[pb_accel_n] = 0;
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void pb_accel_kill_all(void) {
-    int i;
-    for (i = 0; i < pb_accel_n; i++) {
-        if (pb_accel_tbl[i]) DestroyAcceleratorTable(pb_accel_tbl[i]);
-        pb_accel_tbl[i] = 0;
-        pb_accel_dlg[i] = 0;
-    }
-    pb_accel_n = 0;
-}
-
-/* Offer the message to every attached table.  Returns 1 when one consumed it -
-   the caller must then skip TranslateMessage/DispatchMessage, exactly like the
-   accelerator handling in a hand-written Win32 message loop. */
-static int pb_accel_translate(pb_msg_t* msg) {
-    int i, hit = 0;
-    for (i = 0; i < pb_accel_n; i++) {
-        if (pb_accel_tbl[i] && TranslateAcceleratorA(pb_accel_dlg[i], pb_accel_tbl[i], msg))
-            hit = 1;
-    }
-    return hit;
-}
-
 void pb_message_loop(void) {
     pb_msg_t msg;
     while (GetMessageA(&msg, 0, 0, 0) > 0) {
-        if (pb_accel_translate(&msg)) continue;
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
@@ -8227,7 +8127,6 @@ void pb_dialog_doevents(void) {
             PostQuitMessage(0);
             break;
         }
-        if (pb_accel_translate(&msg)) continue;
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

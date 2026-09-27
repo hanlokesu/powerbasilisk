@@ -3259,15 +3259,6 @@ impl Compiler {
             .declare_function("pb_imagelist_count", &IrType::I32, &[IrType::I64], false);
         self.module
             .declare_function("pb_imagelist_kill", &IrType::I32, &[IrType::I64], false);
-        // batch 211: ACCEL ATTACH.  The call arm emits pb_accel_attach, so the
-        // symbol has to be declared here too - a call without a declaration is
-        // "use of undefined value" at clang time, which is how this was caught.
-        self.module.declare_function(
-            "pb_accel_attach",
-            &IrType::I64,
-            &[IrType::Ptr, IrType::Ptr, IrType::I32],
-            false,
-        );
         self.module.declare_function(
             "pb_color",
             &IrType::Void,
@@ -8424,37 +8415,15 @@ impl Compiler {
                 let mut count: i32 = 0;
                 let mut pk = fb.const_i64(0);
                 if let Some(a1) = call.args.get(1) {
-                    // `keys()` reaches codegen as ArrayAccess or as FunctionCall
-                    // depending on how the parser resolved the name; matching only
-                    // one of them made the count silently 0, so no table was built.
-                    let arr_name = match a1 {
-                        Expr::ArrayAccess(an, _) => Some(an.clone()),
-                        Expr::FunctionCall(an, _) => Some(an.clone()),
-                        _ => None,
-                    };
-                    if let Some(an) = arr_name {
-                        if let Some(ai) = self.symbols.lookup_array(&normalize_name(&an)).cloned() {
+                    if let Expr::ArrayAccess(an, _) = a1 {
+                        if let Some(ai) = self.symbols.lookup_array(&normalize_name(an)).cloned() {
                             count = ai.total_elements as i32;
                         }
                     }
-                    // The pointer must be &arr[0].  The *value* path for an
-                    // array yields the loaded element, so converting that integer
-                    // to a pointer handed the runtime address 4259849 and the
-                    // sample died with an access violation; the lvalue path with
-                    // empty indices is exactly "address of element 0".
-                    match self.compile_lvalue_ptr(fb, a1) {
-                        Ok((p, _pb)) => pk = p,
-                        Err(_) => {
-                            let v = self.compile_expr(fb, a1)?;
-                            pk = self.convert_value(fb, &v, &IrType::Ptr, &PbType::Long);
-                        }
-                    }
+                    let v = self.compile_expr(fb, a1)?;
+                    pk = self.convert_value(fb, &v, &IrType::Ptr, &PbType::Long);
                 }
-                let hn = fb.call(
-                    &IrType::I64,
-                    "pb_accel_attach",
-                    &[ph, pk, fb.const_i32(count)],
-                );
+                let hn = fb.call(&IrType::I64, "pb_accel_attach", &[ph, pk, fb.const_i32(count)]);
                 if matches!(call.args.get(2), Some(Expr::IntegerLit(1))) {
                     if let Some(t) = call.args.get(3) {
                         let target = self.compile_lvalue_ptr(fb, t)?;

@@ -8437,24 +8437,10 @@ impl Compiler {
                             count = ai.total_elements as i32;
                         }
                     }
-                    // The pointer must be &arr[0].  The *value* path for an
-                    // array yields the loaded element, so converting that integer
-                    // to a pointer handed the runtime address 4259849 and the
-                    // sample died with an access violation; the lvalue path with
-                    // empty indices is exactly "address of element 0".
-                    match self.compile_lvalue_ptr(fb, a1) {
-                        Ok((p, _pb)) => pk = p,
-                        Err(_) => {
-                            let v = self.compile_expr(fb, a1)?;
-                            pk = self.convert_value(fb, &v, &IrType::Ptr, &PbType::Long);
-                        }
-                    }
+                    let v = self.compile_expr(fb, a1)?;
+                    pk = self.convert_value(fb, &v, &IrType::Ptr, &PbType::Long);
                 }
-                let hn = fb.call(
-                    &IrType::I64,
-                    "pb_accel_attach",
-                    &[ph, pk, fb.const_i32(count)],
-                );
+                let hn = fb.call(&IrType::I64, "pb_accel_attach", &[ph, pk, fb.const_i32(count)]);
                 if matches!(call.args.get(2), Some(Expr::IntegerLit(1))) {
                     if let Some(t) = call.args.get(3) {
                         let target = self.compile_lvalue_ptr(fb, t)?;
