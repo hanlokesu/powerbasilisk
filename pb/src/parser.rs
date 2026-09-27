@@ -254,33 +254,82 @@ impl Parser {
                 Ok(Some(TopLevel::AsmData(ad)))
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("CLASS") => {
-                // CLASS ClassName ... END CLASS — OOP class block (simplified: skip entire block)
+                // CLASS Name ... END CLASS — the body's INSTANCE lines are the object's per-object
+                // storage, so a CLASS produces a real TypeDecl (the object's struct type).  Until
+                // batch 212 the whole block was skipped and INSTANCE had no storage at all.
+                let line = self.current_line();
                 self.advance(); // consume CLASS
-                                // consume optional class name
-                if let Token::Identifier(_) = self.peek() {
+                let name = if let Token::Identifier(cn) = self.peek() {
+                    let n = cn.clone();
                     self.advance();
-                }
+                    n
+                } else {
+                    String::new()
+                };
                 self.consume_to_eol();
-                // skip block body until END CLASS (line-based: read lines until one starts with END CLASS)
-                let mut depth = 1;
-                while depth > 0 && self.peek() != &Token::Eof {
-                    // check if current line starts with CLASS (nested) or END CLASS
-                    let is_class_start = matches!(self.peek(), Token::Identifier(w2) if w2.eq_ignore_ascii_case("CLASS"));
-                    let is_end = matches!(self.peek(), Token::End);
-                    let next_is_class = matches!(self.peek_at(1), Some(Token::Identifier(w3)) if w3.eq_ignore_ascii_case("CLASS"));
-                    if is_end && next_is_class {
-                        depth -= 1;
+                self.skip_eol();
+
+                let mut fields: Vec<TypeField> = Vec::new();
+                loop {
+                    if self.at_end() || self.peek() == &Token::Eof {
+                        break;
+                    }
+                    if self.peek() == &Token::End
+                        && matches!(self.peek_at(1), Some(Token::Identifier(e))
+                                    if e.eq_ignore_ascii_case("CLASS"))
+                    {
                         self.advance(); // END
                         self.advance(); // CLASS
                         self.consume_to_eol();
+                        break;
+                    }
+                    let is_instance = matches!(self.peek(), Token::Identifier(k)
+                                               if k.eq_ignore_ascii_case("INSTANCE"));
+                    if is_instance {
+                        self.advance(); // INSTANCE
+                        loop {
+                            if self.at_end() {
+                                break;
+                            }
+                            let fname = match self.peek() {
+                                Token::Identifier(f) => {
+                                    let n = f.clone();
+                                    self.advance();
+                                    n
+                                }
+                                _ => break,
+                            };
+                            let ftype = if self.peek() == &Token::As {
+                                self.advance();
+                                self.parse_type()?
+                            } else {
+                                PbType::Long
+                            };
+                            fields.push(TypeField {
+                                name: fname,
+                                pb_type: ftype,
+                            });
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                continue;
+                            }
+                            break;
+                        }
+                        self.consume_to_eol();
+                        self.skip_eol();
                         continue;
                     }
-                    if is_class_start {
-                        depth += 1;
-                    }
-                    self.advance();
+                    // METHOD blocks are still skipped line by line: methods need the implicit-this
+                    // work of the next batch, and this keeps today's behaviour for them.
+                    self.consume_to_eol();
+                    self.skip_eol();
                 }
-                Ok(None)
+
+                if name.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(TopLevel::TypeDecl(TypeDecl { name, fields, line })))
+                }
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("OPTION") => {
                 // OPTION EXPLICIT — official PB statement with the same effect
