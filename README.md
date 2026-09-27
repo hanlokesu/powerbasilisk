@@ -260,6 +260,7 @@ exit code 0:
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **4** official keywords are not implemented yet (EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT); **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
 > Updated through batch 211 (v0.2.061). **4 official keyword(s) remain unimplemented: EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT; all other non-Tier-3 official keywords are implemented.**
+> batch 211 (v0.2.061) - ACCEL ATTACH gets a real runtime: the table is sized from the array's declared element count, created with CreateAcceleratorTableA, and consulted by both message pumps through TranslateAcceleratorA; the optional TO clause keeps the handle. INSTANCE / EVENTS / EVENT SOURCE / RAISEEVENT stay parked and reported, because they need a CLASS/INTERFACE/METHOD object model codegen does not have.
 > > batch 210 (v0.2.060) - coverage correction: `ACCEL ATTACH` / `EVENT SOURCE` / `EVENTS` / `INSTANCE` / `RAISEEVENT` were listed as Implemented although codegen emits no code for them (parked OOP/DDT arm). Status corrected to Not implemented, so the tables match the compiler; the sample corpus names exactly these five in its `.unimplemented.log` files.
 > > batch 209 (v0.2.060) - the 5 parked OOP/DDT drops (`ACCEL_ATTACH`/`EVENT_SOURCE`/`EVENTS`/`RAISEEVENT`/`INSTANCE`) are reported now: the arm pushes to compiler.warnings, producing the WARNING line and an `<output>.unimplemented.log` with statement + line. `sweep_noop_arms` no-op 2 -> 1.
 > Batch 197 audit: the family-early-return warning from v0.2.047 was a false alarm (IMAGELIST_* and other covered families are implemented) and it inflated the silently-dropped inventory. The push was removed; only the genuinely empty arm still reports. Witness: examples/batch197_witness.bas prints the image-list handle it receives.
@@ -709,6 +710,35 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.061 (2026-09-27)
+
+- **`ACCEL ATTACH` is real now.** It was the first of the five statements that parsed,
+  compiled and produced no code. The compiler sizes the key table from the array's
+  *declared* element count (the official form passes no count, because a compiler knows a
+  constant array), the runtime creates it with `CreateAcceleratorTableA` and keeps
+  `hDlg -> hAccel`, and **both** message pumps - the modal `GetMessage` loop and
+  `DIALOG DOEVENTS` - offer every message to the attached tables with
+  `TranslateAcceleratorA`. A table nobody consults would have been the same no-op as
+  before. `TO hAccel` keeps the handle. The four remaining statements (`INSTANCE`,
+  `EVENTS`, `EVENT SOURCE`, `RAISEEVENT`) stay parked and reported: they need a
+  CLASS / INTERFACE / METHOD object model that codegen does not have.
+- Four defects were found while making it work, and all are fixed: `TO` is the keyword token
+  `Token::To`, which `peek_plain_upper()` does not map, so the clause was swallowed by
+  `consume_to_eol()` and the handle never reached the caller; the array argument arrives in
+  codegen as `ArrayAccess` *or* as `FunctionCall`, and matching only one shape left the
+  element count silently 0 (no table at all); the pointer is now taken through the lvalue
+  path, i.e. `&arr[0]`, because the value path handed the runtime the first record as an
+  address and the sample died with 0xC0000005; and a nonzero command field turns out to be
+  unreachable through a plain multiply, because `hi * 65536 * 65536` is evaluated in 32 bits
+  and wraps to 0 (measured by probe).
+- Witness samples for the batches that had none (`161`, `162`, `171`, `183`, `184`, `188`,
+  `193`, `194`, `197`, `198`, `208`, `209`): each asserts the single thing its batch changed,
+  all headless, compile rc=0 / run rc=0 / `=== FAILURES:0 ===`.
+- Packaging fix: the patch backups (`*.bak`, `*.bak2`...) are untracked, ignored, and the
+  robocopy `/XF` list now excludes `*.bak*` - they would otherwise have shipped in the zip,
+  the same accident as the `_bak` directory in v0.2.030.
+- Coverage: **709 implemented / 148 established / 4 not implemented / 857 available**.
+
 ### v0.2.060 (2026-09-27)
 
 - **The 5 remaining silent drops are now reported.** `ACCEL_ATTACH`, `EVENT_SOURCE`,
