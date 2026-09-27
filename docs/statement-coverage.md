@@ -1,23 +1,23 @@
 # PowerBasilisk Enhanced — Official Statement Coverage Matrix
 
-> **Last updated from batch 209 (v0.2.060)** — 2026-09-27. All statements through batch 209 are reflected in this matrix.
+> **Last updated from batch 210 (v0.2.060)** — 2026-09-27. All statements through batch 210 are reflected in this matrix.
 
 Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords / 1282 topic pages, PB/Win 10+11 / PB/CC 6+7).
 
 > **Status-column key**: `Implemented` = this branch generates real code. `Established` = a keyword that is *mature in the official PB documentation* - it is **NOT** a claim that upstream benstopics/powerbasilisk implemented it. `Not implemented` = an official keyword this fork does not implement yet. `FORK EXTENSION` = implemented by this fork but **not** an official PB keyword. This matrix does not publish a count of upstream's own keyword set.
 
 - Rows in this matrix: **864** (10 BLOCK, 253 FUNCTION, 5 OPERATOR, 593 STATEMENT, 3 FORK EXTENSION).
-- **861** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
-- **0** documented keywords still not implemented; **0** Tier-3 DDT GUI items deferred; **3** fork extension (implemented here, not an official PB keyword).
+- **856** official keywords currently available (✅ Implemented by this fork + ✅ Established in the official PB docs).
+- **5** documented keywords still not implemented (ACCEL ATTACH, EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT); **0** Tier-3 DDT GUI items deferred; **3** fork extension (implemented here, not an official PB keyword).
 
 ## Summary
 
 | Status | Count | Notes |
 |--------|-------|-------|
-| ✅ Implemented (this fork) | 713 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
+| ✅ Implemented (this fork) | 708 | Real codegen added by this fork (Win32 calls / runtime helpers / control flow) |
 | ✅ Established | 148 | Mature in the official PB documentation (not a claim about upstream's shipped set) |
-| ✅ **Total available** | **861** | Implemented + Established |
-| ❌ Not implemented | 0 | Official PB keywords this fork does not implement yet |
+| ✅ **Total available** | **856** | Implemented + Established |
+| ❌ Not implemented | 5 | Official PB keywords this fork does not implement yet (ACCEL ATTACH, EVENT SOURCE, EVENTS, INSTANCE, RAISEEVENT) |
 | 🔧 Fork extension | 3 | Implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE) |
 | 🔲 Proposed (not yet implemented) | 0 | Documented upstream, no codegen evidence yet |
 | 🛠 Tier-3 DDT (deferred) | 0 | DDT GUI / window-callback framework, high effort, deferred |
@@ -27,7 +27,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | Keyword | Kind | Platform | Status |
 |---------|------|----------|--------|
 | ABS | FUNCTION | LLVM intrinsic | Implemented |
-| ACCEL ATTACH | STATEMENT | PB/Win only | Implemented |
+| ACCEL ATTACH | STATEMENT | PB/Win only | Not implemented |
 | ACODE | FUNCTION | PB/Win + PB/CC | Implemented |
 | ACODE$ | FUNCTION | Win32 | Implemented |
 | ACOS | FUNCTION | LLVM intrinsic | Implemented |
@@ -281,8 +281,8 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | ERRCLEAR | FUNCTION | codegen builtin | Implemented |
 | ERROR | STATEMENT | PB/Win + PB/CC | Established |
 | ERROR$ | FUNCTION | Win32 | Implemented |
-| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Implemented |
-| EVENTS | STATEMENT | PB/Win + PB/CC | Implemented |
+| EVENT SOURCE | STATEMENT | PB/Win + PB/CC | Not implemented |
+| EVENTS | STATEMENT | PB/Win + PB/CC | Not implemented |
 | EXE | FUNCTION | codegen builtin | Implemented |
 | EXIST | FUNCTION | codegen builtin | Implemented |
 | EXIT | STATEMENT | PB/Win + PB/CC | Established |
@@ -438,7 +438,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | INCR | STATEMENT | PB/Win + PB/CC | Established |
 | INPUT FLUSH | STATEMENT | PB/CC only | Established |
 | INPUT# | STATEMENT | PB/CC only | Implemented |
-| INSTANCE | STATEMENT | PB/Win + PB/CC | Implemented |
+| INSTANCE | STATEMENT | PB/Win + PB/CC | Not implemented |
 | INSTR | FUNCTION | codegen builtin | Implemented |
 | INT | FUNCTION | codegen builtin | Implemented |
 | INTEGER | FUNCTION | codegen builtin | Implemented |
@@ -633,7 +633,7 @@ Ground truth: **PowerBASIC official documentation** (MIT license, 735 keywords /
 | PUT_STR | FUNCTION | codegen builtin | Implemented |
 | PUT_WSTR | FUNCTION | codegen builtin | Implemented |
 | QUAD | FUNCTION | codegen builtin | Implemented |
-| RAISEEVENT | STATEMENT | PB/Win + PB/CC | Implemented |
+| RAISEEVENT | STATEMENT | PB/Win + PB/CC | Not implemented |
 | RANDOMIZE | STATEMENT | PB/Win + PB/CC | Established |
 | READ | FUNCTION | codegen builtin | Implemented |
 | READ$ | FUNCTION | Win32 | Implemented |
