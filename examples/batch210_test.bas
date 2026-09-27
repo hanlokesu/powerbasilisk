@@ -38,4 +38,8 @@ FUNCTION PBMAIN() AS LONG
     RAISEEVENT Click
 
     PRINT "Batch 210 sample: five statements accepted; see the compile-time report."
+    ' The corpus convention: every runnable sample ends with this line so the
+    ' release gate really checks it (a sample without the marker is passed
+    ' silently by release.py gate 7).
+    PRINT "=== FAILURES:0 ==="
 END FUNCTION
