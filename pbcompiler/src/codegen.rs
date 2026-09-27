@@ -8404,8 +8404,18 @@ impl Compiler {
             }
             // Accepted but no-op until GUI / OOP runtime (batch 121)
             "ACCEL_ATTACH" | "EVENT_SOURCE" | "EVENTS" | "RAISEEVENT" | "INSTANCE" => {
-                // batch 195: this arm stays empty on purpose (batch 121 parked it),
-                // but the drop is now reported instead of being invisible.
+                // batch 195 parked this arm empty and claimed the drop "is now reported
+                // instead of being invisible" - it was not.  These five names are also
+                // listed in the handled-family early-return guard further down
+                // (`fam == "ACCEL_ATTACH" || ...`), so the statement returned Ok(())
+                // before ever reaching the unimplemented report.  batch 209 makes the
+                // claim true: the drop goes to compiler.warnings, which writes
+                // <output>.unimplemented.log and prints the WARNING line.  The exit code
+                // stays 0 - accepted-but-empty is not a compile error, only a report.
+                self.warnings.push(format!(
+                    "line {}: `{}` accepted but not implemented (DDT/OOP runtime pending) - no code generated",
+                    call.line, name
+                ));
             }
             "XPRINT_GET_MARGIN" => {
                 let mut ps = Vec::new();
