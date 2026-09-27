@@ -5,6 +5,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum BodyEnd {
+    EndMethod,
     EndSub,
     EndFunction,
     EndIf,
@@ -20,6 +21,7 @@ enum BodyEnd {
 
 pub struct Parser {
     tokens: Vec<Located>,
+    pending: std::collections::VecDeque<TopLevel>,
     pos: usize,
     def_funcs: HashMap<String, (Vec<String>, Expr)>,
     pub error_count: usize,
@@ -32,6 +34,7 @@ impl Parser {
     pub fn new(tokens: Vec<Located>) -> Self {
         Parser {
             tokens,
+            pending: std::collections::VecDeque::new(),
             pos: 0,
             def_funcs: HashMap::new(),
             error_count: 0,
@@ -151,8 +154,15 @@ impl Parser {
 
         while !self.at_end() {
             let saved_pos = self.pos;
+            // An item may come from a queue (METHOD blocks inside a CLASS): that hands back
+            // an item WITHOUT consuming a token, so `produced` - not `pos` alone - decides
+            // whether this step really made no progress.
+            let mut produced = false;
             match self.parse_top_level() {
-                Ok(Some(item)) => items.push(item),
+                Ok(Some(item)) => {
+                    items.push(item);
+                    produced = true;
+                }
                 Ok(None) => {} // consumed but no item (e.g., comment)
                 Err(e) => {
                     eprintln!("Error: Parse error: {}", e);
@@ -162,7 +172,7 @@ impl Parser {
             }
             self.skip_eol();
             // Safety: prevent infinite loop at top level
-            if self.pos == saved_pos && !self.at_end() {
+            if !produced && self.pos == saved_pos && !self.at_end() {
                 self.advance();
             }
         }
@@ -171,6 +181,11 @@ impl Parser {
     }
 
     fn parse_top_level(&mut self) -> PbResult<Option<TopLevel>> {
+        // Methods parsed inside a CLASS block are handed back one per call, because
+        // parse_top_level returns a single item.
+        if let Some(item) = self.pending.pop_front() {
+            return Ok(Some(item));
+        }
         self.skip_eol();
         if self.at_end() {
             return Ok(None);
@@ -326,8 +341,17 @@ impl Parser {
                         self.skip_eol();
                         continue;
                     }
-                    // METHOD blocks are still skipped line by line: methods need the implicit-this
-                    // work of the next batch, and this keeps today's behaviour for them.
+                    // METHOD name ... END METHOD: a real method body.  It leaves this
+                    // branch as an ordinary SUB/FUNCTION (see parse_method_decl), queued in
+                    // self.pending because parse_top_level hands back one item per call.
+                    let is_method = matches!(self.peek(), Token::Identifier(k)
+                                               if k.eq_ignore_ascii_case("METHOD"));
+                    if is_method {
+                        let item = self.parse_method_decl(Some(&name))?;
+                        self.pending.push_back(item);
+                        self.skip_eol();
+                        continue;
+                    }
                     self.consume_to_eol();
                     self.skip_eol();
                 }
@@ -351,11 +375,11 @@ impl Parser {
                 Ok(None)
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("METHOD") => {
-                // METHOD name [([args])] — treat as SUB (simplified OOP method).
-                // parse_sub_decl() consumes the leading keyword itself, so advancing
-                // here would swallow the method name (batch 159 fix).
-                let sd = self.parse_sub_decl()?;
-                Ok(Some(TopLevel::SubDecl(sd)))
+                // parse_method_decl() consumes the leading keyword itself and honours an
+                // `AS type` return type.  Going through parse_sub_decl() here (batch 159)
+                // silently dropped that type, so `FUNCTION = x` inside a top-level METHOD
+                // returned 0 to its caller (fixed in batch 214).
+                Ok(Some(self.parse_method_decl(None)?))
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("INTERFACE") => {
                 // INTERFACE Name [DIRECT|IDBIND] ... END INTERFACE — OOP interface block (skip)
@@ -1025,6 +1049,84 @@ impl Parser {
         Ok(TypeDecl { name, fields, line })
     }
 
+    /// A METHOD block inside a CLASS: `METHOD Name [(params)] [AS type] ... END METHOD`.
+    /// It leaves this branch as an ordinary SUB/FUNCTION named `<Class>_<Method>`, so
+    /// codegen needs no new machinery at all (register_sub / register_function exist).
+    fn parse_method_decl(&mut self, prefix: Option<&str>) -> PbResult<TopLevel> {
+        let line = self.current_line();
+        self.advance(); // METHOD
+        let mname = self.consume_identifier()?;
+
+        // Optional CDECL/STDCALL/BDECL decoration (ignored, same as parse_sub_decl).
+        while matches!(self.peek(), Token::Identifier(ref s) if {
+            let u = s.to_uppercase();
+            u == "CDECL" || u == "STDCALL" || u == "BDECL"
+        }) {
+            self.advance();
+        }
+
+        let params = if self.peek() == &Token::LParen {
+            self.advance();
+            let p = self.parse_params()?;
+            self.expect(&Token::RParen)?;
+            p
+        } else {
+            Vec::new()
+        };
+
+        let return_type = if self.peek() == &Token::As {
+            self.advance();
+            Some(self.parse_type()?)
+        } else {
+            None
+        };
+
+        let export = if self.peek() == &Token::Export {
+            self.advance();
+            true
+        } else {
+            false
+        };
+
+        self.consume_to_eol();
+        let (body, method_end) =
+            self.parse_body_with_terminator(&[BodyEnd::EndMethod, BodyEnd::EndSub])?;
+        // A body that never matched its terminator was cut short by parse_body()'s
+        // safety net: the END METHOD is missing.  Say so instead of letting the rest of
+        // the file be swallowed and reported later as a missing entry point (batch 214).
+        if method_end.is_none() {
+            eprintln!(
+                "Error: METHOD block starting on line {} has no END METHOD terminator",
+                line
+            );
+            self.error_count += 1;
+        }
+        let name = match prefix {
+            Some(p) => format!("{}_{}", p, mname),
+            None => mname,
+        };
+
+        Ok(match return_type {
+            Some(rt) => TopLevel::FunctionDecl(FunctionDecl {
+                name,
+                params,
+                return_type: rt,
+                body,
+                alias: None,
+                export,
+                line,
+            }),
+            None => TopLevel::SubDecl(SubDecl {
+                name,
+                params,
+                body,
+                alias: None,
+                export,
+                line,
+            }),
+        })
+    }
+
     fn parse_sub_decl(&mut self) -> PbResult<SubDecl> {
         let line = self.current_line();
         self.advance(); // SUB
@@ -1075,7 +1177,7 @@ impl Parser {
         };
 
         self.consume_to_eol();
-        let body = self.parse_body(&[BodyEnd::EndSub])?;
+        let body = self.parse_body(&[BodyEnd::EndSub, BodyEnd::EndMethod])?;
 
         Ok(SubDecl {
             name,
@@ -1439,6 +1541,11 @@ impl Parser {
 
     fn matches_terminator(&self, term: &BodyEnd) -> bool {
         match term {
+            BodyEnd::EndMethod => {
+                self.peek() == &Token::End
+                    && matches!(self.peek_at(1), Some(Token::Identifier(w))
+                                if w.eq_ignore_ascii_case("METHOD"))
+            }
             BodyEnd::EndSub => self.peek() == &Token::End && self.peek_at(1) == Some(&Token::Sub),
             BodyEnd::EndFunction => {
                 self.peek() == &Token::End && self.peek_at(1) == Some(&Token::Function)
@@ -1463,7 +1570,10 @@ impl Parser {
         for t in terminators {
             if self.matches_terminator(t) {
                 match t {
-                    BodyEnd::EndSub | BodyEnd::EndFunction | BodyEnd::EndIf => {
+                    BodyEnd::EndSub
+                    | BodyEnd::EndFunction
+                    | BodyEnd::EndIf
+                    | BodyEnd::EndMethod => {
                         self.advance(); // END
                         self.advance(); // SUB/FUNCTION/IF
                         self.consume_to_eol();
