@@ -8796,6 +8796,16 @@ impl Compiler {
             }
             "GRAPHIC_SET_VIRTUAL" => {
                 // GRAPHIC SET VIRTUAL nWide&, nHigh& [,USERSIZE]  (batch 65)
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "GRAPHIC_SET_VIRTUAL requires its arguments: GRAPHIC SET VIRTUAL nWidth& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let w0 = self.compile_expr(fb, &call.args[0])?;
                     let w = self.to_i32(fb, &w0);
@@ -8832,6 +8842,16 @@ impl Compiler {
             }
             "GRAPHIC_SET_AUTOSIZE" => {
                 // GRAPHIC SET AUTOSIZE nWidth, nHeight [,USERSIZE]  (batch 64)
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                    "GRAPHIC_SET_AUTOSIZE requires its arguments: GRAPHIC SET AUTOSIZE nWidth ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 2 {
                     let w0 = self.compile_expr(fb, &call.args[0])?;
                     let w = self.to_i32(fb, &w0);
@@ -9514,6 +9534,16 @@ impl Compiler {
 
             "FILECOPY" => {
                 // FILECOPY src$, dst$ — copy a file (sets ERR on failure)
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "FILECOPY requires its arguments: FILECOPY sourcefile , destfile"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let src = self.compile_expr(fb, &call.args[0])?;
                     let dst = self.compile_expr(fb, &call.args[1])?;
@@ -9570,6 +9600,15 @@ impl Compiler {
             }
             "SETATTR" => {
                 // SETATTR "path", attr& — set file attributes
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "SETATTR requires its arguments: SETATTR filespec$ , attribute".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let path = self.compile_expr(fb, &call.args[0])?;
                     let attr = self.compile_expr(fb, &call.args[1])?;
@@ -10283,6 +10322,16 @@ impl Compiler {
             }
             // --- PROGRESSBAR / HEADER (batch 159, official hDlg+id syntax) ---
             "PROGRESSBAR_SET_RANGE" => {
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "PROGRESSBAR_SET_RANGE requires its arguments: PROGRESSBAR SET RANGE hDlg , id& , lolimit& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10293,6 +10342,16 @@ impl Compiler {
                 return Ok(());
             }
             "PROGRESSBAR_SET_POS" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "PROGRESSBAR_SET_POS requires its arguments: PROGRESSBAR SET POS hDlg , id& , position&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10302,6 +10361,16 @@ impl Compiler {
                 return Ok(());
             }
             "PROGRESSBAR_SET_STEP" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "PROGRESSBAR_SET_STEP requires its arguments: PROGRESSBAR SET STEP hDlg , id& , stepval&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10580,6 +10649,15 @@ impl Compiler {
             }
             "TAB_RESET" => {
                 // TAB RESET hDlg, ID&
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_RESET requires its arguments: TAB RESET hDlg ,".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -10619,6 +10697,16 @@ impl Compiler {
             }
             "TAB_SET_IMAGELIST" => {
                 // TAB SET IMAGELIST hDlg, ID&, hLst
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_SET_IMAGELIST requires its arguments: TAB SET IMAGELIST hDlg , ID& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -10720,6 +10808,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_SET_POS" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "SCROLLBAR_SET_POS requires its arguments: SCROLLBAR SET POS hDlg , id& , position&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10732,6 +10830,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_SET_PAGESIZE" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "SCROLLBAR_SET_PAGESIZE requires its arguments: SCROLLBAR SET PAGESIZE hDlg , id& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10744,6 +10852,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_SET_RANGE" => {
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "SCROLLBAR_SET_RANGE requires its arguments: SCROLLBAR SET RANGE hDlg , id& , lolimit& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10780,6 +10898,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_DELETE" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_DELETE requires its arguments: COMBOBOX DELETE hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11002,6 +11130,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_RESET" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_RESET requires its arguments: COMBOBOX RESET hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11013,6 +11151,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_SELECT" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_SELECT requires its arguments: COMBOBOX SELECT hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11029,6 +11177,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_SET_TEXT" => {
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "COMBOBOX_SET_TEXT requires its arguments: COMBOBOX SET TEXT hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11046,6 +11204,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_SET_USER" => {
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "COMBOBOX_SET_USER requires its arguments: COMBOBOX SET USER hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11064,6 +11232,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_UNSELECT" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_UNSELECT requires its arguments: COMBOBOX UNSELECT hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11102,6 +11280,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_DELETE" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_DELETE requires its arguments: LISTBOX DELETE hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11340,6 +11528,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_RESET" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_RESET requires its arguments: LISTBOX RESET hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11351,6 +11549,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_SELECT" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_SELECT requires its arguments: LISTBOX SELECT hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11422,6 +11630,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_CHECK" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_CHECK requires its arguments: CONTROL GET CHECK hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let val = fb.call(&IrType::I64, "pb_control_get_check", &[hc]);
@@ -12072,6 +12290,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_DELETE_ITEM" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_DELETE_ITEM requires its arguments: LISTVIEW DELETE ITEM hDlg , id& , item&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12084,6 +12312,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_RESET" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_RESET requires its arguments: LISTVIEW RESET hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12155,6 +12393,16 @@ impl Compiler {
             }
             "LISTVIEW_FIT_CONTENT" => {
                 // LISTVIEW FIT CONTENT hDlg, ID&, Col&
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_FIT_CONTENT requires its arguments: LISTVIEW FIT CONTENT hDlg , id& , col&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12168,6 +12416,16 @@ impl Compiler {
             }
             "LISTVIEW_FIT_HEADER" => {
                 // LISTVIEW FIT HEADER hDlg, ID&, Col&
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_FIT_HEADER requires its arguments: LISTVIEW FIT HEADER hDlg , id& , col&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12198,6 +12456,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_COLUMN" => {
                 // LISTVIEW SET COLUMN hDlg, ID&, Col&, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_COLUMN requires its arguments: LISTVIEW SET COLUMN hDlg , id& , col& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12236,6 +12504,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_HEADER" => {
                 // LISTVIEW SET HEADER hDlg, ID&, Col&, StrExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_HEADER requires its arguments: LISTVIEW SET HEADER hDlg , id& , col& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12298,6 +12576,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_MODE" => {
                 // LISTVIEW SET MODE hDlg, ID&, NumExpr
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_MODE requires its arguments: LISTVIEW SET MODE hDlg , id& , NumExpr"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12377,6 +12665,16 @@ impl Compiler {
             }
             "LISTVIEW_UNSELECT" => {
                 // LISTVIEW UNSELECT hDlg, ID&, Item& [, Col&]
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_UNSELECT requires its arguments: LISTVIEW UNSELECT hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12407,6 +12705,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_STYLEXX" => {
                 // LISTVIEW SET STYLEXX hDlg, ID&, NumExpr
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_STYLEXX requires its arguments: LISTVIEW SET STYLEXX hDlg , id& , NumExpr"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12437,6 +12745,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_USER" => {
                 // LISTVIEW SET USER hDlg, ID&, Item&, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_USER requires its arguments: LISTVIEW SET USER hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12451,6 +12769,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_IMAGE" => {
                 // LISTVIEW SET IMAGE hDlg, ID&, Item&, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_IMAGE requires its arguments: LISTVIEW SET IMAGE hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12465,6 +12793,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_IMAGE2" => {
                 // LISTVIEW SET IMAGE2 hDlg, ID&, Item&, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_IMAGE2 requires its arguments: LISTVIEW SET IMAGE2 hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12479,6 +12817,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_OVERLAY" => {
                 // LISTVIEW SET OVERLAY hDlg, ID&, Item&, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_OVERLAY requires its arguments: LISTVIEW SET OVERLAY hDlg , id& , item& ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12493,6 +12841,16 @@ impl Compiler {
             }
             "LISTVIEW_SET_IMAGELIST" => {
                 // LISTVIEW SET IMAGELIST hDlg, ID&, hLst, NumExpr
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "LISTVIEW_SET_IMAGELIST requires its arguments: LISTVIEW SET IMAGELIST hDlg , id& , hLst ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12510,6 +12868,16 @@ impl Compiler {
             }
             "LISTVIEW_VISIBLE" => {
                 // LISTVIEW VISIBLE hDlg, ID&, Item&
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_VISIBLE requires its arguments: LISTVIEW VISIBLE hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12672,6 +13040,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_SELECT" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_SELECT requires its arguments: TREEVIEW SELECT hDlg , id& ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12687,6 +13065,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_UNSELECT" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_UNSELECT requires its arguments: TREEVIEW UNSELECT hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12727,6 +13115,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_SET_TEXT" => {
+                // batch 219: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                    "TREEVIEW_SET_TEXT requires its arguments: TREEVIEW SET TEXT hDlg , id& , hItem ,"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12743,6 +13141,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_SET_IMAGELIST" => {
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "TREEVIEW_SET_IMAGELIST requires its arguments: TREEVIEW SET IMAGELIST hDlg , id& , hLst"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12773,6 +13181,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_RESET" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_RESET requires its arguments: TREEVIEW RESET hDlg , id&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12820,6 +13238,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SET_TEXT" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_TEXT requires its arguments: DIALOG SET TEXT hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hdlg = self.compile_expr(fb, &call.args[0])?;
                     let text = self.compile_expr(fb, &call.args[1])?;
@@ -12852,6 +13280,16 @@ impl Compiler {
             }
             "DIALOG_SET_SIZE" => {
                 // DIALOG SET SIZE hDlg, nWide&, nHigh&   (official statement)
+                // batch 219: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                    "DIALOG_SET_SIZE requires its arguments: DIALOG SET SIZE hDlg , nWide& , nHigh&"
+                        .to_string(),
+                    None,
+                    call.line,
+                ));
+                }
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let hdlg64 = fb.inttoptr(&hd);
@@ -12971,6 +13409,16 @@ impl Compiler {
             }
             "DIALOG_SET_ICON" => {
                 // DIALOG SET ICON hDlg, newicon$
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_ICON requires its arguments: DIALOG SET ICON hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let hdlg64 = fb.inttoptr(&hd);
@@ -13142,6 +13590,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SHOW_STATE" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SHOW_STATE requires its arguments: DIALOG SHOW STATE hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let st = self.compile_expr(fb, &call.args[1])?;
@@ -13159,6 +13617,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_CHECK" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_CHECK requires its arguments: CONTROL SET CHECK hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let st = self.compile_expr(fb, &call.args[1])?;
@@ -13227,6 +13695,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_POS" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_POS requires its arguments: CONTROL SET FONT hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let pos = self.compile_expr(fb, &call.args[1])?;
@@ -13236,6 +13714,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_POS" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_POS requires its arguments: CONTROL GET LOC hDlg ,"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let hc = self.compile_expr(fb, &call.args[0])?;
                     let val = fb.call(&IrType::I64, "pb_control_get_pos", &[hc]);
@@ -15101,6 +15589,15 @@ impl Compiler {
                 return Ok(());
             }
             "SEEK" => {
+                // batch 219: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "SEEK requires its arguments: SEEK [#] filenum& , position&&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 if call.args.len() >= 2 {
                     let sv0 = self.compile_expr(fb, &call.args[0])?;
                     let f = self.to_i32(fb, &sv0);
