@@ -1,0 +1,17 @@
+#COMPILE EXE
+CLASS Box
+    INSTANCE v AS LONG
+    METHOD GetIt() AS LONG
+        FUNCTION = v
+    END METHOD
+END CLASS
+
+FUNCTION PBMAIN() AS LONG
+    LOCAL a AS Box
+    LOCAL x AS LONG
+    LOCAL n AS LONG
+    a.v = 5
+    n = 7
+    n.Foo(1)
+    FUNCTION = 0
+END FUNCTION

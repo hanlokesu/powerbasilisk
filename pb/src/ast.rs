@@ -521,6 +521,17 @@ pub enum Expr {
     ArrayAccess(String, Vec<Expr>),
     TypeMember(Box<Expr>, String),
     FunctionCall(String, Vec<Expr>),
+    /// `o.M(a, b)` — a method call written with a dot on a TYPE instance
+    /// (the batch 216/217 sugar). `base` is the receiver expression on the
+    /// left of the dot. codegen lowers the whole node to the qualified free
+    /// function `<Class>_<Method>(o, a, b)` that METHOD was compiled as; it
+    /// never falls back to a silent value when the receiver or the method
+    /// cannot be resolved.
+    MethodCall {
+        base: Box<Expr>,
+        name: String,
+        args: Vec<Expr>,
+    },
     UnaryOp(UnaryOp, Box<Expr>),
     BinaryOp(BinaryOp, Box<Expr>, Box<Expr>),
     PercentConst(String),

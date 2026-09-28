@@ -10805,6 +10805,28 @@ impl Parser {
                             line,
                         }));
                     }
+                    // `o.M(args)` with no assignment: a statement-position method
+                    // call (batch 217). Keep the receiver as argument 0 and mark the
+                    // call name with a leading dot - codegen is the layer that knows
+                    // the receiver's TYPE and lowers it to `<Class>_<Method>`. A
+                    // plain call can never collide with this, because a PB
+                    // identifier cannot begin with a dot.
+                    if let Expr::MethodCall {
+                        base,
+                        name: mname,
+                        args: margs,
+                    } = primary
+                    {
+                        let mut call_args = Vec::with_capacity(margs.len() + 1);
+                        call_args.push(*base);
+                        call_args.extend(margs);
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: format!(".{}", mname),
+                            args: call_args,
+                            line,
+                        }));
+                    }
                     self.consume_to_eol();
                     eprintln!("Error: unrecognised statement on line {}", line);
                     self.error_count += 1;
@@ -13349,11 +13371,29 @@ impl Parser {
                 } else {
                     Expr::Variable(name)
                 };
-                // Chained .member access: obj.field1.field2...
+                // Chained .member access: obj.field1.field2..., and the dotted
+                // method call `obj.M(args)` (batch 217).  The receiver is kept in
+                // the AST: codegen is the layer that knows the receiver's TYPE and
+                // can therefore lower `obj.M(a)` to `<Class>_<Method>(obj, a)`.
                 while self.peek() == &Token::Dot {
                     self.advance();
                     let member = self.consume_identifier()?;
-                    expr = Expr::TypeMember(Box::new(expr), member);
+                    if self.peek() == &Token::LParen {
+                        self.advance();
+                        let args = if self.peek() == &Token::RParen {
+                            Vec::new()
+                        } else {
+                            self.parse_arg_list()?
+                        };
+                        self.expect(&Token::RParen)?;
+                        expr = Expr::MethodCall {
+                            base: Box::new(expr),
+                            name: member,
+                            args,
+                        };
+                    } else {
+                        expr = Expr::TypeMember(Box::new(expr), member);
+                    }
                 }
                 Ok(expr)
             }

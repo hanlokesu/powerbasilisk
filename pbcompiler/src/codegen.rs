@@ -6896,6 +6896,31 @@ impl Compiler {
         ))
     }
 
+    /// The TYPE name behind an expression that denotes a struct instance.
+    /// Used by the `o.M(args)` sugar (batch 217): the receiver must be a
+    /// variable (or a member) whose declared type is a user-defined TYPE.
+    fn struct_type_of_expr(&self, expr: &Expr) -> Option<String> {
+        match expr {
+            Expr::Variable(name) => {
+                let info = self.symbols.lookup(&normalize_name(name))?;
+                match &info.pb_type {
+                    PbType::UserDefined(t) => Some(normalize_name(t)),
+                    _ => None,
+                }
+            }
+            Expr::TypeMember(base, member) => {
+                let t = self.struct_type_of_expr(base)?;
+                let layout = self.type_layouts.get(&t)?;
+                let idx = *layout.field_map.get(&normalize_name(member))?;
+                match &layout.fields[idx].pb_type {
+                    PbType::UserDefined(f) => Some(normalize_name(f)),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
     // ========== Lvalue pointer ==========
 
     /// Return a pointer to an lvalue expression (without loading it).
@@ -15109,6 +15134,48 @@ impl Compiler {
             return Ok(());
         }
 
+        // `o.M(args)` written as a statement, result discarded (batch 217). The
+        // parser keeps the receiver as argument 0 and marks the name with a
+        // leading dot, because only this layer knows the receiver's TYPE. Lower
+        // it to the qualified procedure `<Class>_<Method>(o, args)`; every
+        // unresolvable case stops the build instead of doing nothing.
+        if let Some(method) = name.strip_prefix('.') {
+            if let Some(receiver) = call.args.first() {
+                match self.struct_type_of_expr(receiver) {
+                    Some(class) => {
+                        let qualified = format!("{}_{}", class, method);
+                        if let Some(info) = self.functions.get(&qualified).cloned() {
+                            let margs = self.compile_call_args(fb, &call.args, &info)?;
+                            if info.is_stdcall {
+                                fb.call_stdcall(&info.ret_type, &info.ir_name, &margs);
+                            } else {
+                                fb.call(&info.ret_type, &info.ir_name, &margs);
+                            }
+                            return Ok(());
+                        }
+                        return Err(pb::error::PbError::parser(
+                            format!(
+                                "Unknown method `{}.{}` - no procedure `{}` was compiled",
+                                class, method, qualified
+                            ),
+                            None,
+                            call.line,
+                        ));
+                    }
+                    None => {
+                        return Err(pb::error::PbError::parser(
+                            format!(
+                                "Method call `.{}(...)`: receiver is not a TYPE instance",
+                                method
+                            ),
+                            None,
+                            call.line,
+                        ));
+                    }
+                }
+            }
+        }
+
         if let Some(info) = self.functions.get(&name).cloned() {
             let args = self.compile_call_args(fb, &call.args, &info)?;
             if info.is_stdcall {
@@ -16770,6 +16837,36 @@ impl Compiler {
                 } else {
                     Ok(fb.const_i32(0))
                 }
+            }
+            Expr::MethodCall { base, name, args } => {
+                // `o.M(a, b)` — the dotted method-call sugar. Lower it to the
+                // qualified free function the METHOD was compiled as, prepending
+                // the receiver as argument 0 so the implicit BYREF `this` receives
+                // the object itself. Everything else (argument modes, byref
+                // addresses) is the existing call machinery's job.
+                //
+                // Loud on every failure path on purpose: an unresolvable receiver
+                // or method must stop the build, never produce a silent value.
+                let class = self.struct_type_of_expr(base).ok_or_else(|| {
+                    PbError::runtime(format!(
+                        "method call `.{}(...)`: receiver is not a TYPE instance",
+                        name
+                    ))
+                })?;
+                let qualified = format!("{}_{}", class, normalize_name(name));
+                if !self.functions.contains_key(&qualified) {
+                    return Err(PbError::runtime(format!(
+                        "unknown method `{}.{}` - no procedure `{}` was compiled",
+                        class,
+                        normalize_name(name),
+                        qualified
+                    )));
+                }
+                let mut call_args = Vec::with_capacity(args.len() + 1);
+                call_args.push((**base).clone());
+                call_args.extend(args.iter().cloned());
+                let lowered = Expr::FunctionCall(qualified, call_args);
+                self.compile_expr(fb, &lowered)
             }
             Expr::TypeMember(base_expr, member) => {
                 // Intercept EXE.PATH$ and EXE.NAME$

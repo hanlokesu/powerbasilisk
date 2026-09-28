@@ -993,6 +993,16 @@ impl Interpreter {
                 };
                 Ok(result)
             }
+            Expr::MethodCall { name, .. } => {
+                // The interpreter is a test harness only; the dotted method-call
+                // sugar (batch 217) is implemented in codegen over the qualified
+                // `<Class>_<Method>` procedure. Fail loudly instead of pretending
+                // the call produced a value.
+                Err(PbError::runtime(format!(
+                    "dotted method call `.{}(...)` is not supported by the interpreter",
+                    name
+                )))
+            }
             Expr::TypeMember(_base, _member) => {
                 // Simplified: just access as variable.member
                 // For TYPE fields on UDTs — not needed for test harness
