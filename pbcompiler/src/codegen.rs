@@ -14178,6 +14178,17 @@ impl Compiler {
                 return Ok(());
             }
             "GLOBALMEM ALLOC" => {
+                if call.args.len() < 2 {
+                    // batch 218: the official syntax always carries a `TO <var>` target.
+                    // Without it the old code fell straight through and the statement
+                    // became a silent no-op; malformed input must be loud instead.
+                    return Err(pb::error::PbError::parser(
+                        "GLOBALMEM ALLOC requires its destination: GLOBALMEM ALLOC count TO vHndl"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 // GLOBALMEM ALLOC count TO vHndl
                 if call.args.len() >= 2 {
                     let cv = self.compile_expr(fb, &call.args[0])?;
@@ -14189,6 +14200,17 @@ impl Compiler {
                 return Ok(());
             }
             "GLOBALMEM FREE" => {
+                if call.args.len() < 2 {
+                    // batch 218: the official syntax always carries a `TO <var>` target.
+                    // Without it the old code fell straight through and the statement
+                    // became a silent no-op; malformed input must be loud instead.
+                    return Err(pb::error::PbError::parser(
+                        "GLOBALMEM FREE requires its destination: GLOBALMEM FREE mHndl TO vHndl"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 // GLOBALMEM FREE mHndl TO vHndl
                 if call.args.len() >= 2 {
                     let cv = self.compile_expr(fb, &call.args[0])?;
@@ -14200,6 +14222,17 @@ impl Compiler {
                 return Ok(());
             }
             "GLOBALMEM LOCK" => {
+                if call.args.len() < 2 {
+                    // batch 218: the official syntax always carries a `TO <var>` target.
+                    // Without it the old code fell straight through and the statement
+                    // became a silent no-op; malformed input must be loud instead.
+                    return Err(pb::error::PbError::parser(
+                        "GLOBALMEM LOCK requires its destination: GLOBALMEM LOCK mHndl TO vPtr"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 // GLOBALMEM LOCK mHndl TO vPtr
                 if call.args.len() >= 2 {
                     let cv = self.compile_expr(fb, &call.args[0])?;
@@ -14211,6 +14244,17 @@ impl Compiler {
                 return Ok(());
             }
             "GLOBALMEM SIZE" => {
+                if call.args.len() < 2 {
+                    // batch 218: the official syntax always carries a `TO <var>` target.
+                    // Without it the old code fell straight through and the statement
+                    // became a silent no-op; malformed input must be loud instead.
+                    return Err(pb::error::PbError::parser(
+                        "GLOBALMEM SIZE requires its destination: GLOBALMEM SIZE mHndl TO vSize"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 // GLOBALMEM SIZE mHndl TO vSize
                 if call.args.len() >= 2 {
                     let cv = self.compile_expr(fb, &call.args[0])?;
@@ -14222,6 +14266,17 @@ impl Compiler {
                 return Ok(());
             }
             "GLOBALMEM UNLOCK" => {
+                if call.args.len() < 2 {
+                    // batch 218: the official syntax always carries a `TO <var>` target.
+                    // Without it the old code fell straight through and the statement
+                    // became a silent no-op; malformed input must be loud instead.
+                    return Err(pb::error::PbError::parser(
+                        "GLOBALMEM UNLOCK requires its destination: GLOBALMEM UNLOCK mHndl TO vLocked"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
                 // GLOBALMEM UNLOCK mHndl TO vLocked
                 if call.args.len() >= 2 {
                     let cv = self.compile_expr(fb, &call.args[0])?;
