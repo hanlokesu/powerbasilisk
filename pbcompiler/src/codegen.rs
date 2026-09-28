@@ -6791,6 +6791,24 @@ impl Compiler {
                         fb.store(&converted, &ptr);
                     }
                 } else {
+                    // Implicit member access inside a METHOD: a bare name that is one of
+                    // the receiver's INSTANCE fields means this.<name> (batch 216).
+                    if let Some(member_expr) = self.implicit_this_member(&name) {
+                        let (field_ptr, field_pb) = self.compile_lvalue_ptr(fb, &member_expr)?;
+                        if let PbType::FixedString(n) = &field_pb {
+                            let src = self.compile_expr(fb, &assign.value)?;
+                            let size = fb.const_i32((*n as i32) - 1);
+                            fb.call_void("strncpy", &[field_ptr.clone(), src, size]);
+                            let term_idx = fb.const_i32((*n as i32) - 1);
+                            let term_ptr = fb.gep_byte(&field_ptr, &term_idx);
+                            fb.store(&Val::new("0".to_string(), IrType::I8), &term_ptr);
+                        } else {
+                            let field_ir = Self::ir_type_for(&field_pb);
+                            let converted = self.convert_value(fb, &value, &field_ir, &field_pb);
+                            fb.store(&converted, &field_ptr);
+                        }
+                        return Ok(());
+                    }
                     if self.option_explicit {
                         return Err(PbError::parser(
                             format!(
@@ -6847,6 +6865,37 @@ impl Compiler {
         Ok(())
     }
 
+    /// PowerBASIC implicit member access inside a method (batch 216).
+    ///
+    /// A METHOD inside a CLASS is compiled as `FUNCTION <Class>_<Method>` whose first
+    /// parameter is an implicit BYREF receiver named `this`.  Inside such a body a bare
+    /// name that matches one of the receiver type's INSTANCE fields means
+    /// `this.<name>`.  Before this the name missed the symbol table and fell through to
+    /// the auto-declare path, silently becoming a fresh zero-initialised local: the
+    /// method ran, reported success and changed nothing on the object.
+    ///
+    /// The rewritten expression is handed back to the caller so the existing TypeMember
+    /// machinery does the field arithmetic, string handling and diagnostics instead of
+    /// there being a second copy of them here.
+    fn implicit_this_member(&self, name: &str) -> Option<Expr> {
+        // The symbol table is keyed by the *normalised* name (uppercase, type
+        // suffix stripped), so the receiver injected by the parser is stored under
+        // "THIS" -- looking up the literal "this" always missed.
+        let this = self.symbols.lookup(&normalize_name("this"))?;
+        let tname = match &this.pb_type {
+            PbType::UserDefined(t) => normalize_name(t),
+            _ => return None,
+        };
+        let layout = self.type_layouts.get(&tname)?;
+        if !layout.field_map.contains_key(name) {
+            return None;
+        }
+        Some(Expr::TypeMember(
+            Box::new(Expr::Variable("this".to_string())),
+            name.to_string(),
+        ))
+    }
+
     // ========== Lvalue pointer ==========
 
     /// Return a pointer to an lvalue expression (without loading it).
@@ -6864,6 +6913,11 @@ impl Compiler {
                         info.pb_type.clone(),
                     ))
                 } else {
+                    // Implicit member access inside a METHOD (batch 216): reuse the
+                    // TypeMember path for the receiver's field.
+                    if let Some(member_expr) = self.implicit_this_member(&name) {
+                        return self.compile_lvalue_ptr(fb, &member_expr);
+                    }
                     if self.option_explicit {
                         return Err(PbError::parser(
                             format!(
@@ -16621,6 +16675,11 @@ impl Compiler {
                         return Ok(fb.call(&IrType::I64, "pb_tix", &[]));
                     }
                     _ => {}
+                }
+                // Implicit member access inside a METHOD (batch 216): a bare name that
+                // is one of the receiver's INSTANCE fields reads this.<name>.
+                if let Some(member_expr) = self.implicit_this_member(&name) {
+                    return self.compile_expr(fb, &member_expr);
                 }
                 let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
                 let info = self.symbols.lookup(&name).unwrap();

@@ -4,8 +4,9 @@
 ' Demonstrates:
 '   * METHOD Name [(params)] [AS type] ... END METHOD inside CLASS
 '   * the method leaves the parser as an ordinary FUNCTION named
-'     <Class>_<Method> (here Point_Twice), so codegen needs no new
-'     machinery - register_function already handles that shape
+'     <Class>_<Method> (here Point_Twice) whose first parameter is the
+'     implicit BYREF receiver added in batch 216, so the call passes the
+'     object: got = Point_Twice(p, 21)
 '   * END METHOD is a real block terminator and the return type is
 '     honoured (before batch 214 the CLASS body was skipped line by line
 '     and a METHOD body ran on to the end of the file)
@@ -24,7 +25,8 @@ END CLASS
 
 FUNCTION PBMAIN() AS LONG
     LOCAL got AS LONG
-    got = Point_Twice(21)
+    LOCAL p AS Point
+    got = Point_Twice(p, 21)
     PRINT "twice ="; got
     IF got = 42 THEN
         PRINT "=== FAILURES:0 ==="

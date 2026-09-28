@@ -1074,6 +1074,31 @@ impl Parser {
             Vec::new()
         };
 
+        // A METHOD declared inside a CLASS takes an implicit BYREF receiver as its
+        // first parameter (batch 216).  Two things depend on it:
+        //   * a bare INSTANCE field name in the body means `this.<field>` -- before
+        //     this, such a name missed the symbol table, fell through to the
+        //     auto-declare path and silently became a fresh zero-initialised local,
+        //     so a method could never change the object it was called on;
+        //   * the caller hands over the object, so two objects keep separate state.
+        // PowerBASIC's parameter default is BYREF, and that is what makes the receiver
+        // an address instead of a copy: with `is_byval: false` codegen types the
+        // parameter as a pointer while keeping the declared CLASS type, which is exactly
+        // what `this.<field>` needs.  A top-level METHOD (no CLASS) gets no receiver.
+        let mut params = params;
+        if let Some(cls) = prefix {
+            params.insert(
+                0,
+                Param {
+                    name: "this".to_string(),
+                    pb_type: PbType::UserDefined(cls.to_string()),
+                    is_byval: false,
+                    is_optional: false,
+                    is_array: false,
+                },
+            );
+        }
+
         let return_type = if self.peek() == &Token::As {
             self.advance();
             Some(self.parse_type()?)
