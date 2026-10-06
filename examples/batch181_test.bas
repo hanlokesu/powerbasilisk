@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch181_test.bas - the six GRAPHIC statements of batch 181
 '---------------------------------------------------------------------
@@ -64,7 +93,7 @@
 ' Complexity note: O(1) - a fixed list of draws and pixel reads.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 %RED     = 255      ' COLORREF 0x000000FF
 %GREEN   = 65280    ' COLORREF 0x0000FF00
@@ -92,9 +121,9 @@ FUNCTION PBMAIN () AS LONG
     LOCAL ch     AS LONG
     LOCAL fail   AS LONG
 
-    PRINT "batch 181 - GRAPHIC REDRAW / SET FOCUS / SET LOC / SET CLIENT /"
-    PRINT "            SET OVERLAP / GET OVERLAP"
-    PRINT "-------------------------------------------------------------"
+    ConPrint "batch 181 - GRAPHIC REDRAW / SET FOCUS / SET LOC / SET CLIENT /"
+    ConPrint "            SET OVERLAP / GET OVERLAP"
+    ConPrint "-------------------------------------------------------------"
 
     IMPORT ADDR "IsWindow",        "USER32.DLL" TO iswA, iswH
     IMPORT ADDR "IsWindowVisible", "USER32.DLL" TO isvA, isvH
@@ -103,7 +132,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetPixel",        "GDI32.DLL"  TO gpA, gpH
     IF iswA = 0 OR isvA = 0 OR dcA = 0 OR rdA = 0 OR gpA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
+        ConPrint "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -112,19 +141,19 @@ FUNCTION PBMAIN () AS LONG
     hGr = 0
     GRAPHIC WINDOW NEW "batch 181 - overlap / client / loc", 60, 60, 340, 260 TO hGr
     IF hGr <> 0 THEN
-        PRINT "ok   GRAPHIC WINDOW NEW returned a handle"
+        ConPrint "ok   GRAPHIC WINDOW NEW returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC WINDOW NEW handle"
+        ConPrint "FAIL GRAPHIC WINDOW NEW handle"
     END IF
 
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   the drawing target is a live window"
+        ConPrint "ok   the drawing target is a live window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IsWindow(hGr)="; st
+        ConPrint "FAIL IsWindow(hGr)=" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -133,10 +162,10 @@ FUNCTION PBMAIN () AS LONG
     ov = -1
     GRAPHIC GET OVERLAP TO ov
     IF ov = 0 THEN
-        PRINT "ok   GET OVERLAP answers 0 before anything is set"
+        ConPrint "ok   GET OVERLAP answers 0 before anything is set"
     ELSE
         fail = fail + 1
-        PRINT "FAIL default overlap ="; ov
+        ConPrint "FAIL default overlap =" & STR$(ov)
     END IF
 
     ' ------------------------------------------------------------------
@@ -149,19 +178,19 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 59, 59) TO px
     IF px = %RED THEN
-        PRINT "ok   GRAPHIC REDRAW flushed the buffer (interior pixel 59,59)"
+        ConPrint "ok   GRAPHIC REDRAW flushed the buffer (interior pixel 59,59)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL pixel after REDRAW="; px
+        ConPrint "FAIL pixel after REDRAW=" & STR$(px)
     END IF
 
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 60, 60) TO px
     IF px <> %RED THEN
-        PRINT "ok   overlap off: the exclusive corner (60,60) is untouched"
+        ConPrint "ok   overlap off: the exclusive corner (60,60) is untouched"
     ELSE
         fail = fail + 1
-        PRINT "FAIL exclusive corner was painted with overlap off"
+        ConPrint "FAIL exclusive corner was painted with overlap off"
     END IF
 
     ' ------------------------------------------------------------------
@@ -171,10 +200,10 @@ FUNCTION PBMAIN () AS LONG
     ov = 0
     GRAPHIC GET OVERLAP TO ov
     IF ov <> 0 THEN
-        PRINT "ok   SET OVERLAP 1 is reported back by GET OVERLAP"
+        ConPrint "ok   SET OVERLAP 1 is reported back by GET OVERLAP"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET OVERLAP after SET OVERLAP 1 ="; ov
+        ConPrint "FAIL GET OVERLAP after SET OVERLAP 1 =" & STR$(ov)
     END IF
 
     GRAPHIC BOX (100,100)-(150,150), %BLUE, %BLUE, 1
@@ -182,10 +211,10 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 150, 150) TO px
     IF px = %BLUE THEN
-        PRINT "ok   overlap on: BOX (100,100)-(150,150) reaches (150,150)"
+        ConPrint "ok   overlap on: BOX (100,100)-(150,150) reaches (150,150)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL inclusive corner pixel="; px
+        ConPrint "FAIL inclusive corner pixel=" & STR$(px)
     END IF
 
     ' The same flag drives ELLIPSE, the other RECT-based statement.
@@ -194,10 +223,10 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 250, 35) TO px
     IF px = %GREEN THEN
-        PRINT "ok   overlap on: the ELLIPSE edge reaches its right extreme"
+        ConPrint "ok   overlap on: the ELLIPSE edge reaches its right extreme"
     ELSE
         fail = fail + 1
-        PRINT "FAIL ellipse edge pixel="; px
+        ConPrint "FAIL ellipse edge pixel=" & STR$(px)
     END IF
 
     ' ------------------------------------------------------------------
@@ -207,20 +236,20 @@ FUNCTION PBMAIN () AS LONG
     ov = -1
     GRAPHIC GET OVERLAP TO ov
     IF ov = 0 THEN
-        PRINT "ok   SET OVERLAP 0 turns the mode back off"
+        ConPrint "ok   SET OVERLAP 0 turns the mode back off"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET OVERLAP after SET OVERLAP 0 ="; ov
+        ConPrint "FAIL GET OVERLAP after SET OVERLAP 0 =" & STR$(ov)
     END IF
 
     GRAPHIC SET OVERLAP
     ov = 0
     GRAPHIC GET OVERLAP TO ov
     IF ov <> 0 THEN
-        PRINT "ok   a missing operand enables overlap mode"
+        ConPrint "ok   a missing operand enables overlap mode"
     ELSE
         fail = fail + 1
-        PRINT "FAIL missing operand left overlap off"
+        ConPrint "FAIL missing operand left overlap off"
     END IF
     GRAPHIC SET OVERLAP 0
 
@@ -232,10 +261,10 @@ FUNCTION PBMAIN () AS LONG
     ch = 0
     GRAPHIC GET CLIENT TO cw, ch
     IF cw = 200 AND ch = 120 THEN
-        PRINT "ok   SET CLIENT 200,120 is reported back by GET CLIENT"
+        ConPrint "ok   SET CLIENT 200,120 is reported back by GET CLIENT"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET CLIENT after SET CLIENT ="; cw; ","; ch
+        ConPrint "FAIL GET CLIENT after SET CLIENT =" & STR$(cw) & "," & STR$(ch)
     END IF
 
     GRAPHIC CLEAR %GREEN
@@ -243,10 +272,10 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 100, 60) TO px
     IF px = %GREEN THEN
-        PRINT "ok   the resized buffer takes new drawing"
+        ConPrint "ok   the resized buffer takes new drawing"
     ELSE
         fail = fail + 1
-        PRINT "FAIL pixel in the resized buffer="; px
+        ConPrint "FAIL pixel in the resized buffer=" & STR$(px)
     END IF
 
     ' ------------------------------------------------------------------
@@ -257,10 +286,10 @@ FUNCTION PBMAIN () AS LONG
     ly = -1
     GRAPHIC GET LOC TO lx, ly
     IF lx = 260 AND ly = 180 THEN
-        PRINT "ok   SET LOC 260,180 is reported back by GET LOC"
+        ConPrint "ok   SET LOC 260,180 is reported back by GET LOC"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET LOC after SET LOC ="; lx; ","; ly
+        ConPrint "FAIL GET LOC after SET LOC =" & STR$(lx) & "," & STR$(ly)
     END IF
 
     ' ------------------------------------------------------------------
@@ -270,29 +299,29 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   SET FOCUS left the window alive"
+        ConPrint "ok   SET FOCUS left the window alive"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window gone after SET FOCUS"
+        ConPrint "FAIL window gone after SET FOCUS"
     END IF
 
     lx = 0
     ly = 0
     GRAPHIC GET LOC TO lx, ly
     IF lx = 260 AND ly = 180 THEN
-        PRINT "ok   SET FOCUS did not move the window"
+        ConPrint "ok   SET FOCUS did not move the window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL position changed to"; lx; ","; ly
+        ConPrint "FAIL position changed to" & STR$(lx) & "," & STR$(ly)
     END IF
 
     st = 0
     CALL DWORD isvA USING IsWindowVisible(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   the window is still visible"
+        ConPrint "ok   the window is still visible"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window no longer visible"
+        ConPrint "FAIL window no longer visible"
     END IF
 
     st = 0
@@ -305,10 +334,10 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st = 0 THEN
-        PRINT "ok   GRAPHIC WINDOW END destroyed the window"
+        ConPrint "ok   GRAPHIC WINDOW END destroyed the window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window survived END"
+        ConPrint "FAIL window survived END"
     END IF
 
     ' With no target at all, REDRAW / SET FOCUS / GET LOC are no-ops, and GET LOC
@@ -319,13 +348,13 @@ FUNCTION PBMAIN () AS LONG
     ly = -1
     GRAPHIC GET LOC TO lx, ly
     IF lx = 0 AND ly = 0 THEN
-        PRINT "ok   with no graphic window, GET LOC answers 0,0"
+        ConPrint "ok   with no graphic window, GET LOC answers 0,0"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET LOC with no window ="; lx; ","; ly
+        ConPrint "FAIL GET LOC with no window =" & STR$(lx) & "," & STR$(ly)
     END IF
 
-    PRINT "-------------------------------------------------------------"
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "-------------------------------------------------------------"
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     FUNCTION = fail
 END FUNCTION

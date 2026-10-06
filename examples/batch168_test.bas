@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 168 regression test
 '---------------------------------------------------------------------
@@ -38,7 +67,7 @@
 '   code is the number of failed assertions.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 #COMPILE EXE
 
 FUNCTION PBMAIN () AS LONG
@@ -58,153 +87,153 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD LISTBOX,   hDlg, 202, 160,  10, 120, 100 TO hLb
     CONTROL ADD SCROLLBAR, hDlg, 203,  10, 150, 200,  20 TO hSb
 
-    PRINT "hwnd cb="; hCb; " lb="; hLb; " sb="; hSb
+    ConPrint "hwnd cb=" & STR$(hCb) & " lb=" & STR$(hLb) & " sb=" & STR$(hSb)
 
     ' ---------------- COMBOBOX ----------------
-    PRINT "--- COMBOBOX ---"
+    ConPrint "--- COMBOBOX ---"
     COMBOBOX ADD hDlg, 201, "alpha" TO n
-    PRINT "add alpha -> "; n
+    ConPrint "add alpha -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
     COMBOBOX ADD hDlg, 201, "beta" TO n
-    PRINT "add beta  -> "; n
+    ConPrint "add beta  -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     COMBOBOX ADD hDlg, 201, "gamma"
     COMBOBOX GET COUNT hDlg, 201 TO n
-    PRINT "count     -> "; n
+    ConPrint "count     -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     COMBOBOX FIND hDlg, 201, 1, "bet" TO n
-    PRINT "find bet  -> "; n
+    ConPrint "find bet  -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     COMBOBOX FIND EXACT hDlg, 201, 1, "BETA" TO n
-    PRINT "findexact -> "; n
+    ConPrint "findexact -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     COMBOBOX FIND hDlg, 201, 1, "zzz" TO n
-    PRINT "find zzz  -> "; n
+    ConPrint "find zzz  -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     COMBOBOX SELECT hDlg, 201, 2
     COMBOBOX GET SELECT hDlg, 201 TO n
-    PRINT "sel       -> "; n
+    ConPrint "sel       -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     COMBOBOX GET SELCOUNT hDlg, 201 TO n
-    PRINT "selcount  -> "; n
+    ConPrint "selcount  -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
     COMBOBOX GET STATE hDlg, 201, 2 TO n
-    PRINT "state(2)  -> "; n
+    ConPrint "state(2)  -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     COMBOBOX GET TEXT hDlg, 201 TO t
-    PRINT "text(cur) -> ["; t; "]"
+    ConPrint "text(cur) -> [" & STR$(t) & "]"
     IF t <> "beta" THEN fail = fail + 1
     COMBOBOX GET TEXT hDlg, 201, 3 TO t
-    PRINT "text(3)   -> ["; t; "]"
+    ConPrint "text(3)   -> [" & STR$(t) & "]"
     IF t <> "gamma" THEN fail = fail + 1
     COMBOBOX SET TEXT hDlg, 201, 2, "BETA2"
     COMBOBOX GET TEXT hDlg, 201, 2 TO t
-    PRINT "text(2)   -> ["; t; "]"
+    ConPrint "text(2)   -> [" & STR$(t) & "]"
     IF t <> "BETA2" THEN fail = fail + 1
     COMBOBOX GET USER hDlg, 201, 1 TO n
-    PRINT "getuser   -> "; n
+    ConPrint "getuser   -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     COMBOBOX SET USER hDlg, 201, 1, 4242
     COMBOBOX GET USER hDlg, 201, 1 TO n
-    PRINT "set/getus -> "; n
+    ConPrint "set/getus -> " & STR$(n)
     IF n <> 4242 THEN fail = fail + 1
     COMBOBOX INSERT hDlg, 201, 1, "inserted" TO n
-    PRINT "insert    -> "; n
+    ConPrint "insert    -> " & STR$(n)
     IF n < 1 THEN fail = fail + 1
     COMBOBOX GET COUNT hDlg, 201 TO n
-    PRINT "count     -> "; n
+    ConPrint "count     -> " & STR$(n)
     IF n <> 4 THEN fail = fail + 1
     COMBOBOX UNSELECT hDlg, 201
     COMBOBOX GET SELECT hDlg, 201 TO n
-    PRINT "unsel sel -> "; n
+    ConPrint "unsel sel -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     COMBOBOX DELETE hDlg, 201, 1
     COMBOBOX GET COUNT hDlg, 201 TO n
-    PRINT "del count -> "; n
+    ConPrint "del count -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     COMBOBOX RESET hDlg, 201
     COMBOBOX GET COUNT hDlg, 201 TO n
-    PRINT "rst count -> "; n
+    ConPrint "rst count -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- LISTBOX ----------------
-    PRINT "--- LISTBOX ---"
+    ConPrint "--- LISTBOX ---"
     LISTBOX ADD hDlg, 202, "one" TO n
-    PRINT "add one   -> "; n
+    ConPrint "add one   -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
     LISTBOX ADD hDlg, 202, "two" TO n
-    PRINT "add two   -> "; n
+    ConPrint "add two   -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     LISTBOX ADD hDlg, 202, "three"
     LISTBOX GET COUNT hDlg, 202 TO n
-    PRINT "count     -> "; n
+    ConPrint "count     -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTBOX SELECT hDlg, 202, 3
     LISTBOX GET SELECT hDlg, 202 TO n
-    PRINT "sel       -> "; n
+    ConPrint "sel       -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTBOX GET SELCOUNT hDlg, 202 TO n
-    PRINT "selcount  -> "; n
+    ConPrint "selcount  -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
     LISTBOX GET STATE hDlg, 202, 3 TO n
-    PRINT "state(3)  -> "; n
+    ConPrint "state(3)  -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     LISTBOX GET TEXT hDlg, 202 TO t
-    PRINT "text(cur) -> ["; t; "]"
+    ConPrint "text(cur) -> [" & STR$(t) & "]"
     IF t <> "three" THEN fail = fail + 1
     LISTBOX GET TEXT hDlg, 202, 2 TO t
-    PRINT "text(2)   -> ["; t; "]"
+    ConPrint "text(2)   -> [" & STR$(t) & "]"
     IF t <> "two" THEN fail = fail + 1
     LISTBOX SET TEXT hDlg, 202, 2, "TWO2"
     LISTBOX GET TEXT hDlg, 202, 2 TO t
-    PRINT "text(2)   -> ["; t; "]"
+    ConPrint "text(2)   -> [" & STR$(t) & "]"
     IF t <> "TWO2" THEN fail = fail + 1
     LISTBOX FIND hDlg, 202, 1, "THR" TO n
-    PRINT "find thr  -> "; n
+    ConPrint "find thr  -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTBOX SET USER hDlg, 202, 1, 777
     LISTBOX GET USER hDlg, 202, 1 TO n
-    PRINT "set/getus -> "; n
+    ConPrint "set/getus -> " & STR$(n)
     IF n <> 777 THEN fail = fail + 1
     LISTBOX UNSELECT hDlg, 202, 3
     LISTBOX GET SELCOUNT hDlg, 202 TO n
-    PRINT "unsel cnt -> "; n
+    ConPrint "unsel cnt -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     LISTBOX DELETE hDlg, 202, 1
     LISTBOX GET COUNT hDlg, 202 TO n
-    PRINT "del count -> "; n
+    ConPrint "del count -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     LISTBOX RESET hDlg, 202
     LISTBOX GET COUNT hDlg, 202 TO n
-    PRINT "rst count -> "; n
+    ConPrint "rst count -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- SCROLLBAR ----------------
-    PRINT "--- SCROLLBAR ---"
+    ConPrint "--- SCROLLBAR ---"
     SCROLLBAR SET RANGE hDlg, 203, 0, 100
     SCROLLBAR SET PAGESIZE hDlg, 203, 10
     SCROLLBAR SET POS hDlg, 203, 25
     SCROLLBAR GET POS hDlg, 203 TO n
-    PRINT "pos       -> "; n
+    ConPrint "pos       -> " & STR$(n)
     IF n <> 25 THEN fail = fail + 1
     SCROLLBAR GET PAGESIZE hDlg, 203 TO n
-    PRINT "pagesize  -> "; n
+    ConPrint "pagesize  -> " & STR$(n)
     IF n <> 10 THEN fail = fail + 1
     SCROLLBAR GET RANGE hDlg, 203 TO n, m
-    PRINT "range lo  -> "; n
-    PRINT "range hi  -> "; m
+    ConPrint "range lo  -> " & STR$(n)
+    ConPrint "range hi  -> " & STR$(m)
     IF n <> 0 THEN fail = fail + 1
     IF m <> 100 THEN fail = fail + 1
     SCROLLBAR SET POS hDlg, 203, 60
     SCROLLBAR GET POS hDlg, 203 TO n
-    PRINT "pos       -> "; n
+    ConPrint "pos       -> " & STR$(n)
     IF n <> 60 THEN fail = fail + 1
 
     ' error paths: a control id that does not exist must report failure
     COMBOBOX GET COUNT hDlg, 299 TO n
-    PRINT "bad id cnt-> "; n
+    ConPrint "bad id cnt-> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
 
-    PRINT "=== FAILURES: "; fail; " ==="
+    ConPrint "=== FAILURES: " & STR$(fail) & " ==="
     DIALOG END hDlg, fail
 END FUNCTION

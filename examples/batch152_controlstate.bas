@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: CONTROL HIDE / SHOW / ENABLE / DISABLE
 ' Buttons to toggle a target control
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hTarget AS QUAD

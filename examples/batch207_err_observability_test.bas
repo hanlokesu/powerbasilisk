@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 207 self-check - a failure the program can read
 '---------------------------------------------------------------------
@@ -39,35 +67,36 @@ FUNCTION PBMAIN () AS LONG
     ERRCLEAR
     COMM OPEN "COM404" AS #1
     e = ERR
-    PRINT "COMM OPEN  failure ERR ="; e; " (want 57)"
+    ConPrint "COMM OPEN  failure ERR =" & STR$(e) & " (want 57)"
     IF e <> 57 THEN fails = fails + 1
 
     ERRCLEAR
     TCP OPEN PORT 1 AT "127.0.0.1" AS #3
     e = ERR
-    PRINT "TCP connect failure ERR ="; e; " (want 57)"
+    ConPrint "TCP connect failure ERR =" & STR$(e) & " (want 57)"
     IF e <> 57 THEN fails = fails + 1
 
     ERRCLEAR
     TCP CLOSE #9
     e = ERR
-    PRINT "TCP CLOSE closed  ERR ="; e; " (want 52)"
+    ConPrint "TCP CLOSE closed  ERR =" & STR$(e) & " (want 52)"
     IF e <> 52 THEN fails = fails + 1
 
     ERRCLEAR
     e = ERR
-    PRINT "after ERRCLEAR        ERR ="; e; " (want 0)"
+    ConPrint "after ERRCLEAR        ERR =" & STR$(e) & " (want 0)"
     IF e <> 0 THEN fails = fails + 1
 
     TRY
         COMM OPEN "COM404" AS #1
     CATCH
-        PRINT "TRY/CATCH caught the socket failure: ERR ="; ERR
+        ConPrint "TRY/CATCH caught the socket failure: ERR =" & STR$(ERR)
         IF ERR <> 57 THEN fails = fails + 1
     END TRY
 
-    IF fails = 0 THEN PRINT "=== FAILURES: 0"
+    IF fails = 0 THEN ConPrint "=== FAILURES: 0"
     FUNCTION = 0
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION
+

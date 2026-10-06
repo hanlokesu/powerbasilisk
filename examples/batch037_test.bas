@@ -1,9 +1,37 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch 37: CVx family (binary string -> value)
 GLOBAL failures AS LONG
 
 SUB Check(cond AS LONG, msg AS STRING)
     IF cond = 0 THEN
-        PRINT "FAIL: "; msg
+        ConPrint "FAIL: " & STR$(msg)
         failures = failures + 1
     END IF
 END SUB
@@ -68,10 +96,17 @@ FUNCTION PBMAIN() AS LONG
     Check(l = 999, "cvl offset")
 
     IF failures = 0 THEN
-        PRINT "batch37: ALL PASS"
+        ConPrint "batch37: ALL PASS"
     ELSE
-        PRINT "batch37: FAILURES="; failures
+        ConPrint "batch37: FAILURES=" & STR$(failures)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION
+
+FUNCTION CVW(BYVAL s AS STRING) AS WORD
+    LOCAL w AS WORD
+    IF LEN(s) >= 2 THEN w = ASC(s) + 256 * ASC(MID$(s, 2, 1))
+    FUNCTION = w
+END FUNCTION
+

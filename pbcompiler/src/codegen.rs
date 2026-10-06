@@ -17441,9 +17441,12 @@ impl Compiler {
                 };
                 if param.is_byval || is_byval_override {
                     let val = self.compile_expr(fb, inner_arg)?;
-                    // BYVAL override with integer value for a ptr param (e.g. BYVAL STRPTR(x$)):
-                    // convert i32 to ptr via inttoptr
-                    if is_byval_override && val.ty == IrType::I32 && param.ir_type == IrType::Ptr {
+                    // x64 ABI: every 4-byte BYVAL arg must occupy the full 8-byte
+                    // register/stack slot.  A bare i32 leaves garbage in the upper
+                    // 32 bits of a stack slot (WriteFile's lpOverlapped was the
+                    // 0xC0000005 crash in batch 224).  inttoptr zero-extends the
+                    // value to pointer width, preserving the low 32-bit value.
+                    if val.ty == IrType::I32 {
                         let ptr_val = fb.inttoptr(&val);
                         compiled.push(ptr_val);
                     } else {

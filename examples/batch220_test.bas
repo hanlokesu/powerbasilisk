@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch220_test.bas
 ' batch 220: the remaining 125 guarded arms became loud (a short argument list
 ' is now a compile error, e.g. IMPORT ADDR without its TO AddrVar& target).
@@ -21,9 +49,9 @@ FUNCTION PBMAIN () AS LONG
     s = CHR$(1, 2, 3, 4)
     MEMORY FILL VARPTR(a), 4, s
     IF a = &H04030201 THEN
-        PRINT "OK: MEMORY FILL wrote the 4 bytes"
+        ConPrint "OK: MEMORY FILL wrote the 4 bytes"
     ELSE
-        PRINT "FAIL: MEMORY FILL a="; HEX$(a)
+        ConPrint "FAIL: MEMORY FILL a=" & HEX$(a)
         INCR fails
     END IF
 
@@ -37,9 +65,9 @@ FUNCTION PBMAIN () AS LONG
     CLOSE #1
     NAME name1 AS name2
     IF ISFILE(name2) AND ISFILE(name1) = 0 THEN
-        PRINT "OK: NAME renamed the file"
+        ConPrint "OK: NAME renamed the file"
     ELSE
-        PRINT "FAIL: NAME rename did not land"
+        ConPrint "FAIL: NAME rename did not land"
         INCR fails
     END IF
 
@@ -52,9 +80,9 @@ FUNCTION PBMAIN () AS LONG
     GET$ #1, 5, s
     CLOSE #1
     IF s = "hello" THEN
-        PRINT "OK: PUT/GET string round-trip"
+        ConPrint "OK: PUT/GET string round-trip"
     ELSE
-        PRINT "FAIL: PUT/GET s=["; s; "]"
+        ConPrint "FAIL: PUT/GET s=[" & STR$(s) & "]"
         INCR fails
     END IF
     KILL name2
@@ -63,9 +91,9 @@ FUNCTION PBMAIN () AS LONG
     '     list the batch test sources in this directory
     DIR "batch220_*.bas" TO s
     IF s = "" THEN
-        PRINT "OK: DIR returned empty for a deleted pattern"
+        ConPrint "OK: DIR returned empty for a deleted pattern"
     ELSE
-        PRINT "FAIL: DIR s=["; s; "]"
+        ConPrint "FAIL: DIR s=[" & STR$(s) & "]"
         INCR fails
     END IF
     DIR CLOSE
@@ -73,39 +101,39 @@ FUNCTION PBMAIN () AS LONG
     ' --- DESKTOP GET SIZE/CLIENT/LOC/PPI (guards 2): values must be sane
     DESKTOP GET SIZE TO w, h
     IF w > 0 AND h > 0 THEN
-        PRINT "OK: DESKTOP GET SIZE "; w; "x"; h
+        ConPrint "OK: DESKTOP GET SIZE " & STR$(w) & "x" & STR$(h)
     ELSE
-        PRINT "FAIL: DESKTOP GET SIZE "; w; "x"; h
+        ConPrint "FAIL: DESKTOP GET SIZE " & STR$(w) & "x" & STR$(h)
         INCR fails
     END IF
     DESKTOP GET CLIENT TO w, h
     IF w > 0 AND h > 0 THEN
-        PRINT "OK: DESKTOP GET CLIENT "; w; "x"; h
+        ConPrint "OK: DESKTOP GET CLIENT " & STR$(w) & "x" & STR$(h)
     ELSE
-        PRINT "FAIL: DESKTOP GET CLIENT "; w; "x"; h
+        ConPrint "FAIL: DESKTOP GET CLIENT " & STR$(w) & "x" & STR$(h)
         INCR fails
     END IF
     DESKTOP GET LOC TO x, y
     IF x >= 0 AND y >= 0 THEN
-        PRINT "OK: DESKTOP GET LOC "; x; ","; y
+        ConPrint "OK: DESKTOP GET LOC " & STR$(x) & "," & STR$(y)
     ELSE
-        PRINT "FAIL: DESKTOP GET LOC "; x; ","; y
+        ConPrint "FAIL: DESKTOP GET LOC " & STR$(x) & "," & STR$(y)
         INCR fails
     END IF
     DESKTOP GET PPI TO ppix, ppiy
     IF ppix > 0 AND ppiy > 0 THEN
-        PRINT "OK: DESKTOP GET PPI "; ppix; ","; ppiy
+        ConPrint "OK: DESKTOP GET PPI " & STR$(ppix) & "," & STR$(ppiy)
     ELSE
-        PRINT "FAIL: DESKTOP GET PPI "; ppix; ","; ppiy
+        ConPrint "FAIL: DESKTOP GET PPI " & STR$(ppix) & "," & STR$(ppiy)
         INCR fails
     END IF
 
     IF fails = 0 THEN
-        PRINT "batch220: ALL PASS"
+        ConPrint "batch220: ALL PASS"
     ELSE
-        PRINT "batch220: FAILURES="; fails
+        ConPrint "batch220: FAILURES=" & STR$(fails)
     END IF
-    PRINT "=== FAILURES: "; fails; " ==="
+    ConPrint "=== FAILURES: " & STR$(fails) & " ==="
 
 ' waiting for any key to exit...
 WAITKEY$

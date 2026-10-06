@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: EDITBOX basic typing test
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 CALLBACK FUNCTION DlgProc()
     FUNCTION = 0

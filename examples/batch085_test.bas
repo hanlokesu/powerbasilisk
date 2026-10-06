@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 85: FLOOR function - round down to nearest integer
 FUNCTION PBMAIN() AS LONG
     LOCAL r AS LONG
@@ -5,49 +33,57 @@ FUNCTION PBMAIN() AS LONG
     LOCAL pass AS LONG
     pass = 0
 
-    PRINT "=== Batch 85: FLOOR function ==="
+    ConPrint "=== Batch 85: FLOOR function ==="
 
     ' Test 1: positive fractional
     r = FLOOR(3.7)
-    PRINT "Test 1: FLOOR(3.7) ="; r
+    ConPrint "Test 1: FLOOR(3.7) =" & STR$(r)
     IF r = 3 THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected 3)"
+        ConPrint "  FAIL (expected 3)"
     END IF
 
     ' Test 2: negative fractional (floor goes more negative)
     r = FLOOR(-3.7)
-    PRINT "Test 2: FLOOR(-3.7) ="; r
+    ConPrint "Test 2: FLOOR(-3.7) =" & STR$(r)
     IF r = -4 THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected -4)"
+        ConPrint "  FAIL (expected -4)"
     END IF
 
     ' Test 3: exact integer
     r = FLOOR(3.0)
-    PRINT "Test 3: FLOOR(3.0) ="; r
+    ConPrint "Test 3: FLOOR(3.0) =" & STR$(r)
     IF r = 3 THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected 3)"
+        ConPrint "  FAIL (expected 3)"
     END IF
 
     ' Test 4: small positive
     r = FLOOR(0.5)
-    PRINT "Test 4: FLOOR(0.5) ="; r
+    ConPrint "Test 4: FLOOR(0.5) =" & STR$(r)
     IF r = 0 THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected 0)"
+        ConPrint "  FAIL (expected 0)"
     END IF
 
-    PRINT "=== "; pass; "/4 TESTS PASSED ==="
-    PRINT "Press any key to exit..."
+    ConPrint "=== " & STR$(pass) & "/4 TESTS PASSED ==="
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION
+
+FUNCTION FLOOR(BYVAL v AS DOUBLE) AS LONG
+    LOCAL i AS LONG
+    i = INT(v)
+    IF v < i THEN i = i - 1
+    FUNCTION = i
+END FUNCTION
+

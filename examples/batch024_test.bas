@@ -1,10 +1,39 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 TYPE MyType
     n AS LONG
     d AS DOUBLE
     s AS STRING * 12
 END TYPE
 
-#COMPILE EXE
+
 FUNCTION PBMAIN() AS LONG
     LOCAL t1, t2 AS MyType
     LOCAL f AS LONG
@@ -16,30 +45,30 @@ FUNCTION PBMAIN() AS LONG
     SEEK #1, 1
     GET$ #1, 13, s
     CLOSE #1
-    PRINT "GET$ ="; s
+    ConPrint "GET$ =" & STR$(s)
     ' LET whole-TYPE assignment
     t1.n = 42
     t1.d = 3.14
     t1.s = "hello"
     t2 = t1
-    PRINT "t2.n ="; t2.n; " t2.s ="; TRIM$(t2.s)
+    ConPrint "t2.n =" & STR$(t2.n) & " t2.s =" & TRIM$(t2.s)
     ' DIR$ function + DIR statement family
     OPEN "batch24_dir_a.tmp" FOR OUTPUT AS #2
     CLOSE #2
     OPEN "batch24_dir_b.tmp" FOR OUTPUT AS #3
     CLOSE #3
     d1 = DIR$("batch24_dir_*.tmp")
-    PRINT "DIR$ first ="; d1
+    ConPrint "DIR$ first =" & STR$(d1)
     d2 = DIR$(NEXT)
-    PRINT "DIR$ next  ="; d2
+    ConPrint "DIR$ next  =" & STR$(d2)
     DIR "batch24_dir_*.tmp" TO s
-    PRINT "DIR stmt    ="; s
+    ConPrint "DIR stmt    =" & STR$(s)
     DIR NEXT TO s
-    PRINT "DIR NEXT    ="; s
+    ConPrint "DIR NEXT    =" & STR$(s)
     DIR CLOSE
     KILL "batch24_dir_a.tmp"
     KILL "batch24_dir_b.tmp"
     KILL "batch24_bin.dat"
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

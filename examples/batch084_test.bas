@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 84: REMAIN$ function - return portion after first match
 FUNCTION PBMAIN() AS LONG
     LOCAL s AS STRING
@@ -6,57 +34,58 @@ FUNCTION PBMAIN() AS LONG
     LOCAL pass AS LONG
     pass = 0
 
-    PRINT "=== Batch 84: REMAIN$ function ==="
+    ConPrint "=== Batch 84: REMAIN$ function ==="
 
     ' Test 1: basic remain after space
     s = "hello world"
     r = REMAIN$(s, " ")
-    PRINT "Test 1: REMAIN$('hello world', ' ')"
-    PRINT "  Result: ["; r; "]"
+    ConPrint "Test 1: REMAIN$('hello world', ' ')"
+    ConPrint "  Result: [" & STR$(r) & "]"
     IF r = "world" THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected 'world')"
+        ConPrint "  FAIL (expected 'world')"
     END IF
 
     ' Test 2: match not found returns empty
     s = "hello"
     r = REMAIN$(s, "xyz")
-    PRINT "Test 2: REMAIN$('hello', 'xyz') (not found)"
-    PRINT "  Result: ["; r; "]"
+    ConPrint "Test 2: REMAIN$('hello', 'xyz') (not found)"
+    ConPrint "  Result: [" & STR$(r) & "]"
     IF r = "" THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected empty)"
+        ConPrint "  FAIL (expected empty)"
     END IF
 
     ' Test 3: with Start position
     s = "a1b2c3"
     r = REMAIN$(3, s, "b")
-    PRINT "Test 3: REMAIN$(3, 'a1b2c3', 'b')"
-    PRINT "  Result: ["; r; "]"
+    ConPrint "Test 3: REMAIN$(3, 'a1b2c3', 'b')"
+    ConPrint "  Result: [" & STR$(r) & "]"
     IF r = "2c3" THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected '2c3')"
+        ConPrint "  FAIL (expected '2c3')"
     END IF
 
     ' Test 4: ANY - remain after first digit
     s = "hello123world"
     r = REMAIN$(s, ANY, "0123456789")
-    PRINT "Test 4: REMAIN$('hello123world', ANY, digits)"
-    PRINT "  Result: ["; r; "]"
+    ConPrint "Test 4: REMAIN$('hello123world', ANY, digits)"
+    ConPrint "  Result: [" & STR$(r) & "]"
     IF r = "23world" THEN
-        PRINT "  PASS"
+        ConPrint "  PASS"
         pass = pass + 1
     ELSE
-        PRINT "  FAIL (expected '23world')"
+        ConPrint "  FAIL (expected '23world')"
     END IF
 
-    PRINT "=== "; pass; "/4 TESTS PASSED ==="
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "=== " & STR$(pass) & "/4 TESTS PASSED ==="
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PBXB64 Example - batch 217 witness: the dotted method call `o.M(args)`.
 '---------------------------------------------------------------------
@@ -33,7 +62,7 @@
 '   === FAILURES:0 ===
 ' Complexity: O(1) - a handful of field reads, eight comparisons.
 '=====================================================================
-#COMPILE EXE
+
 CLASS Box
     INSTANCE v AS LONG
     METHOD SetIt(n AS LONG) AS LONG
@@ -67,22 +96,22 @@ FUNCTION PBMAIN() AS LONG
     set1 = a.SetIt(33)
     geta = a.GetIt()
     getb = b.GetIt()
-    PRINT "a.v after a.SetIt(33) ="; a.v
-    PRINT "b.v untouched         ="; b.v
-    PRINT "a.GetIt() / b.GetIt() ="; geta; "/"; getb
+    ConPrint "a.v after a.SetIt(33) =" & STR$(a.v)
+    ConPrint "b.v untouched         =" & STR$(b.v)
+    ConPrint "a.GetIt() / b.GetIt() =" & STR$(geta) & "/" & STR$(getb)
 
     ' statement position: no assignment, the object still changes
     a.SetIt(44)
     set2 = a.GetIt()
-    PRINT "a.SetIt(44) then GetIt ="; set2
+    ConPrint "a.SetIt(44) then GetIt =" & STR$(set2)
 
     ' a real argument list after the dot: receiver + written args
     added = a.Add(7)
-    PRINT "a.Add(7)              ="; added
+    ConPrint "a.Add(7)              =" & STR$(added)
 
     ' the long form must agree with the sugar
     longform = Box_Add(a, 7)
-    PRINT "long form Box_Add(a,7)= "; longform
+    ConPrint "long form Box_Add(a,7)= " & STR$(longform)
 
     IF set1 <> 33 THEN fails = fails + 1
     IF a.v <> 44 THEN fails = fails + 1
@@ -94,9 +123,9 @@ FUNCTION PBMAIN() AS LONG
     IF Box_GetIt(b) <> 22 THEN fails = fails + 1
 
     IF fails = 0 THEN
-        PRINT "=== FAILURES:0 ==="
+        ConPrint "=== FAILURES:0 ==="
     ELSE
-        PRINT "=== FAILURES:"; fails; " ==="
+        ConPrint "=== FAILURES:" & STR$(fails) & " ==="
     END IF
     FUNCTION = 0
 END FUNCTION

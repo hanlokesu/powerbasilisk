@@ -1,38 +1,67 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 105: ON GOTO / ON GOSUB / ON CALL
 FUNCTION PBMAIN() AS LONG
     LOCAL n AS LONG
     LOCAL waitk AS STRING
     
-    PRINT "Testing ON GOTO..."
+    ConPrint "Testing ON GOTO..."
     FOR n = 1 TO 3
         ON n GOTO label1, label2, label3
     NEXT n
     GOTO after1
     
 label1:
-    PRINT "  n=1 -> label1"
+    ConPrint "  n=1 -> label1"
     GOTO after1
 label2:
-    PRINT "  n=2 -> label2"
+    ConPrint "  n=2 -> label2"
     GOTO after1
 label3:
-    PRINT "  n=3 -> label3"
+    ConPrint "  n=3 -> label3"
 after1:
     
-    PRINT "Testing ON GOSUB..."
+    ConPrint "Testing ON GOSUB..."
     n = 2
     ON n GOSUB sub1, sub2
     GOTO after2
     
 sub1:
-    PRINT "  n=1 -> sub1"
+    ConPrint "  n=1 -> sub1"
     RETURN
 sub2:
-    PRINT "  n=2 -> sub2"
+    ConPrint "  n=2 -> sub2"
     RETURN
 after2:
     
-    PRINT "ON GOTO / ON GOSUB tests passed!"
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "ON GOTO / ON GOSUB tests passed!"
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

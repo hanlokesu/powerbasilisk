@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: CONTROL GET TEXT
 ' Type in editbox, click button to read it back
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hEdit AS QUAD

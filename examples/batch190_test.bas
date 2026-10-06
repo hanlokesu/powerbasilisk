@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 190 test
 ' ---------------------------------------------------------------------
@@ -79,8 +107,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL mWmGetTxtLen AS LONG   ' WM_GETTEXTLENGTH  = 14
     LOCAL mWmChar      AS LONG   ' WM_CHAR           = 258
 
-    PRINT "batch 190 - CONTROL ADD MONTHCAL / ANIMATE / RICHEDIT"
-    PRINT "-----------------------------------------------------"
+    ConPrint "batch 190 - CONTROL ADD MONTHCAL / ANIMATE / RICHEDIT"
+    ConPrint "-----------------------------------------------------"
 
     mMcGetDelta = 4115
     mMcSetDelta = 4116
@@ -95,7 +123,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetClassNameA", "USER32.DLL" TO gcnA, gcnH
     IF smA = 0 OR gwlA = 0 OR gcnA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
+        ConPrint "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
     END IF
 
     ' Modeless: a modal dialog would need a human to dismiss it.
@@ -113,19 +141,19 @@ FUNCTION PBMAIN () AS LONG
     ' 1. Every ADD must hand back a real handle.
     ' ------------------------------------------------------------------
     IF hMc <> 0 AND hAn <> 0 AND hRe <> 0 THEN
-        PRINT "ok   all three CONTROL ADD returned a handle"
+        ConPrint "ok   all three CONTROL ADD returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL a CONTROL ADD returned 0 (mc"; hMc; " an"; hAn; " re"; hRe; ")"
+        ConPrint "FAIL a CONTROL ADD returned 0 (mc" & STR$(hMc) & " an" & STR$(hAn) & " re" & STR$(hRe) & ")"
     END IF
 
     hTmp = 0
     CONTROL HANDLE hDlg, 401 TO hTmp
     IF hTmp = hMc AND hTmp <> 0 THEN
-        PRINT "ok   CONTROL HANDLE resolves id 401 to the MONTHCAL handle"
+        ConPrint "ok   CONTROL HANDLE resolves id 401 to the MONTHCAL handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL HANDLE id 401 mismatch"
+        ConPrint "FAIL CONTROL HANDLE id 401 mismatch"
     END IF
 
     ' ------------------------------------------------------------------
@@ -136,30 +164,30 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hMc, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "SysMonthCal32") > 0 THEN
-        PRINT "ok   MONTHCAL created a SysMonthCal32 window"
+        ConPrint "ok   MONTHCAL created a SysMonthCal32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL MONTHCAL class (len"; n; ") -> "; buf
+        ConPrint "FAIL MONTHCAL class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hAn, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "SysAnimate32") > 0 THEN
-        PRINT "ok   ANIMATE created a SysAnimate32 window"
+        ConPrint "ok   ANIMATE created a SysAnimate32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL ANIMATE class (len"; n; ") -> "; buf
+        ConPrint "FAIL ANIMATE class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hRe, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "RICHEDIT50W") > 0 THEN
-        PRINT "ok   RICHEDIT created a RICHEDIT50W window (msftedit.dll loaded)"
+        ConPrint "ok   RICHEDIT created a RICHEDIT50W window (msftedit.dll loaded)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL RICHEDIT class (len"; n; ") -> "; buf
+        ConPrint "FAIL RICHEDIT class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     ' ------------------------------------------------------------------
@@ -174,10 +202,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824          ' WS_CHILD
     b2 = st AND 268435456           ' WS_VISIBLE
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   MONTHCAL is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   MONTHCAL is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL MONTHCAL styles (st="; st; ")"
+        ConPrint "FAIL MONTHCAL styles (st=" & STR$(st) & ")"
     END IF
 
     st = 0
@@ -185,10 +213,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824
     b2 = st AND 268435456
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   ANIMATE is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   ANIMATE is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL ANIMATE styles (st="; st; ")"
+        ConPrint "FAIL ANIMATE styles (st=" & STR$(st) & ")"
     END IF
 
     st = 0
@@ -197,10 +225,10 @@ FUNCTION PBMAIN () AS LONG
     b2 = st AND 268435456           ' WS_VISIBLE
     b3 = st AND 8388608             ' WS_BORDER
     IF b1 <> 0 AND b2 <> 0 AND b3 <> 0 THEN
-        PRINT "ok   RICHEDIT is WS_CHILD | WS_VISIBLE | WS_BORDER"
+        ConPrint "ok   RICHEDIT is WS_CHILD | WS_VISIBLE | WS_BORDER"
     ELSE
         fail = fail + 1
-        PRINT "FAIL RICHEDIT styles (st="; st; ")"
+        ConPrint "FAIL RICHEDIT styles (st=" & STR$(st) & ")"
     END IF
 
     ' ------------------------------------------------------------------
@@ -213,10 +241,10 @@ FUNCTION PBMAIN () AS LONG
     v = 0
     CALL DWORD smA USING SendMessageA(hMc, mMcGetDelta, 0, 0) TO v
     IF v = 3 THEN
-        PRINT "ok   MONTHCAL set month delta 3 and read back 3"
+        ConPrint "ok   MONTHCAL set month delta 3 and read back 3"
     ELSE
         fail = fail + 1
-        PRINT "FAIL MONTHCAL month delta round trip (rc"; rc; " v"; v; ")"
+        ConPrint "FAIL MONTHCAL month delta round trip (rc" & STR$(rc) & " v" & STR$(v) & ")"
     END IF
 
     ' ANIMATE: a fresh animation control is not playing anything.  (Playing
@@ -225,10 +253,10 @@ FUNCTION PBMAIN () AS LONG
     v = -1
     CALL DWORD smA USING SendMessageA(hAn, mAnIsPlaying, 0, 0) TO v
     IF v = 0 THEN
-        PRINT "ok   ANIMATE reports nothing playing on a fresh control"
+        ConPrint "ok   ANIMATE reports nothing playing on a fresh control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL ANIMATE isplaying (v"; v; ")"
+        ConPrint "FAIL ANIMATE isplaying (v" & STR$(v) & ")"
     END IF
 
     ' RICHEDIT: type a character through WM_CHAR, then ask the control how
@@ -241,10 +269,10 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD smA USING SendMessageA(hRe, mWmGetText, 64, VARPTR(buf)) TO n
     IF v = 1 AND INSTR(buf, "A") > 0 THEN
-        PRINT "ok   RICHEDIT took WM_CHAR 'A' and gave it back (len"; v; ")"
+        ConPrint "ok   RICHEDIT took WM_CHAR 'A' and gave it back (len" & STR$(v) & ")"
     ELSE
         fail = fail + 1
-        PRINT "FAIL RICHEDIT text round trip (len"; v; " got"; n; " -> "; buf; ")"
+        ConPrint "FAIL RICHEDIT text round trip (len" & STR$(v) & " got" & STR$(n) & " -> " & STR$(buf) & ")"
     END IF
 
     ' A rich edit is not a plain EDIT: WM_SETTEXT must also work.
@@ -254,12 +282,12 @@ FUNCTION PBMAIN () AS LONG
     v = -1
     CALL DWORD smA USING SendMessageA(hRe, mWmGetTxtLen, 0, 0) TO v
     IF v >= 1 THEN
-        PRINT "ok   RICHEDIT accepted WM_SETTEXT (length now"; v; ")"
+        ConPrint "ok   RICHEDIT accepted WM_SETTEXT (length now" & STR$(v) & ")"
     ELSE
         fail = fail + 1
-        PRINT "FAIL RICHEDIT WM_SETTEXT (len"; v; ")"
+        ConPrint "FAIL RICHEDIT WM_SETTEXT (len" & STR$(v) & ")"
     END IF
 
     DIALOG END hDlg, fail
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
 END FUNCTION

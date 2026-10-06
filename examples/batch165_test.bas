@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' =====================================================================
 ' batch165_test.bas - the DIALOG statement family (batch 165)
 ' ---------------------------------------------------------------------
@@ -47,7 +76,7 @@
 '           %WM_GETTEXTLENGTH is 14.  Colour 16711680 is 0x00FF0000, which
 '           in the 0x00BBGGRR order PowerBASIC uses is pure blue.
 ' =====================================================================
-#COMPILE EXE
+
 
 GLOBAL g_hDlg AS QUAD
 
@@ -65,6 +94,7 @@ FUNCTION PBMAIN () AS LONG
     LOCAL r   AS LONG
     LOCAL bw  AS LONG
     LOCAL bh  AS LONG
+    LOCAL g_hDlg AS LONG
 
     ok = 1
 
@@ -73,7 +103,7 @@ FUNCTION PBMAIN () AS LONG
     ' ---- 1. GET CLIENT is the client area, not the window rectangle ---
     w = 0: h = 0
     DIALOG GET CLIENT g_hDlg TO w, h
-    PRINT "client of a new 400x240 dialog ="; w; "x"; h
+    ConPrint "client of a new 400x240 dialog =" & STR$(w) & "x" & STR$(h)
     IF w <= 0 OR h <= 0 THEN ok = 0
     IF w >= 400 OR h >= 240 THEN ok = 0
 
@@ -81,56 +111,56 @@ FUNCTION PBMAIN () AS LONG
     DIALOG SET CLIENT g_hDlg, 200, 96
     w = 0: h = 0
     DIALOG GET CLIENT g_hDlg TO w, h
-    PRINT "client after SET CLIENT 200,96 ="; w; "x"; h
+    ConPrint "client after SET CLIENT 200,96 =" & STR$(w) & "x" & STR$(h)
     IF w <> 200 OR h <> 96 THEN ok = 0
 
     ' ---- 3. SET LOC / GET LOC round trip ------------------------------
     DIALOG SET LOC g_hDlg, 50, 40
     x = 0: y = 0
     DIALOG GET LOC g_hDlg TO x, y
-    PRINT "loc after SET LOC 50,40 ="; x; ","; y
+    ConPrint "loc after SET LOC 50,40 =" & STR$(x) & "," & STR$(y)
     IF x <> 50 OR y <> 40 THEN ok = 0
 
     ' ---- 4. PIXELS / UNITS round trip ---------------------------------
     DIALOG PIXELS g_hDlg, 40, 80 TO UNITS ux, uy
-    PRINT "PIXELS 40,80 -> UNITS ="; ux; ","; uy
+    ConPrint "PIXELS 40,80 -> UNITS =" & STR$(ux) & "," & STR$(uy)
     IF ux >= 40 OR uy >= 80 THEN ok = 0
     DIALOG UNITS g_hDlg, ux, uy TO PIXELS px, py
-    PRINT "UNITS back -> PIXELS ="; px; ","; py
+    ConPrint "UNITS back -> PIXELS =" & STR$(px) & "," & STR$(py)
     IF px <> 40 OR py <> 80 THEN ok = 0
 
     ' ---- 5. the eight user-data slots ---------------------------------
     v = 99
     DIALOG GET USER g_hDlg, 3 TO v
-    PRINT "user slot 3 before SET ="; v
+    ConPrint "user slot 3 before SET =" & STR$(v)
     IF v <> 0 THEN ok = 0
 
     DIALOG SET USER g_hDlg, 3, 12345
     v = 0
     DIALOG GET USER g_hDlg, 3 TO v
-    PRINT "user slot 3 after SET ="; v
+    ConPrint "user slot 3 after SET =" & STR$(v)
     IF v <> 12345 THEN ok = 0
 
     v = 99
     DIALOG GET USER g_hDlg, 4 TO v
-    PRINT "user slot 4 (untouched) ="; v
+    ConPrint "user slot 4 (untouched) =" & STR$(v)
     IF v <> 0 THEN ok = 0
 
     DIALOG SET USER g_hDlg, 9, 999
     v = 99
     DIALOG GET USER g_hDlg, 9 TO v
-    PRINT "user slot 9 (outside 1..8) ="; v
+    ConPrint "user slot 9 (outside 1..8) =" & STR$(v)
     IF v <> 0 THEN ok = 0
 
     ' ---- 6. SEND: unhandled message vs a real window query ------------
     r = 99
     DIALOG SEND g_hDlg, 1024 + 100, 0, 0 TO r
-    PRINT "SEND WM_USER+100 ="; r
+    ConPrint "SEND WM_USER+100 =" & STR$(r)
     IF r <> 0 THEN ok = 0
 
     r = 0
     DIALOG SEND g_hDlg, 14, 0, 0 TO r
-    PRINT "SEND WM_GETTEXTLENGTH ="; r
+    ConPrint "SEND WM_GETTEXTLENGTH =" & STR$(r)
     IF r <= 0 THEN ok = 0
 
     ' ---- 7. POST is fire and forget -----------------------------------
@@ -140,13 +170,13 @@ FUNCTION PBMAIN () AS LONG
     ' ---- 8. MINIMIZE / NORMALIZE / MAXIMIZE ---------------------------
     bw = 0: bh = 0
     DIALOG GET SIZE g_hDlg TO bw, bh
-    PRINT "size normal ="; bw; "x"; bh
+    ConPrint "size normal =" & STR$(bw) & "x" & STR$(bh)
     IF bw <= 0 OR bh <= 0 THEN ok = 0
 
     DIALOG MINIMIZE g_hDlg
     x = 0: y = 0
     DIALOG GET LOC g_hDlg TO x, y
-    PRINT "loc minimized ="; x; ","; y
+    ConPrint "loc minimized =" & STR$(x) & "," & STR$(y)
     IF x >= 0 THEN ok = 0
 
     DIALOG NORMALIZE g_hDlg
@@ -154,14 +184,14 @@ FUNCTION PBMAIN () AS LONG
     DIALOG GET SIZE g_hDlg TO w, h
     x = 0: y = 0
     DIALOG GET LOC g_hDlg TO x, y
-    PRINT "size/loc normalized ="; w; "x"; h; " at "; x; ","; y
+    ConPrint "size/loc normalized =" & STR$(w) & "x" & STR$(h) & " at " & STR$(x) & "," & STR$(y)
     IF w <= 0 OR h <= 0 THEN ok = 0
     IF x < 0 OR y < 0 THEN ok = 0
 
     DIALOG MAXIMIZE g_hDlg
     w = 0: h = 0
     DIALOG GET SIZE g_hDlg TO w, h
-    PRINT "size maximized ="; w; "x"; h
+    ConPrint "size maximized =" & STR$(w) & "x" & STR$(h)
     IF w < bw THEN ok = 0
 
     DIALOG NORMALIZE g_hDlg
@@ -170,13 +200,13 @@ FUNCTION PBMAIN () AS LONG
     DIALOG SHOW STATE g_hDlg, 2
     x = 0: y = 0
     DIALOG GET LOC g_hDlg TO x, y
-    PRINT "SHOW STATE 2 (minimize) loc ="; x; ","; y
+    ConPrint "SHOW STATE 2 (minimize) loc =" & STR$(x) & "," & STR$(y)
     IF x >= 0 THEN ok = 0
 
     DIALOG SHOW STATE g_hDlg, 1
     w = 0: h = 0
     DIALOG GET SIZE g_hDlg TO w, h
-    PRINT "SHOW STATE 1 (normal) size ="; w; "x"; h
+    ConPrint "SHOW STATE 1 (normal) size =" & STR$(w) & "x" & STR$(h)
     IF w <= 0 OR h <= 0 THEN ok = 0
 
     ' ---- 9. exercised, no readback reachable from PB source -----------
@@ -196,10 +226,10 @@ FUNCTION PBMAIN () AS LONG
     DIALOG END g_hDlg, 1
 
     IF ok = 1 THEN
-        PRINT "PASS"
+        ConPrint "PASS"
         FUNCTION = 0
     ELSE
-        PRINT "FAIL"
+        ConPrint "FAIL"
         FUNCTION = 1
     END IF
 END FUNCTION

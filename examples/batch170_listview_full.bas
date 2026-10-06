@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' Batch 170 test - LISTVIEW: the complete statement family
 '---------------------------------------------------------------------
@@ -29,7 +58,7 @@
 ' NOTE: the official DDT syntax addresses a control by (dialog handle,
 ' control id) - NOT by the control handle returned from CONTROL ADD.
 '=====================================================================
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg AS LONG
@@ -44,11 +73,11 @@ FUNCTION PBMAIN () AS LONG
     DIALOG SHOW MODELESS hDlg
 
     CONTROL ADD LISTVIEW, hDlg, 401, 10, 10, 390, 240 TO hLV
-    PRINT "hwnd listview  -> "; hLV
+    ConPrint "hwnd listview  -> " & STR$(hLV)
     IF hLV = 0 THEN fail = fail + 1
 
     ' ---------------- INSERT COLUMN / INSERT ITEM ----------------
-    PRINT "--- INSERT COLUMN / INSERT ITEM ---"
+    ConPrint "--- INSERT COLUMN / INSERT ITEM ---"
     LISTVIEW INSERT COLUMN hDlg, 401, 1, "Name", 80, 0
     LISTVIEW INSERT COLUMN hDlg, 401, 2, "Qty", 50, 0
     LISTVIEW INSERT COLUMN hDlg, 401, 3, "Date", 70, 0
@@ -58,223 +87,223 @@ FUNCTION PBMAIN () AS LONG
     LISTVIEW INSERT ITEM hDlg, 401, 4, 0, "delta"
 
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "count          -> "; n
+    ConPrint "count          -> " & STR$(n)
     IF n <> 4 THEN fail = fail + 1
 
     ' ---------------- GET / SET TEXT (1-based) ----------------
-    PRINT "--- GET / SET TEXT ---"
+    ConPrint "--- GET / SET TEXT ---"
     LISTVIEW GET TEXT hDlg, 401, 1, 1 TO t
-    PRINT "text(1,1)      -> ["; t; "]"
+    ConPrint "text(1,1)      -> [" & STR$(t) & "]"
     IF t <> "alpha" THEN fail = fail + 1
     LISTVIEW GET TEXT hDlg, 401, 4, 1 TO t
-    PRINT "text(4,1)      -> ["; t; "]"
+    ConPrint "text(4,1)      -> [" & STR$(t) & "]"
     IF t <> "delta" THEN fail = fail + 1
     LISTVIEW SET TEXT hDlg, 401, 2, 2, "20"
     LISTVIEW GET TEXT hDlg, 401, 2, 2 TO t
-    PRINT "text(2,2)      -> ["; t; "]"
+    ConPrint "text(2,2)      -> [" & STR$(t) & "]"
     IF t <> "20" THEN fail = fail + 1
 
     ' ---------------- GET / SET HEADER ----------------
-    PRINT "--- GET / SET HEADER ---"
+    ConPrint "--- GET / SET HEADER ---"
     LISTVIEW GET HEADER hDlg, 401, 1 TO t
-    PRINT "header(1)      -> ["; t; "]"
+    ConPrint "header(1)      -> [" & STR$(t) & "]"
     IF t <> "Name" THEN fail = fail + 1
     LISTVIEW SET HEADER hDlg, 401, 2, "Amount"
     LISTVIEW GET HEADER hDlg, 401, 2 TO t
-    PRINT "header(2)      -> ["; t; "]"
+    ConPrint "header(2)      -> [" & STR$(t) & "]"
     IF t <> "Amount" THEN fail = fail + 1
 
     ' ---------------- GET HEADERID ----------------
     ' The statement hands back the LISTVIEW handle plus the id of the HEADER
     ' child embedded in it; the official text promises the pair is usable
     ' with the HEADER statement, so prove it by counting the header items.
-    PRINT "--- GET HEADERID ---"
+    ConPrint "--- GET HEADERID ---"
     LISTVIEW GET HEADERID hDlg, 401 TO n, m
-    PRINT "header hwnd    -> "; n; "  id -> "; m
+    ConPrint "header hwnd    -> " & STR$(n) & "  id -> " & STR$(m)
     IF n = 0 THEN fail = fail + 1
     HEADER GET COUNT n, m TO k
-    PRINT "header cols    -> "; k
+    ConPrint "header cols    -> " & STR$(k)
     IF k <> 3 THEN fail = fail + 1
 
     ' ---------------- GET / SET COLUMN ----------------
-    PRINT "--- GET / SET COLUMN ---"
+    ConPrint "--- GET / SET COLUMN ---"
     LISTVIEW GET COLUMN hDlg, 401, 1 TO n
-    PRINT "colw(1)        -> "; n
+    ConPrint "colw(1)        -> " & STR$(n)
     IF n <> 80 THEN fail = fail + 1
     LISTVIEW SET COLUMN hDlg, 401, 1, 120
     LISTVIEW GET COLUMN hDlg, 401, 1 TO n
-    PRINT "colw(1)        -> "; n
+    ConPrint "colw(1)        -> " & STR$(n)
     IF n <> 120 THEN fail = fail + 1
 
     ' ---------------- FIT CONTENT / FIT HEADER ----------------
     ' Give the header a far longer caption than any cell, so the two
     ' sentinels cannot be confused: FIT HEADER must end up the wider one.
-    PRINT "--- FIT CONTENT / FIT HEADER ---"
+    ConPrint "--- FIT CONTENT / FIT HEADER ---"
     LISTVIEW SET HEADER hDlg, 401, 1, "A Very Long Column Heading Indeed"
     LISTVIEW FIT CONTENT hDlg, 401, 1
     LISTVIEW GET COLUMN hDlg, 401, 1 TO n
-    PRINT "colw(1) fit    -> "; n
+    ConPrint "colw(1) fit    -> " & STR$(n)
     IF n <= 0 THEN fail = fail + 1
     LISTVIEW FIT HEADER hDlg, 401, 1
     LISTVIEW GET COLUMN hDlg, 401, 1 TO m
-    PRINT "colw(1) fithdr -> "; m
+    ConPrint "colw(1) fithdr -> " & STR$(m)
     IF m <= n THEN fail = fail + 1
     LISTVIEW SET HEADER hDlg, 401, 1, "Name"
 
     ' ---------------- GET / SET STYLEXX ----------------
     ' CONTROL ADD LISTVIEW starts the control with %LVS_EX_FULLROWSELECT.
-    PRINT "--- GET / SET STYLEXX ---"
+    ConPrint "--- GET / SET STYLEXX ---"
     LISTVIEW GET STYLEXX hDlg, 401 TO n
-    PRINT "stylexx        -> &H"; HEX$(n)
+    ConPrint "stylexx        -> &H" & HEX$(n)
     IF n <> &H20 THEN fail = fail + 1
     LISTVIEW SET STYLEXX hDlg, 401, &H21
     LISTVIEW GET STYLEXX hDlg, 401 TO n
-    PRINT "stylexx        -> &H"; HEX$(n)
+    ConPrint "stylexx        -> &H" & HEX$(n)
     IF n <> &H21 THEN fail = fail + 1
 
     ' ---------------- GET / SET USER ----------------
     ' Read back before any SORT: the official docs warn that sorting
     ' overwrites the per-row user value.
-    PRINT "--- GET / SET USER ---"
+    ConPrint "--- GET / SET USER ---"
     LISTVIEW SET USER hDlg, 401, 1, 12345
     LISTVIEW GET USER hDlg, 401, 1 TO n
-    PRINT "user(1)        -> "; n
+    ConPrint "user(1)        -> " & STR$(n)
     IF n <> 12345 THEN fail = fail + 1
 
     ' ---------------- selection ----------------
-    PRINT "--- SELECT / UNSELECT / GET SELECT / GET STATE ---"
+    ConPrint "--- SELECT / UNSELECT / GET SELECT / GET STATE ---"
     LISTVIEW GET SELCOUNT hDlg, 401 TO n
-    PRINT "selcount       -> "; n
+    ConPrint "selcount       -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     LISTVIEW SELECT hDlg, 401, 2
     LISTVIEW GET SELCOUNT hDlg, 401 TO n
-    PRINT "selcount       -> "; n
+    ConPrint "selcount       -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
 
     LISTVIEW GET SELECT hDlg, 401 TO n
-    PRINT "select         -> "; n
+    ConPrint "select         -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
 
     LISTVIEW GET STATE hDlg, 401, 2, 1 TO n
-    PRINT "state(2)       -> "; n
+    ConPrint "state(2)       -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     LISTVIEW GET STATE hDlg, 401, 1, 1 TO n
-    PRINT "state(1)       -> "; n
+    ConPrint "state(1)       -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     LISTVIEW UNSELECT hDlg, 401, 2
     LISTVIEW GET SELCOUNT hDlg, 401 TO n
-    PRINT "selcount       -> "; n
+    ConPrint "selcount       -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- FIND / FIND EXACT ----------------
-    PRINT "--- FIND / FIND EXACT ---"
+    ConPrint "--- FIND / FIND EXACT ---"
     LISTVIEW FIND hDlg, 401, 1, "gam" TO n
-    PRINT "find 'gam'     -> "; n
+    ConPrint "find 'gam'     -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTVIEW FIND EXACT hDlg, 401, 1, "gam" TO n
-    PRINT "exact 'gam'    -> "; n
+    ConPrint "exact 'gam'    -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     LISTVIEW FIND EXACT hDlg, 401, 1, "gamma" TO n
-    PRINT "exact 'gamma'  -> "; n
+    ConPrint "exact 'gamma'  -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTVIEW FIND hDlg, 401, 1, "zzz" TO n
-    PRINT "find 'zzz'     -> "; n
+    ConPrint "find 'zzz'     -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- image statements ----------------
     ' This fork has no IMAGELIST control yet, so there is no image list to
     ' attach: the statements must be accepted without disturbing the
     ' control or its item count.
-    PRINT "--- SET IMAGE / IMAGE2 / OVERLAY / IMAGELIST ---"
+    ConPrint "--- SET IMAGE / IMAGE2 / OVERLAY / IMAGELIST ---"
     LISTVIEW SET IMAGE     hDlg, 401, 1, 0
     LISTVIEW SET IMAGE2    hDlg, 401, 1, 0
     LISTVIEW SET OVERLAY   hDlg, 401, 1, 0
     LISTVIEW SET IMAGELIST hDlg, 401, 0, 0
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "count          -> "; n
+    ConPrint "count          -> " & STR$(n)
     IF n <> 4 THEN fail = fail + 1
 
     ' ---------------- VISIBLE ----------------
-    PRINT "--- VISIBLE ---"
+    ConPrint "--- VISIBLE ---"
     LISTVIEW VISIBLE hDlg, 401, 3
 
     ' ---------------- SORT ----------------
     ' Items are alpha, BETA, gamma, delta. Descending by ASCII gives
     ' gamma, delta, alpha, BETA; ascending with UCASE gives alpha, BETA,
     ' delta, gamma.
-    PRINT "--- SORT ---"
+    ConPrint "--- SORT ---"
     LISTVIEW SORT hDlg, 401, 1, DESCEND
     LISTVIEW GET TEXT hDlg, 401, 1, 1 TO t
-    PRINT "sort desc(1)   -> ["; t; "]"
+    ConPrint "sort desc(1)   -> [" & STR$(t) & "]"
     IF t <> "gamma" THEN fail = fail + 1
     LISTVIEW GET TEXT hDlg, 401, 4, 1 TO t
-    PRINT "sort desc(4)   -> ["; t; "]"
+    ConPrint "sort desc(4)   -> [" & STR$(t) & "]"
     IF t <> "BETA" THEN fail = fail + 1
 
     LISTVIEW SORT hDlg, 401, 1, ASCEND, UCASE
     LISTVIEW GET TEXT hDlg, 401, 1, 1 TO t
-    PRINT "sort asc(1)    -> ["; t; "]"
+    ConPrint "sort asc(1)    -> [" & STR$(t) & "]"
     IF t <> "alpha" THEN fail = fail + 1
     LISTVIEW GET TEXT hDlg, 401, 4, 1 TO t
-    PRINT "sort asc(4)    -> ["; t; "]"
+    ConPrint "sort asc(4)    -> [" & STR$(t) & "]"
     IF t <> "gamma" THEN fail = fail + 1
 
     ' ---------------- DELETE COLUMN / DELETE ITEM ----------------
-    PRINT "--- DELETE COLUMN / DELETE ITEM ---"
+    ConPrint "--- DELETE COLUMN / DELETE ITEM ---"
     ' Windows cannot delete column 1, so column 3 goes first.
     LISTVIEW DELETE COLUMN hDlg, 401, 3
     LISTVIEW GET HEADER hDlg, 401, 3 TO t
-    PRINT "header(3)      -> ["; t; "]"
+    ConPrint "header(3)      -> [" & STR$(t) & "]"
     IF t <> "" THEN fail = fail + 1
 
     LISTVIEW DELETE ITEM hDlg, 401, 1
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "count          -> "; n
+    ConPrint "count          -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTVIEW GET TEXT hDlg, 401, 1, 1 TO t
-    PRINT "text(1,1)      -> ["; t; "]"
+    ConPrint "text(1,1)      -> [" & STR$(t) & "]"
     IF t <> "BETA" THEN fail = fail + 1
 
     ' ---------------- GET MODE / SET MODE ----------------
-    PRINT "--- GET MODE / SET MODE ---"
+    ConPrint "--- GET MODE / SET MODE ---"
     LISTVIEW GET MODE hDlg, 401 TO n
-    PRINT "mode           -> "; n
+    ConPrint "mode           -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
     LISTVIEW SET MODE hDlg, 401, 3
     LISTVIEW GET MODE hDlg, 401 TO n
-    PRINT "mode           -> "; n
+    ConPrint "mode           -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     LISTVIEW SET MODE hDlg, 401, 1
     LISTVIEW GET MODE hDlg, 401 TO n
-    PRINT "mode           -> "; n
+    ConPrint "mode           -> " & STR$(n)
     IF n <> 1 THEN fail = fail + 1
 
     ' ---------------- RESET ----------------
-    PRINT "--- RESET ---"
+    ConPrint "--- RESET ---"
     LISTVIEW RESET hDlg, 401
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "count          -> "; n
+    ConPrint "count          -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- error paths ----------------
     ' Control id 499 was never created: the GET statements must report -1
     ' rather than a plausible-looking number.
-    PRINT "--- error paths (control 499 does not exist) ---"
+    ConPrint "--- error paths (control 499 does not exist) ---"
     LISTVIEW GET COUNT hDlg, 499 TO n
-    PRINT "count          -> "; n
+    ConPrint "count          -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     LISTVIEW GET COLUMN hDlg, 499, 1 TO n
-    PRINT "colw           -> "; n
+    ConPrint "colw           -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     LISTVIEW GET MODE hDlg, 499 TO n
-    PRINT "mode           -> "; n
+    ConPrint "mode           -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     LISTVIEW GET SELCOUNT hDlg, 499 TO n
-    PRINT "selcount       -> "; n
+    ConPrint "selcount       -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
 
-    PRINT "=== FAILURES: "; fail; " ==="
+    ConPrint "=== FAILURES: " & STR$(fail) & " ==="
     DIALOG END hDlg, fail
 END FUNCTION

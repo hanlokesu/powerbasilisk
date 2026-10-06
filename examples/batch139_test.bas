@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: BUTTON - button click action
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 SUB OnBtn1
     MSGBOX "Button 1 clicked!", 0, "Batch 139"

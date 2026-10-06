@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 2: SWAP / SHIFT / ROTATE / ARRAY REVERSE / PUT$
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
@@ -12,23 +40,47 @@ FUNCTION PBMAIN() AS LONG
     a = 1
     b = 2
     SWAP a, b
-    IF a = 2 AND b = 1 THEN PRINT "SWAP-PASS" ELSE PRINT "SWAP-FAIL "; a; b
+    IF a = 2 AND b = 1 THEN
+        ConPrint "SWAP-PASS"
+    ELSE
+        ConPrint "SWAP-FAIL " & STR$(a) & STR$(b)
+    END IF
 
     n = 221
     SHIFT LEFT n, 1
-    IF n = 442 THEN PRINT "SHIFTLEFT-PASS" ELSE PRINT "SHIFTLEFT-FAIL "; n
+    IF n = 442 THEN
+        ConPrint "SHIFTLEFT-PASS"
+    ELSE
+        ConPrint "SHIFTLEFT-FAIL " & STR$(n)
+    END IF
     n = 221
     SHIFT RIGHT n, 1
-    IF n = 110 THEN PRINT "SHIFTRIGHT-PASS" ELSE PRINT "SHIFTRIGHT-FAIL "; n
+    IF n = 110 THEN
+        ConPrint "SHIFTRIGHT-PASS"
+    ELSE
+        ConPrint "SHIFTRIGHT-FAIL " & STR$(n)
+    END IF
     n = -4
     SHIFT SIGNED RIGHT n, 1
-    IF n = -2 THEN PRINT "SHIFTSIGNED-PASS" ELSE PRINT "SHIFTSIGNED-FAIL "; n
+    IF n = -2 THEN
+        ConPrint "SHIFTSIGNED-PASS"
+    ELSE
+        ConPrint "SHIFTSIGNED-FAIL " & STR$(n)
+    END IF
     n = 1
     ROTATE LEFT n, 1
-    IF n = 2 THEN PRINT "ROTATELEFT-PASS" ELSE PRINT "ROTATELEFT-FAIL "; n
+    IF n = 2 THEN
+        ConPrint "ROTATELEFT-PASS"
+    ELSE
+        ConPrint "ROTATELEFT-FAIL " & STR$(n)
+    END IF
     n = 2
     ROTATE RIGHT n, 1
-    IF n = 1 THEN PRINT "ROTATERIGHT-PASS" ELSE PRINT "ROTATERIGHT-FAIL "; n
+    IF n = 1 THEN
+        ConPrint "ROTATERIGHT-PASS"
+    ELSE
+        ConPrint "ROTATERIGHT-FAIL " & STR$(n)
+    END IF
 
     REDIM arr(1 TO 5)
     FOR i = 1 TO 5
@@ -36,9 +88,9 @@ FUNCTION PBMAIN() AS LONG
     NEXT i
     ARRAY REVERSE arr()
     IF arr(1) = 5 AND arr(3) = 3 AND arr(5) = 1 THEN
-        PRINT "ARRAYREV-PASS"
+        ConPrint "ARRAYREV-PASS"
     ELSE
-        PRINT "ARRAYREV-FAIL "; arr(1); arr(3); arr(5)
+        ConPrint "ARRAYREV-FAIL " & STR$(arr(1)) & STR$(arr(3)) & STR$(arr(5))
     END IF
 
     f = FREEFILE
@@ -50,7 +102,11 @@ FUNCTION PBMAIN() AS LONG
     LINE INPUT #f, s
     CLOSE #f
     KILL "putstr_test.dat"
-    IF s = "ABC123" THEN PRINT "PUT$-PASS" ELSE PRINT "PUT$-FAIL ["; s; "]"
-    PRINT "Press any key to exit..."
+    IF s = "ABC123" THEN
+        ConPrint "PUT$-PASS"
+    ELSE
+        ConPrint "PUT$-FAIL [" & STR$(s) & "]"
+    END IF
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

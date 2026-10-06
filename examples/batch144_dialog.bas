@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: DIALOG NEW + DIALOG SHOW MODAL
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL g_hBtn AS QUAD

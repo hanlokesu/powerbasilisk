@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: LABEL + PROGRESSBAR
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hLabel AS QUAD
 GLOBAL g_hProg AS QUAD

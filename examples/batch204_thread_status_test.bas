@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 204 self-check - THREAD STATUS / CLOSE
 '---------------------------------------------------------------------
@@ -47,17 +75,17 @@ FUNCTION PBMAIN () AS LONG
     THREAD CREATE Worker TO h
     SLEEP 150
     THREAD STATUS h TO st
-    PRINT "status while running: "; st
+    ConPrint "status while running: " & STR$(st)
     IF st <> 1 THEN fails = fails + 1
     SLEEP 1200
     THREAD STATUS h TO st
-    PRINT "status after finish: "; st
+    ConPrint "status after finish: " & STR$(st)
     IF st <> 3 THEN fails = fails + 1
-    PRINT "flag: "; g_flag
+    ConPrint "flag: " & STR$(g_flag)
     IF g_flag <> 1 THEN fails = fails + 1
     THREAD CLOSE h
-    PRINT "closes cleanly"
-    PRINT "=== FAILURES: "; fails
+    ConPrint "closes cleanly"
+    ConPrint "=== FAILURES: " & STR$(fails)
     FUNCTION = 0
 ' Press any key to exit...
 WAITKEY$

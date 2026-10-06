@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 74 Test: XPRINT printer properties SET/GET
 FUNCTION PBMAIN() AS LONG
     LOCAL v AS LONG
@@ -5,54 +33,55 @@ FUNCTION PBMAIN() AS LONG
     LOCAL fails AS LONG
     fails = 0
 
-    PRINT "=== Batch 74: XPRINT printer properties ==="
+    ConPrint "=== Batch 74: XPRINT printer properties ==="
 
     XPRINT ATTACH DEFAULT
 
     XPRINT SET COPIES 3
     XPRINT GET COPIES TO v
-    PRINT "COPIES:"; v
-    IF v <> 3 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "COPIES:" & STR$(v)
+    IF v <> 3 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET ORIENTATION 2
     XPRINT GET ORIENTATION TO v
-    PRINT "ORIENTATION:"; v
-    IF v <> 2 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "ORIENTATION:" & STR$(v)
+    IF v <> 2 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET QUALITY 3
     XPRINT GET QUALITY TO v
-    PRINT "QUALITY:"; v
-    IF v <> 3 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "QUALITY:" & STR$(v)
+    IF v <> 3 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET DUPLEX 1
     XPRINT GET DUPLEX TO v
-    PRINT "DUPLEX:"; v
-    IF v <> 1 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "DUPLEX:" & STR$(v)
+    IF v <> 1 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET COLLATE 1
     XPRINT GET COLLATE TO v
-    PRINT "COLLATE:"; v
-    IF v <> 1 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "COLLATE:" & STR$(v)
+    IF v <> 1 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET COLORMODE 1
     XPRINT GET COLORMODE TO v
-    PRINT "COLORMODE:"; v
-    IF v <> 1 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "COLORMODE:" & STR$(v)
+    IF v <> 1 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET PAGES 5
     XPRINT GET PAGES TO v
-    PRINT "PAGES:"; v
-    IF v <> 5 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "PAGES:" & STR$(v)
+    IF v <> 5 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT CLOSE
 
-    PRINT "=== Result: ";
+    ConPrint "=== Result: "
     IF fails = 0 THEN
-        PRINT "ALL PASS (7 SET/GET pairs)"
+        ConPrint "ALL PASS (7 SET/GET pairs)"
     ELSE
-        PRINT fails; " FAILED"
+        ConPrint STR$(fails) & " FAILED"
     END IF
 
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

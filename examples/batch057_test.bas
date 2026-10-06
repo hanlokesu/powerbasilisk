@@ -1,7 +1,35 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch57_test.bas
 ' GRAPHIC BITMAP LOAD / CHR SIZE / CELL / CELL SIZE (batch 57)
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL hbmp2 AS QUAD
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
@@ -22,46 +50,46 @@ FUNCTION PBMAIN() AS LONG
 
     GRAPHIC BITMAP LOAD "batch57_out.bmp" TO hbmp2
     IF hbmp2 <> 0 THEN
-        PRINT "OK: bitmap loaded"
+        ConPrint "OK: bitmap loaded"
     ELSE
-        PRINT "FAIL: bitmap load failed"
+        ConPrint "FAIL: bitmap load failed"
         INCR fails
     END IF
 
     GRAPHIC ATTACH hbmp2
     GRAPHIC GET PIXEL (25, 25) TO px
-    PRINT "OK: loaded pixel="; px
+    ConPrint "OK: loaded pixel=" & STR$(px)
     IF px <> 0 THEN
-        PRINT "OK: loaded bitmap has content"
+        ConPrint "OK: loaded bitmap has content"
     ELSE
-        PRINT "FAIL: loaded bitmap empty"
+        ConPrint "FAIL: loaded bitmap empty"
         INCR fails
     END IF
 
     GRAPHIC CHR SIZE ("ABC") TO cw, ch
-    PRINT "OK: chr size="; cw; "x"; ch
+    ConPrint "OK: chr size=" & STR$(cw) & "x" & STR$(ch)
     IF cw > 0 AND ch > 0 THEN
-        PRINT "OK: chr size positive"
+        ConPrint "OK: chr size positive"
     ELSE
-        PRINT "FAIL: chr size wrong"
+        ConPrint "FAIL: chr size wrong"
         INCR fails
     END IF
 
     GRAPHIC CELL SIZE (2, 3) TO csw, csh
-    PRINT "OK: cell size="; csw; "x"; csh
+    ConPrint "OK: cell size=" & STR$(csw) & "x" & STR$(csh)
     IF csw > 0 AND csh > 0 THEN
-        PRINT "OK: cell size positive"
+        ConPrint "OK: cell size positive"
     ELSE
-        PRINT "FAIL: cell size wrong"
+        ConPrint "FAIL: cell size wrong"
         INCR fails
     END IF
 
     GRAPHIC CELL (2, 3) TO cx, cy
-    PRINT "OK: cell="; cx; ","; cy
+    ConPrint "OK: cell=" & STR$(cx) & "," & STR$(cy)
     IF cx > 0 AND cy > 0 THEN
-        PRINT "OK: cell positive"
+        ConPrint "OK: cell positive"
     ELSE
-        PRINT "FAIL: cell wrong"
+        ConPrint "FAIL: cell wrong"
         INCR fails
     END IF
 
@@ -70,10 +98,10 @@ FUNCTION PBMAIN() AS LONG
     KILL "batch57_out.bmp"
 
     IF fails = 0 THEN
-        PRINT "batch57: ALL PASS"
+        ConPrint "batch57: ALL PASS"
     ELSE
-        PRINT "batch57: FAILURES="; fails
+        ConPrint "batch57: FAILURES=" & STR$(fails)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

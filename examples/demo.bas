@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced  Full Feature Demo
 ' Compile: pbcompiler build demo.bas --exe --target x86_64-pc-windows-msvc --runtime-lib pb_runtime_x64.obj
 '
@@ -25,91 +53,91 @@ FUNCTION PBMAIN() AS LONG
   DIM arr(5) AS LONG
 
   ok = 1
-  PRINT "=============================================="
-  PRINT "  PowerBasilisk Enhanced - Full Feature Demo"
-  PRINT "  PowerBASIC -> LLVM IR -> native x64 exe"
-  PRINT "=============================================="
+  ConPrint "=============================================="
+  ConPrint "  PowerBasilisk Enhanced - Full Feature Demo"
+  ConPrint "  PowerBASIC -> LLVM IR -> native x64 exe"
+  ConPrint "=============================================="
 
   ' ---------- 1. Control flow ----------
-  PRINT ""
-  PRINT "[1] Control flow"
+  ConPrint ""
+  ConPrint "[1] Control flow"
 
   FOR i = 1 TO 5
     sum = sum + i
   NEXT i
   IF sum = 15 THEN
-    PRINT "  FOR/NEXT + IF/THEN: sum(1..5) = " + STR$(sum) + "  OK"
+    ConPrint "  FOR/NEXT + IF/THEN: sum(1..5) = " + STR$(sum) + "  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: sum = " + STR$(sum)
+    ConPrint "  FAIL: sum = " + STR$(sum)
   END IF
 
   i = 0
   WHILE i < 3
     i = i + 1
   WEND
-  PRINT "  WHILE/WEND: i = " + STR$(i) + "  OK"
+  ConPrint "  WHILE/WEND: i = " + STR$(i) + "  OK"
 
   DO
     i = i - 1
   LOOP UNTIL i = 0
-  PRINT "  DO/LOOP UNTIL: i = " + STR$(i) + "  OK"
+  ConPrint "  DO/LOOP UNTIL: i = " + STR$(i) + "  OK"
 
   GOSUB ShowSubroutine
-  PRINT "  GOSUB/RETURN: returned OK"
+  ConPrint "  GOSUB/RETURN: returned OK"
 
   ' ---------- 2. Strings ----------
-  PRINT ""
-  PRINT "[2] Strings (built-in equates)"
+  ConPrint ""
+  ConPrint "[2] Strings (built-in equates)"
 
   ' All 18 equates are compile-time constants; demo a few + join
   s = "Line1" + $CRLF + "Line2"
   IF s = "Line1" + CHR$(13, 10) + "Line2" THEN
-    PRINT "  $CRLF = CR+LF bytes  OK"
+    ConPrint "  $CRLF = CR+LF bytes  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: $CRLF"
+    ConPrint "  FAIL: $CRLF"
   END IF
 
-  PRINT "  $DQ/$SQ/$TAB: [" + $DQ + "quoted" + $DQ + "]" + $TAB + "[" + $SQ + "sq" + $SQ + "]"
-  PRINT "  $WHITESPACE = space+tab+cr+lf (invisible)  OK"
+  ConPrint "  $DQ/$SQ/$TAB: [" + $DQ + "quoted" + $DQ + "]" + $TAB + "[" + $SQ + "sq" + $SQ + "]"
+  ConPrint "  $WHITESPACE = space+tab+cr+lf (invisible)  OK"
 
   t = "the cat sat on the cat mat"
   REPLACE "cat" WITH "dog" IN t
   IF t = "the dog sat on the dog mat" THEN
-    PRINT "  REPLACE: " + t + "  OK"
+    ConPrint "  REPLACE: " + t + "  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: REPLACE -> " + t
+    ConPrint "  FAIL: REPLACE -> " + t
   END IF
 
   fixed10 = ""
   LSET fixed10 = "ab"
-  PRINT "  LSET: [" + fixed10 + "]  (left-aligned)"
+  ConPrint "  LSET: [" + fixed10 + "]  (left-aligned)"
   fixed10 = ""
   RSET fixed10 = "cd"
-  PRINT "  RSET: [" + fixed10 + "]  (right-aligned)"
+  ConPrint "  RSET: [" + fixed10 + "]  (right-aligned)"
 
-  PRINT "  LEN/LEFT$/RIGHT$: " + STR$(LEN("hello")) + " / " + LEFT$("hello", 2) + " / " + RIGHT$("hello", 2)
+  ConPrint "  LEN/LEFT$/RIGHT$: " + STR$(LEN("hello")) + " / " + LEFT$("hello", 2) + " / " + RIGHT$("hello", 2)
 
   ' ---------- 3. Arrays ----------
-  PRINT ""
-  PRINT "[3] Arrays"
+  ConPrint ""
+  ConPrint "[3] Arrays"
 
   FOR i = 0 TO 5
     arr(i) = 100 + i
   NEXT i
   ERASE arr
   IF arr(0) = 0 THEN
-    PRINT "  DIM + ERASE: arr(0) after ERASE = " + STR$(arr(0)) + "  OK"
+    ConPrint "  DIM + ERASE: arr(0) after ERASE = " + STR$(STR$(arr(0))) + "  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: arr(0) = " + STR$(arr(0))
+    ConPrint "  FAIL: arr(0) = " + STR$(STR$(arr(0)))
   END IF
 
   ' ---------- 4. File I/O ----------
-  PRINT ""
-  PRINT "[4] File I/O"
+  ConPrint ""
+  ConPrint "[4] File I/O"
 
   f = FREEFILE
   OPEN "demo_data.tmp" FOR OUTPUT AS #f
@@ -117,22 +145,22 @@ FUNCTION PBMAIN() AS LONG
   WRITE #f, "csv", 42, 3.5
   FLUSH #f
   CLOSE #f
-  PRINT "  OPEN/PRINT#/WRITE#/FLUSH/CLOSE  OK"
+  ConPrint "  OPEN/PRINT#/WRITE#/FLUSH/CLOSE  OK"
 
   f = FREEFILE
   OPEN "demo_data.tmp" FOR INPUT AS #f
   LINE INPUT #f, s
   INPUT #f, t, i, r
   IF s = "Hello file world" AND t = "csv" AND i = 42 AND r = 3.5 THEN
-    PRINT "  LINE INPUT#/INPUT# read back  OK"
+    ConPrint "  LINE INPUT#/INPUT# read back  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: read back [" + s + "] [" + t + "]"
+    ConPrint "  FAIL: read back [" + s + "] [" + t + "]"
   END IF
 
   SEEK #f, 1
   LINE INPUT #f, s
-  PRINT "  SEEK# to top: [" + s + "]"
+  ConPrint "  SEEK# to top: [" + s + "]"
   CLOSE #f
 
   f = FREEFILE
@@ -140,80 +168,80 @@ FUNCTION PBMAIN() AS LONG
   LOCK #f, 1, 10
   UNLOCK #f, 1, 10
   CLOSE #f
-  PRINT "  LOCK/UNLOCK byte range  OK"
+  ConPrint "  LOCK/UNLOCK byte range  OK"
 
   NAME "demo_data.tmp" AS "demo_renamed.tmp"
-  PRINT "  NAME: file renamed  OK"
+  ConPrint "  NAME: file renamed  OK"
 
   f = FREEFILE
   OPEN "demo_renamed.tmp" FOR INPUT AS #f
   RESET
-  PRINT "  RESET: all handles closed  OK"
+  ConPrint "  RESET: all handles closed  OK"
 
   IF ISFILE("demo_renamed.tmp") = 1 THEN
     KILL "demo_renamed.tmp"
-    PRINT "  KILL + ISFILE: file removed  OK"
+    ConPrint "  KILL + ISFILE: file removed  OK"
   END IF
 
   ' ---------- 5. Directories + ERR ----------
-  PRINT ""
-  PRINT "[5] Directories + ERR semantics"
+  ConPrint ""
+  ConPrint "[5] Directories + ERR semantics"
 
   MKDIR "demo_dir"
   MKDIR "demo_dir"          ' already exists -> ERR 75 (PB official)
   IF ERR = 75 THEN
-    PRINT "  MKDIR twice -> ERR 75  OK"
+    ConPrint "  MKDIR twice -> ERR 75  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: MKDIR exists ERR=" + STR$(ERR)
+    ConPrint "  FAIL: MKDIR exists ERR=" + STR$(ERR)
   END IF
   ERRCLEAR
 
   RMDIR "no_such_dir_xyz"   ' missing -> ERR 75
   IF ERR = 75 THEN
-    PRINT "  RMDIR missing -> ERR 75  OK"
+    ConPrint "  RMDIR missing -> ERR 75  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: RMDIR missing ERR=" + STR$(ERR)
+    ConPrint "  FAIL: RMDIR missing ERR=" + STR$(ERR)
   END IF
   ERRCLEAR
 
   CHDIR "no_such_dir_abc"   ' invalid -> ERR 76
   IF ERR = 76 THEN
-    PRINT "  CHDIR invalid -> ERR 76  OK"
+    ConPrint "  CHDIR invalid -> ERR 76  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: CHDIR invalid ERR=" + STR$(ERR)
+    ConPrint "  FAIL: CHDIR invalid ERR=" + STR$(ERR)
   END IF
   ERRCLEAR
 
   RMDIR "demo_dir"
-  PRINT "  RMDIR: cleanup OK"
+  ConPrint "  RMDIR: cleanup OK"
 
   ' ---------- 6. System calls ----------
-  PRINT ""
-  PRINT "[6] System calls"
+  ConPrint ""
+  ConPrint "[6] System calls"
 
   RANDOMIZE 42
   r = RND
-  PRINT "  RANDOMIZE+RND: first value = " + STR$(r)
+  ConPrint "  RANDOMIZE+RND: first value = " + STR$(r)
 
   a = 111
   b = 222
   SWAP a, b
   IF a = 222 AND b = 111 THEN
-    PRINT "  SWAP: a=222 b=111  OK"
+    ConPrint "  SWAP: a=222 b=111  OK"
   ELSE
     ok = 0
-    PRINT "  FAIL: SWAP a=" + STR$(a) + " b=" + STR$(b)
+    ConPrint "  FAIL: SWAP a=" + STR$(a) + " b=" + STR$(b)
   END IF
 
-  PRINT "  CURDIR$ = " + CURDIR$
-  PRINT "  ISFILE(demo.bas) = " + STR$(ISFILE("demo.bas"))
+  ConPrint "  CURDIR$ = " + CURDIR$
+  ConPrint "  ISFILE(demo.bas) = " + STR$(STR$(ISFILE("demo.bas")))
 
   BEEP
   SLEEP 300
-  PRINT "  BEEP + SLEEP 300ms  OK"
+  ConPrint "  BEEP + SLEEP 300ms  OK"
 
   ' ---------- Final report ----------
   f = FREEFILE
@@ -225,13 +253,13 @@ FUNCTION PBMAIN() AS LONG
   END IF
   CLOSE #f
 
-  PRINT ""
+  ConPrint ""
   IF ok = 1 THEN
-    PRINT "=== ALL FEATURES VERIFIED OK ==="
+    ConPrint "=== ALL FEATURES VERIFIED OK ==="
   ELSE
-    PRINT "=== SOME CHECKS FAILED ==="
+    ConPrint "=== SOME CHECKS FAILED ==="
   END IF
-  PRINT "(see demo_result.txt)"
+  ConPrint "(see demo_result.txt)"
 
   ' ---------- 7. GUI popups (the show) ----------
   SHELL "calc.exe"                                   ' launch Calculator
@@ -245,9 +273,10 @@ FUNCTION PBMAIN() AS LONG
   EXIT FUNCTION
 
 ShowSubroutine:
-  PRINT "  (inside GOSUB subroutine)"
+  ConPrint "  (inside GOSUB subroutine)"
   RETURN
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 
 END FUNCTION
+

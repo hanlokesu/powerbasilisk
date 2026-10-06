@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: BUTTON + EDITBOX - show/hide/enable/disable
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 FUNCTION PBMAIN() AS LONG
     LOCAL hWnd AS QUAD

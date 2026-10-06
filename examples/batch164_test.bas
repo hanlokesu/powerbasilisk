@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' =====================================================================
 ' batch164_test.bas - TOOLBAR and STATUSBAR (batch 164)
 ' ---------------------------------------------------------------------
@@ -34,7 +63,7 @@
 '           is shown by DIALOG NEW and never enters a message loop, so
 '           this sample finishes on its own with no interaction.
 ' =====================================================================
-#COMPILE EXE
+
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL g_hTb  AS QUAD
@@ -44,6 +73,7 @@ FUNCTION PBMAIN () AS LONG
     LOCAL n   AS LONG
     LOCAL st  AS LONG
     LOCAL ok  AS LONG
+    LOCAL g_hDlg AS LONG
 
     ok = 1
 
@@ -54,15 +84,15 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD STATUSBAR, g_hDlg, 101, "", 0, 0, 0, 0 TO g_hSb
 
     IF g_hTb <> 0 THEN
-        PRINT "toolbar handle  = 1 (non-zero)"
+        ConPrint "toolbar handle  = 1 (non-zero)"
     ELSE
-        PRINT "toolbar handle  = 0 (CONTROL ADD TOOLBAR failed)"
+        ConPrint "toolbar handle  = 0 (CONTROL ADD TOOLBAR failed)"
         ok = 0
     END IF
     IF g_hSb <> 0 THEN
-        PRINT "statusbar handle= 1 (non-zero)"
+        ConPrint "statusbar handle= 1 (non-zero)"
     ELSE
-        PRINT "statusbar handle= 0 (CONTROL ADD STATUSBAR failed)"
+        ConPrint "statusbar handle= 0 (CONTROL ADD STATUSBAR failed)"
         ok = 0
     END IF
 
@@ -76,13 +106,13 @@ FUNCTION PBMAIN () AS LONG
 
     n = 0
     TOOLBAR GET COUNT g_hDlg, 100 TO n
-    PRINT "count after adds="; n
+    ConPrint "count after adds=" & STR$(n)
     IF n <> 4 THEN ok = 0
 
     ' ---- read the state of the first button --------------------------
     st = 0
     TOOLBAR GET STATE g_hDlg, 100, 1 TO st
-    PRINT "state item 1    ="; st
+    ConPrint "state item 1    =" & STR$(st)
     ' %TBSTATE_ENABLED = &H0004
     IF st <> 4 THEN ok = 0
 
@@ -90,14 +120,14 @@ FUNCTION PBMAIN () AS LONG
     TOOLBAR SET STATE g_hDlg, 100, BYCMD 202, 0
     st = 99
     TOOLBAR GET STATE g_hDlg, 100, BYCMD 202 TO st
-    PRINT "state cmd 202   ="; st; " (after disable)"
+    ConPrint "state cmd 202   =" & STR$(st) & " (after disable)"
     IF st <> 0 THEN ok = 0
 
     ' ---- delete the first button by 1-based position -----------------
     TOOLBAR DELETE BUTTON g_hDlg, 100, 1
     n = 0
     TOOLBAR GET COUNT g_hDlg, 100 TO n
-    PRINT "count after del ="; n
+    ConPrint "count after del =" & STR$(n)
     IF n <> 3 THEN ok = 0
 
     ' ---- statusbar: three parts, then text in part 1 -----------------
@@ -107,10 +137,10 @@ FUNCTION PBMAIN () AS LONG
     DIALOG END g_hDlg, 1
 
     IF ok = 1 THEN
-        PRINT "PASS"
+        ConPrint "PASS"
         FUNCTION = 0
     ELSE
-        PRINT "FAIL"
+        ConPrint "FAIL"
         FUNCTION = 1
     END IF
 END FUNCTION

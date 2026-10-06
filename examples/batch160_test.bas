@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' =====================================================================
 ' batch160_test.bas — METRICS, UCODE$ and ACODE$
 ' ---------------------------------------------------------------------
@@ -23,65 +51,66 @@ FUNCTION PBMAIN () AS LONG
 
     ' ---- METRICS: dotted names -------------------------------------
     n = METRICS(Scroll.Horz)
-    PRINT "Scroll.Horz    ="; n
+    ConPrint "Scroll.Horz    =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     n = METRICS(Scroll.Vert)
-    PRINT "Scroll.Vert    ="; n
+    ConPrint "Scroll.Vert    =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     n = METRICS(Border.X)
-    PRINT "Border.X       ="; n
+    ConPrint "Border.X       =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     n = METRICS(Icon.X)
-    PRINT "Icon.X         ="; n
+    ConPrint "Icon.X         =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     ' ---- METRICS: three-segment name -------------------------------
     n = METRICS(Frame.Fixed.X)
-    PRINT "Frame.Fixed.X  ="; n
+    ConPrint "Frame.Fixed.X  =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     n = METRICS(Frame.Resize.X)
-    PRINT "Frame.Resize.X ="; n
+    ConPrint "Frame.Resize.X =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     ' ---- METRICS: single-word names --------------------------------
     n = METRICS(Caption)
-    PRINT "Caption        ="; n
+    ConPrint "Caption        =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     n = METRICS(Menubar)
-    PRINT "Menubar        ="; n
+    ConPrint "Menubar        =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     ' ---- METRICS: a plain metric index (SM_CXSCREEN = 0) ------------
     n = METRICS(0)
-    PRINT "METRICS(0)     ="; n
+    ConPrint "METRICS(0)     =" & STR$(n)
     IF n <= 0 THEN ok = 0
 
     ' ---- UCODE$ / ACODE$ -------------------------------------------
     u = UCODE$("ABC")
-    PRINT "UCODE$ byte len ="; LEN(u)
+    ConPrint "UCODE$ byte len =" & STR$(STR$(LEN(u)))
     IF LEN(u) <> 6 THEN ok = 0
 
     back = ACODE$(u)
-    PRINT "ACODE$ restored ="; back
+    ConPrint "ACODE$ restored =" & STR$(back)
     IF back <> "ABC" THEN ok = 0
 
     back = UCODE$("Hello") : back = ACODE$(back)
-    PRINT "round trip      ="; back
+    ConPrint "round trip      =" & STR$(back)
     IF back <> "Hello" THEN ok = 0
 
     ' ---- result ----------------------------------------------------
     IF ok = 1 THEN
-        PRINT "PASS"
+        ConPrint "PASS"
         FUNCTION = 0
     ELSE
-        PRINT "FAIL"
+        ConPrint "FAIL"
         FUNCTION = 1
     END IF
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION
+

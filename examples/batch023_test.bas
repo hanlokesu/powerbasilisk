@@ -1,4 +1,33 @@
 #COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
+
 TYPE MyType
     n AS LONG
     d AS DOUBLE
@@ -19,34 +48,34 @@ FUNCTION PBMAIN() AS LONG
     LOCAL t2 AS MyType
     LOCAL title AS STRING
 
-    PRINT "=== Batch 23: STATIC / ARRAY ASSIGN / WINDOW / TYPE SET ==="
+    ConPrint "=== Batch 23: STATIC / ARRAY ASSIGN / WINDOW / TYPE SET ==="
 
     ' 1. STATIC persists across calls
     FOR i = 1 TO 3
-        PRINT "IncStatic = "; IncStatic()
+        ConPrint "IncStatic = " & STR$(IncStatic())
     NEXT i
 
     ' 2. ARRAY ASSIGN b() = a()
     a(0) = 10 : a(1) = 20 : a(2) = 30 : a(3) = 40 : a(4) = 50
     ARRAY ASSIGN b() = a()
-    PRINT "b(0) = "; b(0); " b(4) = "; b(4)
+    ConPrint "b(0) = " & STR$(b(0)) & " b(4) = " & STR$(b(4))
 
     ' 3. WINDOW SET TEXT / WINDOW GET TEXT (console title)
     WINDOW SET TEXT 0, "PowerBasilisk Batch23"
     WINDOW GET TEXT 0 TO title
-    PRINT "Title = "; title
+    ConPrint "Title = " & STR$(title)
 
     ' 4. TYPE SET from a TYPE variable
     t1.n = 123
     t1.d = 4.5
     t1.s = "hello"
     TYPE SET t2 = t1
-    PRINT "t2.n = "; t2.n; " t2.d = "; t2.d; " t2.s = "; TRIM$(t2.s)
+    ConPrint "t2.n = " & STR$(t2.n) & " t2.d = " & STR$(t2.d) & " t2.s = " & TRIM$(t2.s)
 
     ' 5. TYPE SET from a STRING (fills the UDT bytes)
     TYPE SET t2 = "TYPE SET FROM STRING"
-    PRINT "t2.n(1st4 bytes) = "; t2.n
+    ConPrint "t2.n(1st4 bytes) = " & STR$(t2.n)
 
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     WAITKEY$
 END FUNCTION

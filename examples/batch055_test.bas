@@ -1,7 +1,35 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch55_test.bas
 ' GRAPHIC COLOR / GET PIXEL / COPY (batch 55)
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
     LOCAL px AS LONG
@@ -9,37 +37,37 @@ FUNCTION PBMAIN() AS LONG
 
     GRAPHIC BITMAP NEW 100, 50 TO hbmp
     IF hbmp = 0 THEN
-        PRINT "FAIL: bitmap handle is zero"
+        ConPrint "FAIL: bitmap handle is zero"
         INCR fails
     ELSE
-        PRINT "OK: bitmap handle "; hbmp
+        ConPrint "OK: bitmap handle " & STR$(hbmp)
     END IF
 
     GRAPHIC ATTACH hbmp
     GRAPHIC COLOR 255, 0
-    PRINT "OK: color set"
+    ConPrint "OK: color set"
 
     GRAPHIC BOX (10,10)-(40,40), 255, 255, 1
-    PRINT "OK: solid box drawn"
+    ConPrint "OK: solid box drawn"
 
     GRAPHIC GET PIXEL (25, 25) TO px
-    PRINT "OK: pixel="; px
+    ConPrint "OK: pixel=" & STR$(px)
     IF px <> 0 THEN
-        PRINT "OK: pixel non-zero (fill color)"
+        ConPrint "OK: pixel non-zero (fill color)"
     ELSE
-        PRINT "FAIL: pixel is zero"
+        ConPrint "FAIL: pixel is zero"
         INCR fails
     END IF
 
     GRAPHIC COPY (10,10)-(40,40), (0,0)
-    PRINT "OK: copied"
+    ConPrint "OK: copied"
 
     GRAPHIC GET PIXEL (25, 25) TO px2
-    PRINT "OK: pixel2="; px2
+    ConPrint "OK: pixel2=" & STR$(px2)
     IF px2 <> 0 THEN
-        PRINT "OK: copy region non-zero"
+        ConPrint "OK: copy region non-zero"
     ELSE
-        PRINT "FAIL: copy region is zero"
+        ConPrint "FAIL: copy region is zero"
         INCR fails
     END IF
 
@@ -47,10 +75,10 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC BITMAP END
 
     IF fails = 0 THEN
-        PRINT "batch55: ALL PASS"
+        ConPrint "batch55: ALL PASS"
     ELSE
-        PRINT "batch55: FAILURES="; fails
+        ConPrint "batch55: FAILURES=" & STR$(fails)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

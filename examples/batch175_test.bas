@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch175_test.bas - the CONTROL geometry family (six statements)
 '---------------------------------------------------------------------
@@ -67,7 +96,7 @@
 ' Complexity note: O(1) - a fixed sequence of control and dialog calls.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg AS LONG
@@ -82,7 +111,7 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD BUTTON, hDlg, 101, "OK", 12, 12, 60, 24 TO hBtn
     IF hBtn = 0 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL ADD BUTTON returned no handle"
+        ConPrint "FAIL CONTROL ADD BUTTON returned no handle"
     END IF
 
     ' ---------------------------------------------------------------
@@ -92,27 +121,27 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET LOC hDlg, 101 TO v1, v2
     IF v1 <> 12 OR v2 <> 12 THEN
         fail = fail + 1
-        PRINT "FAIL get loc after add 12,12   ="; v1; ","; v2
+        ConPrint "FAIL get loc after add 12,12   =" & STR$(v1) & "," & STR$(v2)
     ELSE
-        PRINT "ok   get loc after add 12,12   = 12,12"
+        ConPrint "ok   get loc after add 12,12   = 12,12"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET SIZE hDlg, 101 TO v1, v2
     IF v1 <> 60 OR v2 <> 24 THEN
         fail = fail + 1
-        PRINT "FAIL get size after add 60x24  ="; v1; "x"; v2
+        ConPrint "FAIL get size after add 60x24  =" & STR$(v1) & "x" & STR$(v2)
     ELSE
-        PRINT "ok   get size after add 60x24  = 60x24"
+        ConPrint "ok   get size after add 60x24  = 60x24"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET CLIENT hDlg, 101 TO v1, v2
     IF v1 <> 60 OR v2 <> 24 THEN
         fail = fail + 1
-        PRINT "FAIL client of a borderless button ="; v1; "x"; v2; " (want 60x24)"
+        ConPrint "FAIL client of a borderless button =" & STR$(v1) & "x" & STR$(v2) & " (want 60x24)"
     ELSE
-        PRINT "ok   client of a borderless button = 60x24 (same as size)"
+        ConPrint "ok   client of a borderless button = 60x24 (same as size)"
     END IF
 
     ' ---------------------------------------------------------------
@@ -123,9 +152,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET LOC hDlg, 101 TO v1, v2
     IF v1 <> 20 OR v2 <> 32 THEN
         fail = fail + 1
-        PRINT "FAIL get loc after set 20,32   ="; v1; ","; v2
+        ConPrint "FAIL get loc after set 20,32   =" & STR$(v1) & "," & STR$(v2)
     ELSE
-        PRINT "ok   set loc 20,32 -> get loc  = 20,32"
+        ConPrint "ok   set loc 20,32 -> get loc  = 20,32"
     END IF
 
     CONTROL SET SIZE hDlg, 101, 80, 24
@@ -133,9 +162,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET SIZE hDlg, 101 TO v1, v2
     IF v1 <> 80 OR v2 <> 24 THEN
         fail = fail + 1
-        PRINT "FAIL get size after set 80x24  ="; v1; "x"; v2
+        ConPrint "FAIL get size after set 80x24  =" & STR$(v1) & "x" & STR$(v2)
     ELSE
-        PRINT "ok   set size 80x24 -> get size = 80x24"
+        ConPrint "ok   set size 80x24 -> get size = 80x24"
     END IF
 
     ' ---------------------------------------------------------------
@@ -146,9 +175,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET CLIENT hDlg, 101 TO v1, v2
     IF v1 <> 68 OR v2 <> 16 THEN
         fail = fail + 1
-        PRINT "FAIL get client after set 68x16 ="; v1; "x"; v2
+        ConPrint "FAIL get client after set 68x16 =" & STR$(v1) & "x" & STR$(v2)
     ELSE
-        PRINT "ok   set client 68x16 -> get   = 68x16"
+        ConPrint "ok   set client 68x16 -> get   = 68x16"
     END IF
 
     ' ---------------------------------------------------------------
@@ -161,17 +190,17 @@ FUNCTION PBMAIN () AS LONG
     DIALOG GET SIZE hDlg TO v1, v2
     IF v1 <> 300 OR v2 <> 150 THEN
         fail = fail + 1
-        PRINT "FAIL get size after DIALOG SET SIZE ="; v1; "x"; v2
+        ConPrint "FAIL get size after DIALOG SET SIZE =" & STR$(v1) & "x" & STR$(v2)
     ELSE
-        PRINT "ok   dialog set size 300x150 -> 300x150"
+        ConPrint "ok   dialog set size 300x150 -> 300x150"
     END IF
     v1 = -1 : v2 = -1
     DIALOG GET LOC hDlg TO v1, v2
     IF v1 <> 40 OR v2 <> 30 THEN
         fail = fail + 1
-        PRINT "FAIL dialog moved on DIALOG SET SIZE ="; v1; ","; v2
+        ConPrint "FAIL dialog moved on DIALOG SET SIZE =" & STR$(v1) & "," & STR$(v2)
     ELSE
-        PRINT "ok   dialog kept its position (40,30) through DIALOG SET SIZE"
+        ConPrint "ok   dialog kept its position (40,30) through DIALOG SET SIZE"
     END IF
 
     DIALOG SET LOC hDlg, 60, 50
@@ -179,9 +208,9 @@ FUNCTION PBMAIN () AS LONG
     DIALOG GET LOC hDlg TO v1, v2
     IF v1 <> 60 OR v2 <> 50 THEN
         fail = fail + 1
-        PRINT "FAIL dialog set loc 60,50 -> ="; v1; ","; v2
+        ConPrint "FAIL dialog set loc 60,50 -> =" & STR$(v1) & "," & STR$(v2)
     ELSE
-        PRINT "ok   dialog set loc 60,50 -> 60,50"
+        ConPrint "ok   dialog set loc 60,50 -> 60,50"
     END IF
 
     ' ---------------------------------------------------------------
@@ -195,12 +224,12 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SET CLIENT hDlg, 9999, 10, 10
     IF v1 <> 0 OR v2 <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL missing control id reported ="; v1; "x"; v2
+        ConPrint "FAIL missing control id reported =" & STR$(v1) & "x" & STR$(v2)
     ELSE
-        PRINT "ok   missing control id is harmless"
+        ConPrint "ok   missing control id is harmless"
     END IF
 
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

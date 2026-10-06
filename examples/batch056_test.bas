@@ -1,7 +1,35 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch56_test.bas
 ' GRAPHIC CIRCLE / POLYGON / GET CLIENT / GET LOC (batch 56)
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
     LOCAL px AS LONG
@@ -12,53 +40,53 @@ FUNCTION PBMAIN() AS LONG
 
     GRAPHIC BITMAP NEW 100, 50 TO hbmp
     IF hbmp = 0 THEN
-        PRINT "FAIL: bitmap handle is zero"
+        ConPrint "FAIL: bitmap handle is zero"
         INCR fails
     ELSE
-        PRINT "OK: bitmap handle "; hbmp
+        ConPrint "OK: bitmap handle " & STR$(hbmp)
     END IF
 
     GRAPHIC ATTACH hbmp
 
     GRAPHIC CIRCLE (50, 25), 15, 255
-    PRINT "OK: circle drawn"
+    ConPrint "OK: circle drawn"
 
     GRAPHIC GET PIXEL (50, 25) TO px
-    PRINT "OK: center pixel="; px
+    ConPrint "OK: center pixel=" & STR$(px)
     IF px <> 0 THEN
-        PRINT "OK: circle center non-zero"
+        ConPrint "OK: circle center non-zero"
     ELSE
-        PRINT "FAIL: circle center is zero"
+        ConPrint "FAIL: circle center is zero"
         INCR fails
     END IF
 
     GRAPHIC POLYGON (10,10)-(30,10)-(20,30), 255
-    PRINT "OK: polygon drawn"
+    ConPrint "OK: polygon drawn"
 
     GRAPHIC GET PIXEL (20, 20) TO px
-    PRINT "OK: polygon pixel="; px
+    ConPrint "OK: polygon pixel=" & STR$(px)
     IF px <> 0 THEN
-        PRINT "OK: polygon interior non-zero"
+        ConPrint "OK: polygon interior non-zero"
     ELSE
-        PRINT "FAIL: polygon interior is zero"
+        ConPrint "FAIL: polygon interior is zero"
         INCR fails
     END IF
 
     GRAPHIC GET CLIENT TO cw, ch
-    PRINT "OK: client="; cw; "x"; ch
+    ConPrint "OK: client=" & STR$(cw) & "x" & STR$(ch)
     IF cw = 100 AND ch = 50 THEN
-        PRINT "OK: client size correct"
+        ConPrint "OK: client size correct"
     ELSE
-        PRINT "FAIL: client size wrong"
+        ConPrint "FAIL: client size wrong"
         INCR fails
     END IF
 
     GRAPHIC GET LOC TO lx, ly
-    PRINT "OK: loc="; lx; ","; ly
+    ConPrint "OK: loc=" & STR$(lx) & "," & STR$(ly)
     IF lx = 0 AND ly = 0 THEN
-        PRINT "OK: loc correct"
+        ConPrint "OK: loc correct"
     ELSE
-        PRINT "FAIL: loc wrong"
+        ConPrint "FAIL: loc wrong"
         INCR fails
     END IF
 
@@ -66,10 +94,10 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC BITMAP END
 
     IF fails = 0 THEN
-        PRINT "batch56: ALL PASS"
+        ConPrint "batch56: ALL PASS"
     ELSE
-        PRINT "batch56: FAILURES="; fails
+        ConPrint "batch56: FAILURES=" & STR$(fails)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

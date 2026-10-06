@@ -1,8 +1,9 @@
+#COMPILE EXE
+#DIM ALL
 ' Tier-3 DDT: TEXTBOX + LABEL + BUTTON (EnterMov)
 ' Auto-generated: PowerBasilisk fork batch test
 
-#COMPILE EXE
-#DIM ALL
+
 
 %IDC_TEXT1 = 141
 %IDC_TEXT2 = 142
@@ -16,7 +17,7 @@
 %MB_TASKMODAL = 524288
 
 FUNCTION PBMAIN() AS LONG
-    LOCAL hDlg AS QUAD
+    LOCAL hDlg AS LONG
     DIALOG NEW 0, "Input text, press Enter",,, 191, 104, 0, 0 TO hDlg
     CONTROL ADD LABEL, hDlg, -1, "&Name", 5, 7, 30, 10
     CONTROL ADD TEXTBOX, hDlg, %IDC_TEXT1, "", 35, 5, 150, 13

@@ -1,5 +1,34 @@
 #COMPILE EXE
 #DIM ALL
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
+
 ' batch 27: ON CALL / GET$$+PUT$$ / MACRO
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
@@ -23,12 +52,12 @@ FUNCTION PBMAIN() AS LONG
     n = 0
     ON 1 CALL GetDouble() TO r, GetDouble() TO n
     IF r = 42 AND n = 0 THEN ok = ok + 1
-    PRINT "oncall-fn1: r="; r; " n="; n
+    ConPrint "oncall-fn1: r=" & STR$(r) & " n=" & STR$(n)
     r = 0
     n = 0
     ON 2 CALL GetDouble() TO r, GetDouble() TO n
     IF r = 0 AND n = 84 THEN ok = ok + 1
-    PRINT "oncall-fn2: r="; r; " n="; n
+    ConPrint "oncall-fn2: r=" & STR$(r) & " n=" & STR$(n)
 
     ' --- 3. GET$$ / PUT$$: wide string round-trip ---
     OPEN "WIDETEST.DAT" FOR BINARY AS #1
@@ -36,10 +65,10 @@ FUNCTION PBMAIN() AS LONG
     PUT$$ #1, "CD"
     SEEK #1, 1
     GET$$ #1, 2, s
-    PRINT "wide-read1: "; s
+    ConPrint "wide-read1: " & STR$(s)
     IF s = "AB" THEN ok = ok + 1
     GET$$ #1, 2, s
-    PRINT "wide-read2: "; s
+    ConPrint "wide-read2: " & STR$(s)
     IF s = "CD" THEN ok = ok + 1
     CLOSE #1
     KILL "WIDETEST.DAT"
@@ -47,13 +76,13 @@ FUNCTION PBMAIN() AS LONG
     ' --- 4. Single-line MACRO in an expression ---
     MACRO muldivide(p1, p2, p3) = ((p1 * p2) / p3)
     x = muldivide(3, 3, 2) + 10
-    PRINT "macro-expr: "; x
+    ConPrint "macro-expr: " & STR$(x)
     IF x = 14 THEN ok = ok + 1
 
     ' --- 5. No-arg single-line macro ---
     MACRO AppTitle = "PB27-MACRO"
     s = AppTitle
-    PRINT "macro-const: "; s
+    ConPrint "macro-const: " & STR$(s)
     IF s = "PB27-MACRO" THEN ok = ok + 1
 
     ' --- 6. Multi-line MACRO at statement position ---
@@ -66,29 +95,29 @@ FUNCTION PBMAIN() AS LONG
     n = 5
     i = 9
     Swap2(n, i)
-    PRINT "macro-swap: n="; n; " i="; i
+    ConPrint "macro-swap: n=" & STR$(n) & " i=" & STR$(i)
     IF n = 9 AND i = 5 THEN ok = ok + 1
 
-    PRINT "batch27 ok="; ok; " / 7"
+    ConPrint "batch27 ok=" & STR$(ok) & " / 7"
     IF ok = 7 THEN
-        PRINT "ALL PASS"
+        ConPrint "ALL PASS"
     ELSE
-        PRINT "FAIL"
+        ConPrint "FAIL"
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION
 
 SUB OneProc(v AS LONG)
-    PRINT "oncall-sub1: "; v
+    ConPrint "oncall-sub1: " & STR$(v)
 END SUB
 
 SUB TwoProc(v AS LONG)
-    PRINT "oncall-sub2: "; v
+    ConPrint "oncall-sub2: " & STR$(v)
 END SUB
 
 SUB ThreeProc()
-    PRINT "oncall-sub3"
+    ConPrint "oncall-sub3"
 END SUB
 
 FUNCTION GetDouble() AS LONG

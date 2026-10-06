@@ -1,7 +1,8 @@
-' EnterMov.bas - PowerBasilisk modified version
-
 #COMPILE EXE
 #DIM ALL
+' EnterMov.bas - PowerBasilisk modified version
+
+
 
 DECLARE FUNCTION GetFocus LIB "user32" ALIAS "GetFocus" () AS DWORD
 DECLARE FUNCTION GetNextDlgTabItem LIB "user32" ALIAS "GetNextDlgTabItem" (BYVAL hDlg AS DWORD, BYVAL hCtl AS DWORD, BYVAL lPrevious AS LONG) AS DWORD
@@ -23,7 +24,7 @@ DECLARE SUB SetFocus LIB "user32" ALIAS "SetFocus" (BYVAL hWnd AS DWORD)
 ' a built-in equate is not valid PB, so the definition is not needed here.
 
 FUNCTION PBMAIN() AS LONG
-    LOCAL hDlg AS QUAD
+    LOCAL hDlg AS LONG
     DIALOG NEW 0, "Input text, Press Enter or Shift+Enter",,, 191, 104, 0, 0 TO hDlg
     CONTROL ADD LABEL, hDlg, -1, "&Name", 5, 7, 30, 10
     CONTROL ADD TEXTBOX, hDlg, %IDC_TEXT1, "", 35, 5, 150, 13

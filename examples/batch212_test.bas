@@ -1,4 +1,33 @@
-#COMPILE EXE
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
+
 ' =====================================================================
 ' batch212_test.bas - witness for "CLASS ... INSTANCE" real storage
 ' ---------------------------------------------------------------------
@@ -27,8 +56,8 @@ FUNCTION PBMAIN() AS LONG
     q.x = 33
     q.y = 44
 
-    PRINT "p = "; p.x; ","; p.y
-    PRINT "q = "; q.x; ","; q.y
+    ConPrint "p = " & STR$(p.x) & "," & STR$(p.y)
+    ConPrint "q = " & STR$(q.x) & "," & STR$(q.y)
 
     IF p.x <> 11 THEN fails = fails + 1
     IF p.y <> 22 THEN fails = fails + 1
@@ -40,10 +69,10 @@ FUNCTION PBMAIN() AS LONG
     IF p.x = p.y THEN fails = fails + 1
 
     t = p
-    PRINT "t = "; t.x; ","; t.y
+    ConPrint "t = " & STR$(t.x) & "," & STR$(t.y)
     IF t.y <> 22 THEN fails = fails + 1
 
-    PRINT "=== FAILURES:"; fails; "==="
+    ConPrint "=== FAILURES:" & STR$(fails) & "==="
     FUNCTION = 0
 ' Press any key to exit...
 WAITKEY$

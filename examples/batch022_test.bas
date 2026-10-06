@@ -1,8 +1,37 @@
-' batch22_test.bas - LPRINT / TRACE / IMPORT / CALL DWORD (batch 22)
 #COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
+' batch22_test.bas - LPRINT / TRACE / IMPORT / CALL DWORD (batch 22)
+
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
-    LOCAL addr&&, hndl&&, t&
+    LOCAL addr&, hndl&, t&
     LOCAL s AS STRING
 
     ' --- LPRINT: attach to a file (device), print, formfeed, flush, close ---
@@ -17,11 +46,11 @@ FUNCTION PBMAIN() AS LONG
     OPEN "lprint_test.out" FOR INPUT AS #1
     LINE INPUT #1, s
     CLOSE #1
-    PRINT "lprint line1 = "; s
+    ConPrint "lprint line1 = " & STR$(s)
     IF INSTR(s, "Hello LPRINT") > 0 THEN
-        PRINT "LPRINT OK"
+        ConPrint "LPRINT OK"
     ELSE
-        PRINT "LPRINT FAIL"
+        ConPrint "LPRINT FAIL"
     END IF
 
     ' --- TRACE: explicit trace file ---
@@ -35,28 +64,28 @@ FUNCTION PBMAIN() AS LONG
     OPEN "trace_test.log" FOR INPUT AS #1
     LINE INPUT #1, s
     CLOSE #1
-    PRINT "trace line1 = "; s
+    ConPrint "trace line1 = " & STR$(s)
     IF INSTR(s, "marker-1") > 0 THEN
-        PRINT "TRACE OK"
+        ConPrint "TRACE OK"
     ELSE
-        PRINT "TRACE FAIL"
+        ConPrint "TRACE FAIL"
     END IF
 
     ' --- IMPORT ADDR + CALL DWORD (GetTickCount) ---
-    IMPORT ADDR "GetTickCount", "KERNEL32.DLL" TO addr&&, hndl&&
-    IF addr&& <> 0 THEN
-        CALL DWORD addr&& USING GetTickCount() TO t&
-        PRINT "tick = "; t&
+    IMPORT ADDR "GetTickCount", "KERNEL32.DLL" TO addr&, hndl&
+    IF addr& <> 0 THEN
+        CALL DWORD addr& USING GetTickCount() TO t&
+        ConPrint "tick = " & STR$(t&)
         IF t& > 0 THEN
-            PRINT "CALL DWORD OK"
+            ConPrint "CALL DWORD OK"
         ELSE
-            PRINT "CALL DWORD FAIL"
+            ConPrint "CALL DWORD FAIL"
         END IF
-        IMPORT CLOSE hndl&&
+        IMPORT CLOSE hndl&
     ELSE
-        PRINT "IMPORT ADDR FAIL"
+        ConPrint "IMPORT ADDR FAIL"
     END IF
 
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

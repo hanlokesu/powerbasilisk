@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 106: ARRAY SCAN / SELECT / TAGARRAY / REDIM
 FUNCTION PBMAIN() AS LONG
     LOCAL arr(10) AS LONG
@@ -11,21 +39,21 @@ FUNCTION PBMAIN() AS LONG
     NEXT i
     
     ' ARRAY SCAN
-    PRINT "Testing ARRAY SCAN..."
+    ConPrint "Testing ARRAY SCAN..."
     ARRAY SCAN arr(), = 30, TO idx
-    PRINT "  Found 30 at index: "; idx
+    ConPrint "  Found 30 at index: " & STR$(idx)
     
     ' ARRAY SELECT
-    PRINT "Testing ARRAY SELECT..."
+    ConPrint "Testing ARRAY SELECT..."
     ARRAY SELECT arr(), > 25, TO idx
-    PRINT "  First >25 at index: "; idx
+    ConPrint "  First >25 at index: " & STR$(idx)
     
     ' ARRAY REDIM
-    PRINT "Testing ARRAY REDIM..."
+    ConPrint "Testing ARRAY REDIM..."
     REDIM arr(20) AS LONG
-    PRINT "  REDIM to 20 elements OK"
+    ConPrint "  REDIM to 20 elements OK"
     
-    PRINT "ARRAY tests passed!"
-    PRINT "Press any key to exit..."
+    ConPrint "ARRAY tests passed!"
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

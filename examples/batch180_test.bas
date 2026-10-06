@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch180_test.bas - the GRAPHIC WINDOW family (batch 180)
 '---------------------------------------------------------------------
@@ -50,7 +79,7 @@
 ' Complexity note: O(1) - a fixed list of window messages and pixel reads.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 %WM_LBUTTONDOWN      = 513      ' 0x0201
 %WM_LBUTTONDBLCLK    = 515      ' 0x0203
@@ -91,8 +120,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL lp     AS QUAD
     LOCAL fail   AS LONG
 
-    PRINT "batch 180 - the GRAPHIC WINDOW family"
-    PRINT "-------------------------------------"
+    ConPrint "batch 180 - the GRAPHIC WINDOW family"
+    ConPrint "-------------------------------------"
 
     IMPORT ADDR "IsWindow",        "USER32.DLL" TO iswA, iswH
     IMPORT ADDR "IsWindowVisible", "USER32.DLL" TO isvA, isvH
@@ -105,7 +134,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetPixel",        "GDI32.DLL"  TO gpA, gpH
     IF iswA = 0 OR isvA = 0 OR icoA = 0 OR gcnA = 0 OR smA = 0 OR uwA = 0 OR dcA = 0 OR rdA = 0 OR gpA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
+        ConPrint "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -114,39 +143,39 @@ FUNCTION PBMAIN () AS LONG
     hGr = 0
     GRAPHIC WINDOW NEW "batch 180 - graphic window", 60, 60, 320, 240 TO hGr
     IF hGr <> 0 THEN
-        PRINT "ok   GRAPHIC WINDOW NEW returned a handle"
+        ConPrint "ok   GRAPHIC WINDOW NEW returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC WINDOW NEW handle"
+        ConPrint "FAIL GRAPHIC WINDOW NEW handle"
     END IF
 
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   the handle is a live window (IsWindow)"
+        ConPrint "ok   the handle is a live window (IsWindow)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IsWindow(hGr)="; st
+        ConPrint "FAIL IsWindow(hGr)=" & STR$(st)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hGr, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "PBGRAPHIC_CLASS") > 0 THEN
-        PRINT "ok   it is the PBGRAPHIC_CLASS window of this batch"
+        ConPrint "ok   it is the PBGRAPHIC_CLASS window of this batch"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window class (len"; n; ")"
+        ConPrint "FAIL window class (len" & STR$(n) & ")"
     END IF
 
     ' No HIDE keyword means the documented default: the window is visible.
     st = 0
     CALL DWORD isvA USING IsWindowVisible(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   NEW without HIDE creates a visible window"
+        ConPrint "ok   NEW without HIDE creates a visible window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL visibility after NEW ="; st
+        ConPrint "FAIL visibility after NEW =" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -157,10 +186,10 @@ FUNCTION PBMAIN () AS LONG
     cyf = -1
     GRAPHIC WINDOW CLICK hGr TO ck, cxf, cyf
     IF ck = 0 AND cxf = 0 AND cyf = 0 THEN
-        PRINT "ok   CLICK with no click answers 0 and zero coordinates"
+        ConPrint "ok   CLICK with no click answers 0 and zero coordinates"
     ELSE
         fail = fail + 1
-        PRINT "FAIL idle click="; ck; " x="; cxf; " y="; cyf
+        ConPrint "FAIL idle click=" & STR$(ck) & " x=" & STR$(cxf) & " y=" & STR$(cyf)
     END IF
 
     ' ------------------------------------------------------------------
@@ -177,26 +206,26 @@ FUNCTION PBMAIN () AS LONG
     cyf = -1
     GRAPHIC WINDOW CLICK hGr TO ck, cxf, cyf
     IF ck = 1 THEN
-        PRINT "ok   a single click is reported as click&=1"
+        ConPrint "ok   a single click is reported as click&=1"
     ELSE
         fail = fail + 1
-        PRINT "FAIL single click="; ck
+        ConPrint "FAIL single click=" & STR$(ck)
     END IF
     IF cxf = 37 AND cyf = 21 THEN
-        PRINT "ok   CLICK reports the client coordinates (x!=37, y!=21)"
+        ConPrint "ok   CLICK reports the client coordinates (x!=37, y!=21)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL click coordinates x="; cxf; " y="; cyf
+        ConPrint "FAIL click coordinates x=" & STR$(cxf) & " y=" & STR$(cyf)
     END IF
 
     ' The click is consumed: the same read with no new click must answer 0.
     ck = -1
     GRAPHIC WINDOW CLICK hGr TO ck, cxf, cyf
     IF ck = 0 THEN
-        PRINT "ok   the click is consumed by the read"
+        ConPrint "ok   the click is consumed by the read"
     ELSE
         fail = fail + 1
-        PRINT "FAIL click not consumed, second read="; ck
+        ConPrint "FAIL click not consumed, second read=" & STR$(ck)
     END IF
 
     ' A double click answers 2.
@@ -205,10 +234,10 @@ FUNCTION PBMAIN () AS LONG
     ck = -1
     GRAPHIC WINDOW CLICK hGr TO ck, cxf, cyf
     IF ck = 2 THEN
-        PRINT "ok   a double click is reported as click&=2"
+        ConPrint "ok   a double click is reported as click&=2"
     ELSE
         fail = fail + 1
-        PRINT "FAIL double click="; ck
+        ConPrint "FAIL double click=" & STR$(ck)
     END IF
 
     ' ------------------------------------------------------------------
@@ -225,10 +254,10 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gpA USING GetPixel(hdc, 5, 5) TO px
     CALL DWORD rdA USING ReleaseDC(hGr, hdc) TO n
     IF px = %RED THEN
-        PRINT "ok   GRAPHIC CLEAR painted the new window (no ATTACH needed)"
+        ConPrint "ok   GRAPHIC CLEAR painted the new window (no ATTACH needed)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL painted pixel="; px; " expected="; %RED
+        ConPrint "FAIL painted pixel=" & STR$(px) & " expected=" & STR$(%RED)
     END IF
 
     ' A second colour proves the WM_PAINT path is repeatable, not a one-off.
@@ -242,10 +271,10 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gpA USING GetPixel(hdc, 5, 5) TO px
     CALL DWORD rdA USING ReleaseDC(hGr, hdc) TO n
     IF px = %BLUE THEN
-        PRINT "ok   the display is persistent across a second WM_PAINT"
+        ConPrint "ok   the display is persistent across a second WM_PAINT"
     ELSE
         fail = fail + 1
-        PRINT "FAIL second painted pixel="; px; " expected="; %BLUE
+        ConPrint "FAIL second painted pixel=" & STR$(px) & " expected=" & STR$(%BLUE)
     END IF
 
     ' ------------------------------------------------------------------
@@ -255,40 +284,40 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD isvA USING IsWindowVisible(hGr) TO st
     IF st = 0 THEN
-        PRINT "ok   HIDE makes the window invisible"
+        ConPrint "ok   HIDE makes the window invisible"
     ELSE
         fail = fail + 1
-        PRINT "FAIL visibility after HIDE ="; st
+        ConPrint "FAIL visibility after HIDE =" & STR$(st)
     END IF
 
     GRAPHIC WINDOW NORMALIZE hGr
     st = 0
     CALL DWORD isvA USING IsWindowVisible(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   NORMALIZE makes it visible again"
+        ConPrint "ok   NORMALIZE makes it visible again"
     ELSE
         fail = fail + 1
-        PRINT "FAIL visibility after NORMALIZE ="; st
+        ConPrint "FAIL visibility after NORMALIZE =" & STR$(st)
     END IF
 
     GRAPHIC WINDOW MINIMIZE hGr
     st = 0
     CALL DWORD icoA USING IsIconic(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   MINIMIZE minimizes the window (IsIconic)"
+        ConPrint "ok   MINIMIZE minimizes the window (IsIconic)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IsIconic after MINIMIZE ="; st
+        ConPrint "FAIL IsIconic after MINIMIZE =" & STR$(st)
     END IF
 
     GRAPHIC WINDOW NORMALIZE hGr
     st = 0
     CALL DWORD icoA USING IsIconic(hGr) TO st
     IF st = 0 THEN
-        PRINT "ok   NORMALIZE also clears the minimized state"
+        ConPrint "ok   NORMALIZE also clears the minimized state"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IsIconic after NORMALIZE ="; st
+        ConPrint "FAIL IsIconic after NORMALIZE =" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -299,20 +328,20 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hTx) TO st
     IF hTx <> 0 AND st <> 0 THEN
-        PRINT "ok   GRAPHIC WINDOW TEXT created a live window"
+        ConPrint "ok   GRAPHIC WINDOW TEXT created a live window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXT window hTx="; hTx; " IsWindow="; st
+        ConPrint "FAIL TEXT window hTx=" & STR$(hTx) & " IsWindow=" & STR$(st)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hTx, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "PBGRAPHIC_CLASS") > 0 THEN
-        PRINT "ok   the TEXT window shares the same window class"
+        ConPrint "ok   the TEXT window shares the same window class"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXT window class (len"; n; ")"
+        ConPrint "FAIL TEXT window class (len" & STR$(n) & ")"
     END IF
 
     ' ------------------------------------------------------------------
@@ -326,10 +355,10 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   STABILIZE refuses WM_CLOSE"
+        ConPrint "ok   STABILIZE refuses WM_CLOSE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL stabilized window closed anyway"
+        ConPrint "FAIL stabilized window closed anyway"
     END IF
 
     GRAPHIC WINDOW NONSTABLE hGr
@@ -338,10 +367,10 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st = 0 THEN
-        PRINT "ok   NONSTABLE allows the close again"
+        ConPrint "ok   NONSTABLE allows the close again"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window survived a close after NONSTABLE"
+        ConPrint "FAIL window survived a close after NONSTABLE"
     END IF
 
     ' ------------------------------------------------------------------
@@ -351,13 +380,13 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD iswA USING IsWindow(hTx) TO st
     IF st = 0 THEN
-        PRINT "ok   GRAPHIC WINDOW END destroyed the TEXT window"
+        ConPrint "ok   GRAPHIC WINDOW END destroyed the TEXT window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL window survived END"
+        ConPrint "FAIL window survived END"
     END IF
 
-    PRINT "-------------------------------------"
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "-------------------------------------"
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     FUNCTION = fail
 END FUNCTION

@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: CONTROL ADD PROGRESSBAR
 ' Click button to update label
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hProg AS QUAD

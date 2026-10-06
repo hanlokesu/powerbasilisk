@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch219_test.bas
 ' batch 219: the statements whose argument-count guard became loud.
 ' This sample drives two of them (FILECOPY, SETATTR) with the argument counts
@@ -20,39 +48,40 @@ FUNCTION PBMAIN () AS LONG
     FILECOPY src, dst
     e = ERR
     IF e = 0 AND ISFILE(dst) THEN
-        PRINT "OK: FILECOPY copied the file"
+        ConPrint "OK: FILECOPY copied the file"
     ELSE
-        PRINT "FAIL: FILECOPY err="; e
+        ConPrint "FAIL: FILECOPY err=" & STR$(e)
         INCR fails
     END IF
 
     SETATTR dst, 1
     e = ERR
     IF e = 0 AND ISFILE(dst) THEN
-        PRINT "OK: SETATTR accepted the attribute"
+        ConPrint "OK: SETATTR accepted the attribute"
     ELSE
-        PRINT "FAIL: SETATTR err="; e
+        ConPrint "FAIL: SETATTR err=" & STR$(e)
         INCR fails
     END IF
 
     SETATTR dst, 0
-    IF ERR = 0 THEN PRINT "OK: SETATTR cleared the attribute"
+    IF ERR = 0 THEN ConPrint "OK: SETATTR cleared the attribute"
 
     KILL src
     KILL dst
     IF ISFILE(src) = 0 AND ISFILE(dst) = 0 THEN
-        PRINT "OK: temporary files removed"
+        ConPrint "OK: temporary files removed"
     ELSE
-        PRINT "FAIL: temporary files left behind"
+        ConPrint "FAIL: temporary files left behind"
         INCR fails
     END IF
 
     IF fails = 0 THEN
-        PRINT "batch219: ALL PASS"
+        ConPrint "batch219: ALL PASS"
     ELSE
-        PRINT "batch219: FAILURES="; fails
+        ConPrint "batch219: FAILURES=" & STR$(fails)
     END IF
-    PRINT "=== FAILURES: "; fails; " ==="
+    ConPrint "=== FAILURES: " & STR$(fails) & " ==="
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION
+

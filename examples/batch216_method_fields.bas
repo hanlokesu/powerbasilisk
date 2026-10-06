@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PBXB64 Example - batch 216 witness: a METHOD changes the object it was
 ' called on, and two objects keep separate state.
@@ -23,7 +52,7 @@
 '   === FAILURES:0 ===
 ' Complexity: O(1) - four field reads, five comparisons.
 '=====================================================================
-#COMPILE EXE
+
 CLASS Box
     INSTANCE v AS LONG
     METHOD SetIt(n AS LONG) AS LONG
@@ -45,10 +74,10 @@ FUNCTION PBMAIN() AS LONG
     b.v = 22
 
     got = Box_SetIt(a, 33)
-    PRINT "a.v after SetIt(33) ="; a.v
-    PRINT "b.v untouched       ="; b.v
-    PRINT "a.v via GetIt()     ="; Box_GetIt(a)
-    PRINT "b.v via GetIt()     ="; Box_GetIt(b)
+    ConPrint "a.v after SetIt(33) =" & STR$(a.v)
+    ConPrint "b.v untouched       =" & STR$(b.v)
+    ConPrint "a.v via GetIt()     =" & STR$(Box_GetIt(a))
+    ConPrint "b.v via GetIt()     =" & STR$(Box_GetIt(b))
 
     IF got <> 33 THEN fails = fails + 1
     IF a.v <> 33 THEN fails = fails + 1
@@ -57,9 +86,9 @@ FUNCTION PBMAIN() AS LONG
     IF Box_GetIt(b) <> 22 THEN fails = fails + 1
 
     IF fails = 0 THEN
-        PRINT "=== FAILURES:0 ==="
+        ConPrint "=== FAILURES:0 ==="
     ELSE
-        PRINT "=== FAILURES:"; fails; " ==="
+        ConPrint "=== FAILURES:" & STR$(fails) & " ==="
     END IF
     FUNCTION = 0
 ' Press any key to exit...

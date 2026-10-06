@@ -1,3 +1,4 @@
+#COMPILE EXE
 '=====================================================================
 ' Batch 158 test - LISTVIEW + TREEVIEW common controls
 '---------------------------------------------------------------------
@@ -14,8 +15,8 @@
 ' (First = 1), which is the convention the official PowerBASIC help
 ' documents and the one the runtime now implements.
 '=====================================================================
-#CONSOLE OFF
-#COMPILE EXE
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
+
 
 GLOBAL g_hDlg   AS QUAD
 GLOBAL hLV      AS QUAD

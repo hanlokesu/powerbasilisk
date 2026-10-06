@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' batch21_test.bas - COMM serial port + THREAD statements (batch 21)
 ' worker uses a GLOBAL stop flag + SLEEP loop so it can exit before the
 ' process does - an infinite DO:LOOP worker made process exit hang.
@@ -6,32 +34,32 @@ GLOBAL g_stop AS LONG
 FUNCTION PBMAIN() AS LONG
     LOCAL id AS LONG, st AS LONG, p AS LONG
 
-    PRINT "== COMM (no real COM port: expect graceful failure, no crash) =="
+    ConPrint "== COMM (no real COM port: expect graceful failure, no crash) =="
     COMM OPEN "COM1" AS #0, BAUD 9600, PARITY "N", DATA 8, STOP 1
     COMM RESET
-    PRINT "COMM OK (no crash)"
+    ConPrint "COMM OK (no crash)"
 
-    PRINT "== THREAD =="
+    ConPrint "== THREAD =="
     THREAD CREATE worker TO id
     IF id < 0 THEN
-        PRINT "THREAD CREATE FAILED rc="; id
+        ConPrint "THREAD CREATE FAILED rc=" & STR$(id)
     ELSE
-        PRINT "thread id="; id
+        ConPrint "thread id=" & STR$(id)
         THREAD STATUS id TO st
-        PRINT "status="; st
+        ConPrint "status=" & STR$(st)
         THREAD SET PRIORITY id, 0
         THREAD GET PRIORITY id TO p
-        PRINT "priority="; p
+        ConPrint "priority=" & STR$(p)
         THREAD SUSPEND id
         THREAD STATUS id TO st
-        PRINT "after suspend status="; st
+        ConPrint "after suspend status=" & STR$(st)
         THREAD RESUME id
         THREAD STATUS id TO st
-        PRINT "after resume status="; st
+        ConPrint "after resume status=" & STR$(st)
         g_stop = 1
         SLEEP 20
         THREAD CLOSE id
-        PRINT "THREAD OK"
+        ConPrint "THREAD OK"
     END IF
 
     WAITKEY$

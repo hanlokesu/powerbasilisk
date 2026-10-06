@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: ALL GUI controls combined demo
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hEdit AS QUAD
 GLOBAL g_hChk AS QUAD

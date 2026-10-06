@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 75 Test: XPRINT CELL/SELECTION/PAPER/TRAY + RESOURCE SAVE FILE
 FUNCTION PBMAIN() AS LONG
     LOCAL v AS LONG
@@ -7,39 +35,39 @@ FUNCTION PBMAIN() AS LONG
     LOCAL fails AS LONG
     fails = 0
 
-    PRINT "=== Batch 75: XPRINT cell + selection + paper + tray + resource ==="
+    ConPrint "=== Batch 75: XPRINT cell + selection + paper + tray + resource ==="
 
     XPRINT ATTACH DEFAULT
 
     XPRINT CELL 5, 10
-    PRINT "CELL: set (5,10) - no crash"
+    ConPrint "CELL: set (5,10) - no crash"
 
     XPRINT GET SELECTION TO sel$
-    PRINT "SELECTION: ["; sel$; "]"
-    IF sel$ <> "" THEN fails = fails + 1 : PRINT "  FAIL (expected empty)"
+    ConPrint "SELECTION: [" & sel$ & "]"
+    IF sel$ <> "" THEN fails = fails + 1 : ConPrint "  FAIL (expected empty)"
 
     XPRINT SET PAPER 9
     XPRINT GET PAPER TO v
-    PRINT "PAPER:"; v
-    IF v <> 9 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "PAPER:" & STR$(v)
+    IF v <> 9 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT SET TRAY 3
     XPRINT GET TRAY TO v
-    PRINT "TRAY:"; v
-    IF v <> 3 THEN fails = fails + 1 : PRINT "  FAIL"
+    ConPrint "TRAY:" & STR$(v)
+    IF v <> 3 THEN fails = fails + 1 : ConPrint "  FAIL"
 
     XPRINT CLOSE
 
     RESOURCE SAVE FILE "TEST", "test_resource.tmp"
-    PRINT "RESOURCE SAVE FILE: done"
+    ConPrint "RESOURCE SAVE FILE: done"
 
-    PRINT "=== Result: ";
+    ConPrint "=== Result: "
     IF fails = 0 THEN
-        PRINT "ALL PASS"
+        ConPrint "ALL PASS"
     ELSE
-        PRINT fails; " FAILED"
+        ConPrint STR$(fails) & " FAILED"
     END IF
 
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

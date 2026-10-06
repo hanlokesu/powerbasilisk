@@ -1,35 +1,63 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch54_test.bas
 ' GRAPHIC WIDTH / STYLE / SAVE (batch 54)
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
 
     GRAPHIC BITMAP NEW 100, 50 TO hbmp
     IF hbmp = 0 THEN
-        PRINT "FAIL: bitmap handle is zero"
+        ConPrint "FAIL: bitmap handle is zero"
         INCR fails
     ELSE
-        PRINT "OK: bitmap handle "; hbmp
+        ConPrint "OK: bitmap handle " & STR$(hbmp)
     END IF
 
     GRAPHIC ATTACH hbmp
     GRAPHIC WIDTH 3
-    PRINT "OK: width set"
+    ConPrint "OK: width set"
 
     GRAPHIC STYLE 0
-    PRINT "OK: style set"
+    ConPrint "OK: style set"
 
     GRAPHIC LINE (10,10)-(90,40), 255
-    PRINT "OK: line drawn"
+    ConPrint "OK: line drawn"
 
     GRAPHIC SAVE "batch54_out.bmp"
-    PRINT "OK: saved"
+    ConPrint "OK: saved"
 
     IF ISFILE("batch54_out.bmp") THEN
-        PRINT "OK: file exists"
+        ConPrint "OK: file exists"
     ELSE
-        PRINT "FAIL: bmp file missing"
+        ConPrint "FAIL: bmp file missing"
         INCR fails
     END IF
 
@@ -38,10 +66,10 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC BITMAP END
 
     IF fails = 0 THEN
-        PRINT "batch54: ALL PASS"
+        ConPrint "batch54: ALL PASS"
     ELSE
-        PRINT "batch54: FAILURES="; fails
+        ConPrint "batch54: FAILURES=" & STR$(fails)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

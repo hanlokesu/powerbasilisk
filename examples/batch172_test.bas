@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 172 regression test
 '---------------------------------------------------------------------
@@ -63,7 +92,7 @@
 '   below meaningless.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg    AS LONG
@@ -89,15 +118,15 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD TREEVIEW, hDlg, 602, 175, 10, 150, 180 TO hTvDef
 
     IF hTv = 0 OR hTvDef = 0 THEN
-        PRINT "FAIL: a TREEVIEW control came back NULL"
-        PRINT "  tv="; hTv; " tvdef="; hTvDef
+        ConPrint "FAIL: a TREEVIEW control came back NULL"
+        ConPrint "  tv=" & STR$(hTv) & " tvdef=" & STR$(hTvDef)
         DIALOG END hDlg, 1
         FUNCTION = 1
         EXIT FUNCTION
     END IF
 
     ' ---------------- regression: INSERT ITEM + GET COUNT ----------------
-    PRINT "--- insert / count ---"
+    ConPrint "--- insert / count ---"
     ' parent 0 means "root level", hInsertAfter 0 means "append last";
     ' both are the shortcuts this fork documents for the 0xFFFF0000 /
     ' 0xFFFFFFFE literals.
@@ -105,101 +134,101 @@ FUNCTION PBMAIN () AS LONG
     TREEVIEW INSERT ITEM hDlg, 601, hRoot, 0, 0, 0, "Child A" TO hA
     TREEVIEW INSERT ITEM hDlg, 601, hRoot, 0, 0, 0, "Child B" TO hB
     TREEVIEW GET COUNT hDlg, 601 TO n
-    PRINT "count        -> "; n
+    ConPrint "count        -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
     IF hRoot = 0 OR hA = 0 OR hB = 0 THEN
-        PRINT "FAIL: INSERT ITEM returned a NULL handle"
+        ConPrint "FAIL: INSERT ITEM returned a NULL handle"
         fail = fail + 1
     END IF
 
     ' ---------------- GET ROOT / CHILD / NEXT / PREVIOUS / PARENT --------
-    PRINT "--- navigation ---"
+    ConPrint "--- navigation ---"
     h = 0
     TREEVIEW GET ROOT hDlg, 601 TO h
-    PRINT "root == hRoot -> "; h; " / "; hRoot
+    ConPrint "root == hRoot -> " & STR$(h) & " / " & STR$(hRoot)
     IF h <> hRoot THEN fail = fail + 1
 
     h = 0
     TREEVIEW GET CHILD hDlg, 601, hRoot TO h
-    PRINT "child == hA  -> "; h; " / "; hA
+    ConPrint "child == hA  -> " & STR$(h) & " / " & STR$(hA)
     IF h <> hA THEN fail = fail + 1
 
     h = 0
     TREEVIEW GET NEXT hDlg, 601, hA TO h
-    PRINT "next == hB   -> "; h; " / "; hB
+    ConPrint "next == hB   -> " & STR$(h) & " / " & STR$(hB)
     IF h <> hB THEN fail = fail + 1
 
     h = 0
     TREEVIEW GET PREVIOUS hDlg, 601, hB TO h
-    PRINT "prev == hA   -> "; h; " / "; hA
+    ConPrint "prev == hA   -> " & STR$(h) & " / " & STR$(hA)
     IF h <> hA THEN fail = fail + 1
 
     h = 0
     TREEVIEW GET PARENT hDlg, 601, hA TO h
-    PRINT "parent == hRoot -> "; h; " / "; hRoot
+    ConPrint "parent == hRoot -> " & STR$(h) & " / " & STR$(hRoot)
     IF h <> hRoot THEN fail = fail + 1
 
     ' The four "there is no such item" paths all promise 0.
     h = 99
     TREEVIEW GET CHILD hDlg, 601, hA TO h
-    PRINT "leaf child   -> "; h
+    ConPrint "leaf child   -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     h = 99
     TREEVIEW GET NEXT hDlg, 601, hB TO h
-    PRINT "last next    -> "; h
+    ConPrint "last next    -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     h = 99
     TREEVIEW GET PREVIOUS hDlg, 601, hRoot TO h
-    PRINT "first prev   -> "; h
+    ConPrint "first prev   -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     h = 99
     TREEVIEW GET PARENT hDlg, 601, hRoot TO h
-    PRINT "root parent  -> "; h
+    ConPrint "root parent  -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     ' ---------------- SET / GET EXPANDED, BOLD, CHECK, USER -------------
-    PRINT "--- GET/SET state ---"
+    ConPrint "--- GET/SET state ---"
     TREEVIEW SET EXPANDED hDlg, 601, hRoot, 1
     TREEVIEW GET EXPANDED hDlg, 601, hRoot TO n
-    PRINT "expanded on  -> "; n
+    ConPrint "expanded on  -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     TREEVIEW SET EXPANDED hDlg, 601, hRoot, 0
     TREEVIEW GET EXPANDED hDlg, 601, hRoot TO n
-    PRINT "expanded off -> "; n
+    ConPrint "expanded off -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     TREEVIEW SET BOLD hDlg, 601, hA, 1
     TREEVIEW GET BOLD hDlg, 601, hA TO n
-    PRINT "bold on      -> "; n
+    ConPrint "bold on      -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     TREEVIEW SET BOLD hDlg, 601, hA, 0
     TREEVIEW GET BOLD hDlg, 601, hA TO n
-    PRINT "bold off     -> "; n
+    ConPrint "bold off     -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     TREEVIEW SET CHECK hDlg, 601, hA, 1
     TREEVIEW GET CHECK hDlg, 601, hA TO n
-    PRINT "check on     -> "; n
+    ConPrint "check on     -> " & STR$(n)
     IF n <> -1 THEN fail = fail + 1
     TREEVIEW SET CHECK hDlg, 601, hA, 0
     TREEVIEW GET CHECK hDlg, 601, hA TO n
-    PRINT "check off    -> "; n
+    ConPrint "check off    -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     TREEVIEW SET USER hDlg, 601, hA, 1234
     TREEVIEW GET USER hDlg, 601, hA TO n
-    PRINT "user         -> "; n
+    ConPrint "user         -> " & STR$(n)
     IF n <> 1234 THEN fail = fail + 1
 
     ' ---------------- SET TEXT + SELECT / UNSELECT ----------------------
-    PRINT "--- text / selection ---"
+    ConPrint "--- text / selection ---"
     TREEVIEW SET TEXT hDlg, 601, hB, "Renamed"
     t = ""
     TREEVIEW GET TEXT hDlg, 601, hB TO t
-    PRINT "text         -> ["; t; "]"
+    ConPrint "text         -> [" & STR$(t) & "]"
     ' Byte-wise comparison on purpose: this fork's CHR$() emits
     ' "trunc i8 to i8" for a BYTE argument and clang rejects that, so the
     ' expected string is compared through ASC()/MID$() instead.
@@ -216,13 +245,13 @@ FUNCTION PBMAIN () AS LONG
     TREEVIEW SELECT hDlg, 601, hB
     h = 0
     TREEVIEW GET SELECT hDlg, 601 TO h
-    PRINT "select       -> "; h; " / "; hB
+    ConPrint "select       -> " & STR$(h) & " / " & STR$(hB)
     IF h <> hB THEN fail = fail + 1
 
     TREEVIEW UNSELECT hDlg, 601
     h = 99
     TREEVIEW GET SELECT hDlg, 601 TO h
-    PRINT "after unselect -> "; h
+    ConPrint "after unselect -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     ' SET IMAGELIST takes an HIMAGELIST and has no read-back statement in
@@ -231,41 +260,41 @@ FUNCTION PBMAIN () AS LONG
     TREEVIEW SET IMAGELIST hDlg, 601, 0
 
     ' ---------------- CHECK on a control without %TVS_CHECKBOXES --------
-    PRINT "--- checkbox negative case (control without %TVS_CHECKBOXES) ---"
+    ConPrint "--- checkbox negative case (control without %TVS_CHECKBOXES) ---"
     TREEVIEW INSERT ITEM hDlg, 602, 0, 0, 0, 0, "Plain" TO h
     n = 99
     TREEVIEW GET CHECK hDlg, 602, h TO n
-    PRINT "check nodefault -> "; n
+    ConPrint "check nodefault -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ---------------- DELETE / RESET / error paths ----------------------
-    PRINT "--- delete / reset / error paths ---"
+    ConPrint "--- delete / reset / error paths ---"
     TREEVIEW DELETE hDlg, 601, hB
     TREEVIEW GET COUNT hDlg, 601 TO n
-    PRINT "count after del -> "; n
+    ConPrint "count after del -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
 
     TREEVIEW RESET hDlg, 601
     TREEVIEW GET COUNT hDlg, 601 TO n
-    PRINT "after reset  -> "; n
+    ConPrint "after reset  -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' An id that does not exist must report "nothing" rather than crash:
     ' the runtime resolves it with GetDlgItem() and returns 0.
     n = 99
     TREEVIEW GET COUNT hDlg, 699 TO n
-    PRINT "bad id count -> "; n
+    ConPrint "bad id count -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
     h = 99
     TREEVIEW GET ROOT hDlg, 699 TO h
-    PRINT "bad id root  -> "; h
+    ConPrint "bad id root  -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
     n = 99
     TREEVIEW GET BOLD hDlg, 699, 0 TO n
-    PRINT "bad id bold  -> "; n
+    ConPrint "bad id bold  -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
-    PRINT "=== FAILURES: "; fail; " ==="
+    ConPrint "=== FAILURES: " & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

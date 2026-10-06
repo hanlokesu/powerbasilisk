@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 67 test
 ' ARRAY ADD arr1(), arr2() — element-wise addition
 FUNCTION PBMAIN() AS LONG
@@ -21,7 +49,7 @@ FUNCTION PBMAIN() AS LONG
     IF a(1) = 11 AND a(2) = 22 AND a(3) = 33 AND a(4) = 44 THEN
         ok = ok + 1
     ELSE
-        PRINT "FAIL: LONG array add"; a(1); a(2); a(3); a(4)
+        ConPrint "FAIL: LONG array add" & STR$(STR$(a(1))) & STR$(STR$(a(2))) & STR$(STR$(a(3))) & STR$(STR$(a(4)))
     END IF
 
     ' test with SINGLE (float)
@@ -33,7 +61,7 @@ FUNCTION PBMAIN() AS LONG
     IF fa(1) = 2.0 AND fa(2) = 3.5 AND fa(3) = 5.0 THEN
         ok = ok + 1
     ELSE
-        PRINT "FAIL: SINGLE array add"; fa(1); fa(2); fa(3)
+        ConPrint "FAIL: SINGLE array add" & STR$(STR$(fa(1))) & STR$(STR$(fa(2))) & STR$(STR$(fa(3)))
     END IF
 
     ' test with BYTE
@@ -45,7 +73,7 @@ FUNCTION PBMAIN() AS LONG
     IF ca(1) = 101 AND ca(2) = 202 AND ca(3) = 53 THEN
         ok = ok + 1
     ELSE
-        PRINT "FAIL: BYTE array add"; ca(1); ca(2); ca(3)
+        ConPrint "FAIL: BYTE array add" & STR$(STR$(ca(1))) & STR$(STR$(ca(2))) & STR$(STR$(ca(3)))
     END IF
 
     ' test with QUAD (64-bit)
@@ -57,14 +85,15 @@ FUNCTION PBMAIN() AS LONG
     IF qa(1) = 10000000001 AND qa(2) = 20000000002 THEN
         ok = ok + 1
     ELSE
-        PRINT "FAIL: QUAD array add"; qa(1); qa(2)
+        ConPrint "FAIL: QUAD array add" & STR$(STR$(qa(1))) & STR$(STR$(qa(2)))
     END IF
 
     IF ok = 4 THEN
-        PRINT "ALL PASS (4/4)"
+        ConPrint "ALL PASS (4/4)"
     ELSE
-        PRINT "FAIL: "; ok
+        ConPrint "FAIL: " & STR$(ok)
     END IF
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

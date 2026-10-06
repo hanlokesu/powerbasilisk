@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PBXB64 / PowerBasilisk Enhanced - batch 177 test
 ' ---------------------------------------------------------------------
@@ -76,7 +105,7 @@
 ' interesting part is the style/class/state plumbing, not any algorithm.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg   AS LONG
@@ -105,15 +134,15 @@ FUNCTION PBMAIN () AS LONG
     LOCAL v2     AS LONG
     LOCAL fail   AS LONG
 
-    PRINT "batch 177 - plain and static CONTROL family"
-    PRINT "------------------------------------------"
+    ConPrint "batch 177 - plain and static CONTROL family"
+    ConPrint "------------------------------------------"
 
     IMPORT ADDR "SendMessageA", "USER32.DLL" TO smA, smH
     IMPORT ADDR "GetWindowLongA", "USER32.DLL" TO gwlA, gwlH
     IMPORT ADDR "GetClassNameA", "USER32.DLL" TO gcnA, gcnH
     IF smA = 0 OR gwlA = 0 OR gcnA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
+        ConPrint "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
     END IF
 
     ' The dialog is shown modeless: a modal dialog would need a human to
@@ -139,22 +168,22 @@ FUNCTION PBMAIN () AS LONG
     ' clause is optional.
     ' ------------------------------------------------------------------
     IF hOpt1 <> 0 THEN
-        PRINT "ok   CONTROL ADD OPTION returned a handle"
+        ConPrint "ok   CONTROL ADD OPTION returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL ADD OPTION returned 0"
+        ConPrint "FAIL CONTROL ADD OPTION returned 0"
     END IF
     IF hOpt2 <> 0 AND hOpt3 <> 0 THEN
-        PRINT "ok   the second and third OPTION returned handles"
+        ConPrint "ok   the second and third OPTION returned handles"
     ELSE
         fail = fail + 1
-        PRINT "FAIL OPTION handles 2/3"
+        ConPrint "FAIL OPTION handles 2/3"
     END IF
     IF hC3 <> 0 AND hTb <> 0 AND hLn <> 0 THEN
-        PRINT "ok   CHECK3STATE / TEXTBOX / LINE returned handles"
+        ConPrint "ok   CHECK3STATE / TEXTBOX / LINE returned handles"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE / TEXTBOX / LINE handle"
+        ConPrint "FAIL CHECK3STATE / TEXTBOX / LINE handle"
     END IF
 
     ' FRAME carries no TO clause in the official syntax.  CONTROL HANDLE has
@@ -163,10 +192,10 @@ FUNCTION PBMAIN () AS LONG
     CONTROL HANDLE hDlg, 221 TO hTmp
     hFr = hTmp
     IF hFr <> 0 THEN
-        PRINT "ok   CONTROL ADD FRAME without TO + CONTROL HANDLE resolved it"
+        ConPrint "ok   CONTROL ADD FRAME without TO + CONTROL HANDLE resolved it"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL ADD FRAME without TO / CONTROL HANDLE"
+        ConPrint "FAIL CONTROL ADD FRAME without TO / CONTROL HANDLE"
     END IF
 
     ' OPTION without a TO clause must work too - that is the OPTION/FRAME
@@ -174,10 +203,10 @@ FUNCTION PBMAIN () AS LONG
     hTmp = 0
     CONTROL HANDLE hDlg, 202 TO hTmp
     IF hTmp = hOpt2 THEN
-        PRINT "ok   CONTROL HANDLE 202 equals the handle ADD OPTION returned"
+        ConPrint "ok   CONTROL HANDLE 202 equals the handle ADD OPTION returned"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL HANDLE 202 ="; hTmp; " but ADD returned"; hOpt2
+        ConPrint "FAIL CONTROL HANDLE 202 =" & STR$(hTmp) & " but ADD returned" & STR$(hOpt2)
     END IF
 
     ' ------------------------------------------------------------------
@@ -188,46 +217,46 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hOpt1, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Button") > 0 THEN
-        PRINT "ok   OPTION is a Button-class control"
+        ConPrint "ok   OPTION is a Button-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL OPTION class (len"; n; ")"
+        ConPrint "FAIL OPTION class (len" & STR$(n) & ")"
     END IF
 
     buf = ""
     CALL DWORD gcnA USING GetClassNameA(hC3, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Button") > 0 THEN
-        PRINT "ok   CHECK3STATE is a Button-class control"
+        ConPrint "ok   CHECK3STATE is a Button-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE class"
+        ConPrint "FAIL CHECK3STATE class"
     END IF
 
     buf = ""
     CALL DWORD gcnA USING GetClassNameA(hFr, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Button") > 0 THEN
-        PRINT "ok   FRAME is a Button-class control"
+        ConPrint "ok   FRAME is a Button-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL FRAME class"
+        ConPrint "FAIL FRAME class"
     END IF
 
     buf = ""
     CALL DWORD gcnA USING GetClassNameA(hTb, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Edit") > 0 THEN
-        PRINT "ok   TEXTBOX is an Edit-class control"
+        ConPrint "ok   TEXTBOX is an Edit-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX class (want Edit)"
+        ConPrint "FAIL TEXTBOX class (want Edit)"
     END IF
 
     buf = ""
     CALL DWORD gcnA USING GetClassNameA(hLn, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Static") > 0 THEN
-        PRINT "ok   LINE is a Static-class control"
+        ConPrint "ok   LINE is a Static-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL LINE class (want Static)"
+        ConPrint "FAIL LINE class (want Static)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -239,71 +268,71 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gwlA USING GetWindowLongA(hOpt1, idx) TO st
     typ = st AND 15
     IF typ = 9 THEN
-        PRINT "ok   OPTION type nibble = 9 (BS_AUTORADIOBUTTON)"
+        ConPrint "ok   OPTION type nibble = 9 (BS_AUTORADIOBUTTON)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL OPTION type nibble ="; typ; " (want 9)"
+        ConPrint "FAIL OPTION type nibble =" & STR$(typ) & " (want 9)"
     END IF
     IF (st AND 65536) <> 0 THEN
-        PRINT "ok   OPTION carries WS_TABSTOP (0x10000)"
+        ConPrint "ok   OPTION carries WS_TABSTOP (0x10000)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL OPTION lost WS_TABSTOP; style ="; st
+        ConPrint "FAIL OPTION lost WS_TABSTOP; style =" & STR$(st)
     END IF
 
     CALL DWORD gwlA USING GetWindowLongA(hC3, idx) TO st
     typ = st AND 15
     IF typ = 6 THEN
-        PRINT "ok   CHECK3STATE type nibble = 6 (BS_AUTO3STATE)"
+        ConPrint "ok   CHECK3STATE type nibble = 6 (BS_AUTO3STATE)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE type nibble ="; typ; " (want 6)"
+        ConPrint "FAIL CHECK3STATE type nibble =" & STR$(typ) & " (want 6)"
     END IF
 
     CALL DWORD gwlA USING GetWindowLongA(hFr, idx) TO st
     typ = st AND 15
     IF typ = 7 THEN
-        PRINT "ok   FRAME type nibble = 7 (BS_GROUPBOX)"
+        ConPrint "ok   FRAME type nibble = 7 (BS_GROUPBOX)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL FRAME type nibble ="; typ; " (want 7)"
+        ConPrint "FAIL FRAME type nibble =" & STR$(typ) & " (want 7)"
     END IF
     IF (st AND 1024) <> 0 THEN
-        PRINT "ok   FRAME carries BS_TOP (0x400, the persistent default)"
+        ConPrint "ok   FRAME carries BS_TOP (0x400, the persistent default)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL FRAME lost BS_TOP; style ="; st
+        ConPrint "FAIL FRAME lost BS_TOP; style =" & STR$(st)
     END IF
 
     CALL DWORD gwlA USING GetWindowLongA(hTb, idx) TO st
     IF (st AND 8388608) <> 0 THEN
-        PRINT "ok   TEXTBOX carries WS_BORDER (0x800000)"
+        ConPrint "ok   TEXTBOX carries WS_BORDER (0x800000)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX lost WS_BORDER; style ="; st
+        ConPrint "FAIL TEXTBOX lost WS_BORDER; style =" & STR$(st)
     END IF
     IF (st AND 128) <> 0 THEN
-        PRINT "ok   TEXTBOX carries ES_AUTOHSCROLL (0x80)"
+        ConPrint "ok   TEXTBOX carries ES_AUTOHSCROLL (0x80)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX lost ES_AUTOHSCROLL; style ="; st
+        ConPrint "FAIL TEXTBOX lost ES_AUTOHSCROLL; style =" & STR$(st)
     END IF
     idx = -20
     CALL DWORD gwlA USING GetWindowLongA(hTb, idx) TO ex
     IF (ex AND 512) <> 0 THEN
-        PRINT "ok   TEXTBOX carries WS_EX_CLIENTEDGE (0x200)"
+        ConPrint "ok   TEXTBOX carries WS_EX_CLIENTEDGE (0x200)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX exstyle ="; ex; " (want WS_EX_CLIENTEDGE)"
+        ConPrint "FAIL TEXTBOX exstyle =" & STR$(ex) & " (want WS_EX_CLIENTEDGE)"
     END IF
     idx = -16
 
     CALL DWORD gwlA USING GetWindowLongA(hLn, idx) TO st
     IF (st AND 31) = 18 THEN
-        PRINT "ok   LINE style is SS_ETCHEDFRAME (0x12)"
+        ConPrint "ok   LINE style is SS_ETCHEDFRAME (0x12)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL LINE style nibble ="; st AND 31; " (want 18)"
+        ConPrint "FAIL LINE style nibble =" & STR$(st AND 31) & " (want 18)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -314,28 +343,28 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 211, 241, 0, 0
     CONTROL SEND hDlg, 211, 240, 0, 0 TO v
     IF v = 0 THEN
-        PRINT "ok   CHECK3STATE state 0 (unchecked) round-tripped"
+        ConPrint "ok   CHECK3STATE state 0 (unchecked) round-tripped"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE state 0 ->"; v
+        ConPrint "FAIL CHECK3STATE state 0 ->" & STR$(v)
     END IF
 
     CONTROL SEND hDlg, 211, 241, 1, 0
     CONTROL SEND hDlg, 211, 240, 0, 0 TO v
     IF v = 1 THEN
-        PRINT "ok   CHECK3STATE state 1 (checked) round-tripped"
+        ConPrint "ok   CHECK3STATE state 1 (checked) round-tripped"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE state 1 ->"; v
+        ConPrint "FAIL CHECK3STATE state 1 ->" & STR$(v)
     END IF
 
     CONTROL SEND hDlg, 211, 241, 2, 0
     CONTROL SEND hDlg, 211, 240, 0, 0 TO v
     IF v = 2 THEN
-        PRINT "ok   CHECK3STATE state 2 (indeterminate) round-tripped"
+        ConPrint "ok   CHECK3STATE state 2 (indeterminate) round-tripped"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE state 2 ->"; v; " (a 3-state box must accept it)"
+        ConPrint "FAIL CHECK3STATE state 2 ->" & STR$(v) & " (a 3-state box must accept it)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -345,10 +374,10 @@ FUNCTION PBMAIN () AS LONG
     buf = ""
     CONTROL SEND hDlg, 241, 13, 64, VARPTR(buf) TO n
     IF n = 3 AND INSTR(buf, "sep") > 0 THEN
-        PRINT "ok   LINE carries its text even though it never displays it"
+        ConPrint "ok   LINE carries its text even though it never displays it"
     ELSE
         fail = fail + 1
-        PRINT "FAIL LINE window text ->"; n
+        ConPrint "FAIL LINE window text ->" & STR$(n)
     END IF
 
     ' ------------------------------------------------------------------
@@ -359,47 +388,47 @@ FUNCTION PBMAIN () AS LONG
 
     CONTROL SEND hDlg, 201, 240, 0, 0 TO v
     IF v = 0 THEN
-        PRINT "ok   SET OPTION 202 cleared 201"
+        ConPrint "ok   SET OPTION 202 cleared 201"
     ELSE
         fail = fail + 1
-        PRINT "FAIL after SET OPTION 202, 201 ="; v
+        ConPrint "FAIL after SET OPTION 202, 201 =" & STR$(v)
     END IF
     CONTROL SEND hDlg, 202, 240, 0, 0 TO v
     IF v = 1 THEN
-        PRINT "ok   SET OPTION 202 checked 202"
+        ConPrint "ok   SET OPTION 202 checked 202"
     ELSE
         fail = fail + 1
-        PRINT "FAIL after SET OPTION 202, 202 ="; v; " (want 1)"
+        ConPrint "FAIL after SET OPTION 202, 202 =" & STR$(v) & " (want 1)"
     END IF
     CONTROL SEND hDlg, 203, 240, 0, 0 TO v
     IF v = 0 THEN
-        PRINT "ok   SET OPTION 202 cleared 203"
+        ConPrint "ok   SET OPTION 202 cleared 203"
     ELSE
         fail = fail + 1
-        PRINT "FAIL after SET OPTION 202, 203 ="; v
+        ConPrint "FAIL after SET OPTION 202, 203 =" & STR$(v)
     END IF
 
     CONTROL SET OPTION hDlg, 203, 201, 203
     CONTROL SEND hDlg, 201, 240, 0, 0 TO v
     IF v = 0 THEN
-        PRINT "ok   second SET OPTION left 201 clear"
+        ConPrint "ok   second SET OPTION left 201 clear"
     ELSE
         fail = fail + 1
-        PRINT "FAIL second SET OPTION, 201 ="; v
+        ConPrint "FAIL second SET OPTION, 201 =" & STR$(v)
     END IF
     CONTROL SEND hDlg, 202, 240, 0, 0 TO v
     IF v = 0 THEN
-        PRINT "ok   second SET OPTION cleared the previous choice (202)"
+        ConPrint "ok   second SET OPTION cleared the previous choice (202)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL second SET OPTION did not clear 202; ="; v
+        ConPrint "FAIL second SET OPTION did not clear 202; =" & STR$(v)
     END IF
     CONTROL SEND hDlg, 203, 240, 0, 0 TO v
     IF v = 1 THEN
-        PRINT "ok   second SET OPTION checked 203"
+        ConPrint "ok   second SET OPTION checked 203"
     ELSE
         fail = fail + 1
-        PRINT "FAIL second SET OPTION, 203 ="; v; " (want 1)"
+        ConPrint "FAIL second SET OPTION, 203 =" & STR$(v) & " (want 1)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -410,46 +439,46 @@ FUNCTION PBMAIN () AS LONG
     v1 = -1 : v2 = -1
     CONTROL GET LOC hDlg, 231 TO v1, v2
     IF v1 = 200 AND v2 = 32 THEN
-        PRINT "ok   TEXTBOX GET LOC after add 200,32 = 200,32"
+        ConPrint "ok   TEXTBOX GET LOC after add 200,32 = 200,32"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX get loc ="; v1; ","; v2; " (want 200,32)"
+        ConPrint "FAIL TEXTBOX get loc =" & STR$(v1) & "," & STR$(v2) & " (want 200,32)"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET SIZE hDlg, 231 TO v1, v2
     IF v1 = 120 AND v2 = 16 THEN
-        PRINT "ok   TEXTBOX GET SIZE after add 120x16 = 120x16"
+        ConPrint "ok   TEXTBOX GET SIZE after add 120x16 = 120x16"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TEXTBOX get size ="; v1; "x"; v2; " (want 120x16)"
+        ConPrint "FAIL TEXTBOX get size =" & STR$(v1) & "x" & STR$(v2) & " (want 120x16)"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET LOC hDlg, 211 TO v1, v2
     IF v1 = 8 AND v2 = 32 THEN
-        PRINT "ok   CHECK3STATE GET LOC after add 8,32 = 8,32"
+        ConPrint "ok   CHECK3STATE GET LOC after add 8,32 = 8,32"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CHECK3STATE get loc ="; v1; ","; v2; " (want 8,32)"
+        ConPrint "FAIL CHECK3STATE get loc =" & STR$(v1) & "," & STR$(v2) & " (want 8,32)"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET SIZE hDlg, 221 TO v1, v2
     IF v1 = 180 AND v2 = 40 THEN
-        PRINT "ok   FRAME GET SIZE after add 180x40 = 180x40"
+        ConPrint "ok   FRAME GET SIZE after add 180x40 = 180x40"
     ELSE
         fail = fail + 1
-        PRINT "FAIL FRAME get size ="; v1; "x"; v2; " (want 180x40)"
+        ConPrint "FAIL FRAME get size =" & STR$(v1) & "x" & STR$(v2) & " (want 180x40)"
     END IF
 
     v1 = -1 : v2 = -1
     CONTROL GET SIZE hDlg, 241 TO v1, v2
     IF v1 = 120 AND v2 = 4 THEN
-        PRINT "ok   LINE GET SIZE after add 120x4 = 120x4"
+        ConPrint "ok   LINE GET SIZE after add 120x4 = 120x4"
     ELSE
         fail = fail + 1
-        PRINT "FAIL LINE get size ="; v1; "x"; v2; " (want 120x4)"
+        ConPrint "FAIL LINE get size =" & STR$(v1) & "x" & STR$(v2) & " (want 120x4)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -459,13 +488,13 @@ FUNCTION PBMAIN () AS LONG
     hTmp = 12345
     CONTROL HANDLE hDlg, 9999 TO hTmp
     IF hTmp = 0 THEN
-        PRINT "ok   CONTROL HANDLE on a missing id returned 0"
+        ConPrint "ok   CONTROL HANDLE on a missing id returned 0"
     ELSE
         fail = fail + 1
-        PRINT "FAIL missing id resolved to"; hTmp
+        ConPrint "FAIL missing id resolved to" & STR$(hTmp)
     END IF
 
     DIALOG END hDlg, fail
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     FUNCTION = fail
 END FUNCTION

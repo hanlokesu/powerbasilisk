@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 12: ON GOTO / ON GOSUB
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
@@ -20,9 +48,9 @@ three:
     r = r + 3
 done:
     IF r = 2 THEN
-        PRINT "ON-GOTO-PASS"
+        ConPrint "ON-GOTO-PASS"
     ELSE
-        PRINT "ON-GOTO-FAIL r="; r
+        ConPrint "ON-GOTO-FAIL r=" & STR$(r)
     END IF
 
     ' ON GOTO: out of range falls through
@@ -38,9 +66,9 @@ o2:
     r = r + 2
 odone:
     IF r = 50 THEN
-        PRINT "ON-GOTO-RANGE-PASS"
+        ConPrint "ON-GOTO-RANGE-PASS"
     ELSE
-        PRINT "ON-GOTO-RANGE-FAIL r="; r
+        ConPrint "ON-GOTO-RANGE-FAIL r=" & STR$(r)
     END IF
 
     ' ON GOSUB: select subroutine by index
@@ -48,9 +76,9 @@ odone:
     i = 3
     ON i GOSUB s1, s2, s3
     IF r = 3 THEN
-        PRINT "ON-GOSUB-PASS"
+        ConPrint "ON-GOSUB-PASS"
     ELSE
-        PRINT "ON-GOSUB-FAIL r="; r
+        ConPrint "ON-GOSUB-FAIL r=" & STR$(r)
     END IF
     GOTO gdone
 s1:
@@ -69,9 +97,9 @@ gdone:
     i = 0
     ON i GOSUB t1, t2
     IF r = 0 THEN
-        PRINT "ON-GOSUB-RANGE-PASS"
+        ConPrint "ON-GOSUB-RANGE-PASS"
     ELSE
-        PRINT "ON-GOSUB-RANGE-FAIL r="; r
+        ConPrint "ON-GOSUB-RANGE-FAIL r=" & STR$(r)
     END IF
     GOTO tdone
 t1:
@@ -81,6 +109,7 @@ t2:
     r = r + 2
     RETURN
 tdone:
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

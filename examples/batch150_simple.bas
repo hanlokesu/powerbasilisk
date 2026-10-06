@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: CONTROL GET TEXT simple test
 ' Auto-generated: PowerBasilisk fork batch test
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL g_hEdit AS QUAD

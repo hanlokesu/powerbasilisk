@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch173_test.bas - IMAGELIST ADD BITMAP / ADD ICON / ADD MASKED,
 '                      IMAGELIST NEW ICON, IMAGELIST SET OVERLAY
@@ -44,7 +73,7 @@
 ' Complexity note: O(1) - a fixed sequence of Win32 image-list calls.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 #RESOURCE ICON, 100, "batch173_test.ico"
 
 FUNCTION PBMAIN () AS LONG
@@ -69,18 +98,18 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST NEW BITMAP 16, 16, 32, 4 TO hil
     IF hil = 0 THEN
         fail = fail + 1
-        PRINT "FAIL NEW BITMAP      -> 0 (expected a handle)"
+        ConPrint "FAIL NEW BITMAP      -> 0 (expected a handle)"
     ELSE
-        PRINT "ok   NEW BITMAP      -> handle"
+        ConPrint "ok   NEW BITMAP      -> handle"
     END IF
 
     hic = 0
     IMAGELIST NEW ICON 16, 16, 32, 2 TO hic
     IF hic = 0 THEN
         fail = fail + 1
-        PRINT "FAIL NEW ICON        -> 0 (expected a handle)"
+        ConPrint "FAIL NEW ICON        -> 0 (expected a handle)"
     ELSE
-        PRINT "ok   NEW ICON        -> handle"
+        ConPrint "ok   NEW ICON        -> handle"
     END IF
 
     ' A freshly created list is empty: GET COUNT must report 0.
@@ -88,9 +117,9 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST GET COUNT hil TO cnt
     IF cnt <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL GET COUNT fresh ->"; cnt; " (expected 0)"
+        ConPrint "FAIL GET COUNT fresh ->" & STR$(cnt) & " (expected 0)"
     ELSE
-        PRINT "ok   GET COUNT fresh -> 0"
+        ConPrint "ok   GET COUNT fresh -> 0"
     END IF
 
     ' ---------------------------------------------------------------
@@ -104,7 +133,7 @@ FUNCTION PBMAIN () AS LONG
     GRAPHIC BITMAP NEW 16, 16 TO hb3
     IF hb1 = 0 OR hb2 = 0 OR hb3 = 0 THEN
         fail = fail + 1
-        PRINT "FAIL GRAPHIC BITMAP NEW (a source bitmap is 0)"
+        ConPrint "FAIL GRAPHIC BITMAP NEW (a source bitmap is 0)"
     END IF
 
     ' ---------------------------------------------------------------
@@ -114,18 +143,18 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD BITMAP hil, hb1 TO n
     IF n <> 1 THEN
         fail = fail + 1
-        PRINT "FAIL ADD BITMAP 1    ->"; n; " (expected 1)"
+        ConPrint "FAIL ADD BITMAP 1    ->" & STR$(n) & " (expected 1)"
     ELSE
-        PRINT "ok   ADD BITMAP 1    -> 1"
+        ConPrint "ok   ADD BITMAP 1    -> 1"
     END IF
 
     n = 77
     IMAGELIST ADD BITMAP hil, hb2 TO n
     IF n <> 2 THEN
         fail = fail + 1
-        PRINT "FAIL ADD BITMAP 2    ->"; n; " (expected 2)"
+        ConPrint "FAIL ADD BITMAP 2    ->" & STR$(n) & " (expected 2)"
     ELSE
-        PRINT "ok   ADD BITMAP 2    -> 2"
+        ConPrint "ok   ADD BITMAP 2    -> 2"
     END IF
 
     ' ---------------------------------------------------------------
@@ -135,9 +164,9 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD MASKED hil, hb3, &H00FF00 TO n
     IF n <> 3 THEN
         fail = fail + 1
-        PRINT "FAIL ADD MASKED      ->"; n; " (expected 3)"
+        ConPrint "FAIL ADD MASKED      ->" & STR$(n) & " (expected 3)"
     ELSE
-        PRINT "ok   ADD MASKED      -> 3"
+        ConPrint "ok   ADD MASKED      -> 3"
     END IF
 
     ' ---------------------------------------------------------------
@@ -149,9 +178,9 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD ICON hic, "#32512" TO n
     IF n <> 1 THEN
         fail = fail + 1
-        PRINT "FAIL ADD ICON #32512 ->"; n; " (expected 1)"
+        ConPrint "FAIL ADD ICON #32512 ->" & STR$(n) & " (expected 1)"
     ELSE
-        PRINT "ok   ADD ICON #32512 -> 1"
+        ConPrint "ok   ADD ICON #32512 -> 1"
     END IF
 
     ' ---------------------------------------------------------------
@@ -162,9 +191,9 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD ICON hic, "#100" TO n
     IF n <> 2 THEN
         fail = fail + 1
-        PRINT "FAIL ADD ICON #100   ->"; n; " (expected 2)"
+        ConPrint "FAIL ADD ICON #100   ->" & STR$(n) & " (expected 2)"
     ELSE
-        PRINT "ok   ADD ICON #100   -> 2"
+        ConPrint "ok   ADD ICON #100   -> 2"
     END IF
 
     ' ---------------------------------------------------------------
@@ -177,27 +206,27 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD BITMAP hil, "no_such_bitmap.bmp" TO n
     IF n <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL ADD BITMAP miss ->"; n; " (expected 0)"
+        ConPrint "FAIL ADD BITMAP miss ->" & STR$(n) & " (expected 0)"
     ELSE
-        PRINT "ok   ADD BITMAP miss -> 0"
+        ConPrint "ok   ADD BITMAP miss -> 0"
     END IF
 
     n = 77
     IMAGELIST ADD ICON hic, "no_such_icon.ico" TO n
     IF n <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL ADD ICON miss   ->"; n; " (expected 0)"
+        ConPrint "FAIL ADD ICON miss   ->" & STR$(n) & " (expected 0)"
     ELSE
-        PRINT "ok   ADD ICON miss   -> 0"
+        ConPrint "ok   ADD ICON miss   -> 0"
     END IF
 
     n = 77
     IMAGELIST ADD MASKED hil, "no_such_bitmap.bmp", &H00FF00 TO n
     IF n <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL ADD MASKED miss ->"; n; " (expected 0)"
+        ConPrint "FAIL ADD MASKED miss ->" & STR$(n) & " (expected 0)"
     ELSE
-        PRINT "ok   ADD MASKED miss -> 0"
+        ConPrint "ok   ADD MASKED miss -> 0"
     END IF
 
     ' ---------------------------------------------------------------
@@ -209,9 +238,9 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST ADD BITMAP hil, hb1
     IF n <> 77 THEN
         fail = fail + 1
-        PRINT "FAIL ADD BITMAP noTO -> n changed to"; n; " (expected 77)"
+        ConPrint "FAIL ADD BITMAP noTO -> n changed to" & STR$(n) & " (expected 77)"
     ELSE
-        PRINT "ok   ADD BITMAP noTO -> n untouched (77), image still added"
+        ConPrint "ok   ADD BITMAP noTO -> n untouched (77), image still added"
     END IF
 
     ' ---------------------------------------------------------------
@@ -223,7 +252,7 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST SET OVERLAY hil, 1, 1
     IMAGELIST SET OVERLAY hil, 4, 15
     IMAGELIST SET OVERLAY hil, 1, 16
-    PRINT "ok   SET OVERLAY     -> 1/1, 4/15, 1/16 (invalid) survived"
+    ConPrint "ok   SET OVERLAY     -> 1/1, 4/15, 1/16 (invalid) survived"
 
     ' ---------------------------------------------------------------
     ' Final counts.  The bitmap list holds the four successful ADD
@@ -233,18 +262,18 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST GET COUNT hil TO cnt
     IF cnt <> 4 THEN
         fail = fail + 1
-        PRINT "FAIL count bitmap    ->"; cnt; " (expected 4)"
+        ConPrint "FAIL count bitmap    ->" & STR$(cnt) & " (expected 4)"
     ELSE
-        PRINT "ok   count bitmap    -> 4"
+        ConPrint "ok   count bitmap    -> 4"
     END IF
 
     cnt = 99
     IMAGELIST GET COUNT hic TO cnt
     IF cnt <> 2 THEN
         fail = fail + 1
-        PRINT "FAIL count icon      ->"; cnt; " (expected 2)"
+        ConPrint "FAIL count icon      ->" & STR$(cnt) & " (expected 2)"
     ELSE
-        PRINT "ok   count icon      -> 2"
+        ConPrint "ok   count icon      -> 2"
     END IF
 
     ' ---------------------------------------------------------------
@@ -252,9 +281,9 @@ FUNCTION PBMAIN () AS LONG
     ' ---------------------------------------------------------------
     IMAGELIST KILL hil
     IMAGELIST KILL hic
-    PRINT "ok   IMAGELIST KILL  -> both lists destroyed"
+    ConPrint "ok   IMAGELIST KILL  -> both lists destroyed"
 
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

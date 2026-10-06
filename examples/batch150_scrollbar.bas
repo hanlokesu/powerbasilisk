@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: SCROLLBAR (vertical)
 ' Drag scrollbar, click button to show value
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hVScroll AS QUAD

@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: DIALOG CENTER + DIALOG SET TEXT
 ' Shows how to center dialog and change title at runtime
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hBtn AS QUAD

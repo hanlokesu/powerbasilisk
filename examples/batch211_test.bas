@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch211_test.bas - batch 211: ACCEL ATTACH gets a real runtime
 '---------------------------------------------------------------------
@@ -60,11 +88,11 @@ FUNCTION PBMAIN () AS LONG
     ' FVIRTKEY|FCONTROL (0x0009) with 'A' (0x41) and with 'B' (0x42)
     keys(0) = &H00410009
     keys(1) = &H00420009
-    PRINT "keys(0) = "; keys(0)
-    PRINT "keys(1) = "; keys(1)
+    ConPrint "keys(0) = " & STR$(keys(0))
+    ConPrint "keys(1) = " & STR$(keys(1))
 
     ACCEL ATTACH hDlg, keys() TO acc
-    PRINT "accelerator table = "; acc
+    ConPrint "accelerator table = " & STR$(acc)
     IF acc = 0 THEN
         fail = fail + 1
     END IF
@@ -74,12 +102,12 @@ FUNCTION PBMAIN () AS LONG
     ' written, which is why it starts at a value the program recognises.
     none = 12345
     ACCEL ATTACH hDlg, plain TO none
-    PRINT "no-count attach   = "; none
+    ConPrint "no-count attach   = " & STR$(none)
     IF none <> 0 THEN
         fail = fail + 1
     END IF
 
-    PRINT "=== FAILURES:"; fail; "==="
+    ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
 WAITKEY$

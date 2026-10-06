@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 OPTION EXPLICIT
 
 FUNCTION PBMAIN() AS LONG
@@ -14,7 +42,7 @@ FUNCTION PBMAIN() AS LONG
     REDIM a(1 TO 5)
     a(4) = 4: a(5) = 5
     FOR i = 1 TO 5
-        PRINT "a("; i; ")="; a(i)
+        ConPrint "a(" & STR$(i) & ")=" & STR$(STR$(a(i)))
         IF a(i) <> i THEN ok = ok + 1
     NEXT i
 
@@ -38,12 +66,13 @@ FUNCTION PBMAIN() AS LONG
     IF a(6) <> 99 THEN ok = ok + 1000
 
     IF ok = 0 THEN
-        PRINT "REDIM ALL PASS"
+        ConPrint "REDIM ALL PASS"
         FUNCTION = 0
     ELSE
-        PRINT "REDIM FAIL code="; ok
+        ConPrint "REDIM FAIL code=" & STR$(ok)
         FUNCTION = 1
     END IF
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 80 Test: OOP remaining 9 items (INTERFACE/EVENTS/RAISEEVENT/INSTANCE/OBJECT/LET)
 
 ' INTERFACE/END INTERFACE (DIRECT) — block skip
@@ -17,37 +45,37 @@ FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     LOCAL v AS LONG
 
-    PRINT "=== Batch 80: OOP remaining 9 items ==="
+    ConPrint "=== Batch 80: OOP remaining 9 items ==="
 
     ' OBJECT type (COM object pointer, simplified as LONG)
     obj = 12345
-    PRINT "OBJECT type: OK (value="; obj; ")"
+    ConPrint "OBJECT type: OK (value=" & STR$(obj) & ")"
 
     ' INSTANCE var AS ClassName — create instance (simplified noop)
     ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "INSTANCE: parsed OK"
+    ConPrint "INSTANCE: parsed OK"
 
     ' LET with OBJECTS — object reference assignment
     LET obj2 = obj
-    PRINT "LET with OBJECTS: OK (obj2="; obj2; ")"
+    ConPrint "LET with OBJECTS: OK (obj2=" & STR$(obj2) & ")"
 
     ' LET with VARIANTS — variant assignment (simplified)
     LET v = 42
-    PRINT "LET with VARIANTS: OK (v="; v; ")"
+    ConPrint "LET with VARIANTS: OK (v=" & STR$(v) & ")"
 
     ' EVENTS — event declaration (simplified noop)
     ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "EVENTS: parsed OK"
+    ConPrint "EVENTS: parsed OK"
 
     ' EVENT SOURCE — event source declaration (simplified noop)
     ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "EVENT SOURCE: parsed OK"
+    ConPrint "EVENT SOURCE: parsed OK"
 
     ' RAISEEVENT — trigger event (simplified noop)
     ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "RAISEEVENT: parsed OK"
+    ConPrint "RAISEEVENT: parsed OK"
 
-    PRINT "=== Result: ALL PASS (OOP remaining 9 items)"
-    PRINT "Press any key to exit..."
+    ConPrint "=== Result: ALL PASS (OOP remaining 9 items)"
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

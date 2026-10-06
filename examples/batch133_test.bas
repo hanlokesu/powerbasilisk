@@ -1,7 +1,6 @@
 ' Tier-3 DDT: CONTROL ADD COMBOBOX - dropdown list
 ' Auto-generated: PowerBasilisk fork batch test
-
-#CONSOLE OFF
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 FUNCTION PBMAIN() AS LONG
     LOCAL hWnd AS QUAD
     LOCAL hCbo AS QUAD

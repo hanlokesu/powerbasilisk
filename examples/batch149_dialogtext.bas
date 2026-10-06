@@ -1,6 +1,7 @@
-' Tier-3 DDT: DIALOG SET TEXT - change window title at runtime
-#CONSOLE OFF
 #COMPILE EXE
+' Tier-3 DDT: DIALOG SET TEXT - change window title at runtime
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
+
 
 GLOBAL g_hDlg AS QUAD
 

@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch178_test.bas - the resource-image CONTROL family
 '---------------------------------------------------------------------
@@ -51,7 +80,7 @@
 ' Complexity note: O(1) - a fixed list of window messages and style reads.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 ' The image under test.  batch173_test.ico is the icon already tracked in this
 ' examples folder; compiling this file embeds it into the EXE, which is what
 ' makes "#100" resolvable at run time.
@@ -81,15 +110,15 @@ FUNCTION PBMAIN () AS LONG
     LOCAL v0     AS LONG
     LOCAL fail   AS LONG
 
-    PRINT "batch 178 - the resource-image CONTROL family"
-    PRINT "--------------------------------------------"
+    ConPrint "batch 178 - the resource-image CONTROL family"
+    ConPrint "--------------------------------------------"
 
     IMPORT ADDR "SendMessageA", "USER32.DLL" TO smA, smH
     IMPORT ADDR "GetWindowLongA", "USER32.DLL" TO gwlA, gwlH
     IMPORT ADDR "GetClassNameA", "USER32.DLL" TO gcnA, gcnH
     IF smA = 0 OR gwlA = 0 OR gcnA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
+        ConPrint "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
     END IF
 
     ' Shown modeless: a modal dialog would wait for a human to dismiss it and
@@ -108,22 +137,22 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD IMAGE,       hDlg, 105, "#100",   8, 104, 48, 48
 
     IF hImg1 <> 0 AND hImg2 <> 0 THEN
-        PRINT "ok   CONTROL ADD IMAGE / IMAGEX returned handles"
+        ConPrint "ok   CONTROL ADD IMAGE / IMAGEX returned handles"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGE / IMAGEX handle:"; hImg1; hImg2
+        ConPrint "FAIL IMAGE / IMAGEX handle:" & STR$(hImg1) & STR$(hImg2)
     END IF
     IF hBtn1 <> 0 AND hBtn2 <> 0 THEN
-        PRINT "ok   CONTROL ADD IMGBUTTON / IMGBUTTONX returned handles"
+        ConPrint "ok   CONTROL ADD IMGBUTTON / IMGBUTTONX returned handles"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMGBUTTON / IMGBUTTONX handle:"; hBtn1; hBtn2
+        ConPrint "FAIL IMGBUTTON / IMGBUTTONX handle:" & STR$(hBtn1) & STR$(hBtn2)
     END IF
     IF hImg1 <> hImg2 AND hImg1 <> hBtn1 THEN
-        PRINT "ok   the four controls are four distinct windows"
+        ConPrint "ok   the four controls are four distinct windows"
     ELSE
         fail = fail + 1
-        PRINT "FAIL distinct handles:"; hImg1; hImg2; hBtn1; hBtn2
+        ConPrint "FAIL distinct handles:" & STR$(hImg1) & STR$(hImg2) & STR$(hBtn1) & STR$(hBtn2)
     END IF
 
     ' ------------------------------------------------------------------
@@ -132,10 +161,10 @@ FUNCTION PBMAIN () AS LONG
     hTmp = 0
     CONTROL HANDLE hDlg, 105 TO hTmp
     IF hTmp <> 0 AND hTmp <> hImg1 THEN
-        PRINT "ok   ADD IMAGE without TO + CONTROL HANDLE resolved it"
+        ConPrint "ok   ADD IMAGE without TO + CONTROL HANDLE resolved it"
     ELSE
         fail = fail + 1
-        PRINT "FAIL ADD IMAGE without TO / CONTROL HANDLE"
+        ConPrint "FAIL ADD IMAGE without TO / CONTROL HANDLE"
     END IF
 
     ' ------------------------------------------------------------------
@@ -145,19 +174,19 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hImg1, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Static") > 0 THEN
-        PRINT "ok   CONTROL ADD IMAGE is a Static-class control"
+        ConPrint "ok   CONTROL ADD IMAGE is a Static-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGE class (len"; n; ")"
+        ConPrint "FAIL IMAGE class (len" & STR$(n) & ")"
     END IF
 
     buf = ""
     CALL DWORD gcnA USING GetClassNameA(hBtn1, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Button") > 0 THEN
-        PRINT "ok   CONTROL ADD IMGBUTTON is a Button-class control"
+        ConPrint "ok   CONTROL ADD IMGBUTTON is a Button-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMGBUTTON class (len"; n; ")"
+        ConPrint "FAIL IMGBUTTON class (len" & STR$(n) & ")"
     END IF
 
     ' ------------------------------------------------------------------
@@ -169,31 +198,31 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gwlA USING GetWindowLongA(hImg1, idx) TO st
     typ = st AND 31                              ' %SS_TYPEMASK
     IF typ = 3 THEN
-        PRINT "ok   plain IMAGE carries %SS_ICON (format was discovered)"
+        ConPrint "ok   plain IMAGE carries %SS_ICON (format was discovered)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMAGE type bits:"; typ
+        ConPrint "FAIL plain IMAGE type bits:" & STR$(typ)
     END IF
     IF (st AND 1073741824) <> 0 AND (st AND 268435456) <> 0 THEN
-        PRINT "ok   plain IMAGE has %WS_CHILD and %WS_VISIBLE"
+        ConPrint "ok   plain IMAGE has %WS_CHILD and %WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMAGE child/visible bits:"; st
+        ConPrint "FAIL plain IMAGE child/visible bits:" & STR$(st)
     END IF
 
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hBtn1, idx) TO st
     IF (st AND 64) <> 0 THEN
-        PRINT "ok   plain IMGBUTTON carries %BS_ICON (format was discovered)"
+        ConPrint "ok   plain IMGBUTTON carries %BS_ICON (format was discovered)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMGBUTTON icon bit:"; st
+        ConPrint "FAIL plain IMGBUTTON icon bit:" & STR$(st)
     END IF
     IF (st AND 65536) <> 0 THEN
-        PRINT "ok   plain IMGBUTTON has the documented %WS_TABSTOP default"
+        ConPrint "ok   plain IMGBUTTON has the documented %WS_TABSTOP default"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMGBUTTON tabstop bit:"; st
+        ConPrint "FAIL plain IMGBUTTON tabstop bit:" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -204,28 +233,28 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hImg1, idx) TO st
     IF (st AND 64) = 0 THEN
-        PRINT "ok   plain IMAGE has no %SS_REALSIZECONTROL"
+        ConPrint "ok   plain IMAGE has no %SS_REALSIZECONTROL"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMAGE unexpectedly stretches:"; st
+        ConPrint "FAIL plain IMAGE unexpectedly stretches:" & STR$(st)
     END IF
 
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hImg2, idx) TO st
     IF (st AND 64) <> 0 AND (st AND 31) = 3 THEN
-        PRINT "ok   IMAGEX has %SS_REALSIZECONTROL and %SS_ICON"
+        ConPrint "ok   IMAGEX has %SS_REALSIZECONTROL and %SS_ICON"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGEX style:"; st
+        ConPrint "FAIL IMAGEX style:" & STR$(st)
     END IF
 
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hBtn2, idx) TO st
     IF (st AND 64) <> 0 THEN
-        PRINT "ok   IMGBUTTONX also carries %BS_ICON"
+        ConPrint "ok   IMGBUTTONX also carries %BS_ICON"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMGBUTTONX icon bit:"; st
+        ConPrint "FAIL IMGBUTTONX icon bit:" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -236,37 +265,37 @@ FUNCTION PBMAIN () AS LONG
     img = 0
     CONTROL SEND hDlg, 101, 371, 1, 0 TO img      ' %STM_GETIMAGE, IMAGE_ICON
     IF img <> 0 THEN
-        PRINT "ok   IMAGE 101 has an icon attached"
+        ConPrint "ok   IMAGE 101 has an icon attached"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGE 101 has no image"
+        ConPrint "FAIL IMAGE 101 has no image"
     END IF
 
     img = 0
     CONTROL SEND hDlg, 102, 371, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   IMAGEX 102 has an icon attached"
+        ConPrint "ok   IMAGEX 102 has an icon attached"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGEX 102 has no image"
+        ConPrint "FAIL IMAGEX 102 has no image"
     END IF
 
     img = 0
     CONTROL SEND hDlg, 103, 246, 1, 0 TO img      ' %BM_GETIMAGE, IMAGE_ICON
     IF img <> 0 THEN
-        PRINT "ok   IMGBUTTON 103 has an icon attached"
+        ConPrint "ok   IMGBUTTON 103 has an icon attached"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMGBUTTON 103 has no image"
+        ConPrint "FAIL IMGBUTTON 103 has no image"
     END IF
 
     img = 0
     CONTROL SEND hDlg, 104, 246, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   IMGBUTTONX 104 has an icon attached"
+        ConPrint "ok   IMGBUTTONX 104 has an icon attached"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMGBUTTONX 104 has no image"
+        ConPrint "FAIL IMGBUTTONX 104 has no image"
     END IF
 
     ' ------------------------------------------------------------------
@@ -278,40 +307,40 @@ FUNCTION PBMAIN () AS LONG
     img = 0
     CONTROL SEND hDlg, 101, 371, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   CONTROL SET IMAGE kept an image on 101"
+        ConPrint "ok   CONTROL SET IMAGE kept an image on 101"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL SET IMAGE dropped the image"
+        ConPrint "FAIL CONTROL SET IMAGE dropped the image"
     END IF
 
     CONTROL SET IMAGEX      hDlg, 102, "#100"
     img = 0
     CONTROL SEND hDlg, 102, 371, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   CONTROL SET IMAGEX kept an image on 102"
+        ConPrint "ok   CONTROL SET IMAGEX kept an image on 102"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL SET IMAGEX dropped the image"
+        ConPrint "FAIL CONTROL SET IMAGEX dropped the image"
     END IF
 
     CONTROL SET IMGBUTTON   hDlg, 103, "#100"
     img = 0
     CONTROL SEND hDlg, 103, 246, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   CONTROL SET IMGBUTTON kept an image on 103"
+        ConPrint "ok   CONTROL SET IMGBUTTON kept an image on 103"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL SET IMGBUTTON dropped the image"
+        ConPrint "FAIL CONTROL SET IMGBUTTON dropped the image"
     END IF
 
     CONTROL SET IMGBUTTONX  hDlg, 104, "#100"
     img = 0
     CONTROL SEND hDlg, 104, 246, 1, 0 TO img
     IF img <> 0 THEN
-        PRINT "ok   CONTROL SET IMGBUTTONX kept an image on 104"
+        ConPrint "ok   CONTROL SET IMGBUTTONX kept an image on 104"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL SET IMGBUTTONX dropped the image"
+        ConPrint "FAIL CONTROL SET IMGBUTTONX dropped the image"
     END IF
 
     ' ------------------------------------------------------------------
@@ -330,10 +359,10 @@ FUNCTION PBMAIN () AS LONG
     v = 0
     CONTROL GET SIZE hDlg, 101 TO n, v
     IF n > 0 AND v > 0 THEN
-        PRINT "ok   plain IMAGE 101 reports a size ("; n; "x"; v; ")"
+        ConPrint "ok   plain IMAGE 101 reports a size (" & STR$(n) & "x" & STR$(v) & ")"
     ELSE
         fail = fail + 1
-        PRINT "FAIL plain IMAGE 101 size:"; n; v
+        ConPrint "FAIL plain IMAGE 101 size:" & STR$(n) & STR$(v)
     END IF
     n0 = n
     v0 = v
@@ -343,24 +372,24 @@ FUNCTION PBMAIN () AS LONG
     v = 0
     CONTROL GET SIZE hDlg, 101 TO n, v
     IF n = n0 AND v = v0 THEN
-        PRINT "ok   CONTROL SET IMAGE did not move or resize 101"
+        ConPrint "ok   CONTROL SET IMAGE did not move or resize 101"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL SET IMAGE changed 101:"; n0; v0; "->"; n; v
+        ConPrint "FAIL CONTROL SET IMAGE changed 101:" & STR$(n0) & STR$(v0) & "->" & STR$(n) & STR$(v)
     END IF
 
     n = 0
     v = 0
     CONTROL GET SIZE hDlg, 102 TO n, v
     IF n = 48 AND v = 48 THEN
-        PRINT "ok   IMAGEX 102 keeps the requested box (48x48)"
+        ConPrint "ok   IMAGEX 102 keeps the requested box (48x48)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IMAGEX 102 box:"; n; v
+        ConPrint "FAIL IMAGEX 102 box:" & STR$(n) & STR$(v)
     END IF
 
-    PRINT "--------------------------------------------"
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "--------------------------------------------"
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

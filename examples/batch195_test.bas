@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 195 test: no-op statement groups are now REPORTED
 '
 ' COMPILE-ONLY by design: this batch changed diagnostics, not behaviour.  The four
@@ -20,21 +48,22 @@
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
 
-    PRINT "=== Batch 195: accepted-but-no-code statements are reported ==="
+    ConPrint "=== Batch 195: accepted-but-no-code statements are reported ==="
 
     ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "INSTANCE: parsed (warning expected at compile time)"
+    ConPrint "INSTANCE: parsed (warning expected at compile time)"
 
     ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "EVENTS: parsed (warning expected)"
+    ConPrint "EVENTS: parsed (warning expected)"
 
     ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "EVENT SOURCE: parsed (warning expected)"
+    ConPrint "EVENT SOURCE: parsed (warning expected)"
 
     ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
-    PRINT "RAISEEVENT: parsed (warning expected)"
+    ConPrint "RAISEEVENT: parsed (warning expected)"
 
-    PRINT "=== Done: compile-only sample, nothing here depends on run-time output ==="
+    ConPrint "=== Done: compile-only sample, nothing here depends on run-time output ==="
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION
+

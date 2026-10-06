@@ -1,6 +1,34 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch 60 test: GRAPHIC ARC / PIE / POLYLINE / PAINT
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL px AS LONG
     LOCAL ok AS LONG
     LOCAL waitk AS STRING
@@ -12,33 +40,33 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC POLYLINE (10,10)-(90,10), &hFF0000
     GRAPHIC GET PIXEL (50, 10) TO px
     IF px = &hFF0000 THEN ok = ok + 1
-    PRINT "polyline px="; px
+    ConPrint "polyline px=" & STR$(px)
 
     ' 2. ARC full ellipse outline
     GRAPHIC ARC (0,0)-(99,49), 0, 360, &h00FF00
     GRAPHIC GET PIXEL (50, 0) TO px
     IF px = &h00FF00 THEN ok = ok + 1
-    PRINT "arc top px="; px
+    ConPrint "arc top px=" & STR$(px)
 
     ' 3. PIE full ellipse fill
     GRAPHIC PIE (0,0)-(99,49), 0, 360, &h0000FF, &h0000FF, 1
     GRAPHIC GET PIXEL (50, 25) TO px
     IF px = &h0000FF THEN ok = ok + 1
-    PRINT "pie center px="; px
+    ConPrint "pie center px=" & STR$(px)
 
     ' 4. PAINT flood fill inside a box
     GRAPHIC BOX (20,20)-(80,40), &hFFFFFF
     GRAPHIC PAINT (50, 30), &h00FF00, &hFFFFFF
     GRAPHIC GET PIXEL (50, 30) TO px
     IF px = &h00FF00 THEN ok = ok + 1
-    PRINT "paint center px="; px
+    ConPrint "paint center px=" & STR$(px)
 
     GRAPHIC DETACH
     IF ok = 4 THEN
-        PRINT "batch60: ALL PASS"
+        ConPrint "batch60: ALL PASS"
     ELSE
-        PRINT "batch60: FAILURES="; 4 - ok
+        ConPrint "batch60: FAILURES=" & STR$(4 - ok)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

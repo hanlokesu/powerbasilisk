@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 205 self-check - TCP loopback in ONE program
 '---------------------------------------------------------------------
@@ -52,17 +80,18 @@ FUNCTION PBMAIN () AS LONG
     TCP OPEN PORT 46219 AT "127.0.0.1" AS #3
     TCP PRINT #3, "ping"
     TCP LINE INPUT #3, s
-    PRINT "client got: "; s
+    ConPrint "client got: " & STR$(s)
     IF s <> "pong" THEN fails = fails + 1
     SLEEP 500
-    PRINT "server read: "; g_server_line
+    ConPrint "server read: " & STR$(g_server_line)
     IF g_server_line <> "ping" THEN fails = fails + 1
-    PRINT "accepted flag: "; g_accepted
+    ConPrint "accepted flag: " & STR$(g_accepted)
     IF g_accepted <> 1 THEN fails = fails + 1
     TCP CLOSE #3
     TCP CLOSE #1
-    PRINT "=== FAILURES: "; fails
+    ConPrint "=== FAILURES: " & STR$(fails)
     FUNCTION = 0
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION
+

@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 189 test
 ' ---------------------------------------------------------------------
@@ -90,8 +118,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL mIpmSetAddr   AS LONG   ' IPM_SETADDRESS  = WM_USER + 101 = 1125
     LOCAL mIpmGetAddr   AS LONG   ' IPM_GETADDRESS  = WM_USER + 102 = 1126
 
-    PRINT "batch 189 - CONTROL ADD TRACKBAR / UPDOWN / HOTKEY / IPADDRESS"
-    PRINT "-------------------------------------------------------------"
+    ConPrint "batch 189 - CONTROL ADD TRACKBAR / UPDOWN / HOTKEY / IPADDRESS"
+    ConPrint "-------------------------------------------------------------"
 
     mTbmGetPos = 1024
     mTbmSetPos = 1029
@@ -108,7 +136,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetClassNameA", "USER32.DLL" TO gcnA, gcnH
     IF smA = 0 OR gwlA = 0 OR gcnA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
+        ConPrint "FAIL IMPORT ADDR SendMessageA / GetWindowLongA / GetClassNameA"
     END IF
 
     ' The dialog is shown modeless: a modal dialog would need a human to
@@ -128,20 +156,20 @@ FUNCTION PBMAIN () AS LONG
     ' 1. Every ADD must hand back a real handle.
     ' ------------------------------------------------------------------
     IF hTb <> 0 AND hUd <> 0 AND hHk <> 0 AND hIp <> 0 THEN
-        PRINT "ok   all four CONTROL ADD returned a handle"
+        ConPrint "ok   all four CONTROL ADD returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL a CONTROL ADD returned 0 (tb"; hTb; " ud"; hUd; " hk"; hHk; " ip"; hIp; ")"
+        ConPrint "FAIL a CONTROL ADD returned 0 (tb" & STR$(hTb) & " ud" & STR$(hUd) & " hk" & STR$(hHk) & " ip" & STR$(hIp) & ")"
     END IF
 
     ' The id must resolve to the same window through a second route.
     hTmp = 0
     CONTROL HANDLE hDlg, 301 TO hTmp
     IF hTmp = hTb AND hTmp <> 0 THEN
-        PRINT "ok   CONTROL HANDLE resolves id 301 to the TRACKBAR handle"
+        ConPrint "ok   CONTROL HANDLE resolves id 301 to the TRACKBAR handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL CONTROL HANDLE id 301 mismatch"
+        ConPrint "FAIL CONTROL HANDLE id 301 mismatch"
     END IF
 
     ' ------------------------------------------------------------------
@@ -152,40 +180,40 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hTb, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "msctls_trackbar32") > 0 THEN
-        PRINT "ok   TRACKBAR created a msctls_trackbar32 window"
+        ConPrint "ok   TRACKBAR created a msctls_trackbar32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TRACKBAR class (len"; n; ") -> "; buf
+        ConPrint "FAIL TRACKBAR class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hUd, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "msctls_updown32") > 0 THEN
-        PRINT "ok   UPDOWN created a msctls_updown32 window"
+        ConPrint "ok   UPDOWN created a msctls_updown32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL UPDOWN class (len"; n; ") -> "; buf
+        ConPrint "FAIL UPDOWN class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hHk, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "msctls_hotkey32") > 0 THEN
-        PRINT "ok   HOTKEY created a msctls_hotkey32 window"
+        ConPrint "ok   HOTKEY created a msctls_hotkey32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL HOTKEY class (len"; n; ") -> "; buf
+        ConPrint "FAIL HOTKEY class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hIp, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "SysIPAddress32") > 0 THEN
-        PRINT "ok   IPADDRESS created a SysIPAddress32 window"
+        ConPrint "ok   IPADDRESS created a SysIPAddress32 window"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IPADDRESS class (len"; n; ") -> "; buf
+        ConPrint "FAIL IPADDRESS class (len" & STR$(n) & ") -> " & STR$(buf)
     END IF
 
     ' ------------------------------------------------------------------
@@ -200,10 +228,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824          ' WS_CHILD
     b2 = st AND 268435456           ' WS_VISIBLE
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   TRACKBAR is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   TRACKBAR is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TRACKBAR styles (st="; st; ")"
+        ConPrint "FAIL TRACKBAR styles (st=" & STR$(st) & ")"
     END IF
 
     st = 0
@@ -211,10 +239,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824
     b2 = st AND 268435456
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   HOTKEY is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   HOTKEY is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL HOTKEY styles (st="; st; ")"
+        ConPrint "FAIL HOTKEY styles (st=" & STR$(st) & ")"
     END IF
 
     st = 0
@@ -222,10 +250,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824
     b2 = st AND 268435456
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   IPADDRESS is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   IPADDRESS is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IPADDRESS styles (st="; st; ")"
+        ConPrint "FAIL IPADDRESS styles (st=" & STR$(st) & ")"
     END IF
 
     st = 0
@@ -233,10 +261,10 @@ FUNCTION PBMAIN () AS LONG
     b1 = st AND 1073741824
     b2 = st AND 268435456
     IF b1 <> 0 AND b2 <> 0 THEN
-        PRINT "ok   UPDOWN is WS_CHILD | WS_VISIBLE"
+        ConPrint "ok   UPDOWN is WS_CHILD | WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL UPDOWN styles (st="; st; ")"
+        ConPrint "FAIL UPDOWN styles (st=" & STR$(st) & ")"
     END IF
 
     ' ------------------------------------------------------------------
@@ -251,10 +279,10 @@ FUNCTION PBMAIN () AS LONG
     v = -1
     CALL DWORD smA USING SendMessageA(hTb, mTbmGetPos, 0, 0) TO v
     IF v = 42 THEN
-        PRINT "ok   TRACKBAR set position 42 and read back 42"
+        ConPrint "ok   TRACKBAR set position 42 and read back 42"
     ELSE
         fail = fail + 1
-        PRINT "FAIL TRACKBAR position round trip (got"; v; ")"
+        ConPrint "FAIL TRACKBAR position round trip (got" & STR$(v) & ")"
     END IF
 
     ' UPDOWN: 32-bit position, so the WM_USER+113/114 pair.
@@ -263,10 +291,10 @@ FUNCTION PBMAIN () AS LONG
     v = -1
     CALL DWORD smA USING SendMessageA(hUd, mUdmGetPos32, 0, 0) TO v
     IF v = 7 THEN
-        PRINT "ok   UPDOWN set position 7 and read back 7"
+        ConPrint "ok   UPDOWN set position 7 and read back 7"
     ELSE
         fail = fail + 1
-        PRINT "FAIL UPDOWN position round trip (got"; v; ")"
+        ConPrint "FAIL UPDOWN position round trip (got" & STR$(v) & ")"
     END IF
 
     ' HOTKEY: Ctrl+A = MAKEWORD(0x41, MOD_CONTROL 2) = 577.
@@ -275,10 +303,10 @@ FUNCTION PBMAIN () AS LONG
     v = -1
     CALL DWORD smA USING SendMessageA(hHk, mHkmGetHotkey, 0, 0) TO v
     IF v = 577 THEN
-        PRINT "ok   HOTKEY set Ctrl+A and read back the same hotkey word"
+        ConPrint "ok   HOTKEY set Ctrl+A and read back the same hotkey word"
     ELSE
         fail = fail + 1
-        PRINT "FAIL HOTKEY round trip (got"; v; ")"
+        ConPrint "FAIL HOTKEY round trip (got" & STR$(v) & ")"
     END IF
 
     ' IPADDRESS: 10.0.0.1 = 0x0A000001 = 167772161, read back through a
@@ -293,12 +321,12 @@ FUNCTION PBMAIN () AS LONG
     ipaddr = 0
     CALL DWORD smA USING SendMessageA(hIp, mIpmGetAddr, 0, VARPTR(ipaddr)) TO v
     IF ipaddr = 167772161 AND v = 4 THEN
-        PRINT "ok   IPADDRESS stored 10.0.0.1 and read it back (4 non-blank fields)"
+        ConPrint "ok   IPADDRESS stored 10.0.0.1 and read it back (4 non-blank fields)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IPADDRESS round trip (addr"; ipaddr; " fields"; v; ")"
+        ConPrint "FAIL IPADDRESS round trip (addr" & STR$(ipaddr) & " fields" & STR$(v) & ")"
     END IF
 
     DIALOG END hDlg, fail
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
 END FUNCTION

@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     LOCAL errcode AS LONG
@@ -11,68 +39,69 @@ FUNCTION PBMAIN() AS LONG
     ' ===== 2. TRY/CATCH traps a run-time error (MKDIR existing dir -> ERR 75) =====
     TRY
         MKDIR "."
-        PRINT "t2: NOT REACHED"
+        ConPrint "t2: NOT REACHED"
     CATCH
         errcode = ERR
-        PRINT "t2 caught ERR="; errcode
+        ConPrint "t2 caught ERR=" & STR$(errcode)
     END TRY
-    PRINT "t2 done"
+    ConPrint "t2 done"
 
     ' ===== 3. TRY without error: CATCH skipped =====
     TRY
-        PRINT "t3 body ran"
+        ConPrint "t3 body ran"
     CATCH
-        PRINT "t3: CATCH SHOULD NOT RUN"
+        ConPrint "t3: CATCH SHOULD NOT RUN"
     END TRY
-    PRINT "t3 done"
+    ConPrint "t3 done"
 
     ' ===== 4. TRY + FINALLY: CATCH on error, FINALLY always runs =====
     TRY
         MKDIR "."
-        PRINT "t4: NOT REACHED"
+        ConPrint "t4: NOT REACHED"
     CATCH
         errcode = ERR
-        PRINT "t4 caught ERR="; errcode
+        ConPrint "t4 caught ERR=" & STR$(errcode)
     FINALLY
-        PRINT "t4 finally ran"
+        ConPrint "t4 finally ran"
     END TRY
-    PRINT "t4 done"
+    ConPrint "t4 done"
 
     ' ===== 5. TRY + FINALLY without error: FINALLY still runs =====
     TRY
-        PRINT "t5 body ran"
+        ConPrint "t5 body ran"
     CATCH
-        PRINT "t5: CATCH SHOULD NOT RUN"
+        ConPrint "t5: CATCH SHOULD NOT RUN"
     FINALLY
-        PRINT "t5 finally ran"
+        ConPrint "t5 finally ran"
     END TRY
-    PRINT "t5 done"
+    ConPrint "t5 done"
 
     ' ===== 6. EXIT TRY skips rest of body and CATCH =====
     TRY
-        PRINT "t6 before EXIT TRY"
+        ConPrint "t6 before EXIT TRY"
         EXIT TRY
-        PRINT "t6: NOT REACHED"
+        ConPrint "t6: NOT REACHED"
     CATCH
-        PRINT "t6: CATCH NOT REACHED"
+        ConPrint "t6: CATCH NOT REACHED"
     END TRY
-    PRINT "t6 done"
+    ConPrint "t6 done"
 
     ' ===== 7. nested TRY: inner catches, outer CATCH must not run =====
     TRY
         TRY
             MKDIR "."
-            PRINT "t7: inner NOT REACHED"
+            ConPrint "t7: inner NOT REACHED"
         CATCH
             errcode = ERR
-            PRINT "t7 inner caught ERR="; errcode
+            ConPrint "t7 inner caught ERR=" & STR$(errcode)
         END TRY
-        PRINT "t7 inner try completed"
+        ConPrint "t7 inner try completed"
     CATCH
-        PRINT "t7: OUTER CATCH SHOULD NOT RUN"
+        ConPrint "t7: OUTER CATCH SHOULD NOT RUN"
     END TRY
-    PRINT "t7 done"
+    ConPrint "t7 done"
 
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

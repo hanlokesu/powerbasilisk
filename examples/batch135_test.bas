@@ -1,7 +1,6 @@
 ' Tier-3 DDT: CONTROL ADD CHECKBOX - toggle checkbox
 ' Auto-generated: PowerBasilisk fork batch test
-
-#CONSOLE OFF
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 FUNCTION PBMAIN() AS LONG
     LOCAL hWnd AS QUAD
     LOCAL hChk AS QUAD

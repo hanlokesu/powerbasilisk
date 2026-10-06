@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch182_test.bas - the DDT/GRAPHIC statements of batch 182
 '---------------------------------------------------------------------
@@ -42,7 +71,7 @@
 ' Complexity note: O(1) - a fixed list of draws and pixel reads.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 %RED     = 255      ' COLORREF 0x000000FF
 %GREEN   = 65280    ' COLORREF 0x0000FF00
@@ -66,9 +95,9 @@ FUNCTION PBMAIN () AS LONG
     LOCAL sv     AS LONG
     LOCAL fail   AS LONG
 
-    PRINT "batch 182 - SET/GET SCROLLTEXT / IMAGELIST / RENDER /"
-    PRINT "            STRETCH / STRETCH PAGE / BITMAP CAPTURE"
-    PRINT "-----------------------------------------------------------"
+    ConPrint "batch 182 - SET/GET SCROLLTEXT / IMAGELIST / RENDER /"
+    ConPrint "            STRETCH / STRETCH PAGE / BITMAP CAPTURE"
+    ConPrint "-----------------------------------------------------------"
 
     IMPORT ADDR "IsWindow",  "USER32.DLL" TO iswA, iswH
     IMPORT ADDR "GetDC",     "USER32.DLL" TO dcA, dcH
@@ -76,17 +105,17 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetPixel",  "GDI32.DLL"  TO gpA, gpH
     IF iswA = 0 OR dcA = 0 OR rdA = 0 OR gpA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
+        ConPrint "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
     END IF
 
     ' ---- the drawing target ------------------------------------------
     hGr = 0
     GRAPHIC WINDOW NEW "batch 182", 60, 60, 420, 320 TO hGr
     IF hGr <> 0 THEN
-        PRINT "ok   GRAPHIC WINDOW NEW returned a handle"
+        ConPrint "ok   GRAPHIC WINDOW NEW returned a handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC WINDOW NEW handle"
+        ConPrint "FAIL GRAPHIC WINDOW NEW handle"
     END IF
 
     ' ---- SET / GET SCROLLTEXT ----------------------------------------
@@ -94,20 +123,20 @@ FUNCTION PBMAIN () AS LONG
     sv = 0
     GRAPHIC GET SCROLLTEXT TO sv
     IF sv <> 0 THEN
-        PRINT "ok   SET SCROLLTEXT 1 is reported back by GET SCROLLTEXT"
+        ConPrint "ok   SET SCROLLTEXT 1 is reported back by GET SCROLLTEXT"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET SCROLLTEXT after SET 1 ="; sv
+        ConPrint "FAIL GET SCROLLTEXT after SET 1 =" & STR$(sv)
     END IF
 
     GRAPHIC SET SCROLLTEXT 0
     sv = -1
     GRAPHIC GET SCROLLTEXT TO sv
     IF sv = 0 THEN
-        PRINT "ok   SET SCROLLTEXT 0 is reported back as 0"
+        ConPrint "ok   SET SCROLLTEXT 0 is reported back as 0"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GET SCROLLTEXT after SET 0 ="; sv
+        ConPrint "FAIL GET SCROLLTEXT after SET 0 =" & STR$(sv)
     END IF
 
     GRAPHIC SET SCROLLTEXT 1
@@ -120,20 +149,20 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 30, 30) TO px
     IF px = %RED THEN
-        PRINT "ok   baseline: the red box reached the target (30,30)"
+        ConPrint "ok   baseline: the red box reached the target (30,30)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL baseline pixel (30,30) ="; px
+        ConPrint "FAIL baseline pixel (30,30) =" & STR$(px)
     END IF
 
     ' ---- BITMAP CAPTURE ----------------------------------------------
     hb = 0
     GRAPHIC BITMAP CAPTURE TO hb
     IF hb <> 0 THEN
-        PRINT "ok   BITMAP CAPTURE returned a bitmap handle"
+        ConPrint "ok   BITMAP CAPTURE returned a bitmap handle"
     ELSE
         fail = fail + 1
-        PRINT "FAIL BITMAP CAPTURE handle ="; hb
+        ConPrint "FAIL BITMAP CAPTURE handle =" & STR$(hb)
     END IF
 
     ' ---- STRETCH, using the captured bitmap as the source -------------
@@ -142,34 +171,34 @@ FUNCTION PBMAIN () AS LONG
     px = -1
     CALL DWORD gpA USING GetPixel(hdc, 240, 180) TO px
     IF px = %RED THEN
-        PRINT "ok   STRETCH copied the captured box to (200,150)-(280,220)"
+        ConPrint "ok   STRETCH copied the captured box to (200,150)-(280,220)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL stretched pixel (240,180) ="; px
+        ConPrint "FAIL stretched pixel (240,180) =" & STR$(px)
     END IF
 
     ' ---- STRETCH PAGE (whole-buffer form, must not fault) -------------
     GRAPHIC STRETCH PAGE hb, 0, 0, 0
     GRAPHIC REDRAW
-    PRINT "ok   STRETCH PAGE ran without faulting (whole-buffer copy)"
+    ConPrint "ok   STRETCH PAGE ran without faulting (whole-buffer copy)"
 
     ' ---- IMAGELIST: the null-handle guard ------------------------------
     GRAPHIC IMAGELIST (5,5), 0, 1, 0, 0
-    PRINT "ok   IMAGELIST refused a null list handle without faulting"
+    ConPrint "ok   IMAGELIST refused a null list handle without faulting"
 
     ' ---- RENDER (no pixel assertion - see the header note) ------------
     GRAPHIC RENDER ICON "batch173_test.ico", (300,10)-(316,26)
     GRAPHIC REDRAW
-    PRINT "ok   RENDER ran (icon has an alpha mask: run, not asserted)"
+    ConPrint "ok   RENDER ran (icon has an alpha mask: run, not asserted)"
 
     ' ---- the window is still alive ------------------------------------
     st = 0
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st <> 0 THEN
-        PRINT "ok   the drawing target survived every statement above"
+        ConPrint "ok   the drawing target survived every statement above"
     ELSE
         fail = fail + 1
-        PRINT "FAIL IsWindow(hGr)="; st
+        ConPrint "FAIL IsWindow(hGr)=" & STR$(st)
     END IF
 
     IF hdc <> 0 THEN
@@ -193,16 +222,16 @@ FUNCTION PBMAIN () AS LONG
     hbL = 0
     GRAPHIC BITMAP CAPTURE TO hbL
     IF hbL <> 0 THEN
-        PRINT "ok   BITMAP CAPTURE into a LONG destination kept its low half"
+        ConPrint "ok   BITMAP CAPTURE into a LONG destination kept its low half"
     ELSE
         fail = fail + 1
-        PRINT "FAIL BITMAP CAPTURE into a LONG destination read back 0"
+        ConPrint "FAIL BITMAP CAPTURE into a LONG destination read back 0"
     END IF
     IF guard = 12345 THEN
-        PRINT "ok   the LONG next to the destination was not written past"
+        ConPrint "ok   the LONG next to the destination was not written past"
     ELSE
         fail = fail + 1
-        PRINT "FAIL the destination's i64 store ran into its neighbour: guard ="; guard
+        ConPrint "FAIL the destination's i64 store ran into its neighbour: guard =" & STR$(guard)
     END IF
 
     ' ---- close the window before returning -----------------------------
@@ -216,13 +245,13 @@ FUNCTION PBMAIN () AS LONG
     st = 1
     CALL DWORD iswA USING IsWindow(hGr) TO st
     IF st = 0 THEN
-        PRINT "ok   GRAPHIC WINDOW END closed the drawing target"
+        ConPrint "ok   GRAPHIC WINDOW END closed the drawing target"
     ELSE
         fail = fail + 1
-        PRINT "FAIL the window was still alive after GRAPHIC WINDOW END"
+        ConPrint "FAIL the window was still alive after GRAPHIC WINDOW END"
     END IF
 
-    PRINT "-----------------------------------------------------------"
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "-----------------------------------------------------------"
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     FUNCTION = fail
 END FUNCTION

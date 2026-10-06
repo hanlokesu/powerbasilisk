@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' =====================================================================
 ' batch163_test.bas - DIALOG GET SIZE / DIALOG SET SIZE
 ' ---------------------------------------------------------------------
@@ -21,7 +50,7 @@
 '           program never enters a message loop, so it exits by itself and
 '           needs no interaction.
 ' =====================================================================
-#COMPILE EXE
+
 
 GLOBAL g_hDlg AS QUAD
 
@@ -31,6 +60,7 @@ FUNCTION PBMAIN () AS LONG
     LOCAL w2 AS LONG
     LOCAL h2 AS LONG
     LOCAL ok AS LONG
+    LOCAL g_hDlg AS LONG
 
     ok = 1
 
@@ -39,7 +69,7 @@ FUNCTION PBMAIN () AS LONG
     ' ---- GET SIZE on the freshly created dialog ---------------------
     w1 = 0 : h1 = 0
     DIALOG GET SIZE g_hDlg TO w1, h1
-    PRINT "after DIALOG NEW   ="; w1; "x"; h1
+    ConPrint "after DIALOG NEW   =" & STR$(w1) & "x" & STR$(h1)
     IF w1 <> 320 THEN ok = 0
     IF h1 <> 200 THEN ok = 0
 
@@ -47,17 +77,17 @@ FUNCTION PBMAIN () AS LONG
     DIALOG SET SIZE g_hDlg, 500, 360
     w2 = 0 : h2 = 0
     DIALOG GET SIZE g_hDlg TO w2, h2
-    PRINT "after DIALOG SET   ="; w2; "x"; h2
+    ConPrint "after DIALOG SET   =" & STR$(w2) & "x" & STR$(h2)
     IF w2 <> 500 THEN ok = 0
     IF h2 <> 360 THEN ok = 0
 
     DIALOG END g_hDlg, 1
 
     IF ok = 1 THEN
-        PRINT "PASS"
+        ConPrint "PASS"
         FUNCTION = 0
     ELSE
-        PRINT "FAIL"
+        ConPrint "FAIL"
         FUNCTION = 1
     END IF
 END FUNCTION

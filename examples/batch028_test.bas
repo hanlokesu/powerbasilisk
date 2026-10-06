@@ -1,3 +1,33 @@
+#COMPILE EXE
+#DIM ALL
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch 28: THREADED (thread-local storage)
 ' THREADED vars are global to every Sub/Function but each thread has its
 ' own independent copy. We verify: main sets tcount=1, a child thread sets
@@ -6,8 +36,7 @@
 ' NOTE: the main thread waits with SLEEP, not a busy loop -- an optimizer
 ' is allowed to hoist an invariant global load out of a busy loop, so a
 ' DO WHILE flag=0 spin can keep reading the pre-thread value forever.
-#COMPILE EXE
-#DIM ALL
+
 
 GLOBAL worker_ran AS LONG
 GLOBAL worker_val AS LONG
@@ -42,18 +71,19 @@ FUNCTION PBMAIN() AS LONG
     SLEEP 500
 
     IF worker_ran = 0 THEN
-        PRINT "worker did NOT run -> THREAD CREATE issue"
+        ConPrint "worker did NOT run -> THREAD CREATE issue"
     ELSE
-        PRINT "worker ran: worker_val="; worker_val; " worker_msg="; worker_msg
+        ConPrint "worker ran: worker_val=" & STR$(worker_val) & " worker_msg=" & STR$(worker_msg)
     END IF
 
     IF tcount = 1 AND tmsg = "main" THEN
-        PRINT "main still sees tcount=1 tmsg=main  -> TLS OK"
+        ConPrint "main still sees tcount=1 tmsg=main  -> TLS OK"
     ELSE
-        PRINT "main sees tcount="; tcount; " tmsg="; tmsg; " -> TLS FAIL"
+        ConPrint "main sees tcount=" & STR$(tcount) & " tmsg=" & STR$(tmsg) & " -> TLS FAIL"
     END IF
 
     THREAD CLOSE th
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

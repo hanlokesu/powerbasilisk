@@ -1,31 +1,72 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 101: ACODE$ test
 FUNCTION PBMAIN() AS LONG
     LOCAL s AS STRING
     LOCAL r AS STRING
     LOCAL waitk AS STRING
 
-    PRINT "=== Batch 101: ACODE$ ==="
+    ConPrint "=== Batch 101: ACODE$ ==="
 
     ' Test 1: ACODE$ with normal string
     s = "Hello World"
     r = ACODE$(s)
-    PRINT "Test 1: ACODE$('Hello World') = ["; r; "]"
-    IF r = "Hello World" THEN PRINT "  PASS" ELSE PRINT "  FAIL"
+    ConPrint "Test 1: ACODE$('Hello World') = [" & STR$(r) & "]"
+    IF r = "Hello World" THEN
+        ConPrint "  PASS"
+    ELSE
+        ConPrint "  FAIL"
+    END IF
 
     ' Test 2: ACODE$ with empty string
     s = ""
     r = ACODE$(s)
-    PRINT "Test 2: ACODE$('') = ["; r; "]"
-    IF r = "" THEN PRINT "  PASS" ELSE PRINT "  FAIL"
+    ConPrint "Test 2: ACODE$('') = [" & STR$(r) & "]"
+    IF r = "" THEN
+        ConPrint "  PASS"
+    ELSE
+        ConPrint "  FAIL"
+    END IF
 
     ' Test 3: ACODE$ with special characters
     s = "Test 123 !@#"
     r = ACODE$(s)
-    PRINT "Test 3: ACODE$('Test 123 !@#') = ["; r; "]"
-    IF r = "Test 123 !@#" THEN PRINT "  PASS" ELSE PRINT "  FAIL"
+    ConPrint "Test 3: ACODE$('Test 123 !@#') = [" & STR$(r) & "]"
+    IF r = "Test 123 !@#" THEN
+        ConPrint "  PASS"
+    ELSE
+        ConPrint "  FAIL"
+    END IF
 
-    PRINT ""
-    PRINT "=== Batch 101 tests complete ==="
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint ""
+    ConPrint "=== Batch 101 tests complete ==="
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

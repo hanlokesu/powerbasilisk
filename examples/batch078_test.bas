@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - Batch 78 Test: XPRINT GET MARGIN + DISPLAY common dialogs (6 statements)
 FUNCTION PBMAIN() AS LONG
     LOCAL ml AS LONG, mt AS LONG, mr AS LONG, mb AS LONG
@@ -5,29 +33,30 @@ FUNCTION PBMAIN() AS LONG
     LOCAL color AS LONG
     LOCAL waitk AS STRING
 
-    PRINT "=== Batch 78: XPRINT GET MARGIN + DISPLAY ==="
+    ConPrint "=== Batch 78: XPRINT GET MARGIN + DISPLAY ==="
 
     XPRINT ATTACH DEFAULT
     XPRINT GET MARGIN TO ml, mt, mr, mb
-    PRINT "GET MARGIN:"; ml; mt; mr; mb
+    ConPrint "GET MARGIN:" & STR$(ml) & STR$(mt) & STR$(mr) & STR$(mb)
     XPRINT CLOSE
 
     DISPLAY OPENFILE "Open", "All|*.*", "C:\" TO result
-    PRINT "DISPLAY OPENFILE: ["; result; "]"
+    ConPrint "DISPLAY OPENFILE: [" & STR$(result) & "]"
 
     DISPLAY SAVEFILE "Save", "All|*.*", "C:\" TO result
-    PRINT "DISPLAY SAVEFILE: ["; result; "]"
+    ConPrint "DISPLAY SAVEFILE: [" & STR$(result) & "]"
 
     DISPLAY COLOR TO color
-    PRINT "DISPLAY COLOR:"; color
+    ConPrint "DISPLAY COLOR:" & STR$(color)
 
     DISPLAY FONT TO result
-    PRINT "DISPLAY FONT: ["; result; "]"
+    ConPrint "DISPLAY FONT: [" & STR$(result) & "]"
 
     DISPLAY BROWSE "Browse", "C:\" TO result
-    PRINT "DISPLAY BROWSE: ["; result; "]"
+    ConPrint "DISPLAY BROWSE: [" & STR$(result) & "]"
 
-    PRINT "=== Result: ALL PASS (6 statements)"
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "=== Result: ALL PASS (6 statements)"
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

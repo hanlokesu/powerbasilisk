@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' =====================================================================
 ' batch185_test.bas - batch 185: the GRAPHIC keyboard family + SPLIT
 '---------------------------------------------------------------------
@@ -55,116 +83,116 @@ FUNCTION PBMAIN () AS LONG
     ' ---------------------------------------------------------------
     ' 1. GRAPHIC INSTAT - empty queue reports no character
     ' ---------------------------------------------------------------
-    PRINT "--- 1. GRAPHIC INSTAT: an empty queue reports no character ---"
+    ConPrint "--- 1. GRAPHIC INSTAT: an empty queue reports no character ---"
     g = -1                                  ' poison, so a silent failure shows up
     GRAPHIC INSTAT TO g
     IF g <> 0 THEN
         fails = fails + 1
-        PRINT "  FAIL GRAPHIC INSTAT returned"; g; "- expected 0 with an empty queue"
+        ConPrint "  FAIL GRAPHIC INSTAT returned" & STR$(g) & "- expected 0 with an empty queue"
     ELSE
-        PRINT "  PASS GRAPHIC INSTAT -> 0 with nothing buffered"
+        ConPrint "  PASS GRAPHIC INSTAT -> 0 with nothing buffered"
     END IF
 
     ' ---------------------------------------------------------------
     ' 2. GRAPHIC INPUT FLUSH - accepted, and the queue stays empty
     ' ---------------------------------------------------------------
-    PRINT "--- 2. GRAPHIC INPUT FLUSH: accepted, queue stays empty ---"
+    ConPrint "--- 2. GRAPHIC INPUT FLUSH: accepted ; queue stays empty ---"
     GRAPHIC INPUT FLUSH
     g = -1
     GRAPHIC INSTAT TO g
     IF g <> 0 THEN
         fails = fails + 1
-        PRINT "  FAIL after GRAPHIC INPUT FLUSH, INSTAT returned"; g; "- expected 0"
+        ConPrint "  FAIL after GRAPHIC INPUT FLUSH ; INSTAT returned" & STR$(g) & "- expected 0"
     ELSE
-        PRINT "  PASS GRAPHIC INPUT FLUSH -> queue still empty"
+        ConPrint "  PASS GRAPHIC INPUT FLUSH -> queue still empty"
     END IF
 
     ' ---------------------------------------------------------------
     ' 3. Querying is non-destructive: two queries in a row agree
     ' ---------------------------------------------------------------
-    PRINT "--- 3. GRAPHIC INSTAT keeps querying without consuming ---"
+    ConPrint "--- 3. GRAPHIC INSTAT keeps querying without consuming ---"
     g = -1
     GRAPHIC INSTAT TO g
     IF g = 0 THEN
-        PRINT "  PASS GRAPHIC INSTAT stayed 0 across two consecutive queries"
+        ConPrint "  PASS GRAPHIC INSTAT stayed 0 across two consecutive queries"
     ELSE
         fails = fails + 1
-        PRINT "  FAIL GRAPHIC INSTAT changed without a key: "; g
+        ConPrint "  FAIL GRAPHIC INSTAT changed without a key: " & STR$(g)
     END IF
 
     ' ---------------------------------------------------------------
     ' 4. GRAPHIC INKEY$ with nothing buffered -> the null string
     ' ---------------------------------------------------------------
-    PRINT "--- 4. GRAPHIC INKEY$: nothing buffered gives a null string ---"
+    ConPrint "--- 4. GRAPHIC INKEY$: nothing buffered gives a null string ---"
     k = "poison"
     GRAPHIC INKEY$ TO k
     IF LEN(k) <> 0 THEN
         fails = fails + 1
-        PRINT "  FAIL GRAPHIC INKEY$ returned LEN"; LEN(k); "- expected 0"
+        ConPrint "  FAIL GRAPHIC INKEY$ returned LEN" & STR$(LEN(k)) & "- expected 0"
     ELSE
-        PRINT "  PASS GRAPHIC INKEY$ -> zero-length string"
+        ConPrint "  PASS GRAPHIC INKEY$ -> zero-length string"
     END IF
 
     ' ---------------------------------------------------------------
     ' 5. GRAPHIC WAITKEY$ with TimeOut& = 0 must not wait
     ' ---------------------------------------------------------------
-    PRINT "--- 5. GRAPHIC WAITKEY$("", 0): returns instead of waiting ---"
+    ConPrint "--- 5. GRAPHIC WAITKEY$("" ; 0): returns instead of waiting ---"
     w = "poison"
     GRAPHIC WAITKEY$("", 0) TO w
     IF LEN(w) <> 0 THEN
         fails = fails + 1
-        PRINT "  FAIL GRAPHIC WAITKEY$ returned LEN"; LEN(w); "- expected 0"
+        ConPrint "  FAIL GRAPHIC WAITKEY$ returned LEN" & STR$(LEN(w)) & "- expected 0"
     ELSE
-        PRINT "  PASS GRAPHIC WAITKEY$ -> zero-length string, no block"
+        ConPrint "  PASS GRAPHIC WAITKEY$ -> zero-length string ; no block"
     END IF
 
     ' ---------------------------------------------------------------
     ' 6. GRAPHIC SPLIT with a field wider than the text
     ' ---------------------------------------------------------------
-    PRINT "--- 6. GRAPHIC SPLIT: a wide field keeps everything in part 1 ---"
+    ConPrint "--- 6. GRAPHIC SPLIT: a wide field keeps everything in part 1 ---"
     src = "The quick brown fox"
     p1 = "poison"
     p2 = "poison"
     GRAPHIC SPLIT src, 100000 TO p1, p2
     IF p1 <> src OR LEN(p2) <> 0 THEN
         fails = fails + 1
-        PRINT "  FAIL wide SPLIT: part1 = "; p1; "  part2 LEN ="; LEN(p2)
+        ConPrint "  FAIL wide SPLIT: part1 = " & STR$(p1) & "  part2 LEN =" & STR$(LEN(p2))
     ELSE
-        PRINT "  PASS wide SPLIT -> part1 is the whole string, part2 empty"
+        ConPrint "  PASS wide SPLIT -> part1 is the whole string ; part2 empty"
     END IF
 
     ' ---------------------------------------------------------------
     ' 7. GRAPHIC SPLIT is lossless: part1 & part2 = the original
     ' ---------------------------------------------------------------
-    PRINT "--- 7. GRAPHIC SPLIT: part1 & part2 = the original ---"
+    ConPrint "--- 7. GRAPHIC SPLIT: part1 & part2 = the original ---"
     p1 = "poison"
     p2 = "poison"
     GRAPHIC SPLIT src, 24 TO p1, p2
     IF (p1 & p2) <> src THEN
         fails = fails + 1
-        PRINT "  FAIL lossless: ["; p1; "] & ["; p2; "] <> "; src
+        ConPrint "  FAIL lossless: [" & STR$(p1) & "] & [" & STR$(p2) & "] <> " & STR$(src)
     ELSE
-        PRINT "  PASS lossless -> "; LEN(p1); " +"; LEN(p2); " characters"
+        ConPrint "  PASS lossless -> " & STR$(LEN(p1)) & " +" & STR$(LEN(p2)) & " characters"
     END IF
 
     ' ---------------------------------------------------------------
     ' 8. A narrow field really does split
     ' ---------------------------------------------------------------
-    PRINT "--- 8. GRAPHIC SPLIT: a narrow field splits ---"
+    ConPrint "--- 8. GRAPHIC SPLIT: a narrow field splits ---"
     p1 = "poison"
     p2 = "poison"
     GRAPHIC SPLIT src, 16 TO p1, p2
     IF LEN(p1) >= LEN(src) OR LEN(p2) = 0 OR (p1 & p2) <> src THEN
         fails = fails + 1
-        PRINT "  FAIL narrow SPLIT: part1 LEN ="; LEN(p1); " part2 LEN ="; LEN(p2)
+        ConPrint "  FAIL narrow SPLIT: part1 LEN =" & STR$(LEN(p1)) & " part2 LEN =" & STR$(LEN(p2))
     ELSE
-        PRINT "  PASS narrow SPLIT -> part1 LEN ="; LEN(p1); ", part2 LEN ="; LEN(p2)
+        ConPrint "  PASS narrow SPLIT -> part1 LEN =" & STR$(LEN(p1)) & " ; part2 LEN =" & STR$(LEN(p2))
     END IF
 
     ' ---------------------------------------------------------------
     ' 9. GRAPHIC SPLIT WORD can only shorten part 1
     ' ---------------------------------------------------------------
-    PRINT "--- 9. GRAPHIC SPLIT WORD never lengthens part 1 ---"
+    ConPrint "--- 9. GRAPHIC SPLIT WORD never lengthens part 1 ---"
     p1 = "poison"
     p2 = "poison"
     n1 = "poison"
@@ -173,9 +201,9 @@ FUNCTION PBMAIN () AS LONG
     GRAPHIC SPLIT WORD src, 40 TO n1, n2
     IF (n1 & n2) <> src OR LEN(n1) > LEN(p1) OR LEFT$(src, LEN(n1)) <> n1 THEN
         fails = fails + 1
-        PRINT "  FAIL WORD SPLIT: plain LEN ="; LEN(p1); " word LEN ="; LEN(n1)
+        ConPrint "  FAIL WORD SPLIT: plain LEN =" & STR$(LEN(p1)) & " word LEN =" & STR$(LEN(n1))
     ELSE
-        PRINT "  PASS WORD SPLIT -> "; LEN(p1); " -> "; LEN(n1); " characters, still lossless"
+        ConPrint "  PASS WORD SPLIT -> " & STR$(LEN(p1)) & " -> " & STR$(LEN(n1)) & " characters ; still lossless"
     END IF
 
     ' ---------------------------------------------------------------
@@ -183,17 +211,18 @@ FUNCTION PBMAIN () AS LONG
     '     Both block until ENTER, so they are compiled but never run here.
     '     Uncomment in a PBGRAPHIC window to hand-test them.
     ' ---------------------------------------------------------------
-    PRINT "--- 10. GRAPHIC INPUT / GRAPHIC LINE INPUT: compiled, not run ---"
-    PRINT "  NOTE these two read the keyboard and would block a headless run"
+    ConPrint "--- 10. GRAPHIC INPUT / GRAPHIC LINE INPUT: compiled ; not run ---"
+    ConPrint "  NOTE these two read the keyboard and would block a headless run"
     ' GRAPHIC LINE INPUT "Name: " k
     ' GRAPHIC INPUT "Two values: ", g, k
-    PRINT "  PASS both statements are compiled by this sample"
+    ConPrint "  PASS both statements are compiled by this sample"
 
-    PRINT
+    ConPrint ""
     IF fails = 0 THEN
-        PRINT "=== FAILURES:0 ==="
+        ConPrint "=== FAILURES:0 ==="
     ELSE
-        PRINT "=== FAILURES:"; fails; " ==="
+        ConPrint "=== FAILURES:" & STR$(fails) & " ==="
     END IF
     FUNCTION = fails
 END FUNCTION
+

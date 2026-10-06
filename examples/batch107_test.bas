@@ -1,9 +1,37 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' Batch 107: DECLARE / DIM / REDIM
 DECLARE SUB MySub()
 DECLARE FUNCTION MyFunc(x AS LONG) AS LONG
 
 SUB MySub()
-    PRINT "  MySub called"
+    ConPrint "  MySub called"
 END SUB
 
 FUNCTION MyFunc(x AS LONG) AS LONG
@@ -15,20 +43,20 @@ FUNCTION PBMAIN() AS LONG
     LOCAL arr(5) AS LONG
     LOCAL waitk AS STRING
     
-    PRINT "Testing DIM..."
+    ConPrint "Testing DIM..."
     DIM arr2(10) AS LONG
-    PRINT "  DIM arr2(10) OK"
+    ConPrint "  DIM arr2(10) OK"
     
-    PRINT "Testing REDIM..."
+    ConPrint "Testing REDIM..."
     REDIM arr2(20) AS LONG
-    PRINT "  REDIM arr2(20) OK"
+    ConPrint "  REDIM arr2(20) OK"
     
-    PRINT "Testing DECLARE..."
+    ConPrint "Testing DECLARE..."
     CALL MySub
     i = MyFunc(5)
-    PRINT "  MyFunc(5) = "; i
+    ConPrint "  MyFunc(5) = " & STR$(i)
     
-    PRINT "DIM / REDIM / DECLARE tests passed!"
-    PRINT "Press any key to exit..."
+    ConPrint "DIM / REDIM / DECLARE tests passed!"
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

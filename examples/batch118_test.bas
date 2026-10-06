@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch118_test.bas
 ' Batch 118: wire up previously half-finished statements.
 '   GRAPHIC PRINT ........ real GDI text on the attached bitmap (pb_graphic_print_str)
@@ -20,12 +48,12 @@ FUNCTION PBMAIN() AS LONG
 
     showDialogs = 0
 
-    PRINT "=== Batch 118: half-finished wiring completion ==="
+    ConPrint "=== Batch 118: half-finished wiring completion ==="
 
     ' --- GRAPHIC PRINT: draw text onto an offscreen bitmap, save it ----------
     GRAPHIC BITMAP NEW 240, 80 TO hbmp
     IF hbmp = 0 THEN
-        PRINT "FAIL: GRAPHIC BITMAP NEW returned zero"
+        ConPrint "FAIL: GRAPHIC BITMAP NEW returned zero"
         INCR fails
     ELSE
         GRAPHIC ATTACH hbmp
@@ -37,16 +65,16 @@ FUNCTION PBMAIN() AS LONG
         GRAPHIC DETACH
         GRAPHIC BITMAP END
         IF ISFILE("batch118_out.bmp") THEN
-            PRINT "OK: GRAPHIC PRINT rendered and saved batch118_out.bmp"
+            ConPrint "OK: GRAPHIC PRINT rendered and saved batch118_out.bmp"
         ELSE
-            PRINT "FAIL: GRAPHIC SAVE did not produce batch118_out.bmp"
+            ConPrint "FAIL: GRAPHIC SAVE did not produce batch118_out.bmp"
             INCR fails
         END IF
     END IF
 
     ' --- PLAY SOUND: a short 440 Hz beep (pb_play_sound -> Beep) -------------
     PLAY SOUND 440, 120
-    PRINT "OK: PLAY SOUND 440,120 issued"
+    ConPrint "OK: PLAY SOUND 440,120 issued"
 
     ' --- Interactive common dialogs / printer / resource (compile-verified) -
     IF showDialogs THEN
@@ -63,11 +91,11 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     IF fails = 0 THEN
-        PRINT "=== Batch 118: ALL PASS ==="
+        ConPrint "=== Batch 118: ALL PASS ==="
     ELSE
-        PRINT "=== Batch 118: FAILURES="; fails; " ==="
+        ConPrint "=== Batch 118: FAILURES=" & STR$(fails) & " ==="
     END IF
 
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

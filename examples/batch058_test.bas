@@ -1,7 +1,35 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch58_test.bas
 ' GRAPHIC GET CANVAS / GET DC / GET MIX / SET MIX (batch 58)
 FUNCTION PBMAIN() AS LONG
-    LOCAL hbmp AS QUAD
+    LOCAL hbmp AS LONG
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
     LOCAL hc AS QUAD
@@ -12,39 +40,39 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC ATTACH hbmp
 
     GRAPHIC GET CANVAS TO hc
-    PRINT "OK: canvas="; hc
+    ConPrint "OK: canvas=" & STR$(hc)
     IF hc = hbmp THEN
-        PRINT "OK: canvas matches bitmap"
+        ConPrint "OK: canvas matches bitmap"
     ELSE
-        PRINT "FAIL: canvas mismatch"
+        ConPrint "FAIL: canvas mismatch"
         INCR fails
     END IF
 
     GRAPHIC GET DC TO hdc
-    PRINT "OK: dc="; hdc
+    ConPrint "OK: dc=" & STR$(hdc)
     IF hdc <> 0 THEN
-        PRINT "OK: dc non-zero"
+        ConPrint "OK: dc non-zero"
     ELSE
-        PRINT "FAIL: dc zero"
+        ConPrint "FAIL: dc zero"
         INCR fails
     END IF
 
     GRAPHIC SET MIX (7)
     GRAPHIC GET MIX TO mix
-    PRINT "OK: mix="; mix
+    ConPrint "OK: mix=" & STR$(mix)
     IF mix = 7 THEN
-        PRINT "OK: mix set/get round-trip"
+        ConPrint "OK: mix set/get round-trip"
     ELSE
-        PRINT "FAIL: mix wrong"
+        ConPrint "FAIL: mix wrong"
         INCR fails
     END IF
 
     GRAPHIC SET MIX (13)
     GRAPHIC GET MIX TO mix
     IF mix = 13 THEN
-        PRINT "OK: mix reset"
+        ConPrint "OK: mix reset"
     ELSE
-        PRINT "FAIL: mix reset wrong"
+        ConPrint "FAIL: mix reset wrong"
         INCR fails
     END IF
 
@@ -52,10 +80,10 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC BITMAP END
 
     IF fails = 0 THEN
-        PRINT "batch58: ALL PASS"
+        ConPrint "batch58: ALL PASS"
     ELSE
-        PRINT "batch58: FAILURES="; fails
+        ConPrint "batch58: FAILURES=" & STR$(fails)
     END IF
-    PRINT "Press any key to exit..."
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

@@ -1,8 +1,9 @@
+#COMPILE EXE
 '=====================================================================
 ' Batch 156 test — #RESOURCE VERSIONINFO + hard-fail diagnostics
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 ' Version info embedded into the EXE
 #RESOURCE VERSIONINFO

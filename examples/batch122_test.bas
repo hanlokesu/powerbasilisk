@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 DEF fnSqr(x) = x * x
 DEF fnAvg(x, y) = (x + y) / 2
 
@@ -6,17 +34,17 @@ FUNCTION PBMAIN() AS LONG
     LOCAL a AS LONG, b AS LONG
     LOCAL p AS LONG, o AS LONG
 
-    PRINT "=== Batch 122: LET * + DEF inline expansion ==="
+    ConPrint "=== Batch 122: LET * + DEF inline expansion ==="
     LET *p = o
-    PRINT "1 LET *p = o accepted OK"
+    ConPrint "1 LET *p = o accepted OK"
 
-    PRINT "2 fnSqr(5) ="; fnSqr(5)
-    PRINT "3 fnSqr(9) ="; fnSqr(9)
+    ConPrint "2 fnSqr(5) =" & STR$(fnSqr(5))
+    ConPrint "3 fnSqr(9) =" & STR$(fnSqr(9))
     a = 20: b = 10
-    PRINT "4 fnAvg(a,b) ="; fnAvg(a, b)
+    ConPrint "4 fnAvg(a,b) =" & STR$(fnAvg(a, b))
 
-    PRINT ""
-    PRINT "=== If 25, 81, 15 shown, DEF inline works ==="
-    PRINT "Press any key to exit..."
+    ConPrint ""
+    ConPrint "=== If 25, 81, 15 shown, DEF inline works ==="
+    ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

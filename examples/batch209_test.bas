@@ -1,3 +1,31 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch209_test.bas - batch 209: the five parked drops report, exactly once each
 '---------------------------------------------------------------------
@@ -22,7 +50,7 @@
 '=====================================================================
 FUNCTION PBMAIN () AS LONG
     LOCAL fail AS LONG
-    LOCAL hil AS QUAD
+    LOCAL hil AS LONG
     LOCAL cnt AS LONG
     ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
@@ -30,7 +58,7 @@ FUNCTION PBMAIN () AS LONG
     ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     IMAGELIST NEW BITMAP 16, 16, 32, 2 TO hil
     IMAGELIST GET COUNT hil TO cnt
-    PRINT "imagelist handle = "; hil; "  count = "; cnt
+    ConPrint "imagelist handle = " & STR$(hil) & "  count = " & STR$(cnt)
     IF hil = 0 THEN
         fail = fail + 1
     END IF
@@ -38,7 +66,7 @@ FUNCTION PBMAIN () AS LONG
         fail = fail + 1
     END IF
     IMAGELIST KILL hil
-    PRINT "=== FAILURES:"; fail; "==="
+    ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
 WAITKEY$

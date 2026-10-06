@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PBXB64 / PowerBasilisk Enhanced — batch 176 test
 ' ---------------------------------------------------------------------
@@ -50,7 +79,7 @@
 ' the interesting part is the address/identity plumbing, not any algorithm.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg   AS LONG
@@ -76,14 +105,14 @@ FUNCTION PBMAIN () AS LONG
     LOCAL q      AS QUAD
     LOCAL fail   AS LONG
 
-    PRINT "batch 176 - CONTROL message and state family"
-    PRINT "-------------------------------------------"
+    ConPrint "batch 176 - CONTROL message and state family"
+    ConPrint "-------------------------------------------"
 
     IMPORT ADDR "SendMessageA", "USER32.DLL" TO smAddr, smHndl
     IMPORT ADDR "GetFocus", "USER32.DLL" TO gfAddr, gfHndl
     IF smAddr = 0 OR gfAddr = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR SendMessageA / GetFocus"
+        ConPrint "FAIL IMPORT ADDR SendMessageA / GetFocus"
     END IF
 
     ' The dialog is shown modeless: a modal dialog would need a human to
@@ -105,13 +134,13 @@ FUNCTION PBMAIN () AS LONG
     CONTROL HANDLE hDlg, 101 TO hTmp
     IF hTmp = 0 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL HANDLE 101 returned 0"
+        ConPrint "FAIL CONTROL HANDLE 101 returned 0"
     ELSE
         IF hTmp = hBtn THEN
-            PRINT "ok   CONTROL HANDLE 101 equals the handle CONTROL ADD returned"
+            ConPrint "ok   CONTROL HANDLE 101 equals the handle CONTROL ADD returned"
         ELSE
             fail = fail + 1
-            PRINT "FAIL CONTROL HANDLE 101 ="; hTmp; " but CONTROL ADD returned"; hBtn
+            ConPrint "FAIL CONTROL HANDLE 101 =" & STR$(hTmp) & " but CONTROL ADD returned" & STR$(hBtn)
         END IF
     END IF
 
@@ -119,9 +148,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL HANDLE hDlg, 999 TO hTmp
     IF hTmp <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL HANDLE 999 (never created) ->"; hTmp; " (want 0)"
+        ConPrint "FAIL CONTROL HANDLE 999 (never created) ->" & STR$(hTmp) & " (want 0)"
     ELSE
-        PRINT "ok   CONTROL HANDLE for a missing id -> 0"
+        ConPrint "ok   CONTROL HANDLE for a missing id -> 0"
     END IF
 
     ' ------------------------------------------------------------------
@@ -131,9 +160,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 102, 14, 0, 0 TO n
     IF n <> 5 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND WM_GETTEXTLENGTH ->"; n; " (the editbox holds 'hello')"
+        ConPrint "FAIL CONTROL SEND WM_GETTEXTLENGTH ->" & STR$(n) & " (the editbox holds 'hello')"
     ELSE
-        PRINT "ok   CONTROL SEND WM_GETTEXTLENGTH -> 5"
+        ConPrint "ok   CONTROL SEND WM_GETTEXTLENGTH -> 5"
     END IF
 
     ' A state change made by SEND is visible to the very next statement -
@@ -143,9 +172,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 103, 240, 0, 0 TO st
     IF st <> 1 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND BM_SETCHECK then BM_GETCHECK ->"; st; " (want 1)"
+        ConPrint "FAIL CONTROL SEND BM_SETCHECK then BM_GETCHECK ->" & STR$(st) & " (want 1)"
     ELSE
-        PRINT "ok   CONTROL SEND is synchronous (BM_SETCHECK was in effect immediately)"
+        ConPrint "ok   CONTROL SEND is synchronous (BM_SETCHECK was in effect immediately)"
     END IF
 
     ' The optional TO clause has to work for a QUAD variable as well as for
@@ -154,9 +183,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 102, 14, 0, 0 TO q
     IF q <> 5 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND TO a QUAD ->"; q; " (want 5)"
+        ConPrint "FAIL CONTROL SEND TO a QUAD ->" & STR$(q) & " (want 5)"
     ELSE
-        PRINT "ok   CONTROL SEND TO a QUAD variable -> 5"
+        ConPrint "ok   CONTROL SEND TO a QUAD variable -> 5"
     END IF
 
     ' ------------------------------------------------------------------
@@ -173,9 +202,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 102, 176, VARPTR(s1), VARPTR(s2)
     IF s1 <> 1 OR s2 <> 4 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND VARPTR write-back ->"; s1; s2; " (want 1 and 4)"
+        ConPrint "FAIL CONTROL SEND VARPTR write-back ->" & STR$(s1) & STR$(s2) & " (want 1 and 4)"
     ELSE
-        PRINT "ok   CONTROL SEND VARPTR write-back through wParam and lParam (1,4)"
+        ConPrint "ok   CONTROL SEND VARPTR write-back through wParam and lParam (1,4)"
     END IF
 
     ' WM_GETTEXT fills a fixed string buffer.  A non-zero return value
@@ -184,13 +213,13 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 102, 13, 32, VARPTR(buf) TO n
     IF n <> 5 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND WM_GETTEXT ->"; n; " (want 5)"
+        ConPrint "FAIL CONTROL SEND WM_GETTEXT ->" & STR$(n) & " (want 5)"
     ELSE
         IF INSTR(buf, "hello") > 0 THEN
-            PRINT "ok   CONTROL SEND filled a STRING * 32 buffer through VARPTR"
+            ConPrint "ok   CONTROL SEND filled a STRING * 32 buffer through VARPTR"
         ELSE
             fail = fail + 1
-            PRINT "FAIL CONTROL SEND returned"; n; " but the buffer stayed empty"
+            ConPrint "FAIL CONTROL SEND returned" & STR$(n) & " but the buffer stayed empty"
         END IF
     END IF
 
@@ -198,9 +227,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 999, 14, 0, 0 TO n
     IF n <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SEND to a missing id ->"; n; " (want 0, and no crash)"
+        ConPrint "FAIL CONTROL SEND to a missing id ->" & STR$(n) & " (want 0, and no crash)"
     ELSE
-        PRINT "ok   CONTROL SEND to a missing id -> 0"
+        ConPrint "ok   CONTROL SEND to a missing id -> 0"
     END IF
 
     ' ------------------------------------------------------------------
@@ -215,9 +244,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SEND hDlg, 103, 240, 0, 0 TO st
     IF st <> 1 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL POST was already delivered (BM_GETCHECK ->"; st; ")"
+        ConPrint "FAIL CONTROL POST was already delivered (BM_GETCHECK ->" & STR$(st) & ")"
     ELSE
-        PRINT "ok   CONTROL POST is asynchronous (the uncheck is still queued)"
+        ConPrint "ok   CONTROL POST is asynchronous (the uncheck is still queued)"
     END IF
 
     ' ------------------------------------------------------------------
@@ -228,9 +257,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET USER hDlg, 101, 3 TO v
     IF v <> 4242 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL GET USER 101,3 ->"; v; " (want 4242)"
+        ConPrint "FAIL CONTROL GET USER 101,3 ->" & STR$(v) & " (want 4242)"
     ELSE
-        PRINT "ok   CONTROL SET/GET USER 101,3 -> 4242"
+        ConPrint "ok   CONTROL SET/GET USER 101,3 -> 4242"
     END IF
 
     CONTROL SET USER hDlg, 102, 3, 99
@@ -238,9 +267,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET USER hDlg, 101, 3 TO v
     IF v <> 4242 THEN
         fail = fail + 1
-        PRINT "FAIL the user slots leak between controls: 101,3 ->"; v
+        ConPrint "FAIL the user slots leak between controls: 101,3 ->" & STR$(v)
     ELSE
-        PRINT "ok   each control owns its own slots (102,3 did not touch 101,3)"
+        ConPrint "ok   each control owns its own slots (102,3 did not touch 101,3)"
     END IF
 
     CONTROL SET USER hDlg, 101, 9, 7
@@ -248,9 +277,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET USER hDlg, 101, 9 TO v
     IF v <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL index 9 (outside 1..8) ->"; v; " (want 0, the write is ignored)"
+        ConPrint "FAIL index 9 (outside 1..8) ->" & STR$(v) & " (want 0, the write is ignored)"
     ELSE
-        PRINT "ok   an index outside 1..8 is ignored"
+        ConPrint "ok   an index outside 1..8 is ignored"
     END IF
 
     CONTROL SET USER hDlg, 999, 1, 77
@@ -258,9 +287,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL GET USER hDlg, 999, 1 TO v
     IF v <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL SET USER on a missing id stored"; v
+        ConPrint "FAIL SET USER on a missing id stored" & STR$(v)
     ELSE
-        PRINT "ok   CONTROL SET USER on a missing id stored nothing"
+        ConPrint "ok   CONTROL SET USER on a missing id stored nothing"
     END IF
 
     ' ------------------------------------------------------------------
@@ -271,18 +300,18 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SHOW STATE hDlg, 101, 0 TO prev
     IF prev = 0 THEN
         fail = fail + 1
-        PRINT "FAIL SHOW STATE SW_HIDE reported previous = 0 (the button was visible)"
+        ConPrint "FAIL SHOW STATE SW_HIDE reported previous = 0 (the button was visible)"
     ELSE
-        PRINT "ok   SHOW STATE SW_HIDE -> previous state was visible"
+        ConPrint "ok   SHOW STATE SW_HIDE -> previous state was visible"
     END IF
 
     prev = -1
     CONTROL SHOW STATE hDlg, 101, 5 TO prev
     IF prev <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL SHOW STATE SW_SHOW reported previous ="; prev; " (it was hidden)"
+        ConPrint "FAIL SHOW STATE SW_SHOW reported previous =" & STR$(prev) & " (it was hidden)"
     ELSE
-        PRINT "ok   SHOW STATE SW_SHOW -> previous state was hidden"
+        ConPrint "ok   SHOW STATE SW_SHOW -> previous state was hidden"
     END IF
 
     ' ------------------------------------------------------------------
@@ -294,9 +323,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL SHOW STATE hDlg, 101, 5 TO prev
     IF prev = 0 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL NORMALIZE left the button hidden"
+        ConPrint "FAIL CONTROL NORMALIZE left the button hidden"
     ELSE
-        PRINT "ok   CONTROL NORMALIZE made a hidden control visible"
+        ConPrint "ok   CONTROL NORMALIZE made a hidden control visible"
     END IF
 
     ' ------------------------------------------------------------------
@@ -304,7 +333,7 @@ FUNCTION PBMAIN () AS LONG
     ' rest of the run.
     ' ------------------------------------------------------------------
     CONTROL REDRAW hDlg, 101
-    PRINT "ok   CONTROL REDRAW returned"
+    ConPrint "ok   CONTROL REDRAW returned"
 
     ' ------------------------------------------------------------------
     ' CONTROL SET FOCUS - checked with GetFocus, not with the statement's
@@ -317,9 +346,9 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gfAddr USING GetFocus() TO hFoc
     IF hFoc <> hEd2 THEN
         fail = fail + 1
-        PRINT "FAIL CONTROL SET FOCUS: GetFocus ="; hFoc; " editbox ="; hEd2
+        ConPrint "FAIL CONTROL SET FOCUS: GetFocus =" & STR$(hFoc) & " editbox =" & STR$(hEd2)
     ELSE
-        PRINT "ok   CONTROL SET FOCUS -> GetFocus reports the editbox"
+        ConPrint "ok   CONTROL SET FOCUS -> GetFocus reports the editbox"
     END IF
 
     ' ------------------------------------------------------------------
@@ -331,16 +360,16 @@ FUNCTION PBMAIN () AS LONG
     FONT NEW "Arial", 14, 0, 0, 0, 0 TO hFnt
     IF hFnt = 0 THEN
         fail = fail + 1
-        PRINT "FAIL FONT NEW returned 0 - CONTROL SET FONT cannot be tested"
+        ConPrint "FAIL FONT NEW returned 0 - CONTROL SET FONT cannot be tested"
     ELSE
         CONTROL SET FONT hDlg, 102, hFnt
         hGot = 0
         CALL DWORD smAddr USING SendMessageA(hEd2, 49, 0, 0) TO hGot
         IF hGot <> hFnt THEN
             fail = fail + 1
-            PRINT "FAIL after CONTROL SET FONT, WM_GETFONT ->"; hGot; " (want"; hFnt; ")"
+            ConPrint "FAIL after CONTROL SET FONT, WM_GETFONT ->" & STR$(hGot) & " (want" & STR$(hFnt) & ")"
         ELSE
-            PRINT "ok   CONTROL SET FONT -> WM_GETFONT reports the new font"
+            ConPrint "ok   CONTROL SET FONT -> WM_GETFONT reports the new font"
         END IF
 
         CONTROL SET FONT hDlg, 102, 0
@@ -348,9 +377,9 @@ FUNCTION PBMAIN () AS LONG
         CALL DWORD smAddr USING SendMessageA(hEd2, 49, 0, 0) TO hGot
         IF hGot = hFnt THEN
             fail = fail + 1
-            PRINT "FAIL CONTROL SET FONT 0 left the new font in place"
+            ConPrint "FAIL CONTROL SET FONT 0 left the new font in place"
         ELSE
-            PRINT "ok   CONTROL SET FONT 0 restored the original font"
+            ConPrint "ok   CONTROL SET FONT 0 restored the original font"
         END IF
         FONT END hFnt
     END IF
@@ -370,9 +399,9 @@ FUNCTION PBMAIN () AS LONG
     CONTROL NORMALIZE  hDlg, 999
     CONTROL SET USER   hDlg, 999, 1, 5
     CONTROL GET USER   hDlg, 999, 1 TO v
-    PRINT "ok   all ten statements survived an id that does not exist"
+    ConPrint "ok   all ten statements survived an id that does not exist"
 
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

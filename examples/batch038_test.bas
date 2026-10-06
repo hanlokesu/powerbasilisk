@@ -1,9 +1,37 @@
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 ' PowerBasilisk Enhanced - batch 38: TALLY / STRREVERSE$ / STRINSERT$ / STRDELETE$ / REPEAT$ / FRAC / ISFOLDER / EXP2 / EXP10 / LOG2 / LOG10 / IIF / CHOOSE
 GLOBAL failures AS LONG
 
 SUB Check(cond AS LONG, msg AS STRING)
     IF cond = 0 THEN
-        PRINT "FAIL: "; msg
+        ConPrint "FAIL: " & STR$(msg)
         failures = failures + 1
     END IF
 END SUB
@@ -88,10 +116,11 @@ FUNCTION PBMAIN() AS LONG
     Check(r = "c", "choose str")
 
     IF failures = 0 THEN
-        PRINT "batch38: ALL PASS"
+        ConPrint "batch38: ALL PASS"
     ELSE
-        PRINT "batch38: FAILURES="; failures
+        ConPrint "batch38: FAILURES=" & STR$(failures)
     END IF
-    PRINT "Press any key to exit..."
-    waitk = WAITKEY$
+    ConPrint "Press any key to exit..."
+    ConWaitKey
 END FUNCTION
+

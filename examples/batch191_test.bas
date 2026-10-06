@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 191 regression test
 '---------------------------------------------------------------------
@@ -90,7 +119,7 @@
 '   real x64 pointer.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg AS LONG
@@ -124,26 +153,26 @@ FUNCTION PBMAIN () AS LONG
     CONTROL HANDLE hDlg, 402 TO hTv2
     CONTROL HANDLE hDlg, 403 TO hSb2
 
-    PRINT "--- handle witnesses ---"
+    ConPrint "--- handle witnesses ---"
     IF hLv = 0 OR hTv = 0 OR hSb = 0 THEN
-        PRINT "FAIL: a control handle came back NULL"
-        PRINT "  lv="; hLv; " tv="; hTv; " sb="; hSb
+        ConPrint "FAIL: a control handle came back NULL"
+        ConPrint "  lv=" & STR$(hLv) & " tv=" & STR$(hTv) & " sb=" & STR$(hSb)
         DIALOG END hDlg, 1
         FUNCTION = 1
         EXIT FUNCTION
     END IF
     IF hLv <> hLv2 OR hTv <> hTv2 OR hSb <> hSb2 THEN
-        PRINT "FAIL: CONTROL ADD handle <> CONTROL HANDLE"
+        ConPrint "FAIL: CONTROL ADD handle <> CONTROL HANDLE"
         fail = fail + 1
     END IF
 
     ' ----------------------------- LISTVIEW ------------------------------
-    PRINT "--- LISTVIEW ---"
+    ConPrint "--- LISTVIEW ---"
     LISTVIEW INSERT COLUMN hDlg, 401, 1, "Item", 80, 0
     LISTVIEW INSERT COLUMN hDlg, 401, 2, "Qty", 50, 0
     t = ""
     LISTVIEW GET HEADER hDlg, 401, 2 TO t
-    PRINT "lv header        -> ["; t; "]"
+    ConPrint "lv header        -> [" & STR$(t) & "]"
     IF t <> "Qty" THEN fail = fail + 1
 
     LISTVIEW INSERT ITEM hDlg, 401, 1, 0, "Apple"  TO n
@@ -155,55 +184,55 @@ FUNCTION PBMAIN () AS LONG
     LISTVIEW INSERT ITEM hDlg, 401, 4, 0, "Date" TO n
     n = 0
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "lv count         -> "; m; "   after insert 4 -> "; n
+    ConPrint "lv count         -> " & STR$(m) & "   after insert 4 -> " & STR$(n)
     IF m <> 3 OR n <> 4 THEN fail = fail + 1
 
     LISTVIEW SET TEXT hDlg, 401, 1, 1, "Apricot"
     t = ""
     LISTVIEW GET TEXT hDlg, 401, 1, 1 TO t
-    PRINT "lv text          -> ["; t; "]"
+    ConPrint "lv text          -> [" & STR$(t) & "]"
     IF t <> "Apricot" THEN fail = fail + 1
 
     LISTVIEW SET USER hDlg, 401, 2, 1234
     n = 0
     LISTVIEW GET USER hDlg, 401, 2 TO n
-    PRINT "lv user          -> "; n
+    ConPrint "lv user          -> " & STR$(n)
     IF n <> 1234 THEN fail = fail + 1
 
     LISTVIEW SELECT hDlg, 401, 2
     n = 0
     LISTVIEW GET SELECT hDlg, 401 TO n
-    PRINT "lv sel           -> "; n
+    ConPrint "lv sel           -> " & STR$(n)
     IF n <> 2 THEN fail = fail + 1
     LISTVIEW UNSELECT hDlg, 401, 2
     n = 99
     LISTVIEW GET SELECT hDlg, 401 TO n
-    PRINT "                   after unselect -> "; n
+    ConPrint "                   after unselect -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     n = 0
     LISTVIEW GET STYLEXX hDlg, 401 TO n
-    PRINT "lv style xx      -> "; n
+    ConPrint "lv style xx      -> " & STR$(n)
     IF n <= 0 THEN fail = fail + 1
     LISTVIEW SET STYLEXX hDlg, 401, n
     m = 0
     LISTVIEW GET STYLEXX hDlg, 401 TO m
-    PRINT "                   after set "; n; " -> "; m
+    ConPrint "                   after set " & STR$(n) & " -> " & STR$(m)
     IF m <> n THEN fail = fail + 1
 
     LISTVIEW RESET hDlg, 401
     n = 99
     LISTVIEW GET COUNT hDlg, 401 TO n
-    PRINT "lv count after reset -> "; n
+    ConPrint "lv count after reset -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ----------------------------- TREEVIEW ------------------------------
-    PRINT "--- TREEVIEW ---"
+    ConPrint "--- TREEVIEW ---"
     TREEVIEW INSERT ITEM hDlg, 402, 0,     0, 0, 0, "Root"    TO hRoot
     TREEVIEW INSERT ITEM hDlg, 402, hRoot, 0, 0, 0, "Child A" TO hA
     TREEVIEW INSERT ITEM hDlg, 402, hRoot, 0, 0, 0, "Child B" TO hB
     IF hRoot = 0 OR hA = 0 OR hB = 0 THEN
-        PRINT "FAIL: TREEVIEW INSERT ITEM returned a NULL handle"
+        ConPrint "FAIL: TREEVIEW INSERT ITEM returned a NULL handle"
         fail = fail + 1
     END IF
     n = 0
@@ -212,42 +241,42 @@ FUNCTION PBMAIN () AS LONG
     TREEVIEW INSERT ITEM hDlg, 402, hRoot, 0, 0, 0, "Child C" TO hC
     n = 0
     TREEVIEW GET COUNT hDlg, 402 TO n
-    PRINT "tv count         -> "; m; "   after insert -> "; n
+    ConPrint "tv count         -> " & STR$(m) & "   after insert -> " & STR$(n)
     IF m <> 3 OR n <> 4 THEN fail = fail + 1
     TREEVIEW DELETE hDlg, 402, hC
     n = 0
     TREEVIEW GET COUNT hDlg, 402 TO n
-    PRINT "                   after delete -> "; n
+    ConPrint "                   after delete -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
 
     h = 0
     TREEVIEW GET ROOT hDlg, 402 TO h
-    PRINT "tv root == root  -> "; (h = hRoot)
+    ConPrint "tv root == root  -> " & STR$((h = hRoot))
     IF h <> hRoot THEN fail = fail + 1
     h = 0
     TREEVIEW GET CHILD hDlg, 402, hRoot TO h
-    PRINT "tv child == A    -> "; (h = hA)
+    ConPrint "tv child == A    -> " & STR$((h = hA))
     IF h <> hA THEN fail = fail + 1
     h = 0
     TREEVIEW GET NEXT hDlg, 402, hA TO h
-    PRINT "tv next == B     -> "; (h = hB)
+    ConPrint "tv next == B     -> " & STR$((h = hB))
     IF h <> hB THEN fail = fail + 1
 
     TREEVIEW SET EXPANDED hDlg, 402, hRoot, 1
     n = 0
     TREEVIEW GET EXPANDED hDlg, 402, hRoot TO n
-    PRINT "tv expanded on   -> "; n
+    ConPrint "tv expanded on   -> " & STR$(n)
     IF n = 0 THEN fail = fail + 1
     TREEVIEW SET EXPANDED hDlg, 402, hRoot, 0
     n = -1
     TREEVIEW GET EXPANDED hDlg, 402, hRoot TO n
-    PRINT "                   off -> "; n
+    ConPrint "                   off -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     TREEVIEW SET TEXT hDlg, 402, hB, "Renamed"
     t = ""
     TREEVIEW GET TEXT hDlg, 402, hB TO t
-    PRINT "tv text          -> ["; t; "]"
+    ConPrint "tv text          -> [" & STR$(t) & "]"
     IF t <> "Renamed" THEN fail = fail + 1
 
     TREEVIEW SELECT hDlg, 402, hB
@@ -257,39 +286,39 @@ FUNCTION PBMAIN () AS LONG
     TREEVIEW UNSELECT hDlg, 402
     h = hB
     TREEVIEW GET SELECT hDlg, 402 TO h
-    PRINT "tv sel == hB, after unselect -> "; h
+    ConPrint "tv sel == hB, after unselect -> " & STR$(h)
     IF h <> 0 THEN fail = fail + 1
 
     TREEVIEW RESET hDlg, 402
     n = 99
     TREEVIEW GET COUNT hDlg, 402 TO n
-    PRINT "tv count after reset -> "; n
+    ConPrint "tv count after reset -> " & STR$(n)
     IF n <> 0 THEN fail = fail + 1
 
     ' ----------------------------- SCROLLBAR -----------------------------
-    PRINT "--- SCROLLBAR ---"
+    ConPrint "--- SCROLLBAR ---"
     SCROLLBAR SET RANGE hDlg, 403, 0, 100
     n = -1
     m = -1
     SCROLLBAR GET RANGE hDlg, 403 TO n, m
-    PRINT "sb range -> "; n; " / "; m
+    ConPrint "sb range -> " & STR$(n) & " / " & STR$(m)
     IF n <> 0 OR m <> 100 THEN fail = fail + 1
 
     SCROLLBAR SET POS hDlg, 403, 25
     n = -1
     SCROLLBAR GET POS hDlg, 403 TO n
-    PRINT "sb pos -> "; n
+    ConPrint "sb pos -> " & STR$(n)
     IF n <> 25 THEN fail = fail + 1
     SCROLLBAR SET POS hDlg, 403, 60
     n = -1
     SCROLLBAR GET POS hDlg, 403 TO n
-    PRINT "                   after move -> "; n
+    ConPrint "                   after move -> " & STR$(n)
     IF n <> 60 THEN fail = fail + 1
 
     SCROLLBAR SET PAGESIZE hDlg, 403, 10
     n = -1
     SCROLLBAR GET PAGESIZE hDlg, 403 TO n
-    PRINT "sb pagesize -> "; n
+    ConPrint "sb pagesize -> " & STR$(n)
     IF n <> 10 THEN fail = fail + 1
 
     ' NOTE - corrected in batch 192 after a probe run:
@@ -305,7 +334,7 @@ FUNCTION PBMAIN () AS LONG
     '   statement/subroutine' at the wrong layer.
     '   Forms exercised above: SET/GET RANGE, SET/GET POS, SET/GET PAGESIZE.
     DIALOG END hDlg, fail
-    PRINT
-    PRINT "=== FAILURES:"; fail; "==="
+    ConPrint ""
+    ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 END FUNCTION

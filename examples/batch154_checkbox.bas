@@ -1,8 +1,8 @@
+#COMPILE EXE
 ' Tier-3 DDT: CHECKBOX GET/SET CHECK
 ' Check a box, click button to show its state
+' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
 
-#CONSOLE OFF
-#COMPILE EXE
 
 GLOBAL g_hDlg AS QUAD
 GLOBAL hChk AS QUAD

@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch179_test.bas - the last three CONTROL statements, plus the
 '                      two-operand GRAPHIC ATTACH they exposed
@@ -60,7 +89,7 @@
 ' Complexity note: O(1) - a fixed list of window messages and style reads.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg   AS LONG
@@ -97,8 +126,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL buf    AS STRING * 64
     LOCAL fail   AS LONG
 
-    PRINT "batch 179 - graphic, header and colour controls"
-    PRINT "----------------------------------------------"
+    ConPrint "batch 179 - graphic, header and colour controls"
+    ConPrint "----------------------------------------------"
 
     IMPORT ADDR "GetWindowLongA", "USER32.DLL" TO gwlA, gwlH
     IMPORT ADDR "GetClassNameA",   "USER32.DLL" TO gcnA, gcnH
@@ -109,7 +138,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetStockObject",  "GDI32.DLL"  TO gsoA, gsoH
     IF gwlA = 0 OR gcnA = 0 OR smA = 0 OR dcA = 0 OR rdA = 0 OR gpA = 0 OR gsoA = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
+        ConPrint "FAIL IMPORT ADDR (USER32/GDI32 helpers)"
     END IF
 
     ' Shown modeless: a modal dialog would wait for a human to dismiss it and
@@ -128,10 +157,10 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD HEADER,  hDlg, 203, "", 8, 184, 200, 24
 
     IF hGr <> 0 AND hGr2 <> 0 THEN
-        PRINT "ok   CONTROL ADD GRAPHIC returned handles (hGr="; hGr; " hGr2="; hGr2; ")"
+        ConPrint "ok   CONTROL ADD GRAPHIC returned handles (hGr=" & STR$(hGr) & " hGr2=" & STR$(hGr2) & ")"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC handles (hGr="; hGr; " hGr2="; hGr2; ")"
+        ConPrint "FAIL GRAPHIC handles (hGr=" & STR$(hGr) & " hGr2=" & STR$(hGr2) & ")"
     END IF
 
     ' The TO clause must hand over the same handle CONTROL HANDLE reports - the
@@ -139,19 +168,19 @@ FUNCTION PBMAIN () AS LONG
     hGrC = 0
     CONTROL HANDLE hDlg, 201 TO hGrC
     IF hGrC <> 0 AND hGrC = hGr THEN
-        PRINT "ok   the GRAPHIC TO handle agrees with CONTROL HANDLE"
+        ConPrint "ok   the GRAPHIC TO handle agrees with CONTROL HANDLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC TO handle (hGr="; hGr; " CONTROL HANDLE="; hGrC; ")"
+        ConPrint "FAIL GRAPHIC TO handle (hGr=" & STR$(hGr) & " CONTROL HANDLE=" & STR$(hGrC) & ")"
     END IF
 
     hHd = 0
     CONTROL HANDLE hDlg, 203 TO hHd
     IF hHd <> 0 THEN
-        PRINT "ok   ADD HEADER without TO + CONTROL HANDLE resolved it"
+        ConPrint "ok   ADD HEADER without TO + CONTROL HANDLE resolved it"
     ELSE
         fail = fail + 1
-        PRINT "FAIL header handle via CONTROL HANDLE"
+        ConPrint "FAIL header handle via CONTROL HANDLE"
     END IF
 
     ' ------------------------------------------------------------------
@@ -161,20 +190,20 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hGr, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "Static") > 0 THEN
-        PRINT "ok   CONTROL ADD GRAPHIC is a Static-class control"
+        ConPrint "ok   CONTROL ADD GRAPHIC is a Static-class control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC class (len"; n; ")"
+        ConPrint "FAIL GRAPHIC class (len" & STR$(n) & ")"
     END IF
 
     buf = ""
     n = 0
     CALL DWORD gcnA USING GetClassNameA(hHd, VARPTR(buf), 64) TO n
     IF n > 0 AND INSTR(buf, "SysHeader32") > 0 THEN
-        PRINT "ok   CONTROL ADD HEADER is the SysHeader32 common control"
+        ConPrint "ok   CONTROL ADD HEADER is the SysHeader32 common control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL HEADER class (len"; n; ")"
+        ConPrint "FAIL HEADER class (len" & STR$(n) & ")"
     END IF
 
     ' ------------------------------------------------------------------
@@ -184,16 +213,16 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gwlA USING GetWindowLongA(hGr, -16) TO st
     typ = st AND 31                               ' %SS_TYPEMASK
     IF typ = 11 THEN                              ' %SS_OWNERDRAW
-        PRINT "ok   GRAPHIC 201 carries the documented %SS_OWNERDRAW default"
+        ConPrint "ok   GRAPHIC 201 carries the documented %SS_OWNERDRAW default"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC 201 type bits="; typ; " style="; st
+        ConPrint "FAIL GRAPHIC 201 type bits=" & STR$(typ) & " style=" & STR$(st)
     END IF
     IF (st AND 1073741824) <> 0 AND (st AND 268435456) <> 0 THEN
-        PRINT "ok   GRAPHIC 201 has %WS_CHILD and %WS_VISIBLE"
+        ConPrint "ok   GRAPHIC 201 has %WS_CHILD and %WS_VISIBLE"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC 201 child/visible bits="; st
+        ConPrint "FAIL GRAPHIC 201 child/visible bits=" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -202,16 +231,16 @@ FUNCTION PBMAIN () AS LONG
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hGr2, -16) TO st
     IF (st AND 31) = 0 THEN
-        PRINT "ok   GRAPHIC 202 has no %SS_ type bits (default was replaced)"
+        ConPrint "ok   GRAPHIC 202 has no %SS_ type bits (default was replaced)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC 202 kept a default type bit, style="; st
+        ConPrint "FAIL GRAPHIC 202 kept a default type bit, style=" & STR$(st)
     END IF
     IF (st AND 256) <> 0 AND (st AND 8388608) <> 0 THEN
-        PRINT "ok   GRAPHIC 202 carries the %SS_NOTIFY and %WS_BORDER asked for"
+        ConPrint "ok   GRAPHIC 202 carries the %SS_NOTIFY and %WS_BORDER asked for"
     ELSE
         fail = fail + 1
-        PRINT "FAIL GRAPHIC 202 supplied style="; st
+        ConPrint "FAIL GRAPHIC 202 supplied style=" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -221,19 +250,19 @@ FUNCTION PBMAIN () AS LONG
     n = 0
     CALL DWORD smA USING SendMessageA(hHd, 4608, 0, 0) TO n
     IF n = 0 THEN
-        PRINT "ok   fresh HEADER reports 0 items (%HDM_GETITEMCOUNT)"
+        ConPrint "ok   fresh HEADER reports 0 items (%HDM_GETITEMCOUNT)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL header item count="; n
+        ConPrint "FAIL header item count=" & STR$(n)
     END IF
 
     st = 0
     CALL DWORD gwlA USING GetWindowLongA(hHd, -16) TO st
     IF (st AND 1073741824) <> 0 AND (st AND 268435456) <> 0 THEN
-        PRINT "ok   HEADER has the documented %WS_CHILD and %WS_VISIBLE default"
+        ConPrint "ok   HEADER has the documented %WS_CHILD and %WS_VISIBLE default"
     ELSE
         fail = fail + 1
-        PRINT "FAIL HEADER child/visible bits="; st
+        ConPrint "FAIL HEADER child/visible bits=" & STR$(st)
     END IF
 
     ' ------------------------------------------------------------------
@@ -243,22 +272,22 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD dcA USING GetDC(hDlg) TO hdc
     IF hdc = 0 THEN
         fail = fail + 1
-        PRINT "FAIL GetDC on the dialog"
+        ConPrint "FAIL GetDC on the dialog"
     END IF
 
     br0 = 0
     CALL DWORD smA USING SendMessageA(hDlg, 312, hdc, hGr) TO br0
-    PRINT "note un-coloured brush answer="; br0
+    ConPrint "note un-coloured brush answer=" & STR$(br0)
 
     ' A solid background colour (65280 = RGB(0,255,0)).
     CONTROL SET COLOR hDlg, 201, -1, 65280
     br = 0
     CALL DWORD smA USING SendMessageA(hDlg, 312, hdc, hGr) TO br
     IF br <> 0 AND br <> br0 THEN
-        PRINT "ok   SET COLOR with a solid back colour answers its own brush"
+        ConPrint "ok   SET COLOR with a solid back colour answers its own brush"
     ELSE
         fail = fail + 1
-        PRINT "FAIL solid colour brush="; br; " un-coloured="; br0
+        ConPrint "FAIL solid colour brush=" & STR$(br) & " un-coloured=" & STR$(br0)
     END IF
 
     ' -2 means "do not paint the text background at all": the answer has to be
@@ -269,10 +298,10 @@ FUNCTION PBMAIN () AS LONG
     nullb = 0
     CALL DWORD gsoA USING GetStockObject(5) TO nullb
     IF br = nullb AND nullb <> 0 THEN
-        PRINT "ok   SET COLOR -2 answers %NULL_BRUSH (no background painted)"
+        ConPrint "ok   SET COLOR -2 answers %NULL_BRUSH (no background painted)"
     ELSE
         fail = fail + 1
-        PRINT "FAIL transparent brush="; br; " expected="; nullb
+        ConPrint "FAIL transparent brush=" & STR$(br) & " expected=" & STR$(nullb)
     END IF
 
     ' Back to the defaults: the answer must return to exactly what it was
@@ -281,10 +310,10 @@ FUNCTION PBMAIN () AS LONG
     br = 0
     CALL DWORD smA USING SendMessageA(hDlg, 312, hdc, hGr) TO br
     IF br = br0 THEN
-        PRINT "ok   SET COLOR -1,-1 answers the default again"
+        ConPrint "ok   SET COLOR -1,-1 answers the default again"
     ELSE
         fail = fail + 1
-        PRINT "FAIL reset brush="; br; " expected="; br0
+        ConPrint "FAIL reset brush=" & STR$(br) & " expected=" & STR$(br0)
     END IF
 
     n = 0
@@ -298,10 +327,10 @@ FUNCTION PBMAIN () AS LONG
     v = 0
     CONTROL GET SIZE hDlg, 201 TO n, v
     IF n = n0 AND v = v0 THEN
-        PRINT "ok   CONTROL REDRAW after SET COLOR left 201 alone"
+        ConPrint "ok   CONTROL REDRAW after SET COLOR left 201 alone"
     ELSE
         fail = fail + 1
-        PRINT "FAIL REDRAW changed 201: "; n0; "x"; v0; " -> "; n; "x"; v
+        ConPrint "FAIL REDRAW changed 201: " & STR$(n0) & "x" & STR$(v0) & " -> " & STR$(n) & "x" & STR$(v)
     END IF
 
     CALL DWORD rdA USING ReleaseDC(hDlg, hdc) TO n
@@ -320,10 +349,10 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gpA USING GetPixel(hdc2, 5, 5) TO px
     CALL DWORD rdA USING ReleaseDC(hGr, hdc2) TO n
     IF hdc2 <> 0 AND px = 255 THEN
-        PRINT "ok   GRAPHIC ATTACH hDlg, id& draws on the control's own DC"
+        ConPrint "ok   GRAPHIC ATTACH hDlg, id& draws on the control's own DC"
     ELSE
         fail = fail + 1
-        PRINT "FAIL control-DC pixel="; px; " dc="; hdc2
+        ConPrint "FAIL control-DC pixel=" & STR$(px) & " dc=" & STR$(hdc2)
     END IF
 
     ' The re-attach path: detach releases the DC the matching way, then a
@@ -338,17 +367,17 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gpA USING GetPixel(hdc2, 5, 5) TO px
     CALL DWORD rdA USING ReleaseDC(hGr2, hdc2) TO n
     IF px = 65280 THEN
-        PRINT "ok   a second GRAPHIC ATTACH after DETACH targets the new control"
+        ConPrint "ok   a second GRAPHIC ATTACH after DETACH targets the new control"
     ELSE
         fail = fail + 1
-        PRINT "FAIL re-attach pixel="; px
+        ConPrint "FAIL re-attach pixel=" & STR$(px)
     END IF
 
     GRAPHIC DETACH
-    PRINT "ok   GRAPHIC DETACH released the control DC"
+    ConPrint "ok   GRAPHIC DETACH released the control DC"
 
-    PRINT "----------------------------------------------"
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "----------------------------------------------"
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

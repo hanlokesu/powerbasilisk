@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' batch174_test.bas - MENU ATTACH / MENU CONTEXT / MENU DRAW BAR
 '---------------------------------------------------------------------
@@ -53,7 +82,7 @@
 ' Complexity note: O(1) - a fixed sequence of menu and dialog calls.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg  AS LONG
@@ -80,7 +109,7 @@ FUNCTION PBMAIN () AS LONG
     IMPORT ADDR "GetMenu", "USER32.DLL" TO gaddr, ghndl
     IF gaddr = 0 THEN
         fail = fail + 1
-        PRINT "FAIL IMPORT ADDR GetMenu failed - cannot verify attachment"
+        ConPrint "FAIL IMPORT ADDR GetMenu failed - cannot verify attachment"
     END IF
 
     ' ---------------------------------------------------------------
@@ -90,9 +119,9 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gaddr USING GetMenu(hDlg) TO hGot
     IF hGot <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL GetMenu before attach ->"; hGot; " (expected 0, a bare dialog has no menu)"
+        ConPrint "FAIL GetMenu before attach ->" & STR$(hGot) & " (expected 0, a bare dialog has no menu)"
     ELSE
-        PRINT "ok   GetMenu before attach  -> 0"
+        ConPrint "ok   GetMenu before attach  -> 0"
     END IF
 
     ' ---------------------------------------------------------------
@@ -107,19 +136,19 @@ FUNCTION PBMAIN () AS LONG
     MENU NEW POPUP TO hPop
     IF hBar1 = 0 OR hBar2 = 0 OR hPop = 0 THEN
         fail = fail + 1
-        PRINT "FAIL MENU NEW BAR/POPUP returned 0 ("; hBar1; hBar2; hPop; ")"
+        ConPrint "FAIL MENU NEW BAR/POPUP returned 0 (" & STR$(hBar1) & STR$(hBar2) & STR$(hPop) & ")"
     ELSE
-        PRINT "ok   MENU NEW BAR x2, NEW POPUP -> handles"
+        ConPrint "ok   MENU NEW BAR x2, NEW POPUP -> handles"
     END IF
     IF hBar1 = hBar2 THEN
         fail = fail + 1
-        PRINT "FAIL the two bars are the same handle"
+        ConPrint "FAIL the two bars are the same handle"
     END IF
 
     MENU ADD STRING hBar1, "File", 100, 0
     MENU ADD POPUP hBar1, hPop, 0
     MENU ADD STRING hBar2, "Edit", 200, 0
-    PRINT "ok   MENU ADD STRING / ADD POPUP -> items added"
+    ConPrint "ok   MENU ADD STRING / ADD POPUP -> items added"
 
     ' ---------------------------------------------------------------
     ' ATTACH: GetMenu must report exactly the handle we attached, and the
@@ -130,16 +159,16 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gaddr USING GetMenu(hDlg) TO hGot
     IF hGot <> hBar1 THEN
         fail = fail + 1
-        PRINT "FAIL GetMenu after attach ->"; hGot; " (expected the bar"; hBar1; ")"
+        ConPrint "FAIL GetMenu after attach ->" & STR$(hGot) & " (expected the bar" & STR$(hBar1) & ")"
     ELSE
-        PRINT "ok   GetMenu after attach   -> the attached bar"
+        ConPrint "ok   GetMenu after attach   -> the attached bar"
     END IF
     DIALOG GET CLIENT hDlg TO cw, ch1
     IF ch1 >= ch0 THEN
         fail = fail + 1
-        PRINT "FAIL client height with menu ->"; ch1; " (expected < "; ch0; ")"
+        ConPrint "FAIL client height with menu ->" & STR$(ch1) & " (expected < " & STR$(ch0) & ")"
     ELSE
-        PRINT "ok   client height shrinks by the menu bar ("; ch0; " -> "; ch1; ")"
+        ConPrint "ok   client height shrinks by the menu bar (" & STR$(ch0) & " -> " & STR$(ch1) & ")"
     END IF
 
     ' ---------------------------------------------------------------
@@ -150,16 +179,16 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gaddr USING GetMenu(hDlg) TO hGot
     IF hGot <> hBar2 THEN
         fail = fail + 1
-        PRINT "FAIL GetMenu after replace ->"; hGot; " (expected the second bar"; hBar2; ")"
+        ConPrint "FAIL GetMenu after replace ->" & STR$(hGot) & " (expected the second bar" & STR$(hBar2) & ")"
     ELSE
-        PRINT "ok   MENU ATTACH replaced the first bar"
+        ConPrint "ok   MENU ATTACH replaced the first bar"
     END IF
     DIALOG GET CLIENT hDlg TO cw, ch2
     IF ch2 <> ch1 THEN
         fail = fail + 1
-        PRINT "FAIL client height changed on replacement ->"; ch2; " (expected "; ch1; ")"
+        ConPrint "FAIL client height changed on replacement ->" & STR$(ch2) & " (expected " & STR$(ch1) & ")"
     ELSE
-        PRINT "ok   same menu-bar height after replacement"
+        ConPrint "ok   same menu-bar height after replacement"
     END IF
 
     ' ---------------------------------------------------------------
@@ -173,9 +202,9 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gaddr USING GetMenu(hDlg) TO hGot
     IF hGot <> hBar2 THEN
         fail = fail + 1
-        PRINT "FAIL GetMenu after DRAW BAR ->"; hGot; " (expected "; hBar2; ")"
+        ConPrint "FAIL GetMenu after DRAW BAR ->" & STR$(hGot) & " (expected " & STR$(hBar2) & ")"
     ELSE
-        PRINT "ok   MENU DRAW BAR x2 kept the bar attached"
+        ConPrint "ok   MENU DRAW BAR x2 kept the bar attached"
     END IF
 
     ' ---------------------------------------------------------------
@@ -186,9 +215,9 @@ FUNCTION PBMAIN () AS LONG
     MENU CONTEXT 0, 100, 100, 0 TO cmd
     IF cmd <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL MENU CONTEXT null ->"; cmd; " (expected 0, no selection)"
+        ConPrint "FAIL MENU CONTEXT null ->" & STR$(cmd) & " (expected 0, no selection)"
     ELSE
-        PRINT "ok   MENU CONTEXT null       -> 0, returned immediately"
+        ConPrint "ok   MENU CONTEXT null       -> 0, returned immediately"
     END IF
 
     ' ---------------------------------------------------------------
@@ -201,24 +230,24 @@ FUNCTION PBMAIN () AS LONG
     CALL DWORD gaddr USING GetMenu(hDlg) TO hGot
     IF hGot <> 0 THEN
         fail = fail + 1
-        PRINT "FAIL GetMenu after removal ->"; hGot; " (expected 0)"
+        ConPrint "FAIL GetMenu after removal ->" & STR$(hGot) & " (expected 0)"
     ELSE
-        PRINT "ok   MENU ATTACH 0 removed the menu"
+        ConPrint "ok   MENU ATTACH 0 removed the menu"
     END IF
     DIALOG GET CLIENT hDlg TO cw, ch3
     IF ch3 <> ch0 THEN
         fail = fail + 1
-        PRINT "FAIL client height after removal ->"; ch3; " (expected "; ch0; ")"
+        ConPrint "FAIL client height after removal ->" & STR$(ch3) & " (expected " & STR$(ch0) & ")"
     ELSE
-        PRINT "ok   client height restored ("; ch3; ")"
+        ConPrint "ok   client height restored (" & STR$(ch3) & ")"
     END IF
     MENU DRAW BAR hDlg
-    PRINT "ok   MENU DRAW BAR on a menu-less dialog is harmless"
+    ConPrint "ok   MENU DRAW BAR on a menu-less dialog is harmless"
 
     IF gaddr <> 0 THEN
         IMPORT CLOSE ghndl
     END IF
-    PRINT "=== FAILURES:"; fail; " ==="
+    ConPrint "=== FAILURES:" & STR$(fail) & " ==="
     DIALOG END hDlg, fail
     FUNCTION = fail
 END FUNCTION

@@ -1,3 +1,32 @@
+#COMPILE EXE
+' === console emulation for dual-compiler compatibility ===
+' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
+DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
+DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
+SUB ConPrint(BYVAL s AS STRING)
+    LOCAL h AS LONG
+    LOCAL n AS DWORD
+    h = GetStdHandle(-11)
+    IF h = 0 THEN
+        AllocConsole
+        h = GetStdHandle(-11)
+    END IF
+    IF h <> 0 THEN
+        WriteFile h, BYVAL STRPTR(s), LEN(s), n, 0
+    END IF
+END SUB
+SUB ConWaitKey()
+    LOCAL h AS LONG
+    LOCAL c AS STRING * 1
+    LOCAL n AS DWORD
+    h = GetStdHandle(-10)
+    IF h <> 0 THEN
+        ReadFile h, c, 1, n, 0
+    END IF
+END SUB
+
 '=====================================================================
 ' PowerBasilisk Enhanced - batch 167 regression test
 '---------------------------------------------------------------------
@@ -54,7 +83,7 @@
 '   code is the number of failed assertions.
 '=====================================================================
 #COMPILER PBWIN 10
-#COMPILE EXE
+
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg  AS LONG
@@ -96,37 +125,37 @@ FUNCTION PBMAIN () AS LONG
     CONTROL ADD LISTVIEW,    hDlg, 504, 10, 40, 300, 120 TO hLv
 
     IF hProg = 0 OR hTb = 0 OR hSb = 0 OR hLv = 0 THEN
-        PRINT "FAIL: a control came back NULL"
-        PRINT "  prog="; hProg; " tb="; hTb; " sb="; hSb; " lv="; hLv
+        ConPrint "FAIL: a control came back NULL"
+        ConPrint "  prog=" & STR$(hProg) & " tb=" & STR$(hTb) & " sb=" & STR$(hSb) & " lv=" & STR$(hLv)
         DIALOG END hDlg, 1
         FUNCTION = 1
         EXIT FUNCTION
     END IF
 
     ' ---------------- PROGRESSBAR ----------------
-    PRINT "--- PROGRESSBAR ---"
+    ConPrint "--- PROGRESSBAR ---"
     PROGRESSBAR SET RANGE hDlg, 501, 0, 100
     PROGRESSBAR GET RANGE hDlg, 501 TO rlo, rhi
-    PRINT "range lo/hi  -> "; rlo; " / "; rhi
+    ConPrint "range lo/hi  -> " & STR$(rlo) & " / " & STR$(rhi)
     IF rlo <> 0 THEN fail = fail + 1
     IF rhi <> 100 THEN fail = fail + 1
 
     PROGRESSBAR SET POS hDlg, 501, 30
     PROGRESSBAR GET POS hDlg, 501 TO n
-    PRINT "pos          -> "; n
+    ConPrint "pos          -> " & STR$(n)
     IF n <> 30 THEN fail = fail + 1
 
     ' SET STEP arms PBM_STEPIT; STEP with no increment advances by it.
     PROGRESSBAR SET STEP hDlg, 501, 5
     PROGRESSBAR STEP hDlg, 501
     PROGRESSBAR GET POS hDlg, 501 TO n
-    PRINT "pos stepit   -> "; n
+    ConPrint "pos stepit   -> " & STR$(n)
     IF n <> 35 THEN fail = fail + 1
 
     ' STEP with an explicit increment is PBM_DELTAPOS, a relative move.
     PROGRESSBAR STEP hDlg, 501, 10
     PROGRESSBAR GET POS hDlg, 501 TO n
-    PRINT "pos deltapos -> "; n
+    ConPrint "pos deltapos -> " & STR$(n)
     IF n <> 45 THEN fail = fail + 1
 
     ' error path: an id that does not exist must report failure
@@ -134,17 +163,17 @@ FUNCTION PBMAIN () AS LONG
     IF n <> -1 THEN fail = fail + 1
 
     ' ---------------- HEADER ----------------
-    PRINT "--- HEADER ---"
+    ConPrint "--- HEADER ---"
     LISTVIEW INSERT COLUMN hDlg, 504, 1, "Name", 80, 0
     LISTVIEW INSERT COLUMN hDlg, 504, 2, "Qty", 50, 0
     LISTVIEW INSERT COLUMN hDlg, 504, 3, "Date", 70, 0
 
     LISTVIEW GET HEADERID hDlg, 504 TO hHdr, hid
-    PRINT "header hwnd  -> "; hHdr; "  id -> "; hid
+    ConPrint "header hwnd  -> " & STR$(hHdr) & "  id -> " & STR$(hid)
     IF hHdr = 0 THEN fail = fail + 1
 
     HEADER GET COUNT hHdr, hid TO k
-    PRINT "header cols  -> "; k
+    ConPrint "header cols  -> " & STR$(k)
     IF k <> 3 THEN fail = fail + 1
 
     ' Build a HDITEMA in hdi() and ask for the caption of column 1.
@@ -168,7 +197,7 @@ FUNCTION PBMAIN () AS LONG
     ' clang rejects that, so CHR$ must not be used to rebuild a string from a
     ' BYTE array here.  (Reported as a defect; see the skill's pitfalls file.)
     LISTVIEW GET HEADER hDlg, 504, 1 TO t
-    PRINT "header item1 -> ["; t; "]"
+    ConPrint "header item1 -> [" & STR$(t) & "]"
     IF v = 0 THEN fail = fail + 1
     bad = 0
     IF LEN(t) <> 4 THEN bad = 1
@@ -192,7 +221,7 @@ FUNCTION PBMAIN () AS LONG
     POKE BYTE, VARPTR(txt(0)) + 7, 0
     HEADER SET ITEM hHdr, hid, 1, p TO v
     LISTVIEW GET HEADER hDlg, 504, 1 TO t
-    PRINT "header after -> ["; t; "]"
+    ConPrint "header after -> [" & STR$(t) & "]"
     IF t <> "Renamed" THEN fail = fail + 1
 
     ' HEADER SEND reaches the same control through the raw message path.
@@ -200,11 +229,11 @@ FUNCTION PBMAIN () AS LONG
     ' returns 0 even on success, so a zero result could not tell "the control
     ' answered" from "the call never got there".  The header has 3 columns.
     HEADER SEND hHdr, hid, &H1200, 0, 0 TO v
-    PRINT "header send  -> "; v
+    ConPrint "header send  -> " & STR$(v)
     IF v <> 3 THEN fail = fail + 1
 
     ' ---------------- TOOLBAR ----------------
-    PRINT "--- TOOLBAR ---"
+    ConPrint "--- TOOLBAR ---"
     ' image& = 0 (no image list attached yet); style& = 0 is %BTNS_BUTTON.
     TOOLBAR ADD BUTTON hDlg, 502, 0, 201, 0, "One"
     TOOLBAR ADD BUTTON hDlg, 502, 0, 202, 0, "Two"
@@ -213,35 +242,35 @@ FUNCTION PBMAIN () AS LONG
 
     ' The official help counts separators as items, so the answer is 4.
     TOOLBAR GET COUNT hDlg, 502 TO n
-    PRINT "count        -> "; n
+    ConPrint "count        -> " & STR$(n)
     IF n <> 4 THEN fail = fail + 1
 
     ' %TBSTATE_ENABLED = &H0004 on a freshly added button.
     TOOLBAR GET STATE hDlg, 502, 1 TO st
-    PRINT "state item 1 -> "; st
+    ConPrint "state item 1 -> " & STR$(st)
     IF st <> 4 THEN fail = fail + 1
 
     ' SET STATE addressing a button by COMMAND ID, not by position.
     TOOLBAR SET STATE hDlg, 502, BYCMD 202, 0
     TOOLBAR GET STATE hDlg, 502, BYCMD 202 TO st
-    PRINT "state cmd202 -> "; st
+    ConPrint "state cmd202 -> " & STR$(st)
     IF st <> 0 THEN fail = fail + 1
 
     TOOLBAR SET IMAGELIST hDlg, 502, 0, 0
 
     TOOLBAR DELETE BUTTON hDlg, 502, 1
     TOOLBAR GET COUNT hDlg, 502 TO n
-    PRINT "count after del -> "; n
+    ConPrint "count after del -> " & STR$(n)
     IF n <> 3 THEN fail = fail + 1
 
     ' ---------------- STATUSBAR ----------------
-    PRINT "--- STATUSBAR ---"
+    ConPrint "--- STATUSBAR ---"
     ' Neither statement has a documented TO target, so their return
     ' values cannot be captured from PB source; they are exercised for
     ' the code path, and the assertions above carry the verdict.
     STATUSBAR SET PARTS hDlg, 503, 100, 100, 9999
     STATUSBAR SET TEXT hDlg, 503, 1, 0, "Ready"
 
-    PRINT "=== FAILURES: "; fail; " ==="
+    ConPrint "=== FAILURES: " & STR$(fail) & " ==="
     DIALOG END hDlg, fail
 END FUNCTION
