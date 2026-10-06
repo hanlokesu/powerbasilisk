@@ -1,4 +1,8 @@
 ' batch21_test.bas - COMM serial port + THREAD statements (batch 21)
+' worker uses a GLOBAL stop flag + SLEEP loop so it can exit before the
+' process does - an infinite DO:LOOP worker made process exit hang.
+GLOBAL g_stop AS LONG
+
 FUNCTION PBMAIN() AS LONG
     LOCAL id AS LONG, st AS LONG, p AS LONG
 
@@ -24,6 +28,8 @@ FUNCTION PBMAIN() AS LONG
         THREAD RESUME id
         THREAD STATUS id TO st
         PRINT "after resume status="; st
+        g_stop = 1
+        SLEEP 20
         THREAD CLOSE id
         PRINT "THREAD OK"
     END IF
@@ -32,6 +38,8 @@ FUNCTION PBMAIN() AS LONG
 END FUNCTION
 
 SUB worker()
-    DO
+    ' SLEEP is a call boundary: keeps the g_stop load fresh (see batch028 NOTE)
+    DO WHILE g_stop = 0
+        SLEEP 1
     LOOP
 END SUB
