@@ -7466,6 +7466,16 @@ impl Compiler {
                 return Ok(());
             }
             "MEMORY_FILLS" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "MEMORY_FILLS requires its arguments: MEMORY FILL Dest& , Count& , BYTE | WORD | DWORD IntegralExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // MEMORY FILL dst&, count&, str$
                 if call.args.len() >= 3 {
                     let d = self.compile_expr(fb, &call.args[0])?;
@@ -10144,6 +10154,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_BUTTON" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_BUTTON requires its arguments: CONTROL ADD BUTTON hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL ADD BUTTON, hWnd, id, text$, x, y, w, h TO hCtrl&
                 if call.args.len() >= 8 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
@@ -10175,6 +10195,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_EDITBOX" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_EDITBOX requires its arguments: CONTROL ADD EDITBOX hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -10201,6 +10231,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_COMBOBOX" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_COMBOBOX requires its arguments: CONTROL ADD COMBOBOX hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -10226,6 +10266,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_TEXT_ID" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_TEXT_ID requires its arguments: CONTROL GET TEXT ID hDlg , id& TO txtv$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let hdlg = self.compile_expr(fb, &call.args[0])?;
                     let cid = self.compile_expr(fb, &call.args[1])?;
@@ -10380,6 +10430,16 @@ impl Compiler {
                 return Ok(());
             }
             "PROGRESSBAR_STEP" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "PROGRESSBAR_STEP requires its arguments: PROGRESSBAR STEP hDlg , id& [, incramt& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10389,6 +10449,16 @@ impl Compiler {
                 return Ok(());
             }
             "PROGRESSBAR_GET_POS" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "PROGRESSBAR_GET_POS requires its arguments: PROGRESSBAR GET POS hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10401,6 +10471,16 @@ impl Compiler {
                 return Ok(());
             }
             "PROGRESSBAR_GET_RANGE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "PROGRESSBAR_GET_RANGE requires its arguments: PROGRESSBAR GET RANGE hDlg , id& TO LoDatav& , HiDatav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10422,6 +10502,16 @@ impl Compiler {
                 return Ok(());
             }
             "HEADER_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "HEADER_GET_COUNT requires its arguments: HEADER GET COUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10434,6 +10524,16 @@ impl Compiler {
                 return Ok(());
             }
             "HEADER_SEND" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "HEADER_SEND requires its arguments: HEADER SEND hWin , ID& , Msg& , wParam& , lParam& [ TO ResultVar& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10451,6 +10551,16 @@ impl Compiler {
                 return Ok(());
             }
             "HEADER_GET_ITEM" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "HEADER_GET_ITEM requires its arguments: HEADER GET ITEM hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10467,6 +10577,16 @@ impl Compiler {
                 return Ok(());
             }
             "HEADER_SET_ITEM" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "HEADER_SET_ITEM requires its arguments: HEADER SET ITEM hDlg , id& , item& , value&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -10486,6 +10606,17 @@ impl Compiler {
             // TAB family (batch 169) -- official TAB_statement.htm
             // ---------------------------------------------------------
             "TAB_DELETE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_DELETE requires its arguments: TAB DELETE hDlg , ID& , PageNum&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB DELETE hDlg, ID&, PageNum&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10499,6 +10630,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_COUNT requires its arguments: TAB GET COUNT hDlg , ID& TO CountVar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET COUNT hDlg, ID& TO CountVar&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10515,6 +10656,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_DIALOG" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_DIALOG requires its arguments: TAB GET DIALOG hDlg , ID& , PageNum& TO PageDlgVar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET DIALOG hDlg, ID&, PageNum& TO PageDlgVar&
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10532,6 +10683,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_IMAGE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_IMAGE requires its arguments: TAB GET IMAGE hDlg , ID& , PageNum& TO ImageVar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET IMAGE hDlg, ID&, PageNum& TO ImageVar&
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10549,6 +10710,17 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_PAGE" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_PAGE requires its arguments: TAB GET PAGE PageDlg TO PageNumVar&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET PAGE PageDlg TO PageNumVar&
                 // The operand is a page dialog handle, not an (hDlg, id) pair.
                 if call.args.len() >= 2 {
@@ -10565,6 +10737,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_SELECT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_SELECT requires its arguments: TAB GET SELECT hDlg , ID& TO PageNumVar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET SELECT hDlg, ID& TO PageNumVar&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10581,6 +10763,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_GET_TEXT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_GET_TEXT requires its arguments: TAB GET TEXT hDlg , ID& , PageNum& TO TextVar$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB GET TEXT hDlg, ID&, PageNum& TO TextVar$
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10669,6 +10861,17 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_SELECT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_SELECT requires its arguments: TAB SELECT hDlg , ID& , PageNum&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB SELECT hDlg, ID&, PageNum&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10682,6 +10885,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_SET_IMAGE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_SET_IMAGE requires its arguments: TAB SET IMAGE hDlg , ID& , PageNum& , Image&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB SET IMAGE hDlg, ID&, PageNum&, Image&
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10722,6 +10935,16 @@ impl Compiler {
                 return Ok(());
             }
             "TAB_SET_TEXT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TAB_SET_TEXT requires its arguments: TAB SET TEXT hDlg , ID& , PageNum& , Text$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // TAB SET TEXT hDlg, ID&, PageNum&, Text$
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -10736,6 +10959,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_GET_POS" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "SCROLLBAR_GET_POS requires its arguments: SCROLLBAR GET POS hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10751,6 +10984,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_GET_PAGESIZE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "SCROLLBAR_GET_PAGESIZE requires its arguments: SCROLLBAR GET PAGESIZE hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10766,6 +11009,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_GET_TRACKPOS" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "SCROLLBAR_GET_TRACKPOS requires its arguments: SCROLLBAR GET TRACKPOS hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10781,6 +11034,16 @@ impl Compiler {
                 return Ok(());
             }
             "SCROLLBAR_GET_RANGE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "SCROLLBAR_GET_RANGE requires its arguments: SCROLLBAR GET RANGE hDlg& , id& TO LoDatav& , HiDatav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10924,6 +11187,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_FIND" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_FIND requires its arguments: COMBOBOX FIND hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10945,6 +11218,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_FIND_EXACT" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_FIND_EXACT requires its arguments: COMBOBOX FIND EXACT hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10966,6 +11249,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_GET_COUNT requires its arguments: COMBOBOX GET COUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -10981,6 +11274,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_GET_SELCOUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_GET_SELCOUNT requires its arguments: COMBOBOX GET SELCOUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11000,6 +11303,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_GET_SELECT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_GET_SELECT requires its arguments: COMBOBOX GET SELECT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11019,6 +11332,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_GET_STATE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_GET_STATE requires its arguments: COMBOBOX GET STATE hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11087,6 +11410,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_GET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_GET_USER requires its arguments: COMBOBOX GET USER hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11107,6 +11440,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMBOBOX_INSERT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "COMBOBOX_INSERT requires its arguments: COMBOBOX INSERT hDlg , id& , item& , StrExpr [ TO datav& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11306,6 +11649,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_FIND" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_FIND requires its arguments: LISTBOX FIND hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11327,6 +11680,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_FIND_EXACT" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_FIND_EXACT requires its arguments: LISTBOX FIND EXACT hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11348,6 +11711,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_GET_COUNT requires its arguments: LISTBOX GET COUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11363,6 +11736,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_GET_SELCOUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_GET_SELCOUNT requires its arguments: LISTBOX GET SELCOUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11417,6 +11800,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_GET_STATE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_GET_STATE requires its arguments: LISTBOX GET STATE hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11485,6 +11878,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_GET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_GET_USER requires its arguments: LISTBOX GET USER hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11505,6 +11908,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_INSERT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_INSERT requires its arguments: LISTBOX INSERT hDlg , id& , item& , StrExpr [ TO datav& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11575,6 +11988,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_SET_TEXT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_SET_TEXT requires its arguments: LISTBOX SET TEXT hDlg , id& , item& , StrExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11592,6 +12015,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTBOX_SET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTBOX_SET_USER requires its arguments: LISTBOX SET USER hDlg , id& , item& , NumExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut h = self.compile_expr(fb, &call.args[0])?;
                     if h.ty != IrType::Ptr {
@@ -11651,6 +12084,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_HSCROLLBAR" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_HSCROLLBAR requires its arguments: CONTROL ADD HSCROLLBAR hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let parent = self.compile_expr(fb, &call.args[0])?;
                     let id = self.compile_expr(fb, &call.args[1])?;
@@ -11672,6 +12115,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_SCROLLBAR" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_SCROLLBAR requires its arguments: CONTROL ADD SCROLLBAR hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let parent = self.compile_expr(fb, &call.args[0])?;
                     let id = self.compile_expr(fb, &call.args[1])?;
@@ -11693,6 +12146,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_LABEL" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_LABEL requires its arguments: CONTROL ADD LABEL hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let parent = self.compile_expr(fb, &call.args[0])?;
                     let id = self.compile_expr(fb, &call.args[1])?;
@@ -11715,6 +12178,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_PROGRESSBAR" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_PROGRESSBAR requires its arguments: CONTROL ADD PROGRESSBAR hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let parent = self.compile_expr(fb, &call.args[0])?;
                     let id = self.compile_expr(fb, &call.args[1])?;
@@ -11736,6 +12209,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_MONTHCAL" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_MONTHCAL requires its arguments: CONTROL ADD MONTHCAL hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11760,6 +12243,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_ANIMATE" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_ANIMATE requires its arguments: CONTROL ADD ANIMATE hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11784,6 +12277,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_RICHEDIT" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_RICHEDIT requires its arguments: CONTROL ADD RICHEDIT hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11808,6 +12311,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_TRACKBAR" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_TRACKBAR requires its arguments: CONTROL ADD TRACKBAR hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11832,6 +12345,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_UPDOWN" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_UPDOWN requires its arguments: CONTROL ADD UPDOWN hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11856,6 +12379,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_HOTKEY" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_HOTKEY requires its arguments: CONTROL ADD HOTKEY hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11880,6 +12413,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_IPADDRESS" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_IPADDRESS requires its arguments: CONTROL ADD IPADDRESS hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11904,6 +12447,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_TAB" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_TAB requires its arguments: CONTROL ADD TAB hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -11928,6 +12481,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_LISTVIEW" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_LISTVIEW requires its arguments: CONTROL ADD LISTVIEW hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut parent = self.compile_expr(fb, &call.args[0])?;
                     if parent.ty != IrType::Ptr {
@@ -12085,6 +12648,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_ADD_SEPARATOR" => {
+                // batch 220: the official syntax requires all 6 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 6 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_ADD_SEPARATOR requires its arguments: TOOLBAR ADD SEPARATOR hDlg , ID , size& [, cmd& ] [ AT item& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 6 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12100,6 +12673,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_DELETE_BUTTON" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_DELETE_BUTTON requires its arguments: TOOLBAR DELETE BUTTON hDlg , id& , [ BYCMD ] item&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12114,6 +12697,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_GET_STATE" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_GET_STATE requires its arguments: TOOLBAR GET STATE hDlg , ID , [ BYCMD ] item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12128,6 +12721,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_GET_COUNT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_GET_COUNT requires its arguments: TOOLBAR GET COUNT hDlg , ID TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12140,6 +12743,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_SET_IMAGELIST" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_SET_IMAGELIST requires its arguments: TOOLBAR SET IMAGELIST hDlg , ID , hLst , ListType&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12154,6 +12767,16 @@ impl Compiler {
                 return Ok(());
             }
             "TOOLBAR_SET_STATE" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "TOOLBAR_SET_STATE requires its arguments: TOOLBAR SET STATE hDlg , ID , [ BYCMD ] item& , state&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12169,6 +12792,16 @@ impl Compiler {
                 return Ok(());
             }
             "STATUSBAR_SET_PARTS" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "STATUSBAR_SET_PARTS requires its arguments: STATUSBAR SET PARTS hDlg , id& , x& [ , x& ... ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12190,6 +12823,16 @@ impl Compiler {
                 return Ok(());
             }
             "STATUSBAR_SET_TEXT" => {
+                // batch 220: the official syntax requires all 6 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 6 {
+                    return Err(pb::error::PbError::parser(
+                        "STATUSBAR_SET_TEXT requires its arguments: STATUSBAR SET TEXT hDlg , id& , item& , style& , text$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 6 {
                     let a = self.compile_expr(fb, &call.args[0])?;
                     let b = self.compile_expr(fb, &call.args[1])?;
@@ -12205,6 +12848,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_INSERT_COLUMN" => {
+                // batch 220: the official syntax requires all 6 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 6 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_INSERT_COLUMN requires its arguments: LISTVIEW INSERT COLUMN hDlg , id& , col& , StrExpr , ColWidth& , format&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 6 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12223,6 +12876,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_INSERT_ITEM" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_INSERT_ITEM requires its arguments: LISTVIEW INSERT ITEM hDlg , id& , item& , image& , StrExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12237,6 +12900,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_COUNT requires its arguments: LISTVIEW GET COUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12252,6 +12925,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_TEXT" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_TEXT requires its arguments: LISTVIEW GET TEXT hDlg , id& , item& , col& TO txtv$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12276,6 +12959,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_SET_TEXT" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_SET_TEXT requires its arguments: LISTVIEW SET TEXT hDlg , id& , item& , col& , StrExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 5 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12333,6 +13026,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_DELETE_COLUMN" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_DELETE_COLUMN requires its arguments: LISTVIEW DELETE COLUMN hDlg , id& , col&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW DELETE COLUMN hDlg, ID&, Col&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12346,6 +13049,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_FIND" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_FIND requires its arguments: LISTVIEW FIND hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW FIND hDlg, ID&, Item&, StrExpr TO datav&
                 if call.args.len() >= 5 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12368,6 +13081,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_FIND_EXACT" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_FIND_EXACT requires its arguments: LISTVIEW FIND EXACT hDlg , id& , item& , StrExpr TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW FIND EXACT hDlg, ID&, Item&, StrExpr TO datav&
                 // Same runtime entry as LISTVIEW FIND; operand 5 selects
                 // the exact-match comparison instead of the prefix match.
@@ -12438,6 +13161,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_COLUMN" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_COLUMN requires its arguments: LISTVIEW GET COLUMN hDlg , id& , col& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET COLUMN hDlg, ID&, Col& TO datav&
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12479,6 +13212,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_HEADER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_HEADER requires its arguments: LISTVIEW GET HEADER hDlg , id& , col& TO txtv$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET HEADER hDlg, ID&, Col& TO txtv$
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12527,6 +13270,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_HEADERID" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_HEADERID requires its arguments: LISTVIEW GET HEADERID hDlg , id& TO hLV , idv&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET HEADERID hDlg, ID& TO hLV, idv&
                 // Two out-parameters, so both travel through I64 slots
                 // that the runtime fills and we convert on the way back.
@@ -12559,6 +13312,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_MODE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_MODE requires its arguments: LISTVIEW GET MODE hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET MODE hDlg, ID& TO datav&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12598,6 +13361,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_SELCOUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_SELCOUNT requires its arguments: LISTVIEW GET SELCOUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET SELCOUNT hDlg, ID& TO datav&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12614,6 +13387,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_SELECT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_SELECT requires its arguments: LISTVIEW GET SELECT hDlg , id& [, item& ] TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET SELECT hDlg, ID& [, Item&] TO datav&
                 // The parser always emits Item&, defaulting it to 1.
                 if call.args.len() >= 4 {
@@ -12632,6 +13415,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_STATE" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_STATE requires its arguments: LISTVIEW GET STATE hDlg , id& , item& , col& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET STATE hDlg, ID&, Item&, Col& TO datav&
                 if call.args.len() >= 5 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12650,6 +13443,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_SELECT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_SELECT requires its arguments: LISTVIEW SELECT hDlg , id& , item& [, col& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW SELECT hDlg, ID&, Item& [, Col&]
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12688,6 +13491,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_STYLEXX" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_STYLEXX requires its arguments: LISTVIEW GET STYLEXX hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET STYLEXX hDlg, ID& TO datav&
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12727,6 +13540,16 @@ impl Compiler {
                 return Ok(());
             }
             "LISTVIEW_GET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "LISTVIEW_GET_USER requires its arguments: LISTVIEW GET USER hDlg , id& , item& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // LISTVIEW GET USER hDlg, ID&, Item& TO datav&
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
@@ -12907,6 +13730,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_INSERT_ITEM" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_INSERT_ITEM requires its arguments: TREEVIEW INSERT ITEM hDlg , id& , hPrnt , hIAftr , image& , simage& , txt$ TO hItem".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12938,6 +13771,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_GET_COUNT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_GET_COUNT requires its arguments: TREEVIEW GET COUNT hDlg , id& TO datav&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -12953,6 +13796,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_GET_TEXT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_GET_TEXT requires its arguments: TREEVIEW GET TEXT hDlg , id& , hItem TO txtv$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 4 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -13166,6 +14019,16 @@ impl Compiler {
                 return Ok(());
             }
             "TREEVIEW_DELETE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "TREEVIEW_DELETE requires its arguments: TREEVIEW DELETE hDlg , id& , hItem".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let mut hd = self.compile_expr(fb, &call.args[0])?;
                     if hd.ty != IrType::Ptr {
@@ -13202,6 +14065,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_NEW" => {
+                // batch 220: the official syntax requires all 9 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 9 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_NEW requires its arguments: DIALOG NEW hParent , title , x , y , nWide& , nHigh& [, style& ] [, exstyle& ] TO hDlg".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 9 {
                     let _parent = self.compile_expr(fb, &call.args[0])?;
                     let title = self.compile_expr(fb, &call.args[1])?;
@@ -13261,6 +14134,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_GET_SIZE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_GET_SIZE requires its arguments: DIALOG GET SIZE hDlg TO x& , y&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG GET SIZE hDlg TO x&, y&   (official statement)
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13302,6 +14186,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_ENABLE" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_ENABLE requires its arguments: DIALOG ENABLE hDlg".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG ENABLE hDlg / DIALOG DISABLE hDlg
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13313,6 +14207,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SHOW" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SHOW requires its arguments: DIALOG SHOW MODELESS hDlg".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG HIDE / NORMALIZE / MINIMIZE / MAXIMIZE / SHOW MODELESS
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13324,6 +14228,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_STABILIZE" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_STABILIZE requires its arguments: DIALOG STABILIZE hDlg"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG STABILIZE hDlg / DIALOG NONSTABLE hDlg
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13344,6 +14259,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SEND" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SEND requires its arguments: DIALOG SEND hDlg , msg& , wParam& , lParam& [TO lResult& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG SEND hDlg, msg&, wParam&, lParam& [TO lResult&]
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13365,6 +14290,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_POST" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_POST requires its arguments: DIALOG POST hDlg , Msg& , wParam& , lParam&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG POST hDlg, msg&, wParam&, lParam&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13380,6 +14315,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SET_USER" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_USER requires its arguments: DIALOG SET USER hDlg , index& , usrval&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG SET USER hDlg, index&, usrval&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13393,6 +14338,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_GET_USER" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_GET_USER requires its arguments: DIALOG GET USER hDlg , index& TO retvar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG GET USER hDlg, index& TO retvar&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13428,6 +14383,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_GET_CLIENT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_GET_CLIENT requires its arguments: DIALOG GET CLIENT hDlg TO nWide& , nHigh&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG GET CLIENT hDlg TO nWide&, nHigh&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13446,6 +14411,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SET_CLIENT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_CLIENT requires its arguments: DIALOG SET CLIENT hDlg , x& , y&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG SET CLIENT hDlg, x&, y&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13459,6 +14434,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_GET_LOC" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_GET_LOC requires its arguments: DIALOG GET LOC hDlg TO x& , y&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG GET LOC hDlg TO x&, y&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13477,6 +14463,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SET_LOC" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_LOC requires its arguments: DIALOG SET LOC hDlg , x& , y&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG SET LOC hDlg, x&, y&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13490,6 +14487,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_COLOR" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_COLOR requires its arguments: CONTROL SET COLOR hDlg , id& , foreclr& , backclr&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET COLOR hDlg, id&, foreclr&, backclr&
                 //   The colour is recorded here and answered later, when Windows
                 //   asks the dialog for a brush with a %WM_CTLCOLOR* message,
@@ -13509,6 +14516,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_SET_COLOR" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_SET_COLOR requires its arguments: DIALOG SET COLOR hDlg , foreclr& , backclr&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIALOG SET COLOR hDlg, foreclr&, backclr&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13571,6 +14588,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_GET_TEXT" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_GET_TEXT requires its arguments: DIALOG GET TEXT hDlg TO titletext$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let hdlg64 = fb.inttoptr(&hd);
@@ -13647,6 +14674,16 @@ impl Compiler {
             // Layout normalised by the parser to
             //   [cls, hDlg, id, text, x, y, w, h, style, exstyle, target]
             "CONTROL_ADD_CUSTOM" => {
+                // batch 220: the official syntax requires all 11 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 11 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_CUSTOM requires its arguments: CONTROL ADD CUSTOM classname$ , hDlg , id& , txt$ , x , y , xx , yy [, style& ] [, exstyle& ] TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 11 {
                     let cls = self.compile_expr(fb, &call.args[0])?;
                     let mut parent = self.compile_expr(fb, &call.args[1])?;
@@ -13677,6 +14714,17 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_END" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_END requires its arguments: DIALOG END hDlg [, lResult& ]"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
                     let result = self.compile_expr(fb, &call.args[1])?;
@@ -13685,6 +14733,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIALOG_MENU" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIALOG_MENU requires its arguments: DIALOG MENU hDlg , hMenu".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let hdlg = self.compile_expr(fb, &call.args[0])?;
                     let hmenu = self.compile_expr(fb, &call.args[1])?;
@@ -13735,6 +14793,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_CLIENT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_CLIENT requires its arguments: CONTROL GET CLIENT hDlg , id& TO w& , h&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL GET CLIENT hDlg, id& TO nWide&, nHigh&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13761,6 +14829,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_LOC" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_LOC requires its arguments: CONTROL GET LOC hDlg , id& TO x& , y&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL GET LOC hDlg, id& TO x&, y&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13787,6 +14865,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_SIZE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_SIZE requires its arguments: CONTROL GET SIZE hDlg , id& TO nWide& , nHigh&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL GET SIZE hDlg, id& TO nWide&, nHigh&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13813,6 +14901,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_CLIENT" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_CLIENT requires its arguments: CONTROL SET CLIENT hDlg , id& , nWide& , nHigh&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET CLIENT hDlg, id&, nWide&, nHigh&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13831,6 +14929,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_LOC" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_LOC requires its arguments: CONTROL SET LOC hDlg , id& , x& , y&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET LOC hDlg, id&, x&, y&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13849,6 +14957,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_SIZE" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_SIZE requires its arguments: CONTROL SET SIZE hDlg , id& , nWide& , nHigh&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET SIZE hDlg, id&, nWide&, nHigh&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13868,6 +14986,17 @@ impl Compiler {
             }
             // --- Batch 176: CONTROL messages / state (official hDlg + id syntax) ---
             "CONTROL_HANDLE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_HANDLE requires its arguments: CONTROL HANDLE hDlg , id& TO hCtl&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL HANDLE hDlg, id& TO hCtl&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13886,6 +15015,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SEND" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SEND requires its arguments: CONTROL SEND hDlg , id& , Msg& , wParam& , lParam& [TO lResult& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SEND hDlg, id&, Msg&, wParam&, lParam& [TO lResult&]
                 if call.args.len() >= 5 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13916,6 +15055,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_POST" => {
+                // batch 220: the official syntax requires all 5 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 5 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_POST requires its arguments: CONTROL POST hDlg , id& , Msg& , wParam& , lParam&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL POST hDlg, id&, Msg&, wParam&, lParam&
                 if call.args.len() >= 5 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13955,6 +15104,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_FONT" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_FONT requires its arguments: CONTROL SET FONT hDlg , id& , FontHndl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET FONT hDlg, id&, FontHndl&
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13971,6 +15130,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SHOW_STATE" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SHOW_STATE requires its arguments: CONTROL SHOW STATE hDlg , id& , showstate& [TO lResult& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SHOW STATE hDlg, id&, showstate& [TO lResult&]
                 if call.args.len() >= 3 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -13993,6 +15162,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_USER requires its arguments: CONTROL SET USER hDlg , id& , index& , usrval&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET USER hDlg, id&, index&, usrval&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -14011,6 +15190,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_GET_USER" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_GET_USER requires its arguments: CONTROL GET USER hDlg , id& , index& TO retvar&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL GET USER hDlg, id&, index& TO retvar&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -14047,6 +15236,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_LISTBOX" => {
+                // batch 220: the official syntax requires all 7 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 7 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_LISTBOX requires its arguments: CONTROL ADD LISTBOX hDlg , id& , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 7 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -14072,6 +15271,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_CHECKBOX" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_CHECKBOX requires its arguments: CONTROL ADD CHECKBOX hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -14098,6 +15307,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_RADIOBUTTON" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_RADIOBUTTON requires its arguments: CONTROL ADD RADIOBUTTON hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -14164,6 +15383,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_SET_OPTION" => {
+                // batch 220: the official syntax requires all 4 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 4 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_SET_OPTION requires its arguments: CONTROL SET OPTION hDlg , id& , minid& , maxid&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // CONTROL SET OPTION hDlg, id&, minid&, maxid&
                 if call.args.len() >= 4 {
                     let hd = self.compile_expr(fb, &call.args[0])?;
@@ -14268,6 +15497,16 @@ impl Compiler {
                 return Ok(());
             }
             "CONTROL_ADD_GROUPBOX" => {
+                // batch 220: the official syntax requires all 8 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 8 {
+                    return Err(pb::error::PbError::parser(
+                        "CONTROL_ADD_GROUPBOX requires its arguments: CONTROL ADD GROUPBOX hDlg , id& , txt$ , x , y , xx , yy TO hCtrl&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 8 {
                     let mut hwnd = self.compile_expr(fb, &call.args[0])?;
                     if hwnd.ty != IrType::Ptr {
@@ -14547,6 +15786,16 @@ impl Compiler {
                 return Ok(());
             }
             "PUT_STR" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "PUT_STR requires its arguments: PUT # filenum& , StrgExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // PUT$ [#] filenum&, StrgExpr — write ANSI string at file position
                 if call.args.len() >= 2 {
                     let sv = self.compile_expr(fb, &call.args[0])?;
@@ -14557,6 +15806,17 @@ impl Compiler {
                 return Ok(());
             }
             "GET_STR" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "GET_STR requires its arguments: GET # filenum& , Count& , StrgVar"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // GET$ [#] filenum&, Count&, StrgVar — read Count bytes into a string var
                 if call.args.len() >= 3 {
                     let fv = self.compile_expr(fb, &call.args[0])?;
@@ -14569,6 +15829,16 @@ impl Compiler {
                 return Ok(());
             }
             "PUT_WSTR" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "PUT_WSTR requires its arguments: PUT$$ # filenum& , StrgExpr".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // PUT$$ [#] filenum&, StrgExpr — write WIDE (UTF-16LE) string
                 if call.args.len() >= 2 {
                     let sv = self.compile_expr(fb, &call.args[0])?;
@@ -14579,6 +15849,17 @@ impl Compiler {
                 return Ok(());
             }
             "GET_WSTR" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "GET_WSTR requires its arguments: GET$$ # filenum& , Count& , StrgVar"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // GET$$ [#] filenum&, Count&, StrgVar — read Count WIDE chars
                 if call.args.len() >= 3 {
                     let fv = self.compile_expr(fb, &call.args[0])?;
@@ -14604,6 +15885,16 @@ impl Compiler {
                 return Ok(());
             }
             "DIR" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DIR requires its arguments: DIR mask [, [ONLY] attr& ] TO s$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DIR mask [, [ONLY] attr] TO s$
                 // args: [mask, target] | [mask, attr, target] | [mask, only, attr, target]
                 if call.args.len() >= 2 {
@@ -14627,6 +15918,16 @@ impl Compiler {
                 return Ok(());
             }
             "DESKTOP GET SIZE" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DESKTOP GET SIZE requires its arguments: DESKTOP GET SIZE TO ncWidth& , ncHeight&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DESKTOP GET SIZE TO ncWidth&, ncHeight&
                 if call.args.len() >= 2 {
                     let (wp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
@@ -14639,6 +15940,16 @@ impl Compiler {
                 return Ok(());
             }
             "DESKTOP GET CLIENT" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DESKTOP GET CLIENT requires its arguments: DESKTOP GET CLIENT TO ncWidth& , ncHeight&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DESKTOP GET CLIENT TO ncWidth&, ncHeight& (work area)
                 if call.args.len() >= 2 {
                     let (wp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
@@ -14648,6 +15959,17 @@ impl Compiler {
                 return Ok(());
             }
             "DESKTOP GET LOC" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DESKTOP GET LOC requires its arguments: DESKTOP GET LOC TO x& , y&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DESKTOP GET LOC TO x&, y& (work area origin)
                 if call.args.len() >= 2 {
                     let (xp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
@@ -14657,6 +15979,17 @@ impl Compiler {
                 return Ok(());
             }
             "DESKTOP GET PPI" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "DESKTOP GET PPI requires its arguments: DESKTOP GET PPI TO x& , y&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // DESKTOP GET PPI TO x&, y& (pixels per inch)
                 if call.args.len() >= 2 {
                     let (xp, _) = self.compile_lvalue_ptr(fb, &call.args[0])?;
@@ -14803,6 +16136,19 @@ impl Compiler {
             }
 
             "PLAY SOUND" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+
+                // spelling is malformed. Report it instead of silently doing nothing.
+
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "PLAY SOUND requires its arguments: PLAY SOUND freq& , duration&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 // PLAY SOUND freq&, duration& — speaker beep
                 if call.args.len() >= 2 {
                     let fv = self.compile_expr(fb, &call.args[0])?;
@@ -15212,6 +16558,16 @@ impl Compiler {
                 return Ok(());
             }
             "NAME" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "NAME requires its arguments: NAME filespec1$ AS filespec2$".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let old = self.compile_expr(fb, &call.args[0])?;
                     let new_s = self.compile_expr(fb, &call.args[1])?;
@@ -15269,6 +16625,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMM LINE INPUT" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "COMM LINE INPUT requires its arguments: COMM LINE [INPUT] [#] hComm , string_var".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let ch = self.to_i32(fb, &v0);
@@ -15279,6 +16645,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMM RECV" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMM RECV requires its arguments: COMM RECV [#] hComm , count& , string_var".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let ch = self.to_i32(fb, &v0);
@@ -15291,6 +16667,16 @@ impl Compiler {
                 return Ok(());
             }
             "COMM SEND" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "COMM SEND requires its arguments: COMM SEND [#] hComm , string_expression TO [ CharCountVar ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let ch = self.to_i32(fb, &v0);
@@ -15318,6 +16704,17 @@ impl Compiler {
                 return Ok(());
             }
             "COMM SET" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "COMM SET requires its arguments: COMM SET [#] hComm , Comfunc = value"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 3 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let ch = self.to_i32(fb, &v0);
@@ -15329,6 +16726,17 @@ impl Compiler {
                 return Ok(());
             }
             "COMM TIMEOUT" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "COMM TIMEOUT requires its arguments: COMM TIMEOUT [#] hComm , TimeOutMS&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let ch = self.to_i32(fb, &v0);
@@ -15384,6 +16792,17 @@ impl Compiler {
                 return Ok(());
             }
             "THREAD STATUS" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "THREAD STATUS requires its arguments: THREAD STATUS hThread TO lResult&"
+                            .to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let id = self.to_i32(fb, &v0);
@@ -15396,6 +16815,16 @@ impl Compiler {
                 return Ok(());
             }
             "THREAD GET PRIORITY" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "THREAD GET PRIORITY requires its arguments: THREAD GET PRIORITY hThread TO lResult&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let id = self.to_i32(fb, &v0);
@@ -15408,6 +16837,16 @@ impl Compiler {
                 return Ok(());
             }
             "THREAD SET PRIORITY" => {
+                // batch 220: the official syntax requires all 2 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 2 {
+                    return Err(pb::error::PbError::parser(
+                        "THREAD SET PRIORITY requires its arguments: THREAD SET PRIORITY hThread , Priority&".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let v0 = self.compile_expr(fb, &call.args[0])?;
                     let id = self.to_i32(fb, &v0);
@@ -15492,6 +16931,16 @@ impl Compiler {
                 return Ok(());
             }
             "IMPORT ADDR" => {
+                // batch 220: the official syntax requires all 3 arguments, so a shorter
+                // spelling is malformed. Report it instead of silently doing nothing.
+                if call.args.len() < 3 {
+                    return Err(pb::error::PbError::parser(
+                        "IMPORT ADDR requires its arguments: IMPORT ADDR ProcName$ , LibName$ TO AddrVar& [, HndlVar& ]".to_string(),
+                        None,
+                        call.line,
+                    ));
+                }
+
                 if call.args.len() >= 2 {
                     let pv = self.compile_expr(fb, &call.args[0])?;
                     let lv = self.compile_expr(fb, &call.args[1])?;
