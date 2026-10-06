@@ -10017,7 +10017,20 @@ impl Compiler {
                         fb.const_i64(-1)
                     };
                     let var_expr = &call.args[call.args.len() - 1];
-                    let (ptr, pb_type) = self.compile_lvalue_ptr(fb, var_expr)?;
+                    let (ptr, _ir_ty, pb_type) = match self.lvalue_ptr(fb, var_expr) {
+                        Some(lv) => lv,
+                        None => {
+                            return Err(PbError::parser(
+                                format!(
+                                    "{} # record variable must be a variable (use {} # for string literals/expressions)",
+                                    call.name,
+                                    if call.name == "GET" { "GET$" } else { "PUT$" }
+                                ),
+                                None,
+                                call.line,
+                            ))
+                        }
+                    };
                     let size = match &pb_type {
                         PbType::Byte => 1,
                         PbType::Word | PbType::Integer => 2,
@@ -10036,6 +10049,18 @@ impl Compiler {
                             },
                             &[filenum, pos_val, ptr, fb.const_i64(size)],
                         );
+                    } else {
+                        // batch 220: a dynamic STRING / Variant / UDT record target used to
+                        // compile into a silent no-op (size 0 skipped the call). Report it.
+                        return Err(PbError::parser(
+                            format!(
+                                "{} # with a variable-size variable (dynamic STRING/Variant/UDT) is not supported; use {} # filenum& , ... for string I/O",
+                                call.name,
+                                if call.name == "GET" { "GET$" } else { "PUT$" }
+                            ),
+                            None,
+                            call.line,
+                        ));
                     }
                 }
                 return Ok(());

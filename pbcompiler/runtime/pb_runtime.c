@@ -2646,7 +2646,8 @@ void pb_field_tostr(pb_field_t* fv) {
 }
 
 /* PUT$ #f, str$ � write ANSI string at current file position */
-int pb_put_string(int f, const char* s) {    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) pb_err = 52; return -1;
+int pb_put_string(int f, const char* s) {
+    if (f < 1 || f >= MAX_FILE_HANDLES || file_handles[f] == NULL) { pb_err = 52; return -1; }
     if (!s) { pb_err = 5; return -1; }
     size_t n = strlen(s);
     if (n == 0) return 0;
