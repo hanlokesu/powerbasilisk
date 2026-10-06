@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -42,7 +52,7 @@ FUNCTION PBMAIN() AS LONG
     IF a(1) = 10 AND a(2) = 25 AND a(3) = 20 AND a(4) = 30 AND a(5) = 40 THEN
         ConPrint "ARRAY-INSERT-PASS"
     ELSE
-        ConPrint "ARRAY-INSERT-FAIL a(1)=" & STR$(STR$(a(1))) & " a(2)=" & STR$(STR$(a(2))) & " a(3)=" & STR$(STR$(a(3))) & " a(4)=" & STR$(STR$(a(4))) & " a(5)=" & STR$(STR$(a(5)))
+        ConPrint "ARRAY-INSERT-FAIL a(1)=" & STR$(a(1)) & " a(2)=" & STR$(a(2)) & " a(3)=" & STR$(a(3)) & " a(4)=" & STR$(a(4)) & " a(5)=" & STR$(a(5))
     END IF
     ConPrint "Press any key to exit..."
     ConWaitKey

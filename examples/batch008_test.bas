@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -43,7 +53,7 @@ FUNCTION PBMAIN() AS LONG
     IF a(1) = 10 AND a(2) = 30 AND a(3) = 40 AND a(4) = 50 THEN
         ConPrint "ARRAY-DELETE-PASS"
     ELSE
-        ConPrint "ARRAY-DELETE-FAIL a(1)=" & STR$(STR$(a(1))) & " a(2)=" & STR$(STR$(a(2))) & " a(3)=" & STR$(STR$(a(3))) & " a(4)=" & STR$(STR$(a(4)))
+        ConPrint "ARRAY-DELETE-FAIL a(1)=" & STR$(a(1)) & " a(2)=" & STR$(a(2)) & " a(3)=" & STR$(a(3)) & " a(4)=" & STR$(a(4))
     END IF
 
     ARRAY DELETE a(1) FOR 2
@@ -51,7 +61,7 @@ FUNCTION PBMAIN() AS LONG
     IF a(1) = 40 AND a(2) = 50 THEN
         ConPrint "ARRAY-DELETE-FOR-PASS"
     ELSE
-        ConPrint "ARRAY-DELETE-FOR-FAIL a(1)=" & STR$(STR$(a(1))) & " a(2)=" & STR$(STR$(a(2)))
+        ConPrint "ARRAY-DELETE-FOR-FAIL a(1)=" & STR$(a(1)) & " a(2)=" & STR$(a(2))
     END IF
     ConPrint "Press any key to exit..."
     ConWaitKey

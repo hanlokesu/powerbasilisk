@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -33,10 +43,10 @@ FUNCTION PBMAIN() AS LONG
     
     ConPrint "Testing DIR$..."
     s = DIR$("*.bas")
-    ConPrint "  First .bas file: " & STR$(s)
+    ConPrint "  First .bas file: " & s
     
     s = DIR$(NEXT)
-    ConPrint "  Next .bas file: " & STR$(s)
+    ConPrint "  Next .bas file: " & s
     
     ConPrint "DIR FUNCTION tests passed!"
     ConPrint "Press any key to exit..."

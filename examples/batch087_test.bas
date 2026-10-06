@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -42,19 +52,19 @@ FUNCTION PBMAIN() AS LONG
     ' Test 1: CSTR — numeric to string (no leading space)
     s = CSTR(123)
     IF s = "123" THEN
-        ConPrint "Test 1 PASS: CSTR(123) = [" & STR$(s) & "]"
+        ConPrint "Test 1 PASS: CSTR(123) = [" & s & "]"
         pass = pass + 1
     ELSE
-        ConPrint "Test 1 FAIL: CSTR(123) = [" & STR$(s) & "], expected [123]"
+        ConPrint "Test 1 FAIL: CSTR(123) = [" & s & "], expected [123]"
     END IF
 
     ' Test 2: CSTR — negative number
     s = CSTR(-456)
     IF s = "-456" THEN
-        ConPrint "Test 2 PASS: CSTR(-456) = [" & STR$(s) & "]"
+        ConPrint "Test 2 PASS: CSTR(-456) = [" & s & "]"
         pass = pass + 1
     ELSE
-        ConPrint "Test 2 FAIL: CSTR(-456) = [" & STR$(s) & "], expected [-456]"
+        ConPrint "Test 2 FAIL: CSTR(-456) = [" & s & "], expected [-456]"
     END IF
 
     ' Test 3: CQUAD — convert to 64-bit integer

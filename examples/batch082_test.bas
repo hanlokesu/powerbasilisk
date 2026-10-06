@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -40,7 +50,7 @@ FUNCTION PBMAIN() AS LONG
     s = "the cat sat on the mat"
     r = REMOVE$(s, "the ")
     ConPrint "Test 1: remove 'the ' from ['the cat sat on the mat']"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "cat sat on mat" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -52,7 +62,7 @@ FUNCTION PBMAIN() AS LONG
     s = "hello world"
     r = REMOVE$(s, "xyz")
     ConPrint "Test 2: remove 'xyz' (not found) from ['hello world']"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "hello world" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -64,7 +74,7 @@ FUNCTION PBMAIN() AS LONG
     s = "hello world"
     r = REMOVE$(s, ANY, "lo")
     ConPrint "Test 3: ANY remove 'l','o' from ['hello world']"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "he wrd" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -76,7 +86,7 @@ FUNCTION PBMAIN() AS LONG
     s = "aaaa"
     r = REMOVE$(s, "aa")
     ConPrint "Test 4: remove 'aa' from ['aaaa']"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "" THEN
         ConPrint "  PASS"
         pass = pass + 1

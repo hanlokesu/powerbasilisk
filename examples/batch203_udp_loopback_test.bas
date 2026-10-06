@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -65,7 +75,7 @@ FUNCTION PBMAIN () AS LONG
     UDP OPEN PORT 46217 AS #1
     UDP SEND #1, AT "127.0.0.1", 46217, "self-ping"
     UDP RECV #1, FROM ip, pnum, buf
-    ConPrint "received: " & STR$(buf)
+    ConPrint "received: " & buf
     IF buf <> "self-ping" THEN fails = fails + 1
     ConPrint "from port: " & STR$(pnum)
     IF pnum <> 46217 THEN fails = fails + 1
@@ -73,5 +83,5 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "=== FAILURES: " & STR$(fails)
     FUNCTION = 0
 ' Press any key to exit...
-WAITKEY$
+ConWaitKey
 END FUNCTION

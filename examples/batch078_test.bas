@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -35,25 +45,25 @@ FUNCTION PBMAIN() AS LONG
 
     ConPrint "=== Batch 78: XPRINT GET MARGIN + DISPLAY ==="
 
-    XPRINT ATTACH DEFAULT
+    XPRINT ATTACH 0
     XPRINT GET MARGIN TO ml, mt, mr, mb
     ConPrint "GET MARGIN:" & STR$(ml) & STR$(mt) & STR$(mr) & STR$(mb)
     XPRINT CLOSE
 
     DISPLAY OPENFILE "Open", "All|*.*", "C:\" TO result
-    ConPrint "DISPLAY OPENFILE: [" & STR$(result) & "]"
+    ConPrint "DISPLAY OPENFILE: [" & result & "]"
 
     DISPLAY SAVEFILE "Save", "All|*.*", "C:\" TO result
-    ConPrint "DISPLAY SAVEFILE: [" & STR$(result) & "]"
+    ConPrint "DISPLAY SAVEFILE: [" & result & "]"
 
     DISPLAY COLOR TO color
     ConPrint "DISPLAY COLOR:" & STR$(color)
 
     DISPLAY FONT TO result
-    ConPrint "DISPLAY FONT: [" & STR$(result) & "]"
+    ConPrint "DISPLAY FONT: [" & result & "]"
 
     DISPLAY BROWSE "Browse", "C:\" TO result
-    ConPrint "DISPLAY BROWSE: [" & STR$(result) & "]"
+    ConPrint "DISPLAY BROWSE: [" & result & "]"
 
     ConPrint "=== Result: ALL PASS (6 statements)"
     ConPrint "Press any key to exit..."

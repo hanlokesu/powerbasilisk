@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 #DIM ALL
 ' === console emulation for dual-compiler compatibility ===
@@ -65,10 +75,10 @@ FUNCTION PBMAIN() AS LONG
     PUT$$ #1, "CD"
     SEEK #1, 1
     GET$$ #1, 2, s
-    ConPrint "wide-read1: " & STR$(s)
+    ConPrint "wide-read1: " & s
     IF s = "AB" THEN ok = ok + 1
     GET$$ #1, 2, s
-    ConPrint "wide-read2: " & STR$(s)
+    ConPrint "wide-read2: " & s
     IF s = "CD" THEN ok = ok + 1
     CLOSE #1
     KILL "WIDETEST.DAT"
@@ -82,7 +92,7 @@ FUNCTION PBMAIN() AS LONG
     ' --- 5. No-arg single-line macro ---
     MACRO AppTitle = "PB27-MACRO"
     s = AppTitle
-    ConPrint "macro-const: " & STR$(s)
+    ConPrint "macro-const: " & s
     IF s = "PB27-MACRO" THEN ok = ok + 1
 
     ' --- 6. Multi-line MACRO at statement position ---

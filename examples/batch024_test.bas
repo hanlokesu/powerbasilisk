@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -45,7 +55,7 @@ FUNCTION PBMAIN() AS LONG
     SEEK #1, 1
     GET$ #1, 13, s
     CLOSE #1
-    ConPrint "GET$ =" & STR$(s)
+    ConPrint "GET$ =" & s
     ' LET whole-TYPE assignment
     t1.n = 42
     t1.d = 3.14
@@ -62,9 +72,9 @@ FUNCTION PBMAIN() AS LONG
     d2 = DIR$(NEXT)
     ConPrint "DIR$ next  =" & STR$(d2)
     DIR "batch24_dir_*.tmp" TO s
-    ConPrint "DIR stmt    =" & STR$(s)
+    ConPrint "DIR stmt    =" & s
     DIR NEXT TO s
-    ConPrint "DIR NEXT    =" & STR$(s)
+    ConPrint "DIR NEXT    =" & s
     DIR CLOSE
     KILL "batch24_dir_a.tmp"
     KILL "batch24_dir_b.tmp"

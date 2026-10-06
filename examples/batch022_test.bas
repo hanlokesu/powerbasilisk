@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -46,7 +56,7 @@ FUNCTION PBMAIN() AS LONG
     OPEN "lprint_test.out" FOR INPUT AS #1
     LINE INPUT #1, s
     CLOSE #1
-    ConPrint "lprint line1 = " & STR$(s)
+    ConPrint "lprint line1 = " & s
     IF INSTR(s, "Hello LPRINT") > 0 THEN
         ConPrint "LPRINT OK"
     ELSE
@@ -64,7 +74,7 @@ FUNCTION PBMAIN() AS LONG
     OPEN "trace_test.log" FOR INPUT AS #1
     LINE INPUT #1, s
     CLOSE #1
-    ConPrint "trace line1 = " & STR$(s)
+    ConPrint "trace line1 = " & s
     IF INSTR(s, "marker-1") > 0 THEN
         ConPrint "TRACE OK"
     ELSE

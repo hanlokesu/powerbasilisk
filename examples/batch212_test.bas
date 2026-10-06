@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -27,53 +37,97 @@ SUB ConWaitKey()
     END IF
 END SUB
 
-
-' =====================================================================
-' batch212_test.bas - witness for "CLASS ... INSTANCE" real storage
-' ---------------------------------------------------------------------
-' What this asserts, and nothing else:
-'   * a CLASS whose INSTANCE lines declare members now produces a real
-'     object type, so two variables of that type keep INDEPENDENT values
-'   * each member keeps its own slot (x and y do not alias)
-'   * a member can be read back after a whole-object copy
-' The official CLASS page shows exactly this shape:
-'   CLASS name / INSTANCE var AS type / END CLASS
-' =====================================================================
-CLASS Point
-    INSTANCE x AS LONG
-    INSTANCE y AS LONG
-END CLASS
-
-FUNCTION PBMAIN() AS LONG
-    LOCAL p AS Point
-    LOCAL q AS Point
-    LOCAL fails AS LONG
-    LOCAL t AS Point
-
-    fails = 0
-    p.x = 11
-    p.y = 22
-    q.x = 33
-    q.y = 44
-
+
+
+' =====================================================================
+
+' batch212_test.bas - witness for "CLASS ... INSTANCE" real storage
+
+' ---------------------------------------------------------------------
+
+' What this asserts, and nothing else:
+
+'   * a CLASS whose INSTANCE lines declare members now produces a real
+
+'     object type, so two variables of that type keep INDEPENDENT values
+
+'   * each member keeps its own slot (x and y do not alias)
+
+'   * a member can be read back after a whole-object copy
+
+' The official CLASS page shows exactly this shape:
+
+'   CLASS name / INSTANCE var AS type / END CLASS
+
+' =====================================================================
+
+CLASS Point
+
+    INSTANCE x AS LONG
+
+    INSTANCE y AS LONG
+
+END CLASS
+
+
+
+FUNCTION PBMAIN() AS LONG
+
+    LOCAL p AS Point
+
+    LOCAL q AS Point
+
+    LOCAL fails AS LONG
+
+    LOCAL t AS Point
+
+
+
+    fails = 0
+
+    p.x = 11
+
+    p.y = 22
+
+    q.x = 33
+
+    q.y = 44
+
+
+
     ConPrint "p = " & STR$(p.x) & "," & STR$(p.y)
     ConPrint "q = " & STR$(q.x) & "," & STR$(q.y)
-
-    IF p.x <> 11 THEN fails = fails + 1
-    IF p.y <> 22 THEN fails = fails + 1
-    IF q.x <> 33 THEN fails = fails + 1
-    IF q.y <> 44 THEN fails = fails + 1
-    ' per-object independence: q.x must not have touched p.x
-    IF p.x = q.x THEN fails = fails + 1
-    ' member slots do not alias inside one object
-    IF p.x = p.y THEN fails = fails + 1
-
-    t = p
+
+
+    IF p.x <> 11 THEN fails = fails + 1
+
+    IF p.y <> 22 THEN fails = fails + 1
+
+    IF q.x <> 33 THEN fails = fails + 1
+
+    IF q.y <> 44 THEN fails = fails + 1
+
+    ' per-object independence: q.x must not have touched p.x
+
+    IF p.x = q.x THEN fails = fails + 1
+
+    ' member slots do not alias inside one object
+
+    IF p.x = p.y THEN fails = fails + 1
+
+
+
+    t = p
+
     ConPrint "t = " & STR$(t.x) & "," & STR$(t.y)
-    IF t.y <> 22 THEN fails = fails + 1
-
+    IF t.y <> 22 THEN fails = fails + 1
+
+
+
     ConPrint "=== FAILURES:" & STR$(fails) & "==="
-    FUNCTION = 0
+    FUNCTION = 0
+
 ' Press any key to exit...
 WAITKEY$
-END FUNCTION
+END FUNCTION
+

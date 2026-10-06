@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -37,7 +47,7 @@ FUNCTION PBMAIN() AS LONG
     ' Test 1: ACODE$ with normal string
     s = "Hello World"
     r = ACODE$(s)
-    ConPrint "Test 1: ACODE$('Hello World') = [" & STR$(r) & "]"
+    ConPrint "Test 1: ACODE$('Hello World') = [" & r & "]"
     IF r = "Hello World" THEN
         ConPrint "  PASS"
     ELSE
@@ -47,7 +57,7 @@ FUNCTION PBMAIN() AS LONG
     ' Test 2: ACODE$ with empty string
     s = ""
     r = ACODE$(s)
-    ConPrint "Test 2: ACODE$('') = [" & STR$(r) & "]"
+    ConPrint "Test 2: ACODE$('') = [" & r & "]"
     IF r = "" THEN
         ConPrint "  PASS"
     ELSE
@@ -57,7 +67,7 @@ FUNCTION PBMAIN() AS LONG
     ' Test 3: ACODE$ with special characters
     s = "Test 123 !@#"
     r = ACODE$(s)
-    ConPrint "Test 3: ACODE$('Test 123 !@#') = [" & STR$(r) & "]"
+    ConPrint "Test 3: ACODE$('Test 123 !@#') = [" & r & "]"
     IF r = "Test 123 !@#" THEN
         ConPrint "  PASS"
     ELSE

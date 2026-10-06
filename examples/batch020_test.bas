@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -41,7 +51,7 @@ FUNCTION PBMAIN() AS LONG
     a(5) = 5
     ' ARRAY ARRAYIX: each element = its index
     ARRAY ARRAYIX a()
-    ConPrint "ARRAYIX=" + STR$(STR$(a(1))) + "," + STR$(STR$(a(2))) + "," + STR$(STR$(a(3))) + "," + STR$(STR$(a(4))) + "," + STR$(STR$(a(5)))
+    ConPrint "ARRAYIX=" + STR$(a(1)) + "," + STR$(a(2)) + "," + STR$(a(3)) + "," + STR$(a(4)) + "," + STR$(a(5))
     ' reset values
     a(1) = 10
     a(2) = 20
@@ -56,9 +66,9 @@ FUNCTION PBMAIN() AS LONG
     ConPrint "SCAN2=" + STR$(idx)
     ' ARRAY INSERT / DELETE
     ARRAY DELETE a(2) FOR 1
-    ConPrint "DEL=" + STR$(STR$(a(2))) + "," + STR$(STR$(a(3)))
+    ConPrint "DEL=" + STR$(a(2)) + "," + STR$(a(3))
     ARRAY INSERT a(3), 99
-    ConPrint "INS=" + STR$(STR$(a(3))) + "," + STR$(STR$(a(4)))
+    ConPrint "INS=" + STR$(a(3)) + "," + STR$(a(4))
     ' FILESCAN (INPUT mode)
     OPEN "b20_scan.txt" FOR OUTPUT AS #1
     PRINT #1, "line one"

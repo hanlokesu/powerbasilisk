@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -36,7 +46,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 1: MCASE$ basic
     s = MCASE$("hello world")
-    ConPrint "Test 1: MCASE$('hello world') = [" & STR$(s) & "]"
+    ConPrint "Test 1: MCASE$('hello world') = [" & s & "]"
     IF s = "Hello World" THEN
         ConPrint "  PASS"
     ELSE
@@ -45,7 +55,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 2: MCASE$ with mixed case and punctuation
     s = MCASE$("Cats aren't AL.WAYS good.")
-    ConPrint "Test 2: MCASE$('Cats aren''t AL.WAYS good.') = [" & STR$(s) & "]"
+    ConPrint "Test 2: MCASE$('Cats aren''t AL.WAYS good.') = [" & s & "]"
     IF s = "Cats Aren'T Al.Ways Good." THEN
         ConPrint "  PASS"
     ELSE
@@ -54,7 +64,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 3: MCASE$ all uppercase
     s = MCASE$("HELLO WORLD")
-    ConPrint "Test 3: MCASE$('HELLO WORLD') = [" & STR$(s) & "]"
+    ConPrint "Test 3: MCASE$('HELLO WORLD') = [" & s & "]"
     IF s = "Hello World" THEN
         ConPrint "  PASS"
     ELSE
@@ -63,7 +73,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 4: MCASE$ empty string
     s = MCASE$("")
-    ConPrint "Test 4: MCASE$('') = [" & STR$(s) & "]"
+    ConPrint "Test 4: MCASE$('') = [" & s & "]"
     IF s = "" THEN
         ConPrint "  PASS"
     ELSE

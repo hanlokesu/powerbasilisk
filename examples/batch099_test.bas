@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -56,7 +66,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 3: FUNCNAME$ inside PBMAIN (should return "PBMAIN")
     s = FUNCNAME$
-    ConPrint "Test 3: FUNCNAME$ in PBMAIN = [" & STR$(s) & "] (expected PBMAIN)"
+    ConPrint "Test 3: FUNCNAME$ in PBMAIN = [" & s & "] (expected PBMAIN)"
     IF s = "PBMAIN" THEN
         ConPrint "  PASS"
     ELSE
@@ -65,7 +75,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 4: FUNCNAME$ bare form (no parens)
     s = FUNCNAME
-    ConPrint "Test 4: FUNCNAME (bare) = [" & STR$(s) & "] (expected PBMAIN)"
+    ConPrint "Test 4: FUNCNAME (bare) = [" & s & "] (expected PBMAIN)"
     IF s = "PBMAIN" THEN
         ConPrint "  PASS"
     ELSE
@@ -84,7 +94,7 @@ END FUNCTION
 SUB TestSub()
     LOCAL s AS STRING
     s = FUNCNAME$
-    ConPrint "Test 5: FUNCNAME$ in TestSub = [" & STR$(s) & "] (expected TESTSUB)"
+    ConPrint "Test 5: FUNCNAME$ in TestSub = [" & s & "] (expected TESTSUB)"
     IF s = "TESTSUB" THEN
         ConPrint "  PASS"
     ELSE

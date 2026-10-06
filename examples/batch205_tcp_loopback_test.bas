@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -80,7 +90,7 @@ FUNCTION PBMAIN () AS LONG
     TCP OPEN PORT 46219 AT "127.0.0.1" AS #3
     TCP PRINT #3, "ping"
     TCP LINE INPUT #3, s
-    ConPrint "client got: " & STR$(s)
+    ConPrint "client got: " & s
     IF s <> "pong" THEN fails = fails + 1
     SLEEP 500
     ConPrint "server read: " & STR$(g_server_line)

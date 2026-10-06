@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -30,10 +40,10 @@ END SUB
 ' hello.bas - PowerBasilisk Enhanced v0.1.15 smoke demo
 
 FUNCTION PBMAIN() AS LONG
-    LOCAL waitk AS STRING
+    LOCAL here AS STRING
     ConPrint "Hello from PowerBasilisk Enhanced v0.1.15!"
-    ConPrint "CURDIR$ = " & CURDIR$
-    ConPrint "ISFILE(examples\hello.bas) = " & STR$(STR$(ISFILE("examples\hello.bas")))
+    here = CURDIR$
+    ConPrint "CURDIR$ = " & here
     ConPrint "Press any key to exit..."
     ConWaitKey
 END FUNCTION

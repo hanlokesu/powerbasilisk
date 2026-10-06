@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -40,7 +50,7 @@ FUNCTION PBMAIN() AS LONG
     s = "hello world"
     r = REMAIN$(s, " ")
     ConPrint "Test 1: REMAIN$('hello world', ' ')"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "world" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -52,7 +62,7 @@ FUNCTION PBMAIN() AS LONG
     s = "hello"
     r = REMAIN$(s, "xyz")
     ConPrint "Test 2: REMAIN$('hello', 'xyz') (not found)"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -64,7 +74,7 @@ FUNCTION PBMAIN() AS LONG
     s = "a1b2c3"
     r = REMAIN$(3, s, "b")
     ConPrint "Test 3: REMAIN$(3, 'a1b2c3', 'b')"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "2c3" THEN
         ConPrint "  PASS"
         pass = pass + 1
@@ -76,7 +86,7 @@ FUNCTION PBMAIN() AS LONG
     s = "hello123world"
     r = REMAIN$(s, ANY, "0123456789")
     ConPrint "Test 4: REMAIN$('hello123world', ANY, digits)"
-    ConPrint "  Result: [" & STR$(r) & "]"
+    ConPrint "  Result: [" & r & "]"
     IF r = "23world" THEN
         ConPrint "  PASS"
         pass = pass + 1

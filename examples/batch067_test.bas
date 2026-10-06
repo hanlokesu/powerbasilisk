@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -49,7 +59,7 @@ FUNCTION PBMAIN() AS LONG
     IF a(1) = 11 AND a(2) = 22 AND a(3) = 33 AND a(4) = 44 THEN
         ok = ok + 1
     ELSE
-        ConPrint "FAIL: LONG array add" & STR$(STR$(a(1))) & STR$(STR$(a(2))) & STR$(STR$(a(3))) & STR$(STR$(a(4)))
+        ConPrint "FAIL: LONG array add" & STR$(a(1)) & STR$(a(2)) & STR$(a(3)) & STR$(a(4))
     END IF
 
     ' test with SINGLE (float)
@@ -61,7 +71,7 @@ FUNCTION PBMAIN() AS LONG
     IF fa(1) = 2.0 AND fa(2) = 3.5 AND fa(3) = 5.0 THEN
         ok = ok + 1
     ELSE
-        ConPrint "FAIL: SINGLE array add" & STR$(STR$(fa(1))) & STR$(STR$(fa(2))) & STR$(STR$(fa(3)))
+        ConPrint "FAIL: SINGLE array add" & STR$(fa(1)) & STR$(fa(2)) & STR$(fa(3))
     END IF
 
     ' test with BYTE
@@ -73,7 +83,7 @@ FUNCTION PBMAIN() AS LONG
     IF ca(1) = 101 AND ca(2) = 202 AND ca(3) = 53 THEN
         ok = ok + 1
     ELSE
-        ConPrint "FAIL: BYTE array add" & STR$(STR$(ca(1))) & STR$(STR$(ca(2))) & STR$(STR$(ca(3)))
+        ConPrint "FAIL: BYTE array add" & STR$(ca(1)) & STR$(ca(2)) & STR$(ca(3))
     END IF
 
     ' test with QUAD (64-bit)
@@ -85,7 +95,7 @@ FUNCTION PBMAIN() AS LONG
     IF qa(1) = 10000000001 AND qa(2) = 20000000002 THEN
         ok = ok + 1
     ELSE
-        ConPrint "FAIL: QUAD array add" & STR$(STR$(qa(1))) & STR$(STR$(qa(2)))
+        ConPrint "FAIL: QUAD array add" & STR$(qa(1)) & STR$(qa(2))
     END IF
 
     IF ok = 4 THEN

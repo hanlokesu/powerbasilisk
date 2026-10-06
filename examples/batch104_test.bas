@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -42,13 +52,13 @@ FUNCTION PBMAIN() AS LONG
     ' Read back
     OPEN "test_io.txt" FOR INPUT AS #f
     INPUT #f, s
-    ConPrint "Read back: " & STR$(s)
+    ConPrint "Read back: " & s
     CLOSE #f
     
     ' LINE INPUT test
     OPEN "test_io.txt" FOR INPUT AS #f
     LINE INPUT #f, s
-    ConPrint "LINE INPUT: " & STR$(s)
+    ConPrint "LINE INPUT: " & s
     CLOSE #f
     
     KILL "test_io.txt"

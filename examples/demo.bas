@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -129,10 +139,10 @@ FUNCTION PBMAIN() AS LONG
   NEXT i
   ERASE arr
   IF arr(0) = 0 THEN
-    ConPrint "  DIM + ERASE: arr(0) after ERASE = " + STR$(STR$(arr(0))) + "  OK"
+    ConPrint "  DIM + ERASE: arr(0) after ERASE = " + STR$(arr(0)) + "  OK"
   ELSE
     ok = 0
-    ConPrint "  FAIL: arr(0) = " + STR$(STR$(arr(0)))
+    ConPrint "  FAIL: arr(0) = " + STR$(arr(0))
   END IF
 
   ' ---------- 4. File I/O ----------
@@ -237,7 +247,7 @@ FUNCTION PBMAIN() AS LONG
   END IF
 
   ConPrint "  CURDIR$ = " + CURDIR$
-  ConPrint "  ISFILE(demo.bas) = " + STR$(STR$(ISFILE("demo.bas")))
+  ConPrint "  ISFILE(demo.bas) = " + ISFILE("demo.bas")
 
   BEEP
   SLEEP 300

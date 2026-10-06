@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 #COMPILE EXE
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
@@ -46,7 +56,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' PARSE$(s, i) - space delimiter, i-th word (2-arg form)
     p = PARSE$(s, 2)
-    ConPrint "word2 = " & STR$(p)
+    ConPrint "word2 = " & p
     IF p <> "two" THEN
         ConPrint "FAIL: expected two"
     ELSE
@@ -54,7 +64,7 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     p = PARSE$(s, 4)
-    ConPrint "word4 = " & STR$(p)
+    ConPrint "word4 = " & p
     IF p <> "four" THEN
         ConPrint "FAIL: expected four"
     ELSE
@@ -64,7 +74,7 @@ FUNCTION PBMAIN() AS LONG
     ' PARSE$(s, delim, i) - 3-arg form (regression)
     s = "a,b,c"
     p = PARSE$(s, ",", 2)
-    ConPrint "csv2 = " & STR$(p)
+    ConPrint "csv2 = " & p
     IF p <> "b" THEN
         ConPrint "FAIL: expected b"
     ELSE

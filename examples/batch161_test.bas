@@ -1,3 +1,13 @@
+#IF (%PB_REVISION AND &H0FF00) = &H1000
+    ' Compiling with PB/Win 10.x
+    %MY_PBVER = 10
+#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
+    ' Compiling with PB/Win 9.x
+    %MY_PBVER = 9
+#ELSE
+    ' Not PBWin (this fork, or other)
+    %MY_PBVER = 0
+#ENDIF
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -46,8 +56,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL here AS STRING
     here = CURDIR$
     ConPrint "batch 161 sample (tooling-only batch, no compiler change)"
-    ConPrint "CURDIR$     = " & STR$(here)
-    ConPrint "ISFILE(exe) = " & STR$(STR$(ISFILE("batch161_test.exe")))
+    ConPrint "CURDIR$     = " & here
+    ConPrint "ISFILE(exe) = " & ISFILE("batch161_test.exe")
     IF LEN(here) = 0 THEN
         fail = fail + 1
     END IF
