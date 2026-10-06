@@ -285,6 +285,7 @@ impl Parser {
                 self.skip_eol();
 
                 let mut fields: Vec<TypeField> = Vec::new();
+                let mut event_sources: Vec<String> = Vec::new();
                 loop {
                     if self.at_end() || self.peek() == &Token::Eof {
                         break;
@@ -352,6 +353,24 @@ impl Parser {
                         self.skip_eol();
                         continue;
                     }
+                    // EVENT SOURCE IfaceName — advertise an event interface this
+                    // class can raise (batch 222).  Collected into the TypeDecl so
+                    // codegen can validate RAISEEVENT uses.
+                    let is_event_source = matches!(self.peek(), Token::Identifier(k)
+                                                    if k.eq_ignore_ascii_case("EVENT"))
+                        && matches!(self.peek_at(1), Some(Token::Identifier(k2))
+                                    if k2.eq_ignore_ascii_case("SOURCE"));
+                    if is_event_source {
+                        self.advance(); // EVENT
+                        self.advance(); // SOURCE
+                        if let Token::Identifier(iface) = self.peek() {
+                            event_sources.push(iface.clone());
+                            self.advance();
+                        }
+                        self.consume_to_eol();
+                        self.skip_eol();
+                        continue;
+                    }
                     self.consume_to_eol();
                     self.skip_eol();
                 }
@@ -359,7 +378,12 @@ impl Parser {
                 if name.is_empty() {
                     Ok(None)
                 } else {
-                    Ok(Some(TopLevel::TypeDecl(TypeDecl { name, fields, line })))
+                    Ok(Some(TopLevel::TypeDecl(TypeDecl {
+                        name,
+                        fields,
+                        line,
+                        event_sources,
+                    })))
                 }
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("OPTION") => {
@@ -415,28 +439,37 @@ impl Parser {
                 Ok(None)
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("INSTANCE") => {
-                // INSTANCE var AS ClassName — create object instance (simplified)
-                self.advance(); // consume INSTANCE
-                let _var_name = if let Token::Identifier(vn) = self.peek() {
-                    let n = vn.clone();
-                    self.advance();
-                    n
-                } else {
-                    String::new()
-                };
-                // skip AS ClassName
+                // INSTANCE declares per-object storage and is only valid at the
+                // start of a CLASS/END CLASS block.  A top-level occurrence was
+                // silently swallowed before batch 222; report it loudly.
+                self.error_count += 1;
+                eprintln!(
+                    "Error: Parse error at line {}: INSTANCE is only valid inside a CLASS/END CLASS block",
+                    line
+                );
                 self.consume_to_eol();
-                Ok(None) // simplified: no codegen (variable treated as LONG pointer)
+                Ok(None)
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("RAISEEVENT") => {
-                // RAISEEVENT eventname [(args)] — trigger event (simplified noop)
-                self.advance(); // consume RAISEEVENT
+                // RAISEEVENT Iface.Method(args) fires event handlers and is only
+                // valid inside a CLASS that declares the EVENT SOURCE interface.
+                self.error_count += 1;
+                eprintln!(
+                    "Error: Parse error at line {}: RAISEEVENT is only valid inside a CLASS that declares an EVENT SOURCE interface",
+                    line
+                );
                 self.consume_to_eol();
                 Ok(None)
             }
             Token::Identifier(w) if w.eq_ignore_ascii_case("EVENT") => {
-                // EVENT SOURCE id | EVENTS eventname list — simplified noop
-                self.advance(); // consume EVENT
+                // EVENT SOURCE declares an event interface and is only valid
+                // inside a CLASS/END CLASS block.  EVENTS FROM/END is a statement
+                // and is parsed by the statement branch, not here.
+                self.error_count += 1;
+                eprintln!(
+                    "Error: Parse error at line {}: EVENT SOURCE is only valid inside a CLASS/END CLASS block (EVENTS FROM/END is a statement)",
+                    line
+                );
                 self.consume_to_eol();
                 Ok(None)
             }
@@ -1046,7 +1079,12 @@ impl Parser {
             self.skip_eol();
         }
 
-        Ok(TypeDecl { name, fields, line })
+        Ok(TypeDecl {
+            name,
+            fields,
+            line,
+            event_sources: Vec::new(),
+        })
     }
 
     /// A METHOD block inside a CLASS: `METHOD Name [(params)] [AS type] ... END METHOD`.
@@ -10175,10 +10213,15 @@ impl Parser {
                         line,
                     }));
                 }
-                // EVENT SOURCE id — accepted; no-op until OOP runtime
+                // EVENT SOURCE id — only valid inside a CLASS/END CLASS block
                 if name_upper == "EVENT"
                     && matches!(self.peek_at(1), Some(Token::Identifier(w)) if w.to_uppercase() == "SOURCE")
                 {
+                    self.error_count += 1;
+                    eprintln!(
+                        "Error: Parse error at line {}: EVENT SOURCE is only valid inside a CLASS/END CLASS block",
+                        line
+                    );
                     self.advance();
                     self.advance();
                     self.consume_to_eol();
@@ -10188,28 +10231,84 @@ impl Parser {
                         line,
                     }));
                 }
-                // EVENTS ... — accepted; no-op
+                // EVENTS FROM obj / EVENTS END obj — subscribe / unsubscribe
                 if name_upper == "EVENTS" {
-                    self.advance();
+                    let ev_kind = match self.peek_at(1) {
+                        Some(Token::Identifier(k)) if k.to_uppercase() == "FROM" => "EVENTS_FROM",
+                        Some(Token::End) => "EVENTS_END",
+                        _ => {
+                            self.error_count += 1;
+                            eprintln!(
+                                "Error: Parse error at line {}: EVENTS requires FROM <obj> or END <obj>",
+                                line
+                            );
+                            self.consume_to_eol();
+                            return Ok(Statement::Call(CallStmt {
+                                name: "EVENTS".to_string(),
+                                args: vec![],
+                                line,
+                            }));
+                        }
+                    };
+                    self.advance(); // EVENTS
+                    self.advance(); // FROM / END
+                    let obj = self.parse_expression()?;
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
-                        name: "EVENTS".to_string(),
-                        args: vec![],
+                        name: ev_kind.to_string(),
+                        args: vec![obj],
                         line,
                     }));
                 }
-                // RAISEEVENT name[(args)] — accepted; no-op
+                // RAISEEVENT Iface . Method ( args ) — fire event handlers
                 if name_upper == "RAISEEVENT" {
-                    self.advance();
+                    self.advance(); // RAISEEVENT
+                    let iface = self.consume_identifier()?;
+                    if !matches!(self.peek(), Token::Dot) {
+                        self.error_count += 1;
+                        eprintln!(
+                            "Error: Parse error at line {}: RAISEEVENT requires Iface.Method form",
+                            line
+                        );
+                        self.consume_to_eol();
+                        return Ok(Statement::Call(CallStmt {
+                            name: "RAISEEVENT".to_string(),
+                            args: vec![],
+                            line,
+                        }));
+                    }
+                    self.advance(); // .
+                    let method = self.consume_identifier()?;
+                    let mut args = vec![Expr::StringLit(iface), Expr::StringLit(method)];
+                    if self.peek() == &Token::LParen {
+                        self.advance();
+                        loop {
+                            if self.peek() == &Token::RParen {
+                                break;
+                            }
+                            args.push(self.parse_expression()?);
+                            if self.peek() == &Token::Comma {
+                                self.advance();
+                                continue;
+                            }
+                            break;
+                        }
+                        self.expect(&Token::RParen)?;
+                    }
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {
                         name: "RAISEEVENT".to_string(),
-                        args: vec![],
+                        args,
                         line,
                     }));
                 }
-                // INSTANCE var AS ClassName — accepted; no-op (treated as LONG pointer)
+                // INSTANCE — only valid at the start of a CLASS/END CLASS block
                 if name_upper == "INSTANCE" {
+                    self.error_count += 1;
+                    eprintln!(
+                        "Error: Parse error at line {}: INSTANCE is only valid inside a CLASS/END CLASS block",
+                        line
+                    );
                     self.advance();
                     self.consume_to_eol();
                     return Ok(Statement::Call(CallStmt {

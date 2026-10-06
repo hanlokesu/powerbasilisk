@@ -22,16 +22,16 @@ FUNCTION PBMAIN() AS LONG
 
     PRINT "=== Batch 195: accepted-but-no-code statements are reported ==="
 
-    INSTANCE myObj AS MyClass
+    ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "INSTANCE: parsed (warning expected at compile time)"
 
-    EVENTS Click, Changed
+    ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "EVENTS: parsed (warning expected)"
 
-    EVENT SOURCE 1
+    ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "EVENT SOURCE: parsed (warning expected)"
 
-    RAISEEVENT Click
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "RAISEEVENT: parsed (warning expected)"
 
     PRINT "=== Done: compile-only sample, nothing here depends on run-time output ==="

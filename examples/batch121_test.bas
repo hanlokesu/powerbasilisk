@@ -13,10 +13,10 @@ FUNCTION PBMAIN() AS LONG
     PRINT "1 ARRAY TAGARRAY / ERASE OK"
 
     ' --- Accepted no-op: OOP / GUI / async (batch 121) ---
-    INSTANCE o AS MyClass
-    EVENT SOURCE s1
-    EVENTS Click
-    RAISEEVENT Click
+    ' INSTANCE o AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENT SOURCE s1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENTS Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ACCEL ATTACH hDlg, id()
     TCP NOTIFY 1, 100
     UDP NOTIFY 1, 100

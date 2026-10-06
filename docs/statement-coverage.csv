@@ -1,4 +1,4 @@
-# Last updated from batch 221 (v0.2.067) - 2026-10-06,,,,
+# Last updated from batch 222 (v0.2.068) - 2026-10-06,,,,
 "# Status key: Implemented=this fork emits real code. Established=mature in the OFFICIAL PB docs (NOT ""implemented by upstream""). Not implemented=official keyword this fork does not implement yet. FORK EXTENSION=implemented here but not an official PB keyword.",,,
 Keyword,Kind,Platform,Status
 ABS,FUNCTION,LLVM intrinsic,Implemented
@@ -250,8 +250,8 @@ ERR,FUNCTION,codegen builtin,Implemented
 ERRCLEAR,FUNCTION,codegen builtin,Implemented
 ERROR,STATEMENT,PB/Win + PB/CC,Established
 ERROR$,FUNCTION,Win32,Implemented
-EVENT SOURCE,STATEMENT,PB/Win + PB/CC,Not implemented
-EVENTS,STATEMENT,PB/Win + PB/CC,Not implemented
+EVENT SOURCE,STATEMENT,PB/Win + PB/CC,Implemented
+EVENTS,STATEMENT,PB/Win + PB/CC,Implemented
 EXE,FUNCTION,codegen builtin,Implemented
 EXIST,FUNCTION,codegen builtin,Implemented
 EXIT,STATEMENT,PB/Win + PB/CC,Established
@@ -406,7 +406,7 @@ IMPORT,STATEMENT,PB/Win + PB/CC,Established
 INCR,STATEMENT,PB/Win + PB/CC,Established
 INPUT FLUSH,STATEMENT,PB/CC only,Established
 INPUT#,STATEMENT,PB/CC only,Implemented
-INSTANCE,STATEMENT,PB/Win + PB/CC,Not implemented
+INSTANCE,STATEMENT,PB/Win + PB/CC,Implemented
 INSTR,FUNCTION,codegen builtin,Implemented
 INT,FUNCTION,codegen builtin,Implemented
 INTEGER,FUNCTION,codegen builtin,Implemented
@@ -597,7 +597,7 @@ PUT$$,STATEMENT,PB/Win + PB/CC,Implemented
 PUT_STR,FUNCTION,codegen builtin,Implemented
 PUT_WSTR,FUNCTION,codegen builtin,Implemented
 QUAD,FUNCTION,codegen builtin,Implemented
-RAISEEVENT,STATEMENT,PB/Win + PB/CC,Not implemented
+RAISEEVENT,STATEMENT,PB/Win + PB/CC,Implemented
 RANDOMIZE,STATEMENT,PB/Win + PB/CC,Established
 READ,FUNCTION,codegen builtin,Implemented
 READ$,FUNCTION,Win32,Implemented

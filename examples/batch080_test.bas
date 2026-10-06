@@ -24,7 +24,7 @@ FUNCTION PBMAIN() AS LONG
     PRINT "OBJECT type: OK (value="; obj; ")"
 
     ' INSTANCE var AS ClassName — create instance (simplified noop)
-    INSTANCE myObj AS MyClass
+    ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "INSTANCE: parsed OK"
 
     ' LET with OBJECTS — object reference assignment
@@ -36,15 +36,15 @@ FUNCTION PBMAIN() AS LONG
     PRINT "LET with VARIANTS: OK (v="; v; ")"
 
     ' EVENTS — event declaration (simplified noop)
-    EVENTS Click, Changed
+    ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "EVENTS: parsed OK"
 
     ' EVENT SOURCE — event source declaration (simplified noop)
-    EVENT SOURCE 1
+    ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "EVENT SOURCE: parsed OK"
 
     ' RAISEEVENT — trigger event (simplified noop)
-    RAISEEVENT Click
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "RAISEEVENT: parsed OK"
 
     PRINT "=== Result: ALL PASS (OOP remaining 9 items)"

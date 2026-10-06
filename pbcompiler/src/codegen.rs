@@ -962,6 +962,12 @@ struct Compiler {
     #[allow(dead_code)]
     xprint_dc: Option<String>,
 
+    // OOP event bus (batch 222): class -> EVENT SOURCE interface names, and
+    // event method name -> integer id (allocated lazily so RAISEEVENT and
+    // EVENTS FROM agree on the same id for the same method name).
+    event_sources: std::collections::HashMap<String, Vec<String>>,
+    event_method_ids: std::collections::HashMap<String, i32>,
+
     // String variables bound via FIELD dyn$ — their assignments must copy
     // into a fresh mutable buffer (a plain store would point at a read-only
     // string constant and pb_field_set would crash writing through it).
@@ -1108,6 +1114,8 @@ impl Compiler {
             pp_constants: HashMap::new(),
             warnings: Vec::new(),
             xprint_dc: None,
+            event_sources: std::collections::HashMap::new(),
+            event_method_ids: std::collections::HashMap::new(),
             field_bound_strings: std::collections::HashSet::new(),
         }
     }
@@ -4196,6 +4204,29 @@ impl Compiler {
             &[IrType::Ptr, IrType::Ptr],
             false,
         );
+        // OOP event bus (batch 222): per-class handler table + subscribe bus
+        self.module
+            .declare_function("pb_events_new_table", &IrType::Ptr, &[], false);
+        self.module.declare_function(
+            "pb_events_add",
+            &IrType::Void,
+            &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            false,
+        );
+        self.module.declare_function(
+            "pb_events_attach",
+            &IrType::I32,
+            &[IrType::Ptr, IrType::Ptr],
+            false,
+        );
+        self.module
+            .declare_function("pb_events_detach", &IrType::I32, &[IrType::Ptr], false);
+        self.module.declare_function(
+            "pb_raise_event",
+            &IrType::I32,
+            &[IrType::I32, IrType::I32],
+            false,
+        );
         self.module.declare_function(
             "pb_array_redim_incr",
             &IrType::I32,
@@ -5622,11 +5653,17 @@ impl Compiler {
         self.type_layouts.insert(
             name.clone(),
             TypeLayout {
-                ir_name: name,
+                ir_name: name.clone(),
                 fields,
                 field_map,
             },
         );
+
+        // EVENT SOURCE interfaces advertised by this class (batch 222).
+        if !td.event_sources.is_empty() {
+            let ifaces: Vec<String> = td.event_sources.iter().map(|s| s.to_uppercase()).collect();
+            self.event_sources.insert(name.clone(), ifaces);
+        }
     }
 
     fn register_function(&mut self, fd: &FunctionDecl) {
@@ -8595,24 +8632,129 @@ impl Compiler {
                     }
                 }
             }
-            // Still parked, and reported rather than silently dropped: these four
-            // need a CLASS / INTERFACE / METHOD object model that codegen does not
-            // have at all (0 hits for all three), so any "implementation" today
-            // would be a no-op wearing an Implemented label - the mistake batch 210
-            // had to undo.
-            "EVENT_SOURCE" | "EVENTS" | "RAISEEVENT" | "INSTANCE" => {
-                // batch 195 parked this arm empty and claimed the drop "is now reported
-                // instead of being invisible" - it was not.  These five names are also
-                // listed in the handled-family early-return guard further down
-                // (`fam == "ACCEL_ATTACH" || ...`), so the statement returned Ok(())
-                // before ever reaching the unimplemented report.  batch 209 makes the
-                // claim true: the drop goes to compiler.warnings, which writes
-                // <output>.unimplemented.log and prints the WARNING line.  The exit code
-                // stays 0 - accepted-but-empty is not a compile error, only a report.
+            // OOP event bus (batch 222).  EVENT SOURCE only exists inside a
+            // CLASS block (parser collects it into the TypeDecl); reaching codegen
+            // at statement position is a user error already reported by the
+            // parser - keep it loud here too.  EVENTS FROM/END and RAISEEVENT are
+            // real implementations against the simplified class-wide event bus:
+            //   EVENTS FROM obj   -> build <Class>'s handler table (methods with
+            //                        <= 1 real parameter: this + at most one arg)
+            //                        and attach obj to the bus
+            //   EVENTS END obj    -> detach obj
+            //   RAISEEVENT I.M(a) -> validate I is an EVENT SOURCE of the current
+            //                        class, then fire M(a) to every subscriber
+            "EVENT_SOURCE" => {
                 self.warnings.push(format!(
-                    "line {}: `{}` accepted but not implemented (DDT/OOP runtime pending) - no code generated",
-                    call.line, name
+                    "line {}: `EVENT SOURCE` is only valid inside a CLASS/END CLASS block - no code generated",
+                    call.line
                 ));
+            }
+            "EVENTS_FROM" | "EVENTS_END" => {
+                if let Some(obj) = call.args.first() {
+                    if let Some(class) = self.struct_type_of_expr(obj) {
+                        let (obj_ptr, _, _) = self.lvalue_ptr(fb, obj).ok_or_else(|| {
+                            pb::error::PbError::parser(
+                                format!(
+                                    "`{}` object cannot be resolved on line {}",
+                                    name, call.line
+                                ),
+                                None,
+                                call.line,
+                            )
+                        })?;
+                        if name == "EVENTS_FROM" {
+                            let tbl = fb.call(&IrType::Ptr, "pb_events_new_table", &[]);
+                            let prefix = format!("{}_", class);
+                            let mut fns: Vec<(String, FuncInfo)> = self
+                                .functions
+                                .iter()
+                                .chain(self.subs.iter())
+                                .filter(|(k, _)| k.starts_with(&prefix))
+                                .map(|(k, v)| (k.clone(), v.clone()))
+                                .collect();
+                            fns.sort_by(|a, b| a.0.cmp(&b.0));
+                            for (fn_name, info) in &fns {
+                                // a usable event handler takes this + at most one
+                                // argument; anything wider cannot be called through
+                                // the (void*, i32) bus signature
+                                if info.params.len() <= 2 {
+                                    let mname = &fn_name[prefix.len()..];
+                                    let next_id = self.event_method_ids.len() as i32;
+                                    let id = *self
+                                        .event_method_ids
+                                        .entry(mname.to_uppercase())
+                                        .or_insert(next_id);
+                                    fb.call_void(
+                                        "pb_events_add",
+                                        &[
+                                            tbl.clone(),
+                                            fb.const_i32(id),
+                                            Val::new(format!("@{}", info.ir_name), IrType::Ptr),
+                                        ],
+                                    );
+                                }
+                            }
+                            fb.call_void("pb_events_attach", &[obj_ptr, tbl]);
+                        } else {
+                            fb.call_void("pb_events_detach", &[obj_ptr]);
+                        }
+                    } else {
+                        return Err(pb::error::PbError::parser(
+                            format!(
+                                "`{}` requires an object variable of a CLASS type on line {}",
+                                name, call.line
+                            ),
+                            None,
+                            call.line,
+                        ));
+                    }
+                }
+                return Ok(());
+            }
+            "RAISEEVENT" => {
+                let (iface, method) = match (call.args.first(), call.args.get(1)) {
+                    (Some(Expr::StringLit(a)), Some(Expr::StringLit(b))) => {
+                        (a.to_uppercase(), b.to_uppercase())
+                    }
+                    _ => {
+                        return Err(pb::error::PbError::parser(
+                            format!(
+                                "RAISEEVENT requires the Iface.Method form on line {}",
+                                call.line
+                            ),
+                            None,
+                            call.line,
+                        ));
+                    }
+                };
+                // validate: the current function must belong to a class that
+                // declares EVENT SOURCE <iface>
+                let cur = self.current_fn_name.clone().unwrap_or_default();
+                let allowed = self.event_sources.iter().any(|(cls, ifaces)| {
+                    cur.strip_prefix(cls.as_str())
+                        .is_some_and(|rest| rest.starts_with('_'))
+                        && ifaces.contains(&iface)
+                });
+                if !allowed {
+                    self.warnings.push(format!(
+                        "line {}: RAISEEVENT {}: no class in scope declares EVENT SOURCE {} - no code generated",
+                        call.line, method, iface
+                    ));
+                    return Ok(());
+                }
+                let next_id = self.event_method_ids.len() as i32;
+                let id = *self
+                    .event_method_ids
+                    .entry(method.clone())
+                    .or_insert(next_id);
+                let arg = if call.args.len() > 2 {
+                    let v = self.compile_expr(fb, &call.args[2])?;
+                    self.to_i32(fb, &v)
+                } else {
+                    fb.const_i32(0)
+                };
+                fb.call_void("pb_raise_event", &[fb.const_i32(id), arg]);
+                return Ok(());
             }
             "XPRINT_GET_MARGIN" => {
                 let mut ps = Vec::new();
@@ -17193,10 +17335,6 @@ impl Compiler {
             || fam.starts_with("TCP_")
             || fam.starts_with("UDP_")
             || fam == "ACCEL_ATTACH"
-            || fam == "EVENT_SOURCE"
-            || fam == "EVENTS"
-            || fam == "RAISEEVENT"
-            || fam == "INSTANCE"
             || fam == "LET_PTR"
             || fam == "DEF_FN"
         {
@@ -17213,9 +17351,20 @@ impl Compiler {
                 match self.struct_type_of_expr(receiver) {
                     Some(class) => {
                         let qualified = format!("{}_{}", class, method);
-                        if let Some(info) = self.functions.get(&qualified).cloned() {
+                        let info = self
+                            .functions
+                            .get(&qualified)
+                            .cloned()
+                            .or_else(|| self.subs.get(&qualified).cloned());
+                        if let Some(info) = info {
                             let margs = self.compile_call_args(fb, &call.args, &info)?;
-                            if info.is_stdcall {
+                            if info.ret_type == IrType::Void {
+                                if info.is_stdcall {
+                                    fb.call_void_stdcall(&info.ir_name, &margs);
+                                } else {
+                                    fb.call_void(&info.ir_name, &margs);
+                                }
+                            } else if info.is_stdcall {
                                 fb.call_stdcall(&info.ret_type, &info.ir_name, &margs);
                             } else {
                                 fb.call(&info.ret_type, &info.ir_name, &margs);

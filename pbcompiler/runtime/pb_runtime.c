@@ -6273,9 +6273,66 @@ void* pb_instance_create(const char* classname) {
 /* EVENTS / RAISEEVENT / EVENT SOURCE � simplified noop event model */
 static int g_event_enabled = 1;
 void pb_events_enable(int enable) { g_event_enabled = enable; }
-int pb_raise_event(void* obj, const char* eventname) {
+/* --- batch 222: class-wide event bus (integer method ids) ---
+ * A handler table is built once per EVENTS FROM site and attached to the
+ * subscribing client object.  RAISEEVENT fires by method id across every
+ * attached client.  Handlers are called as fn(client, arg); a zero-argument
+ * handler simply ignores the second register (x64 calling convention). */
+typedef int (*pb_event_fn)(void* client, int arg);
+typedef struct pb_event_ent { int mname; pb_event_fn fn; } pb_event_ent;
+typedef struct pb_event_tbl { int count; int cap; pb_event_ent* ents; } pb_event_tbl;
+typedef struct pb_sub { void* client; pb_event_tbl* tbl; } pb_sub;
+static pb_sub g_ev_subs[64];
+static int g_ev_sub_count = 0;
+
+void* pb_events_new_table(void) {
+    pb_event_tbl* t = (pb_event_tbl*)calloc(1, sizeof(pb_event_tbl));
+    return (void*)t;
+}
+void pb_events_add(void* tblp, int mname, pb_event_fn fn) {
+    pb_event_tbl* t = (pb_event_tbl*)tblp;
+    if (!t) return;
+    if (t->count >= t->cap) {
+        t->cap = t->cap ? t->cap * 2 : 4;
+        t->ents = (pb_event_ent*)realloc(t->ents, t->cap * sizeof(pb_event_ent));
+    }
+    t->ents[t->count].mname = mname;
+    t->ents[t->count].fn = fn;
+    t->count++;
+}
+int pb_events_attach(void* client, void* tblp) {
+    if (g_ev_sub_count >= 64) return 0;
+    g_ev_subs[g_ev_sub_count].client = client;
+    g_ev_subs[g_ev_sub_count].tbl = (pb_event_tbl*)tblp;
+    g_ev_sub_count++;
+    return 1;
+}
+int pb_events_detach(void* client) {
+    int i;
+    for (i = 0; i < g_ev_sub_count; i++) {
+        if (g_ev_subs[i].client == client) {
+            free(g_ev_subs[i].tbl->ents);
+            free(g_ev_subs[i].tbl);
+            g_ev_sub_count--;
+            for (; i < g_ev_sub_count; i++) g_ev_subs[i] = g_ev_subs[i + 1];
+            return 1;
+        }
+    }
+    return 0;
+}
+int pb_raise_event(int mname, int arg) {
+    int called = 0, i, j;
     if (!g_event_enabled) return 0;
-    return 1; /* noop: event not wired to any handler */
+    for (i = 0; i < g_ev_sub_count; i++) {
+        pb_event_tbl* t = g_ev_subs[i].tbl;
+        for (j = 0; j < t->count; j++) {
+            if (t->ents[j].mname == mname) {
+                t->ents[j].fn(g_ev_subs[i].client, arg);
+                called++;
+            }
+        }
+    }
+    return called;
 }
 void pb_event_source_set(void* obj, int source_id) { /* noop */ }
 /* LET with OBJECTS � object reference assignment (simplified: pointer copy) */

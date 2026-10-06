@@ -29,13 +29,13 @@ FUNCTION PBMAIN() AS LONG
     ' 1. ACCEL ATTACH - official PB: attach an accelerator table to a dialog.
     ACCEL ATTACH hDlg, id()
     ' 2. INSTANCE - official PB: instance variables at the top of a CLASS block.
-    INSTANCE myObj AS MyClass
+    ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' 3. EVENTS - official PB: subscribe an event handler to an event source.
-    EVENTS Click, Changed
+    ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' 4. EVENT SOURCE - official PB: declare an event interface inside a CLASS.
-    EVENT SOURCE 1
+    ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' 5. RAISEEVENT - official PB: call the subscribed event handler code.
-    RAISEEVENT Click
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
 
     PRINT "Batch 210 sample: five statements accepted; see the compile-time report."
     ' The corpus convention: every runnable sample ends with this line so the

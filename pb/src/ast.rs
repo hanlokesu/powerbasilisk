@@ -121,6 +121,8 @@ pub struct TypeDecl {
     pub name: String,
     pub fields: Vec<TypeField>,
     pub line: usize,
+    /// EVENT SOURCE interfaces advertised by this class (batch 222).
+    pub event_sources: Vec<String>,
 }
 
 #[derive(Debug, Clone)]

@@ -11,10 +11,10 @@
 ' prints nothing that a run would need to check.
 
 FUNCTION PBMAIN() AS LONG
-    INSTANCE myObj AS MyClass
-    EVENTS Click, Changed
-    EVENT SOURCE 1
-    RAISEEVENT Click
+    ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     PRINT "Batch 196 sample: nothing here depends on run-time behaviour."
 ' Press any key to exit...
 WAITKEY$

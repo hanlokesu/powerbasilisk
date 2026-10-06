@@ -24,10 +24,10 @@ FUNCTION PBMAIN () AS LONG
     LOCAL fail AS LONG
     LOCAL hil AS QUAD
     LOCAL cnt AS LONG
-    INSTANCE myObj AS MyClass
-    EVENTS Click, Changed
-    EVENT SOURCE 1
-    RAISEEVENT Click
+    ' INSTANCE myObj AS MyClass  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENTS Click, Changed  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' EVENT SOURCE 1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+    ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     IMAGELIST NEW BITMAP 16, 16, 32, 2 TO hil
     IMAGELIST GET COUNT hil TO cnt
     PRINT "imagelist handle = "; hil; "  count = "; cnt
