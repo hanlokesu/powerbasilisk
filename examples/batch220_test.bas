@@ -106,4 +106,7 @@ FUNCTION PBMAIN () AS LONG
         PRINT "batch220: FAILURES="; fails
     END IF
     PRINT "=== FAILURES: "; fails; " ==="
+
+' waiting for any key to exit...
+WAITKEY$
 END FUNCTION

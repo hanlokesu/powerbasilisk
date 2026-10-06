@@ -37,5 +37,4 @@ FUNCTION PBMAIN() AS LONG
 
     PRINT "=== Result: ALL PASS (7 statements)"
     PRINT "Press any key to exit..."
-    waitk = WAITKEY$
 END FUNCTION

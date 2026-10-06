@@ -30,4 +30,7 @@ FUNCTION PBMAIN() AS LONG
     IF q <> 123456789012345 THEN FUNCTION = 5
 
     FUNCTION = 0
+
+' waiting for any key to exit...
+WAITKEY$
 END FUNCTION

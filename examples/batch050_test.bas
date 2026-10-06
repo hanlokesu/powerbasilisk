@@ -37,5 +37,4 @@ FUNCTION PBMAIN() AS LONG
         PRINT "batch50: FAILURES="; fails
     END IF
     PRINT "Press any key to exit..."
-    waitk = WAITKEY$
 END FUNCTION
