@@ -202,4 +202,6 @@ FUNCTION PBMAIN () AS LONG
         PRINT "FAIL"
         FUNCTION = 1
     END IF
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -308,4 +308,6 @@ FUNCTION PBMAIN () AS LONG
     PRINT
     PRINT "=== FAILURES:"; fail; "==="
     FUNCTION = fail
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

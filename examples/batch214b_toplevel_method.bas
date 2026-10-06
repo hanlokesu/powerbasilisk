@@ -25,4 +25,6 @@ FUNCTION PBMAIN() AS LONG
         PRINT "=== FAILURES:1 ==="
     END IF
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

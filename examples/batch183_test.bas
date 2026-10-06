@@ -22,4 +22,6 @@ FUNCTION PBMAIN () AS LONG
     GRAPHIC BITMAP END
     PRINT "=== FAILURES:"; fail; "==="
     FUNCTION = fail
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

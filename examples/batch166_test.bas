@@ -84,4 +84,6 @@ FUNCTION PBMAIN () AS LONG
     DIALOG END hDlg, res
     PRINT "PASS"
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

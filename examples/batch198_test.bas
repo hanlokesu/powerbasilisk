@@ -36,4 +36,6 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST KILL hil
     PRINT "=== FAILURES:"; fail; "==="
     FUNCTION = fail
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -8458,33 +8458,76 @@ impl Compiler {
             // arms were unreachable, and their runtime helpers treated the dialog
             // handle as the control HWND.  Do not re-add without a parser path.
             "ARRAY_SELECT" => {
-                let a0 = self.compile_expr(fb, &call.args[0])?;
-                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
-                let a1 = self.compile_expr(fb, &call.args[1])?;
-                let ia1 = self.convert_value(fb, &a1, &IrType::I32, &PbType::Long);
-                let a2 = self.compile_expr(fb, &call.args[2])?;
-                let ia2 = self.convert_value(fb, &a2, &IrType::I32, &PbType::Long);
-                fb.call_void("pb_array_select", &[pa0, ia1, ia2, fb.const_i32(0)]);
+                // ARRAY SELECT arr(), start, end  (fork extension: mark a
+                // selected range for subsequent array operations).  Batch 221:
+                // the old arm passed (arr, start, end, 0) into the
+                // (arr, count, start, end) runtime, shifting every argument.
+                if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let s = self.compile_expr(fb, &call.args[1])?;
+                        let s32 = self.to_i32(fb, &s);
+                        let e = self.compile_expr(fb, &call.args[2])?;
+                        let e32 = self.to_i32(fb, &e);
+                        fb.call_void(
+                            "pb_array_select",
+                            &[base, fb.const_i32(arr_info.total_elements as i32), s32, e32],
+                        );
+                    }
+                }
             }
             "ARRAY_SELECT_OP" => {
-                // ARRAY SELECT arr(), > 25, TO idx -> use scan runtime
-                let a0 = self.compile_expr(fb, &call.args[0])?;
-                let pa0 = self.convert_value(fb, &a0, &IrType::Ptr, &PbType::Long);
-                let opv = self.compile_expr(fb, &call.args[1])?;
-                let opi = self.convert_value(fb, &opv, &IrType::I32, &PbType::Long);
-                let val = self.compile_expr(fb, &call.args[2])?;
-                let v64 = self.to_i64(fb, &val);
-                let idx = fb.call(
-                    &IrType::I64,
-                    "pb_array_scan_num",
-                    &[pa0, fb.const_i32(4), v64, opi],
-                );
-                // store relative index into dst
-                let dst_expr = &call.args[3];
-                if let Expr::Variable(dn) = dst_expr {
-                    if let Some(info) = self.symbols.lookup(&normalize_name(dn)) {
-                        let ptr = Val::new(info.ptr_name.clone(), IrType::Ptr);
-                        fb.store(&idx, &ptr);
+                // ARRAY SELECT arr(), > 25, TO idx - fork extension that shares
+                // the ARRAY SCAN scan runtime.  Batch 221: the old arm passed
+                // only (base, elem_size, value, op) to the 7-argument
+                // pb_array_scan_num, shifting total/index/count/value/op and
+                // reading out of bounds (crash 0xC0000005 on batch106).
+                if let Some(Expr::FunctionCall(arr_name, _)) = call.args.first() {
+                    let an = normalize_name(arr_name);
+                    if let Some(arr_info) = self.symbols.lookup_array(&an).cloned() {
+                        let base = Val::new(arr_info.ptr_name.clone(), IrType::Ptr);
+                        let elem_size = match &arr_info.elem_ir_type {
+                            IrType::I8 | IrType::I1 => 1,
+                            IrType::I16 => 2,
+                            IrType::I32 | IrType::Float => 4,
+                            IrType::I64 | IrType::Double | IrType::Ptr => 8,
+                            _ => 4,
+                        };
+                        let op = match &call.args[1] {
+                            Expr::IntegerLit(v) => *v as i32,
+                            _ => 0,
+                        };
+                        let val = self.compile_expr(fb, &call.args[2])?;
+                        let v64 = self.to_i64(fb, &val);
+                        let total = fb.const_i64(arr_info.total_elements as i64);
+                        let result = if arr_info.elem_ir_type == IrType::Ptr {
+                            fb.call(
+                                &IrType::I64,
+                                "pb_array_scan_str",
+                                &[base, total, fb.const_i64(1), fb.const_i64(0), v64],
+                            )
+                        } else {
+                            fb.call(
+                                &IrType::I64,
+                                "pb_array_scan_num",
+                                &[
+                                    base,
+                                    fb.const_i32(elem_size),
+                                    total,
+                                    fb.const_i64(1),
+                                    fb.const_i64(0),
+                                    v64,
+                                    fb.const_i32(op),
+                                ],
+                            )
+                        };
+                        if let Some(tgt) = call.args.get(3) {
+                            if let Some((ptr, ir_ty, pb_ty)) = self.lvalue_ptr(fb, tgt) {
+                                let conv = self.convert_value(fb, &result, &ir_ty, &pb_ty);
+                                fb.store(&conv, &ptr);
+                            }
+                        }
                     }
                 }
             }

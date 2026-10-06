@@ -25,4 +25,6 @@ FUNCTION PBMAIN () AS LONG
     PRINT "PASS: handle survived and the list is usable"
     IMAGELIST KILL hil
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

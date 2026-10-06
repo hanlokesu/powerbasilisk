@@ -59,4 +59,6 @@ FUNCTION PBMAIN () AS LONG
     PRINT "closes cleanly"
     PRINT "=== FAILURES: "; fails
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

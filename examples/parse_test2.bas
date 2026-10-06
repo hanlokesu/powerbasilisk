@@ -51,4 +51,6 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     PRINT "ALL PASS"
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -63,4 +63,6 @@ FUNCTION PBMAIN () AS LONG
     TCP CLOSE #1
     PRINT "=== FAILURES: "; fails
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -42,4 +42,6 @@ FUNCTION PBMAIN() AS LONG
     ' release gate really checks it (a sample without the marker is passed
     ' silently by release.py gate 7).
     PRINT "=== FAILURES:0 ==="
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

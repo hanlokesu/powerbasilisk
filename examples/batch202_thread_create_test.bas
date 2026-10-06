@@ -51,4 +51,6 @@ FUNCTION PBMAIN () AS LONG
     IF g_two <> 1 THEN fails = fails + 1
     PRINT "=== FAILURES: "; fails
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

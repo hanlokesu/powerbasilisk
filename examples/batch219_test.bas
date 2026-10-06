@@ -53,4 +53,6 @@ FUNCTION PBMAIN () AS LONG
         PRINT "batch219: FAILURES="; fails
     END IF
     PRINT "=== FAILURES: "; fails; " ==="
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

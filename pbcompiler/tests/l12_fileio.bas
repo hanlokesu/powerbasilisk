@@ -36,4 +36,6 @@ FUNCTION PBMAIN() AS LONG
   KILL "l12_test.tmp"
 
   FUNCTION = 0  ' All tests passed
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

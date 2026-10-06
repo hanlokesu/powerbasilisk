@@ -15,4 +15,6 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST KILL hic
     PRINT "killed both; done"
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -108,4 +108,6 @@ FUNCTION getha_check(BYVAL x AS LONG, BYVAL y AS LONG) AS LONG
     ELSE
         FUNCTION = 0
     END IF
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

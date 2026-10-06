@@ -30,4 +30,6 @@ FUNCTION PBMAIN () AS LONG
     PRINT "The answer is:"; answer
     PRINT "done"
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

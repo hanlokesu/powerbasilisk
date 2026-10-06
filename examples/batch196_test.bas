@@ -16,4 +16,6 @@ FUNCTION PBMAIN() AS LONG
     EVENT SOURCE 1
     RAISEEVENT Click
     PRINT "Batch 196 sample: nothing here depends on run-time behaviour."
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -35,4 +35,6 @@ FUNCTION PBMAIN() AS LONG
     PRINT "RAISEEVENT: parsed (warning expected)"
 
     PRINT "=== Done: compile-only sample, nothing here depends on run-time output ==="
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

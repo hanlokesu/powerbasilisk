@@ -47,4 +47,6 @@ FUNCTION PBMAIN () AS LONG
     COMM RESET
     IF fails = 0 THEN PRINT "=== FAILURES: 0"
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

@@ -262,4 +262,6 @@ FUNCTION PBMAIN () AS LONG
 
     DIALOG END hDlg, fail
     PRINT "=== FAILURES:"; fail; " ==="
+' Press any key to exit...
+WAITKEY$
 END FUNCTION

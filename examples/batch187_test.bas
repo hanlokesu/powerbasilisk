@@ -43,4 +43,6 @@ FUNCTION PBMAIN () AS LONG
     PRINT "one"
     PRINT "two"
     FUNCTION = 0
+' Press any key to exit...
+WAITKEY$
 END FUNCTION
