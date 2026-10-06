@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 222 (v0.2.068). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 224 (v0.2.069). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 224 (v0.2.069) - 双兼容示例转换（PRINT/WAITKEY$/#CONSOLE → ConPrint/ConWaitKey Win32 封装，一侧实现两侧可编）+ x64 i32→ptr inttoptr 修复（WriteFile/ReadFile 5 号槽高位垃圾崩溃）；236 示例 CRLF/BOM/meta 顶置规范化；TRACE/GRAPHIC/XPRINT PRINT 误伤 10 处修复；单行 IF-ELSE 展开器引号内冒号拆行修复（batch029）；IMAGELIST/GLOBALMEM 64 位句柄 QUAD 修复（batch173/199c 崩溃、batch201 FAILURES 清零）；fork compile-all 237/0、headless 112/0
 > batch 222 (v0.2.068) - OOP event bus: EVENT SOURCE / EVENTS FROM / EVENTS END / RAISEEVENT real implementations; INSTANCE marked Implemented; dotted method calls now resolve SUB-style (void) methods too. Counts: 713 implemented / 148 established / 861 available / 0 not implemented.
 > batch 221 (v0.2.067) - WAITKEY$ on 60 console examples; ARRAY SELECT/ARRAY_SELECT_OP argument-shift crash fixed; 23 GUI examples revert WAITKEY$; batch021 process-exit hang fixed. Counts unchanged: 709 implemented / 148 established / 857 available / 4 not implemented.
 > batch 220 (v0.2.066) - make the last 125 short-argument codegen arms loud (sweep 143 -> 0): every malformed short spelling now stops the build with a line number and the official syntax; harden GET#/PUT# record arms (non-lvalue and dynamic-string targets report, pointing to GET$ / PUT$); fix the PUT$ runtime write bug (pb_put_string's early return was unconditional, so PUT$ never wrote); add batch220_test.bas witness (MEMORY FILL / NAME / PUT$ / GET$ / SEEK / DIR / DESKTOP GET family, FAILURES: 0).
@@ -719,6 +720,18 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.069 (2026-10-06)
+
+**batch 224 - dual-compiler example conversion + x64 codegen fix**
+
+- All console examples now use an in-file ConPrint/ConWaitKey wrapper (Win32 API: AllocConsole / GetStdHandle / WriteFile / ReadFile) instead of PRINT / WAITKEY$ / #CONSOLE - the same source compiles with PBWin10 and with this fork (PBWin10 has no PRINT in GUI mode).
+- CRLF normalization, BOM stripping, and `#COMPILE` / meta directives moved to file top for PBWin10 compatibility (Error 407 / 418 / 506 fixes).
+- Fixed TRACE / GRAPHIC / XPRINT PRINT false conversion (10 files).
+- Fixed single-line IF..ELSE expander splitting inside string quotes (batch029).
+- Fixed 64-bit handle truncation: IMAGELIST NEW / GLOBALMEM LOCK targets now AS QUAD (batch173 / batch199c crash 0xC0000005, batch201 FAILURES:1).
+- codegen: inttoptr zero-extends i32 arguments to pointers on x64 - fixes WriteFile / ReadFile crashes caused by 32-bit stack-slot garbage in the high 32 bits of the 5th argument slot.
+- fork regression: compile-all 237/0, headless run 112/0.
+
 ### v0.2.068 (2026-10-06)
 
 batch 222 — OOP event bus: `EVENT SOURCE` / `EVENTS FROM` / `EVENTS END` / `RAISEEVENT` real implementations.
