@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 224 (v0.2.069). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 225 (v0.2.070). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> > batch 225 (v0.2.070) - PBWin10 example compatibility: STR$ string Error 420 cleared (41 files), nested STR$(STR$(x)) balanced-bracket fix (12 files), INPUT FLUSH removed, %MY_PBVER compile-time discriminator added to all 237 examples
 > batch 224 (v0.2.069) - 双兼容示例转换（PRINT/WAITKEY$/#CONSOLE → ConPrint/ConWaitKey Win32 封装，一侧实现两侧可编）+ x64 i32→ptr inttoptr 修复（WriteFile/ReadFile 5 号槽高位垃圾崩溃）；236 示例 CRLF/BOM/meta 顶置规范化；TRACE/GRAPHIC/XPRINT PRINT 误伤 10 处修复；单行 IF-ELSE 展开器引号内冒号拆行修复（batch029）；IMAGELIST/GLOBALMEM 64 位句柄 QUAD 修复（batch173/199c 崩溃、batch201 FAILURES 清零）；fork compile-all 237/0、headless 112/0
 > batch 222 (v0.2.068) - OOP event bus: EVENT SOURCE / EVENTS FROM / EVENTS END / RAISEEVENT real implementations; INSTANCE marked Implemented; dotted method calls now resolve SUB-style (void) methods too. Counts: 713 implemented / 148 established / 861 available / 0 not implemented.
 > batch 221 (v0.2.067) - WAITKEY$ on 60 console examples; ARRAY SELECT/ARRAY_SELECT_OP argument-shift crash fixed; 23 GUI examples revert WAITKEY$; batch021 process-exit hang fixed. Counts unchanged: 709 implemented / 148 established / 857 available / 4 not implemented.
@@ -720,6 +721,13 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.070 (2026-10-06) - batch 225: PBWin10 example compatibility + %MY_PBVER compiler discriminator
+- All 237 examples now carry a `#IF (%PB_REVISION AND &H0FF00)` block at the top defining `%MY_PBVER` (10 = PBWin10, 9 = PBWin9, 0 = this fork) - compile-time compiler identity for dual-compiler source.
+- PBWin10 example compile compatibility raised 46/191 -> 69/168: cleared `STR$(string)` Error 420 (41 files), nested `STR$(STR$(x))` (12 files), `INPUT FLUSH` Error 477, bare `WAITKEY$`, `XPRINT ATTACH DEFAULT`.
+- Fixed hello.bas startup crash (unused STRING local + CURDIR$ concatenation).
+- Full regression: fork compile-all 240/0, headless run 116/0.
+- Release: https://github.com/hanlokesu/powerbasilisk/releases/tag/v0.2.070
+
 ### v0.2.069 (2026-10-06)
 
 **batch 224 - dual-compiler example conversion + x64 codegen fix**
