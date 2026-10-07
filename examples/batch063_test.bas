@@ -87,7 +87,7 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC SET WRAP 0
     GRAPHIC GET WRAP TO wrapv
     IF wrapv <> 0 THEN
-        ConPrint "FAIL 5: GET WRAP after SET WRAP 0 = " & STR$(wrap)
+        ConPrint "FAIL 5: GET WRAP after SET WRAP 0 = " & STR$(wrapv)
         fails = fails + 1
     ELSE
         ConPrint "OK 5: SET WRAP 0 -> GET WRAP = 0"
@@ -97,7 +97,7 @@ FUNCTION PBMAIN() AS LONG
     GRAPHIC SET WRAP 1
     GRAPHIC GET WRAP TO wrapv
     IF wrapv <> 1 THEN
-        ConPrint "FAIL 6: GET WRAP after SET WRAP 1 = " & STR$(wrap)
+        ConPrint "FAIL 6: GET WRAP after SET WRAP 1 = " & STR$(wrapv)
         fails = fails + 1
     ELSE
         ConPrint "OK 6: SET WRAP 1 -> GET WRAP = 1"

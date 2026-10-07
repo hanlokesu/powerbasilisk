@@ -53,6 +53,9 @@ pub struct Preprocessor {
     macros: HashMap<String, MacroDef>,
     pub resources: Vec<(u32, PathBuf)>,
     pub version_info: VersionInfo,
+    /// Official PB: `#DIM ALL` == `OPTION EXPLICIT` (every variable must be
+    /// declared). Recorded here so main.rs can enforce it at codegen time.
+    dim_all: bool,
 }
 
 impl Default for Preprocessor {
@@ -69,6 +72,7 @@ impl Preprocessor {
             macros: HashMap::new(),
             resources: Vec::new(),
             version_info: VersionInfo::default(),
+            dim_all: false,
         }
     }
 
@@ -273,8 +277,12 @@ impl Preprocessor {
                 continue;
             }
 
-            // #DIM ALL — skip (we don't enforce)
+            // #DIM ALL — official meta-directive == OPTION EXPLICIT.
+            // Record it (main.rs enforces at codegen); other #DIM forms skip.
             if upper_full.starts_with("#DIM") {
+                if upper_full.starts_with("#DIM ALL") {
+                    self.dim_all = true;
+                }
                 i += 1;
                 continue;
             }
@@ -659,6 +667,10 @@ impl Preprocessor {
 
     pub fn resources(&self) -> &[(u32, PathBuf)] {
         &self.resources
+    }
+
+    pub fn dim_all(&self) -> bool {
+        self.dim_all
     }
 
     pub fn version_info(&self) -> &VersionInfo {

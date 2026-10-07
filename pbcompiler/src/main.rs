@@ -192,7 +192,9 @@ fn compile_file(
         return Err(pb::error::PbError::parser(format!("Build failed with {} parse error(s). Search for unexpected tokens in your .bas file.", parser.error_count), None, 0));
     }
 
-    opts.option_explicit = parser.option_explicit;
+    // #DIM ALL (official meta-directive) == OPTION EXPLICIT. The parser only
+    // sees the OPTION EXPLICIT statement form; the preprocessor records #DIM ALL.
+    opts.option_explicit = parser.option_explicit || preprocessor.dim_all();
 
     if parse_only {
         eprintln!("[pbcompiler] Parse-only mode, skipping codegen");

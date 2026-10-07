@@ -38,6 +38,7 @@ FUNCTION PBMAIN() AS LONG
     LOCAL s AS STRING
     LOCAL f AS LONG
     LOCAL ok AS LONG
+    LOCAL x AS LONG
 
     ok = 0
 

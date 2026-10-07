@@ -47,8 +47,7 @@ FUNCTION PBMAIN() AS LONG
     IF hFont <> 0 THEN
         ok = ok + 1
     ELSE
-        ConPrint "FAIL
-        FONT NEW returned 0" END IF
+        ConPrint "FAIL: FONT NEW returned 0"
     END IF
 
     ' SET FONT selects the font into the graphic DC

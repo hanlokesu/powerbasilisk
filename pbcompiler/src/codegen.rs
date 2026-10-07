@@ -6856,6 +6856,19 @@ impl Compiler {
                             self.current_line,
                         ));
                     }
+                    // Official PB: a bare undeclared name has no type source
+                    // (no DEFxxx support yet) → Error 516, matching the official
+                    // compiler instead of silently auto-declaring LONG.
+                    if !name_has_type_suffix(orig_name) {
+                        return Err(PbError::parser(
+                            format!(
+                                "DefType, Type id (?%&!#$), or AS... required: {}",
+                                orig_name.to_uppercase()
+                            ),
+                            None,
+                            self.current_line,
+                        ));
+                    }
                     // Auto-declare local → use original name for type inference
                     let pb_type = infer_type_from_name(orig_name);
                     let ir_type = Self::ir_type_for(&pb_type);
@@ -6991,7 +7004,7 @@ impl Compiler {
                         ));
                     }
                     // Auto-declare
-                    let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
+                    let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name)?;
                     let info = self.symbols.lookup(&name).unwrap();
                     let pb_type = info.pb_type.clone();
                     Ok((Val::new(ptr_name, IrType::Ptr), pb_type))
@@ -17457,7 +17470,7 @@ impl Compiler {
                     match inner_arg {
                         Expr::Variable(vname) => {
                             let norm = normalize_name(vname);
-                            let ptr_name = self.ensure_variable_ptr(fb, &norm, vname).clone();
+                            let ptr_name = self.ensure_variable_ptr(fb, &norm, vname)?;
                             compiled.push(Val::new(ptr_name, IrType::Ptr));
                         }
                         _ => {
@@ -17565,7 +17578,7 @@ impl Compiler {
 
     fn compile_for(&mut self, fb: &mut FunctionBuilder, for_stmt: &ForStmt) -> PbResult<()> {
         let var_name = normalize_name(&for_stmt.var);
-        let var_ptr_name = self.ensure_variable_ptr(fb, &var_name, &for_stmt.var);
+        let var_ptr_name = self.ensure_variable_ptr(fb, &var_name, &for_stmt.var)?;
 
         // Compute and store start
         let start = self.compile_expr(fb, &for_stmt.start)?;
@@ -18383,7 +18396,7 @@ impl Compiler {
         match &stmt.target {
             Expr::Variable(ref orig_name) => {
                 let name = normalize_name(orig_name);
-                let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
+                let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name)?;
                 let ptr = Val::new(ptr_name, IrType::Ptr);
                 let current = fb.load(&IrType::I32, &ptr);
                 let amount = if let Some(ref amt) = stmt.amount {
@@ -18969,7 +18982,7 @@ impl Compiler {
                 if let Some(member_expr) = self.implicit_this_member(&name) {
                     return self.compile_expr(fb, &member_expr);
                 }
-                let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name);
+                let ptr_name = self.ensure_variable_ptr(fb, &name, orig_name)?;
                 let info = self.symbols.lookup(&name).unwrap();
                 // FixedString (ASCIIZ*N): alloca IS the buffer → create heap copy
                 // (stack buffer would be dangling after function return)
@@ -19981,7 +19994,10 @@ impl Compiler {
                 match &args[0] {
                     Expr::Variable(orig_name) => {
                         let vname = normalize_name(orig_name);
-                        let ptr_name = self.ensure_variable_ptr(fb, &vname, orig_name);
+                        let ptr_name = match self.ensure_variable_ptr(fb, &vname, orig_name) {
+                            Ok(p) => p,
+                            Err(e) => return Some(Err(e)),
+                        };
                         let ptr = Val::new(ptr_name, IrType::Ptr);
                         Some(Ok(fb.ptrtoint64(&ptr)))
                     }
@@ -22215,9 +22231,22 @@ impl Compiler {
         fb: &mut FunctionBuilder,
         name: &str,
         original_name: &str,
-    ) -> String {
+    ) -> PbResult<String> {
         if let Some(info) = self.symbols.lookup(name) {
-            return info.ptr_name.clone();
+            return Ok(info.ptr_name.clone());
+        }
+        // Official PB: an undeclared variable needs a type source (name suffix
+        // or DEFxxx). This fork has no DEFxxx support yet, so a bare name is
+        // Error 516, never silently auto-declared.
+        if !name_has_type_suffix(original_name) {
+            return Err(PbError::parser(
+                format!(
+                    "DefType, Type id (?%&!#$), or AS... required: {}",
+                    original_name.to_uppercase()
+                ),
+                None,
+                self.current_line,
+            ));
         }
         // Auto-allocate → use original_name (with type suffix) for type inference
         let pb_type = infer_type_from_name(original_name);
@@ -22231,7 +22260,7 @@ impl Compiler {
         let ptr_name = ptr.name.clone();
         self.symbols
             .insert_local(name.to_string(), ptr_name.clone(), ir_type, pb_type);
-        ptr_name
+        Ok(ptr_name)
     }
 }
 
@@ -22383,6 +22412,23 @@ fn split_asm_tokens(text: &str) -> Vec<String> {
         out.push(cur);
     }
     out
+}
+
+/// True if the name carries an explicit PB type suffix ($ % & ! # @ ## && %%).
+///
+/// Official PowerBASIC accepts an undeclared variable ONLY when a type source
+/// exists: a suffix or a DEFxxx statement. This fork has no DEFxxx support yet,
+/// so a bare name is an error (Error 516), never silently auto-declared.
+fn name_has_type_suffix(name: &str) -> bool {
+    name.ends_with("##")
+        || name.ends_with("&&")
+        || name.ends_with("%%")
+        || name.ends_with('#')
+        || name.ends_with('&')
+        || name.ends_with('%')
+        || name.ends_with('!')
+        || name.ends_with('@')
+        || name.ends_with('$')
 }
 
 /// Infer PB type from variable name suffix.
