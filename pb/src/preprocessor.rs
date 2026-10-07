@@ -556,6 +556,18 @@ impl Preprocessor {
             return !self.evaluate_if_condition(stripped);
         }
 
+        // Comparison forms: "%CONST = 0", "%CONST <> 5", "(X AND Y) = &H1000".
+        // (batch 229: without these the %MY_PBVER discriminator blocks evaluate
+        // "0 = 0" as the bare-constant truth test "is the %CONST non-zero?" ->
+        // false, silently dropping every fork-only statement inside the block,
+        // e.g. WINDOW SET/GET TEXT, ARRAY ASSIGN, TYPE SET.)
+        if let Some(eq) = cond.find(" = ") {
+            return self.eval_operand(&cond[..eq]) == self.eval_operand(&cond[eq + 3..]);
+        }
+        if let Some(ne) = cond.find(" <> ") {
+            return self.eval_operand(&cond[..ne]) != self.eval_operand(&cond[ne + 4..]);
+        }
+
         // Handle %DEF(%CONSTANT)
         if cond.starts_with("%DEF(") {
             if let Some(end) = cond.find(')') {
@@ -576,6 +588,44 @@ impl Preprocessor {
         // Handle expr - expr (non-zero is true)
         // Simple: just check if it's a defined constant
         false
+    }
+
+    /// Evaluate one #IF operand: a plain number, an &H hex literal, a
+    /// %CONSTANT reference, or a parenthesized bitwise-AND expression such as
+    /// `(%PB_REVISION AND &H0FF00)`. Unknown %CONSTANTs evaluate to 0 (same
+    /// rule parse_constant_value uses). A top-level split may leave a single
+    /// trailing ')' on the right operand, which is stripped here.
+    fn eval_operand(&self, s: &str) -> i64 {
+        let mut s = s.trim();
+        let opens = s.matches('(').count();
+        let mut closes = s.matches(')').count();
+        while closes > opens && s.ends_with(')') {
+            s = &s[..s.len() - 1];
+            closes -= 1;
+        }
+        if s.starts_with('(') && s.ends_with(')') {
+            let inner = &s[1..s.len() - 1];
+            // Find the top-level "AND" (depth 0) and split on it.
+            let mut depth = 0i32;
+            let bytes = inner.as_bytes();
+            let mut i = 0usize;
+            while i < bytes.len() {
+                match bytes[i] {
+                    b'(' => depth += 1,
+                    b')' => depth -= 1,
+                    b'A' if depth == 0
+                        && inner[i..].starts_with("AND ")
+                        && (i == 0 || bytes[i - 1] == b' ' || bytes[i - 1] == b'\t') =>
+                    {
+                        return self.eval_operand(&inner[..i]) & self.eval_operand(&inner[i + 4..]);
+                    }
+                    _ => {}
+                }
+                i += 1;
+            }
+            return self.eval_operand(inner);
+        }
+        self.parse_constant_value(s)
     }
 
     fn parse_constant_value(&self, s: &str) -> i64 {
