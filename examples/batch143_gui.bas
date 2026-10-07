@@ -1,13 +1,3 @@
-#IF (%PB_REVISION AND &H0FF00) = &H1000
-    ' Compiling with PB/Win 10.x
-    %MY_PBVER = 10
-#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
-    ' Compiling with PB/Win 9.x
-    %MY_PBVER = 9
-#ELSE
-    ' Not PBWin (this fork, or other)
-    %MY_PBVER = 0
-#ENDIF
 #COMPILE EXE
 ' Tier-3 DDT: LABEL + PROGRESSBAR
 ' Auto-generated: PowerBasilisk fork batch test
@@ -27,3 +17,4 @@ FUNCTION PBMAIN() AS LONG
 
     MESSAGE LOOP
 END FUNCTION
+

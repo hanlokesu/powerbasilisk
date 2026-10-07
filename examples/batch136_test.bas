@@ -1,13 +1,3 @@
-#IF (%PB_REVISION AND &H0FF00) = &H1000
-    ' Compiling with PB/Win 10.x
-    %MY_PBVER = 10
-#ELSEIF (%PB_REVISION AND &H0FF00) = &H0900
-    ' Compiling with PB/Win 9.x
-    %MY_PBVER = 9
-#ELSE
-    ' Not PBWin (this fork, or other)
-    %MY_PBVER = 0
-#ENDIF
 ' Tier-3 DDT: CONTROL ADD RADIOBUTTON - radio selection
 ' Auto-generated: PowerBasilisk fork batch test
 ' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
@@ -21,3 +11,4 @@ FUNCTION PBMAIN() AS LONG
     CONTROL ADD RADIOBUTTON, hWnd, 103, "Option C", 20, 100, 400, 30 TO hR
     pb_message_loop
 END FUNCTION
+
