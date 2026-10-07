@@ -37,17 +37,28 @@ SUB ConWaitKey()
 END SUB
 
 FUNCTION PBMAIN() AS LONG
-    LOCAL a(10) AS LONG
-    LOCAL t(10) AS LONG
+    LOCAL a() AS LONG
+    DIM a(10) AS LONG
+    LOCAL t() AS LONG
+    DIM t(10) AS LONG
     LOCAL hDlg AS LONG
-    LOCAL id(0) AS LONG
+    LOCAL id() AS LONG
+    DIM id(0) AS LONG
     LOCAL o AS LONG
     LOCAL waitk AS STRING
     ConPrint "=== Batch 121: Tier-2 non-GUI cleanup ==="
 
     ' --- ARRAY TAGARRAY / ERASE (real codegen, verified) ---
+#IF %MY_PBVER = 0
     ARRAY TAGARRAY a(), t()
+#ELSE
+' (PBWin10: skipped: ARRAY TAGARRAY a(), t())
+#ENDIF
+#IF %MY_PBVER = 0
     ARRAY TAGARRAY ERASE a()
+#ELSE
+' (PBWin10: skipped: ARRAY TAGARRAY ERASE a())
+#ENDIF
     ConPrint "1 ARRAY TAGARRAY / ERASE OK"
 
     ' --- Accepted no-op: OOP / GUI / async (batch 121) ---
@@ -55,9 +66,21 @@ FUNCTION PBMAIN() AS LONG
     ' EVENT SOURCE s1  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' EVENTS Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
     ' RAISEEVENT Click  ' (batch 222: real form lives in a CLASS block; see batch222_test.bas)
+#IF %MY_PBVER = 0
     ACCEL ATTACH hDlg, id()
+#ELSE
+' (PBWin10: skipped: ACCEL ATTACH hDlg, id())
+#ENDIF
+#IF %MY_PBVER = 0
     TCP NOTIFY 1, 100
+#ELSE
+' (PBWin10: skipped: TCP NOTIFY 1, 100)
+#ENDIF
+#IF %MY_PBVER = 0
     UDP NOTIFY 1, 100
+#ELSE
+' (PBWin10: skipped: UDP NOTIFY 1, 100)
+#ENDIF
     ConPrint "2 OOP/GUI/notify no-op statements accepted OK"
     ConPrint ""
     ConPrint "=== ALL 2 GROUPS PASSED ==="

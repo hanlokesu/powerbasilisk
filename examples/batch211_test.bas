@@ -92,7 +92,8 @@ FUNCTION PBMAIN () AS LONG
     LOCAL hDlg AS LONG
     LOCAL acc AS QUAD
     LOCAL none AS QUAD
-    LOCAL keys(1) AS QUAD
+    LOCAL keys() AS QUAD
+    DIM keys(1) AS QUAD
     LOCAL plain AS QUAD
 
     ' FVIRTKEY|FCONTROL (0x0009) with 'A' (0x41) and with 'B' (0x42)
@@ -101,7 +102,11 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "keys(0) = " & STR$(keys(0))
     ConPrint "keys(1) = " & STR$(keys(1))
 
+#IF %MY_PBVER = 0
     ACCEL ATTACH hDlg, keys() TO acc
+#ELSE
+' (PBWin10: skipped: ACCEL ATTACH hDlg, keys() TO acc)
+#ENDIF
     ConPrint "accelerator table = " & STR$(acc)
     IF acc = 0 THEN
         fail = fail + 1
@@ -111,7 +116,11 @@ FUNCTION PBMAIN () AS LONG
     ' built: the handle must come back 0 - and the TO target must still be
     ' written, which is why it starts at a value the program recognises.
     none = 12345
+#IF %MY_PBVER = 0
     ACCEL ATTACH hDlg, plain TO none
+#ELSE
+' (PBWin10: skipped: ACCEL ATTACH hDlg, plain TO none)
+#ENDIF
     ConPrint "no-count attach   = " & STR$(none)
     IF none <> 0 THEN
         fail = fail + 1
@@ -120,5 +129,5 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
-WAITKEY$
+    ConWaitKey
 END FUNCTION

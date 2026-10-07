@@ -52,8 +52,10 @@ END FUNCTION
 
 FUNCTION PBMAIN() AS LONG
     LOCAL i AS LONG
-    LOCAL a(4) AS LONG
-    LOCAL b(4) AS LONG
+    LOCAL a() AS LONG
+    DIM a(4) AS LONG
+    LOCAL b() AS LONG
+    DIM b(4) AS LONG
     LOCAL t1 AS MyType
     LOCAL t2 AS MyType
     LOCAL title AS STRING
@@ -67,25 +69,45 @@ FUNCTION PBMAIN() AS LONG
 
     ' 2. ARRAY ASSIGN b() = a()
     a(0) = 10 : a(1) = 20 : a(2) = 30 : a(3) = 40 : a(4) = 50
+#IF %MY_PBVER = 0
     ARRAY ASSIGN b() = a()
+#ELSE
+' (PBWin10: skipped: ARRAY ASSIGN b() = a())
+#ENDIF
     ConPrint "b(0) = " & STR$(b(0)) & " b(4) = " & STR$(b(4))
 
     ' 3. WINDOW SET TEXT / WINDOW GET TEXT (console title)
+#IF %MY_PBVER = 0
     WINDOW SET TEXT 0, "PowerBasilisk Batch23"
+#ELSE
+' (PBWin10: skipped: WINDOW SET TEXT 0, "PowerBasilisk Batch2)
+#ENDIF
+#IF %MY_PBVER = 0
     WINDOW GET TEXT 0 TO title
-    ConPrint "Title = " & STR$(title)
+#ELSE
+' (PBWin10: skipped: WINDOW GET TEXT 0 TO title)
+#ENDIF
+    ConPrint "Title = " & title
 
     ' 4. TYPE SET from a TYPE variable
     t1.n = 123
     t1.d = 4.5
     t1.s = "hello"
+#IF %MY_PBVER = 0
     TYPE SET t2 = t1
+#ELSE
+' (PBWin10: skipped: TYPE SET t2 = t1)
+#ENDIF
     ConPrint "t2.n = " & STR$(t2.n) & " t2.d = " & STR$(t2.d) & " t2.s = " & TRIM$(t2.s)
 
     ' 5. TYPE SET from a STRING (fills the UDT bytes)
+#IF %MY_PBVER = 0
     TYPE SET t2 = "TYPE SET FROM STRING"
+#ELSE
+' (PBWin10: skipped: TYPE SET t2 = "TYPE SET FROM STRING")
+#ENDIF
     ConPrint "t2.n(1st4 bytes) = " & STR$(t2.n)
 
     ConPrint "Press any key to exit..."
-    WAITKEY$
+    ConWaitKey
 END FUNCTION
