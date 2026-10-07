@@ -1,4 +1,24 @@
 #COMPILE EXE
+#COMPILER PBWIN 10
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -62,9 +82,7 @@ END SUB
 '   safe to run in the non-interactive verification harness.  The exit
 '   code is the number of failed assertions.
 '=====================================================================
-#COMPILER PBWIN 10
 
-#COMPILE EXE
 
 FUNCTION PBMAIN () AS LONG
     LOCAL hDlg  AS LONG
@@ -199,3 +217,5 @@ FUNCTION PBMAIN () AS LONG
     DIALOG END hDlg, fail
 END FUNCTION
 
+
+#ENDIF

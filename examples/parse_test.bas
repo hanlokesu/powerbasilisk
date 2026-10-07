@@ -33,10 +33,10 @@ FUNCTION PBMAIN() AS LONG
     LOCAL n AS LONG
     s = "apple,banana,cherry"
     n = PARSECOUNT(s, ",")
-    IF n = 3 AND PARSE(s, ",", 2) = "banana" THEN
+    IF n = 3 AND PARSE$(s, ",", 2) = "banana" THEN
         ConPrint "PARSE-PASS"
     ELSE
-        ConPrint "PARSE-FAIL n=" & STR$(n) & " p2=" & PARSE(s, ",", 2)
+        ConPrint "PARSE-FAIL n=" & STR$(n) & " p2=" & PARSE$(s, ",", 2)
     END IF
     ConPrint "Press any key to exit..."
     ConWaitKey

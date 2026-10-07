@@ -30,14 +30,13 @@ END SUB
 ' GRAPHIC SET FIXED + GRAPHIC SET FONT
 FUNCTION PBMAIN() AS LONG
     LOCAL hBmp AS LONG
-    LOCAL hFont AS QUAD
+    LOCAL hFont AS LONG
     LOCAL ok AS LONG
     LOCAL waitk AS STRING
     ok = 0
 
     GRAPHIC BITMAP NEW 100, 50 TO hBmp
-    GRAPHIC ATTACH hBmp
-
+    GRAPHIC ATTACH hBmp, 0
     ' SET FIXED (no-arg, restores fixed mode)
     GRAPHIC SET FIXED
     ok = ok + 1

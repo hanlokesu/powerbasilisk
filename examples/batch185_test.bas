@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -156,7 +175,7 @@ FUNCTION PBMAIN () AS LONG
     GRAPHIC SPLIT src, 100000 TO p1, p2
     IF p1 <> src OR LEN(p2) <> 0 THEN
         fails = fails + 1
-        ConPrint "  FAIL wide SPLIT: part1 = " & STR$(p1) & "  part2 LEN =" & STR$(LEN(p2))
+        ConPrint "  FAIL wide SPLIT: part1 = " & p1 & "  part2 LEN =" & STR$(LEN(p2))
     ELSE
         ConPrint "  PASS wide SPLIT -> part1 is the whole string ; part2 empty"
     END IF
@@ -227,3 +246,5 @@ FUNCTION PBMAIN () AS LONG
 END FUNCTION
 
 
+
+#ENDIF

@@ -35,12 +35,12 @@ FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     DIM buf AS STRING
     DIM ip AS LONG
-    DIM port AS LONG
+    DIM portnum AS LONG
     UDP OPEN PORT 23460 AS #1 TIMEOUT 8000
-    ConPrint "server: listening on UDP port 23460"
-    UDP RECV #1, FROM ip, port, buf
+    ConPrint "server: listening on UDP portnum 23460"
+    UDP RECV #1, FROM ip, portnum, buf
     ConPrint "server: got [" + buf + "]"
-    UDP SEND #1, AT ip, port, "echo-udp"
+    UDP SEND #1, AT ip, portnum, "echo-udp"
     ConPrint "server: replied"
     UDP CLOSE #1
     FUNCTION = 0

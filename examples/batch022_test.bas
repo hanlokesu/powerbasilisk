@@ -1,4 +1,23 @@
 #COMPILE EXE
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -31,7 +50,7 @@ END SUB
 
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
-    LOCAL addr&, hndl&, t&
+    LOCAL memaddr&, hndl&, t&
     LOCAL s AS STRING
 
     ' --- LPRINT: attach to a file (device), print, formfeed, flush, close ---
@@ -72,9 +91,9 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     ' --- IMPORT ADDR + CALL DWORD (GetTickCount) ---
-    IMPORT ADDR "GetTickCount", "KERNEL32.DLL" TO addr&, hndl&
-    IF addr& <> 0 THEN
-        CALL DWORD addr& USING GetTickCount() TO t&
+    IMPORT ADDR "GetTickCount", "KERNEL32.DLL" TO memaddr&, hndl&
+    IF memaddr& <> 0 THEN
+        CALL DWORD memaddr& USING GetTickCount() TO t&
         ConPrint "tick = " & STR$(t&)
         IF t& > 0 THEN
             ConPrint "CALL DWORD OK"
@@ -90,3 +109,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

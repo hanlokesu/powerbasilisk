@@ -30,7 +30,7 @@ END SUB
 ' GRAPHIC GET BITS / SET BITS / GET SCALE / SCALE / SET AUTOSIZE
 FUNCTION PBMAIN() AS LONG
     LOCAL hBmp AS LONG
-    LOCAL hBmp2 AS QUAD
+    LOCAL hBmp2 AS LONG
     LOCAL s AS STRING
     LOCAL w AS LONG
     LOCAL h AS LONG
@@ -43,7 +43,7 @@ FUNCTION PBMAIN() AS LONG
     ok = 0
 
     GRAPHIC BITMAP NEW 100, 50 TO hBmp
-    GRAPHIC ATTACH hBmp
+    GRAPHIC ATTACH hBmp, 0
     GRAPHIC GET SIZE TO w, h
     IF w = 100 AND h = 50 THEN
         ok = ok + 1
@@ -59,7 +59,7 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     GRAPHIC BITMAP NEW 50, 25 TO hBmp2
-    GRAPHIC ATTACH hBmp2
+    GRAPHIC ATTACH hBmp2, 0
     GRAPHIC GET SIZE TO w, h
     IF w = 50 AND h = 25 THEN
         ok = ok + 1
@@ -80,18 +80,21 @@ FUNCTION PBMAIN() AS LONG
         ok = ok + 1
     ELSE
         ConPrint "FAIL5" & STR$(x1) & STR$(y1) & STR$(x2) & STR$(y2)
+    END IF
     GRAPHIC SCALE (10, 20) - (110, 120)
     GRAPHIC GET SCALE TO x1, y1, x2, y2
     IF x1 = 10 AND y1 = 20 AND x2 = 110 AND y2 = 120 THEN
         ok = ok + 1
     ELSE
         ConPrint "FAIL6" & STR$(x1) & STR$(y1) & STR$(x2) & STR$(y2)
+    END IF
     GRAPHIC SCALE PIXELS
     GRAPHIC GET SCALE TO x1, y1, x2, y2
     IF x1 = 0 AND y1 = 0 AND x2 = 100 AND y2 = 50 THEN
         ok = ok + 1
     ELSE
         ConPrint "FAIL7" & STR$(x1) & STR$(y1) & STR$(x2) & STR$(y2)
+    END IF
     GRAPHIC SET AUTOSIZE 200, 150
     ok = ok + 1
 
@@ -99,6 +102,7 @@ FUNCTION PBMAIN() AS LONG
         ConPrint "ALL PASS (8/8)"
     ELSE
         ConPrint "FAIL: " & STR$(ok)
+    END IF
     ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

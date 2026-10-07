@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -32,7 +51,7 @@ FUNCTION PBMAIN() AS LONG
     LOCAL q AS QUAD
     LOCAL b AS BYTE
     LOCAL w AS WORD
-    LOCAL dw AS DWORD
+    LOCAL dwval AS DWORD
     LOCAL waitk AS STRING
     LOCAL pass AS LONG
     pass = 0
@@ -103,12 +122,12 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     ' Test 8: CDWORD — convert to unsigned double word (32-bit)
-    dw = CDWORD(5000000000)
-    IF dw = 705032704 THEN  ' 5000000000 mod 2^32 = 705032704
-        ConPrint "Test 8 PASS: CDWORD(5000000000) =" & STR$(dw) & " (mod 2^32)"
+    dwval = CDWORD(5000000000)
+    IF dwval = 705032704 THEN  ' 5000000000 mod 2^32 = 705032704
+        ConPrint "Test 8 PASS: CDWORD(5000000000) =" & STR$(dwval) & " (mod 2^32)"
         pass = pass + 1
     ELSE
-        ConPrint "Test 8 FAIL: CDWORD(5000000000) =" & STR$(dw) & ", expected 705032704"
+        ConPrint "Test 8 FAIL: CDWORD(5000000000) =" & STR$(dwval) & ", expected 705032704"
     END IF
 
     ConPrint "=== " & STR$(pass) & "/8 TESTS PASSED ==="
@@ -116,3 +135,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

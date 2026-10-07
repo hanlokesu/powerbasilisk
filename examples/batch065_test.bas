@@ -41,14 +41,14 @@ FUNCTION PBMAIN() AS LONG
     ok = 0
 
     GRAPHIC BITMAP NEW 100, 50 TO hBmp
-    GRAPHIC ATTACH hBmp
-
+    GRAPHIC ATTACH hBmp, 0
     GRAPHIC SET SIZE 80, 40
     GRAPHIC GET SIZE TO w, h
     IF w = 80 AND h = 40 THEN
         ok = ok + 1
     ELSE
         ConPrint "FAIL1" & STR$(w) & STR$(h)
+    END IF
     GRAPHIC GET BITS TO s
     IF LEN(s) = 12840 THEN
         ok = ok + 1
@@ -62,6 +62,7 @@ FUNCTION PBMAIN() AS LONG
         ok = ok + 1
     ELSE
         ConPrint "FAIL3" & STR$(cw) & STR$(ch)
+    END IF
     GRAPHIC SET VIRTUAL 200, 150
     ok = ok + 1
 
@@ -71,16 +72,19 @@ FUNCTION PBMAIN() AS LONG
         ok = ok + 1
     ELSE
         ConPrint "FAIL5" & STR$(n)
+    END IF
     GRAPHIC SET WORDWRAP 1
     GRAPHIC GET WORDWRAP TO n
     IF n = 1 THEN
         ok = ok + 1
     ELSE
         ConPrint "FAIL6" & STR$(n)
+    END IF
     IF ok = 6 THEN
         ConPrint "ALL PASS (6/6)"
     ELSE
         ConPrint "FAIL: " & STR$(ok)
+    END IF
     ConPrint "Press any key to exit..."
     waitk = WAITKEY$
 END FUNCTION

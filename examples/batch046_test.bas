@@ -31,15 +31,15 @@ GLOBAL failures AS LONG
 
 SUB Check(cond AS LONG, msg AS STRING)
     IF cond = 0 THEN
-        ConPrint "FAIL: " & STR$(msg)
+        ConPrint "FAIL: " & msg
         failures = failures + 1
     END IF
 END SUB
 
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
-    LOCAL buf(20) AS BYTE
-    LOCAL src(4) AS BYTE
+    DIM buf(20) AS BYTE
+    DIM src(4) AS BYTE
     LOCAL i AS LONG
     LOCAL n AS LONG
     failures = 0

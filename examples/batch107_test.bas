@@ -40,7 +40,7 @@ END FUNCTION
 
 FUNCTION PBMAIN() AS LONG
     LOCAL i AS LONG
-    LOCAL arr(5) AS LONG
+    DIM arr(5) AS LONG
     LOCAL waitk AS STRING
     
     ConPrint "Testing DIM..."

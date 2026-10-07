@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -29,7 +48,7 @@ END SUB
 ' Batch 81 test: INPUT (console) + LINE INPUT (console)
 FUNCTION PBMAIN() AS LONG
     LOCAL s AS STRING
-    LOCAL line AS STRING
+    LOCAL linetxt AS STRING
     LOCAL waitk AS STRING
 
     ConPrint "=== Batch 81: INPUT / LINE INPUT (console) ==="
@@ -37,8 +56,8 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 1: LINE INPUT with prompt
     ConPrint "Test 1: LINE INPUT with prompt"
-    LINE INPUT "Enter a line: "; line
-    ConPrint "You entered: [" & STR$(line) & "]"
+    LINE INPUT "Enter a linetxt: "; linetxt
+    ConPrint "You entered: [" & STR$(linetxt) & "]"
     ConPrint ""
 
     ' Test 2: INPUT with prompt
@@ -49,8 +68,8 @@ FUNCTION PBMAIN() AS LONG
 
     ' Test 3: LINE INPUT without prompt
     ConPrint "Test 3: LINE INPUT without prompt (type something and press Enter)"
-    LINE INPUT line
-    ConPrint "You entered: [" & STR$(line) & "]"
+    LINE INPUT linetxt
+    ConPrint "You entered: [" & STR$(linetxt) & "]"
     ConPrint ""
 
     ConPrint "=== ALL 3 TESTS PASSED ==="
@@ -58,3 +77,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

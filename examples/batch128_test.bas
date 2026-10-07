@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' Tier-3 DDT: WINDOW NEW - basic window creation
 ' Auto-generated: PowerBasilisk fork batch test
 
@@ -8,3 +27,5 @@ FUNCTION PBMAIN() AS LONG
     MSGBOX "Window created (hwnd=" + STR$(h) + "). Close this message to end.", 0, "WINDOW OK"
 END FUNCTION
 
+
+#ENDIF

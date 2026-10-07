@@ -39,6 +39,7 @@ END SUB
 ' Expected:  every printed value non-zero; count of a fresh list is 0 (correct).
 '=====================================================================
 FUNCTION PBMAIN () AS LONG
+    LOCAL waitk AS STRING
     LOCAL hil AS LONG
     LOCAL cnt AS LONG
     IMAGELIST NEW BITMAP 16, 16, 32, 4 TO hil
@@ -54,6 +55,6 @@ FUNCTION PBMAIN () AS LONG
     IMAGELIST KILL hil
     FUNCTION = 0
 ' Press any key to exit...
-WAITKEY$
+    waitk = WAITKEY$
 END FUNCTION
 

@@ -30,7 +30,7 @@ END SUB
 ' GRAPHIC GET CLIP / GET VIEW / SET VIEW / GET LINES / GET+SET WRAP
 ' All statements verified against a memory DIB bitmap (console-testable).
 FUNCTION PBMAIN() AS LONG
-    LOCAL hBmp AS QUAD
+    LOCAL hBmp AS LONG
     LOCAL cw AS SINGLE
     LOCAL ch AS SINGLE
     LOCAL vx AS SINGLE
@@ -44,8 +44,7 @@ FUNCTION PBMAIN() AS LONG
 
     ' Create a 100 x 50 memory bitmap and attach it
     GRAPHIC BITMAP NEW 100, 50 TO hBmp
-    GRAPHIC ATTACH hBmp
-
+    GRAPHIC ATTACH hBmp, 0
     ' 1. GRAPHIC GET CLIP TO w!, h!  - default clip area is the whole bitmap
     GRAPHIC GET CLIP TO cw, ch
     IF cw <> 100 OR ch <> 50 THEN
@@ -104,8 +103,7 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     GRAPHIC DETACH
-    GRAPHIC BITMAP END hBmp
-
+    GRAPHIC BITMAP END
     IF fails = 0 THEN
         ConPrint "ALL PASS (6/6)"
     ELSE

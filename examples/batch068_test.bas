@@ -30,11 +30,11 @@ END SUB
 ' Uses screen DC as fallback when no printer is available (CI-friendly)
 FUNCTION PBMAIN() AS LONG
     LOCAL hdc AS LONG
-    LOCAL hdc2 AS QUAD
+    LOCAL hdc2 AS LONG
     LOCAL px AS LONG
-    LOCAL py AS QUAD
-    LOCAL pw AS QUAD
-    LOCAL ph AS QUAD
+    LOCAL py AS LONG
+    LOCAL pw AS LONG
+    LOCAL ph AS LONG
     LOCAL waitk AS STRING
     LOCAL fails AS LONG
     fails = 0

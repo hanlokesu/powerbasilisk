@@ -1,4 +1,23 @@
 #COMPILE EXE
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' Tier-3 DDT: SCROLLBAR - vertical/horizontal scrollbar
 ' Auto-generated: PowerBasilisk fork batch test
 ' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
@@ -26,3 +45,5 @@ FUNCTION PBMAIN() AS LONG
     MSGBOX "Done!", 0, "Batch 141"
 END FUNCTION
 
+
+#ENDIF

@@ -70,11 +70,11 @@ FUNCTION PBMAIN() AS LONG
     LOCAL t2 AS MyType
     LOCAL title AS STRING
 
-    ConPrint "=== Batch 23: STATIC / ARRAY ASSIGN / WINDOW / TYPE SET ==="
+    ConPrint "=== Batch 23: STATIC / ARRAY ASSIGN / WINDOW / TYPE SET ==="+$CRLF
 
     ' 1. STATIC persists across calls
     FOR i = 1 TO 3
-        ConPrint "IncStatic = " & STR$(IncStatic())
+        ConPrint "IncStatic = " & STR$(IncStatic())+$CRLF
     NEXT i
 
     ' 2. ARRAY ASSIGN b() = a()
@@ -84,7 +84,7 @@ FUNCTION PBMAIN() AS LONG
 #ELSE
 ' (PBWin10: skipped: ARRAY ASSIGN b() = a())
 #ENDIF
-    ConPrint "b(0) = " & STR$(b(0)) & " b(4) = " & STR$(b(4))
+    ConPrint "b(0) = " & STR$(b(0)) & " b(4) = " & STR$(b(4))+$CRLF
 
     ' 3. WINDOW SET TEXT / WINDOW GET TEXT (console title)
 #IF %MY_PBVER = 0
@@ -97,7 +97,7 @@ FUNCTION PBMAIN() AS LONG
 #ELSE
 ' (PBWin10: skipped: WINDOW GET TEXT 0 TO title)
 #ENDIF
-    ConPrint "Title = " & title
+    ConPrint "Title = " & title+$CRLF
 
     ' 4. TYPE SET from a TYPE variable
     t1.n = 123
@@ -108,7 +108,7 @@ FUNCTION PBMAIN() AS LONG
 #ELSE
 ' (PBWin10: skipped: TYPE SET t2 = t1)
 #ENDIF
-    ConPrint "t2.n = " & STR$(t2.n) & " t2.d = " & STR$(t2.d) & " t2.s = " & TRIM$(t2.s)
+    ConPrint "t2.n = " & STR$(t2.n) & " t2.d = " & STR$(t2.d) & " t2.s = " & TRIM$(t2.s)+$CRLF
 
     ' 5. TYPE SET from a STRING (fills the UDT bytes)
 #IF %MY_PBVER = 0
@@ -116,8 +116,8 @@ FUNCTION PBMAIN() AS LONG
 #ELSE
 ' (PBWin10: skipped: TYPE SET t2 = "TYPE SET FROM STRING")
 #ENDIF
-    ConPrint "t2.n(1st4 bytes) = " & STR$(t2.n)
+    ConPrint "t2.n(1st4 bytes) = " & STR$(t2.n)+$CRLF
 
-    ConPrint "Press any key to exit..."
+    ConPrint "Press any key to exit..."+$CRLF
     ConWaitKey
 END FUNCTION

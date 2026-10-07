@@ -48,6 +48,7 @@ END SUB
 ' Asserts: non-zero handle, count 0 on a fresh list.
 '=====================================================================
 FUNCTION PBMAIN () AS LONG
+    LOCAL waitk AS STRING
     LOCAL fail AS LONG
     LOCAL hil AS LONG
     LOCAL cnt AS LONG
@@ -65,6 +66,6 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
-WAITKEY$
+    waitk = WAITKEY$
 END FUNCTION
 

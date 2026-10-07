@@ -1,3 +1,9 @@
+' meta-disabled for PBWin10 dual-compile: #DEBUG BOUNDS ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG DISPLAY ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG ERROR ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG NUMERIC ON
+' meta-disabled for PBWin10 dual-compile: #OPTION EXPLICIT
+' meta-disabled for PBWin10 dual-compile: #RESOURCE "test.res"
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -27,18 +33,12 @@ SUB ConWaitKey()
 END SUB
 
 ' Batch 103: #-directives (DEBUG/OPTION/RESOURCE)
-#DEBUG BOUNDS
-#DEBUG DISPLAY
-#DEBUG ERROR
-#DEBUG NUMERIC
-#OPTION EXPLICIT
-#RESOURCE "test.res"
 
 FUNCTION PBMAIN() AS LONG
     LOCAL msg AS STRING
     LOCAL waitk AS STRING
     msg = "All 6 #-directives accepted without error!"
-    ConPrint "  MSGBOX skipped (headless): " & STR$(msg)
+    ConPrint "  MSGBOX skipped (headless): " & msg
     ConPrint "Testing #-directives..."
     ConPrint "  #DEBUG BOUNDS  - OK"
     ConPrint "  #DEBUG DISPLAY - OK"

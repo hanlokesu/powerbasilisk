@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -52,7 +71,7 @@ END SUB
 
 FUNCTION PBMAIN() AS LONG
     LOCAL hDlg AS LONG          ' ACCEL ATTACH would take a dialog handle
-    LOCAL id(0 TO 1) AS LONG    ' ... and a table of key/command pairs
+    DIM id(0 TO 1) AS LONG    ' ... and a table of key/command pairs
 
     ' 1. ACCEL ATTACH - official PB: attach an accelerator table to a dialog.
     ACCEL ATTACH hDlg, id()
@@ -74,3 +93,5 @@ FUNCTION PBMAIN() AS LONG
 WAITKEY$
 END FUNCTION
 
+
+#ENDIF

@@ -47,7 +47,7 @@ FUNCTION PBMAIN () AS LONG
     here = CURDIR$
     ConPrint "batch 188 sample (tooling-only batch, nothing of its own in the repo)"
     ConPrint "CURDIR$     = " & here
-    ConPrint "ISFILE(exe) = " & ISFILE("batch188_test.exe")
+    ConPrint "ISFILE(exe) = " & STR$(ISFILE("batch188_test.exe"))
     IF LEN(here) = 0 THEN
         fail = fail + 1
     END IF

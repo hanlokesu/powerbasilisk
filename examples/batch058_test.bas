@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -37,8 +56,7 @@ FUNCTION PBMAIN() AS LONG
     LOCAL mix AS LONG
 
     GRAPHIC BITMAP NEW 100, 50 TO hbmp
-    GRAPHIC ATTACH hbmp
-
+    GRAPHIC ATTACH hbmp, 0
     GRAPHIC GET CANVAS TO hc
     ConPrint "OK: canvas=" & STR$(hc)
     IF hc = hbmp THEN
@@ -88,3 +106,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

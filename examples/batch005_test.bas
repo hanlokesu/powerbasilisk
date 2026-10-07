@@ -30,36 +30,36 @@ END SUB
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     LOCAL x AS LONG
-    LOCAL addr AS QUAD
+    LOCAL memaddr AS QUAD
     LOCAL b AS LONG
 
     x = 0
-    addr = VARPTR(x)
-    POKE LONG, addr, 12345
+    memaddr = VARPTR(x)
+    POKE LONG, memaddr, 12345
     IF x = 12345 THEN
         ConPrint "POKE-LONG-PASS"
     ELSE
         ConPrint "POKE-LONG-FAIL x=" & STR$(x)
     END IF
 
-    b = PEEK(LONG, addr)
+    b = PEEK(LONG, memaddr)
     IF b = 12345 THEN
         ConPrint "PEEK-LONG-PASS"
     ELSE
         ConPrint "PEEK-LONG-FAIL b=" & STR$(b)
     END IF
 
-    POKE BYTE, addr, 65
-    b = PEEK(addr)
+    POKE BYTE, memaddr, 65
+    b = PEEK(memaddr)
     IF b = 65 THEN
         ConPrint "PEEK-BYTE-PASS"
     ELSE
         ConPrint "PEEK-BYTE-FAIL b=" & STR$(b)
     END IF
 
-    POKE BYTE, addr, 7, 8, 9
-    b = PEEK(addr)
-    IF b = 7 AND PEEK(addr + 2) = 9 THEN
+    POKE BYTE, memaddr, 7, 8, 9
+    b = PEEK(memaddr)
+    IF b = 7 AND PEEK(memaddr + 2) = 9 THEN
         ConPrint "POKE-MULTI-PASS"
     ELSE
         ConPrint "POKE-MULTI-FAIL b=" & STR$(b)

@@ -40,7 +40,7 @@ END SUB
 
 ' The resource gives the EXE program the "hello" icon in Explorer,
 ' and provides it with Windows version information.
-#RESOURCE ICON, 100, "Hello.ico"
+' (removed for PBWin10 dual-compile: Hello.ico not shipped) ' #RESOURCE ICON, 100, "Hello.ico"
 #RESOURCE VERSIONINFO
 #RESOURCE FILEVERSION 10, 0, 0, 0
 #RESOURCE PRODUCTVERSION 10, 0, 0, 0

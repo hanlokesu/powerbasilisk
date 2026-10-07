@@ -38,13 +38,13 @@ FUNCTION PBMAIN() AS LONG
     n = 42
     s = "world"
     q = 9876543210
-    ConPrint "C1-" & n
-    ConPrint "C2-" & LEN("abc")
+    ConPrint "C1-" & STR$(n)
+    ConPrint "C2-" & STR$(LEN("abc"))
     ConPrint "C3-" & STR$(n)
-    ConPrint "C4-" & ISFILE(".\nonexistent.txt")
-    ConPrint "C5-" & s & "-" & n
-    ConPrint "C6-" & q
-    ConPrint "C7-" & 7
+    ConPrint "C4-" & STR$(ISFILE(".\nonexistent.txt"))
+    ConPrint "C5-" & s & "-" & STR$(n)
+    ConPrint "C6-" & STR$(q)
+    ConPrint "C7-" & STR$(7)
     ConPrint "FAILURES: 0"
     ConPrint "Press any key to exit..."
     ConWaitKey

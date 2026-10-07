@@ -1,4 +1,23 @@
 #COMPILE EXE
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -29,17 +48,17 @@ END SUB
 
 
 ' udp_echo_client.bas - UDP echo client (pair with udp_echo_server.bas)
-' Note: client uses UDP OPEN without PORT (random local port, PB semantics).
+' Note: client uses UDP OPEN without PORT (random local portnum, PB semantics).
 
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     DIM buf AS STRING
     DIM ip AS LONG
-    DIM port AS LONG
+    DIM portnum AS LONG
     UDP OPEN AS #1 TIMEOUT 5000
     ConPrint "client: sending"
     UDP SEND #1, AT "127.0.0.1", 23460, "hello-udp"
-    UDP RECV #1, FROM ip, port, buf
+    UDP RECV #1, FROM ip, portnum, buf
     ConPrint "client: got [" + buf + "]"
     UDP CLOSE #1
     FUNCTION = 0
@@ -47,3 +66,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

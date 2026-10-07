@@ -40,6 +40,7 @@ END SUB
 ' Asserts: the bitmap handle is non-zero.
 '=====================================================================
 FUNCTION PBMAIN () AS LONG
+    LOCAL waitk AS STRING
     LOCAL fail AS LONG
     LOCAL hbmp AS LONG
     GRAPHIC BITMAP NEW 100, 50 TO hbmp
@@ -51,6 +52,6 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
-WAITKEY$
+    waitk = WAITKEY$
 END FUNCTION
 

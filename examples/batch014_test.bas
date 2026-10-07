@@ -1,3 +1,22 @@
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -30,14 +49,14 @@ OPTION EXPLICIT
 
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
-    LOCAL a() AS LONG
-    LOCAL b() AS LONG
-    LOCAL sa() AS STRING
-    LOCAL s2() AS STRING
-    LOCAL sb() AS STRING
+    DIM a() AS LONG
+    DIM b() AS LONG
+    DIM sa() AS STRING
+    DIM s2() AS STRING
+    DIM sb() AS STRING
     LOCAL i AS LONG
     LOCAL ip AS LONG
-    LOCAL host AS STRING
+    LOCAL hostname AS STRING
 
     ' ---- ARRAY COPY (LONG) ----
     REDIM a(1 TO 5)
@@ -105,8 +124,8 @@ FUNCTION PBMAIN() AS LONG
     END IF
 
     ' ---- HOST NAME (ip 0 = local machine) ----
-    HOST NAME 0 TO host
-    IF LEN(host) = 0 THEN
+    HOST NAME 0 TO hostname
+    IF LEN(hostname) = 0 THEN
         ConPrint "HOSTNAME FAIL"
         FUNCTION = 1
         EXIT FUNCTION
@@ -118,3 +137,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

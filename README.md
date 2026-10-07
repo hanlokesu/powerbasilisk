@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 226 (v0.2.071). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 230 (v0.2.072). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> > batch 230 (v0.2.072) - examples PBWin10 dual-compile parity complete: 239/239 compile under both PBWin10 and fork (163 -> 0). PBWin10 syntax rulings: #OPTION EXPLICIT unsupported (use #DIM ALL); #DEBUG/#BREAK/#UNIQUE/#BLOAT/#COM/#EXPORT/#MESSAGES meta commented; GRAPHIC ATTACH 2-arg; BITMAP NEW TO target LONG; STR$ balanced parens (ISFILE/LEN); LOCAL waitk decls; END IF closures; & STR$(q) QUAD concat. fork compile-all 239/0, headless 117/0.
 > > batch 226 (v0.2.071) - fix string `&` numeric concat type mismatch: `"x" & LEN(...)` / `& n` / `& q&` now convert the numeric operand to text instead of passing an i32 Val as a pointer to `pb_str_concat` (previously corrupted or dropped the whole output; behind the hello.bas 0xC0000005 family and the lost ISFILE/CURDIR$ values). Same conversion applied to numeric operands in string comparisons. New example batch226_test.bas, dual-compiler (fork + PBWin10). compile-all 239/0, headless 115/0.
 > > batch 225 (v0.2.070) - PBWin10 example compatibility: STR$ string Error 420 cleared (41 files), nested STR$(STR$(x)) balanced-bracket fix (12 files), INPUT FLUSH removed, %MY_PBVER compile-time discriminator added to all 237 examples
 > batch 224 (v0.2.069) - 双兼容示例转换（PRINT/WAITKEY$/#CONSOLE → ConPrint/ConWaitKey Win32 封装，一侧实现两侧可编）+ x64 i32→ptr inttoptr 修复（WriteFile/ReadFile 5 号槽高位垃圾崩溃）；236 示例 CRLF/BOM/meta 顶置规范化；TRACE/GRAPHIC/XPRINT PRINT 误伤 10 处修复；单行 IF-ELSE 展开器引号内冒号拆行修复（batch029）；IMAGELIST/GLOBALMEM 64 位句柄 QUAD 修复（batch173/199c 崩溃、batch201 FAILURES 清零）；fork compile-all 237/0、headless 112/0
@@ -722,6 +723,17 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
+### v0.2.072 (2026-10-07) - batch 230: examples PBWin10 dual-compile parity complete (239/239)
+
+- **All 239 examples now compile under both PBWin10 and this fork** (163 failing under PBWin10 at batch 230 start -> 0).
+- Discriminator wraps (~130 files) isolate fork-only syntax in `#IF %MY_PBVER = 0` blocks; the PBWin10 side compiles a stub branch.
+- PBWin10 syntax rulings applied across the corpus:
+  - `#OPTION EXPLICIT` unsupported by PBWin10 (use `#DIM ALL`); `#DEBUG BOUNDS/DISPLAY/ERROR/NUMERIC/ConPrint`, `#BREAK ON`, `#UNIQUE ON`, `#BLOAT`, `#COM`, `#EXPORT`, `#MESSAGES` meta directives commented out for the PBWin side.
+  - `GRAPHIC ATTACH hbmp, 0` (two args), `GRAPHIC BITMAP END` (no-arg), `GRAPHIC BITMAP NEW ... TO` target must be LONG (QUAD -> 432).
+  - STR$(...) balanced-paren fixes (ISFILE / LEN wrappers; regex capture-group trap recorded in the skill).
+  - `LOCAL waitk AS STRING` declarations, `END IF` closures, `& STR$(q)` QUAD concat.
+- fork regression: compile-all 239/0, headless 117/0.
+
 ### v0.2.071 (2026-10-07)
 
 - **Fix: string `&` numeric concatenation type mismatch** — `"x" & LEN(...)`,

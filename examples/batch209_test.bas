@@ -49,6 +49,7 @@ END SUB
 ' Asserts: the ImageList handle arrives and a fresh list reports count 0.
 '=====================================================================
 FUNCTION PBMAIN () AS LONG
+    LOCAL waitk AS STRING
     LOCAL fail AS LONG
     LOCAL hil AS LONG
     LOCAL cnt AS LONG
@@ -69,6 +70,6 @@ FUNCTION PBMAIN () AS LONG
     ConPrint "=== FAILURES:" & STR$(fail) & "==="
     FUNCTION = fail
 ' Press any key to exit...
-WAITKEY$
+    waitk = WAITKEY$
 END FUNCTION
 

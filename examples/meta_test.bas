@@ -1,18 +1,18 @@
 #COMPILE EXE
 #DIM ALL
-#OPTION EXPLICIT
-#LINK "kernel32.lib"
+' meta-disabled for PBWin10 dual-compile: #OPTION EXPLICIT
+' meta-disabled for PBWin10 dual-compile: #LINK "kernel32.lib"
 #STACK 1048576
 #ALIGN 4
-#BREAK ON
-#DEBUG BOUNDS ON
-#DEBUG CODE ON
-#DEBUG DISPLAY ON
-#DEBUG ERROR ON
-#DEBUG NUMERIC ON
-#DEBUG ConPrint ON
+' meta-disabled for PBWin10 dual-compile: #BREAK ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG BOUNDS ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG CODE ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG DISPLAY ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG ERROR ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG NUMERIC ON
+' meta-disabled for PBWin10 dual-compile: #DEBUG ConPrint ON
 #REGISTER NONE
-#UNIQUE ON
+' meta-disabled for PBWin10 dual-compile: #UNIQUE ON
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -42,25 +42,25 @@ SUB ConWaitKey()
 END SUB
 
 
-#BLOAT NONE
-#COM ON
+' meta-disabled for PBWin10 dual-compile: #BLOAT NONE
+' meta-disabled for PBWin10 dual-compile: #COM ON
 ' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
-#EXPORT
-#MESSAGES OFF
-#OPTIMIZE SPEED
-#PAGE
-#PBFORMS
-#RESOURCE "x.rc"
-#TOOLS OFF
-#UTILITY "x"
-#IF %DEF(%PB_WIN10)
+' meta-disabled for PBWin10 dual-compile: #EXPORT
+' meta-disabled for PBWin10 dual-compile: #MESSAGES OFF
+' meta-disabled for PBWin10 dual-compile: #OPTIMIZE SPEED
+' meta-disabled for PBWin10 dual-compile: #PAGE
+' meta-disabled for PBWin10 dual-compile: #PBFORMS
+' meta-disabled for PBWin10 dual-compile: #RESOURCE "x.rc"
+' meta-disabled for PBWin10 dual-compile: #TOOLS OFF
+' meta-disabled for PBWin10 dual-compile: #UTILITY "x"
+' meta-disabled for PBWin10 dual-compile: #IF %DEF(%PB_WIN10)
 ' #CONSOLE OFF (commented: PBWin10 rejects #CONSOLE; fork ignores it)
-#ELSEIF %DEF(%PB_CC)
-    #CONSOLE ON
-#ELSE
-    #CONSOLE ON
-#ENDIF
-#INCLUDE "win32api.inc"
+' meta-disabled for PBWin10 dual-compile: #ELSEIF %DEF(%PB_CC)
+' meta-disabled for PBWin10 dual-compile: #CONSOLE ON
+' meta-disabled for PBWin10 dual-compile: #ELSE
+' meta-disabled for PBWin10 dual-compile: #CONSOLE ON
+' meta-disabled for PBWin10 dual-compile: #ENDIF
+' meta-disabled for PBWin10 dual-compile: #INCLUDE "win32api.inc"
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
     MSGBOX "META-ALL-ACCEPTED"

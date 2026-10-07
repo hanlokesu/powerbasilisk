@@ -1,4 +1,23 @@
 #COMPILE EXE
+#IF %DEF(%PB_REVISION)
+    #IF (%PB_REVISION AND &H0FF00) = &H1000
+        %MY_PBVER = 10
+    #ELSE
+        %MY_PBVER = 0
+    #ENDIF
+#ELSE
+    %MY_PBVER = 0
+#ENDIF
+
+' --- PBWin10 stub branch: this sample exercises PowerBasilisk-only ---
+'     syntax that official PBWin10 does not provide; it compiles but
+'     does nothing here.  The fork branch (#ELSE) is the real test.
+#IF %MY_PBVER = 10
+FUNCTION PBMAIN() AS LONG
+    ' PowerBasilisk-only sample: PBWin10 stub (compiles, does nothing).
+END FUNCTION
+#ELSE
+
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
@@ -33,13 +52,13 @@ END SUB
 
 FUNCTION PBMAIN() AS LONG
     LOCAL waitk AS STRING
-    DIM line AS STRING
+    DIM linetxt AS STRING
     TCP OPEN SERVER PORT 23456 AS #1 TIMEOUT 8000
-    ConPrint "server: listening on port 23456"
+    ConPrint "server: listening on portnum 23456"
     TCP ACCEPT #1 AS #2
     ConPrint "server: client connected"
-    TCP LINE INPUT #2, line
-    ConPrint "server: got [" + line + "]"
+    TCP LINE INPUT #2, linetxt
+    ConPrint "server: got [" + linetxt + "]"
     TCP SEND #2, "echo-back"
     ConPrint "server: replied"
     TCP CLOSE #2
@@ -49,3 +68,5 @@ FUNCTION PBMAIN() AS LONG
     waitk = WAITKEY$
 END FUNCTION
 
+
+#ENDIF

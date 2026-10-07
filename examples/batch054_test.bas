@@ -41,7 +41,7 @@ FUNCTION PBMAIN() AS LONG
         ConPrint "OK: bitmap handle " & STR$(hbmp)
     END IF
 
-    GRAPHIC ATTACH hbmp
+    GRAPHIC ATTACH hbmp, 0
     GRAPHIC WIDTH 3
     ConPrint "OK: width set"
 
