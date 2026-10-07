@@ -19266,9 +19266,13 @@ impl Compiler {
         lhs: &Val,
         rhs: &Val,
     ) -> PbResult<Val> {
-        // Null-guard both operands for all string operations
-        let safe_l = self.null_guard_string(fb, lhs);
-        let safe_r = self.null_guard_string(fb, rhs);
+        // Null-guard both operands for all string operations.
+        // A numeric operand in a string context must first be converted to
+        // text: pb_str_concat/strcmp expect ptr, and passing an i32/f64 Val
+        // as a ptr is a type mismatch (batch 226: "P3" & LEN("abc") dropped
+        // the whole output; "ISFILE = " & ISFILE(...) lost the value).
+        let safe_l = self.stringify_operand(fb, lhs);
+        let safe_r = self.stringify_operand(fb, rhs);
         match op {
             BinaryOp::StrConcat => Ok(self.compile_str_concat(fb, &safe_l, &safe_r)),
             BinaryOp::Add => {
@@ -19357,6 +19361,18 @@ impl Compiler {
         let is_null = fb.icmp("eq", val, &Val::new("null".to_string(), IrType::Ptr));
         let empty = Val::new(self.empty_string_name.clone(), IrType::Ptr);
         fb.select(&is_null, &empty, val)
+    }
+
+    /// Convert a Val to a string operand: pass pointer operands through the
+    /// null guard, turn numeric operands into text (STR$ semantics) so mixed
+    /// `"x" & 42` / `"x" & LEN(...)` concatenations and comparisons receive
+    /// well-formed ptr arguments.
+    fn stringify_operand(&mut self, fb: &mut FunctionBuilder, val: &Val) -> Val {
+        if val.ty == IrType::Ptr {
+            self.null_guard_string(fb, val)
+        } else {
+            self.num_to_string(fb, val)
+        }
     }
 
     fn compare_eq(&self, fb: &mut FunctionBuilder, a: &Val, b: &Val) -> Val {
