@@ -259,7 +259,8 @@ exit code 0:
 > - **0** documented keywords not yet implemented
 >
 > Counts are computed directly from [statement-coverage.csv](docs/statement-coverage.csv) (864 rows, deduplicated). **0** official keywords are not implemented yet; **3** entry is a fork extension, implemented here but not an official PB keyword (ARRAY SELECT, DIALOG CENTER, GRAPHIC BITMAP CAPTURE). Rows whose internal codegen name uses an underscore are shown here in their spaced form - `GRAPHIC_CIRCLE` appears as `GRAPHIC CIRCLE`; the raw names are in [statement-coverage.md](docs/statement-coverage.md).
-> Updated through batch 230 (v0.2.072). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> Updated through batch 232 (v0.2.073). **No official keyword remains unimplemented - every non-Tier-3 official keyword is implemented.**
+> batch 232 (v0.2.073) - 2026-10-09: dual-compile verification (239/239 PBWin10 + fork) and 3 compiler bug fixes (STR$/PRINT number formatting, ERROR$ text parity, FixedString NUL safety)
 > > batch 230 (v0.2.072) - examples PBWin10 dual-compile parity complete: 239/239 compile under both PBWin10 and fork (163 -> 0). PBWin10 syntax rulings: #OPTION EXPLICIT unsupported (use #DIM ALL); #DEBUG/#BREAK/#UNIQUE/#BLOAT/#COM/#EXPORT/#MESSAGES meta commented; GRAPHIC ATTACH 2-arg; BITMAP NEW TO target LONG; STR$ balanced parens (ISFILE/LEN); LOCAL waitk decls; END IF closures; & STR$(q) QUAD concat. fork compile-all 239/0, headless 117/0.
 > > batch 226 (v0.2.071) - fix string `&` numeric concat type mismatch: `"x" & LEN(...)` / `& n` / `& q&` now convert the numeric operand to text instead of passing an i32 Val as a pointer to `pb_str_concat` (previously corrupted or dropped the whole output; behind the hello.bas 0xC0000005 family and the lost ISFILE/CURDIR$ values). Same conversion applied to numeric operands in string comparisons. New example batch226_test.bas, dual-compiler (fork + PBWin10). compile-all 239/0, headless 115/0.
 > > batch 225 (v0.2.070) - PBWin10 example compatibility: STR$ string Error 420 cleared (41 files), nested STR$(STR$(x)) balanced-bracket fix (12 files), INPUT FLUSH removed, %MY_PBVER compile-time discriminator added to all 237 examples
@@ -723,7 +724,14 @@ exit code 0:
 | `PRINT` | Console output flushed immediately after each line (visible under redirection / on abort). |
 
 ## Changelog
-### v0.2.072 (2026-10-07) - batch 230: examples PBWin10 dual-compile parity complete (239/239)
+### v0.2.073 (2026-10-09) - batch 232: dual-compile verification + STR$/PRINT number formatting + FixedString safety
+
+- **Full dual-compile verification**: all 239 examples compile under PBWin10 (239 OK / 0 FAIL) and this fork (239 ok / 0 failed).
+- **Headless dual-run output comparison** (ConPTY harness): 117 headless examples run under both compilers and compared -> MATCH 46 / DIFF 20 / EMPTY 1 / ONLY-PBWIN 1 / ONLY-FORK 49; every DIFF is classified (environment, fork-extension design, or documented).
+- **STR$/PRINT number formatting is now PBWin10-compatible**: leading space for non-negative numbers (e.g. `STR$(42)` -> `" 42"`), full-precision integers (no scientific notation for large QUADs such as `987654321012345`). Resolved ~20 output DIFFs.
+- **ERROR$(0) text aligned with official PowerBASIC**: "No Error" (was "No error").
+- **FixedString(N) buffers allocate N+1 bytes**: `GET`/`INPUT` filling all N data bytes now keeps the NUL terminator, fixing garbage bytes in binary reads (e.g. `GET #f, 1, buf` with `buf AS STRING * 6`).
+- 202 console examples gained an `AttachConsole(-1)` fallback so headless output is capturable under cmd.exe/ConPTY in the dual-run harness.
 
 - **All 239 examples now compile under both PBWin10 and this fork** (163 failing under PBWin10 at batch 230 start -> 0).
 - Discriminator wraps (~130 files) isolate fork-only syntax in `#IF %MY_PBVER = 0` blocks; the PBWin10 side compiles a stub branch.
