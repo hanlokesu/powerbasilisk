@@ -16,6 +16,7 @@
 ' === console emulation for dual-compiler compatibility ===
 ' (PBWin10 has no PRINT/#CONSOLE; this wrapper uses only official Win32 API)
 DECLARE FUNCTION AllocConsole LIB "KERNEL32.DLL" ALIAS "AllocConsole" () AS LONG
+DECLARE FUNCTION AttachConsole LIB "KERNEL32.DLL" ALIAS "AttachConsole" (BYVAL dwProcessId AS DWORD) AS LONG
 DECLARE FUNCTION GetStdHandle LIB "KERNEL32.DLL" ALIAS "GetStdHandle" (BYVAL nStdHandle AS DWORD) AS LONG
 DECLARE FUNCTION WriteFile LIB "KERNEL32.DLL" ALIAS "WriteFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToWrite AS DWORD, lpBytesWritten AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
 DECLARE FUNCTION ReadFile LIB "KERNEL32.DLL" ALIAS "ReadFile" (BYVAL hFile AS LONG, lpBuffer AS ANY, BYVAL nBytesToRead AS DWORD, lpBytesRead AS DWORD, BYVAL lpOverlapped AS LONG) AS LONG
@@ -24,7 +25,7 @@ SUB ConPrint(BYVAL s AS STRING)
     LOCAL n AS DWORD
     h = GetStdHandle(-11)
     IF h = 0 THEN
-        AllocConsole
+        IF AttachConsole(-1) = 0 THEN AllocConsole
         h = GetStdHandle(-11)
     END IF
     IF h <> 0 THEN

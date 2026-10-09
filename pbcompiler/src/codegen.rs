@@ -7333,7 +7333,8 @@ impl Compiler {
                 None => format!("__static_{}", name),
             };
             if let PbType::FixedString(n) = &dim.pb_type {
-                let buf_ir = IrType::Array(*n, Box::new(IrType::I8));
+                // +1 keeps the global buffer NUL-terminated after GET fills all N
+                let buf_ir = IrType::Array(*n + 1, Box::new(IrType::I8));
                 self.module
                     .add_global(&global_name, &buf_ir, "zeroinitializer");
                 self.symbols.insert_local(
@@ -7374,9 +7375,12 @@ impl Compiler {
             self.declare_threaded_global(&vd);
             return Ok(());
         }
-        // FixedString(N) / ASCIIZ*N: allocate [N x i8] buffer on stack
+        // FixedString(N) / ASCIIZ*N: allocate [N+1 x i8] buffer on stack.
+        // The extra byte keeps the buffer NUL-terminated even after a
+        // GET/PUT/INPUT fills all N data bytes (pb_get writes exactly N),
+        // so strlen/strcmp/& -concatenation never read past the buffer.
         if let PbType::FixedString(n) = &dim.pb_type {
-            let buf_ir = IrType::Array(*n, Box::new(IrType::I8));
+            let buf_ir = IrType::Array(*n + 1, Box::new(IrType::I8));
             let ptr = fb.alloca(&buf_ir);
             fb.store(&Val::new("zeroinitializer", buf_ir.clone()), &ptr);
             // Register as Ptr type so it can be passed to functions expecting char*
@@ -17900,20 +17904,21 @@ impl Compiler {
                 let str_ptr = Val::new(str_name, IrType::Ptr);
                 fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val]);
             } else if val.ty.is_int() {
+                // PB PRINT semantics: numeric fields carry a leading space for
+                // non-negative values (PRINT 42 prints " 42").  % lld / % d.
                 if val.ty == IrType::I64 {
-                    // QUAD: print as 64-bit, no truncation
-                    let (str_name, _len) = self.module.add_string_constant("%lld");
+                    let (str_name, _len) = self.module.add_string_constant("% lld");
                     let str_ptr = Val::new(str_name, IrType::Ptr);
                     fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val]);
                 } else {
-                    let (str_name, _len) = self.module.add_string_constant("%d");
+                    let (str_name, _len) = self.module.add_string_constant("% d");
                     let str_ptr = Val::new(str_name, IrType::Ptr);
                     // Extend to i32 if needed
                     let val_i32 = self.to_i32(fb, &val);
                     fb.call_variadic(&IrType::I32, "printf", &[str_ptr, val_i32]);
                 }
             } else if val.ty.is_float() {
-                let (str_name, _len) = self.module.add_string_constant("%.6g");
+                let (str_name, _len) = self.module.add_string_constant("% .6g");
                 let str_ptr = Val::new(str_name, IrType::Ptr);
                 // Promote to f64 if needed
                 let val_f64 = self.to_f64(fb, &val);
@@ -21267,15 +21272,41 @@ impl Compiler {
         let val = self.compile_expr(fb, &args[0])?;
         let buf_size = fb.const_i32(32);
         let buf = fb.call(&IrType::Ptr, "malloc", std::slice::from_ref(&buf_size));
-        let f64_val = self.to_f64(fb, &val);
-        let (fmt_name, _) = self.module.add_string_constant("%g");
-        let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
-        fb.call_variadic_with_sig(
-            &IrType::I32,
-            "snprintf",
-            &[buf.clone(), buf_size, fmt_ptr, f64_val],
-            &[IrType::Ptr, IrType::I32, IrType::Ptr],
-        );
+        if val.ty.is_int() {
+            // PB STR$ semantics: full-precision decimal, leading space for
+            // positive values (STR$(353) = " 353").  % d / % lld give exactly
+            // that: space flag = leading blank for non-negative, '-' for negative.
+            if val.ty == IrType::I64 {
+                let (fmt_name, _) = self.module.add_string_constant("% lld");
+                let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+                fb.call_variadic_with_sig(
+                    &IrType::I32,
+                    "snprintf",
+                    &[buf.clone(), buf_size, fmt_ptr, val.clone()],
+                    &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I64],
+                );
+            } else {
+                let (fmt_name, _) = self.module.add_string_constant("% d");
+                let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+                let val_i32 = self.to_i32(fb, &val);
+                fb.call_variadic_with_sig(
+                    &IrType::I32,
+                    "snprintf",
+                    &[buf.clone(), buf_size, fmt_ptr, val_i32],
+                    &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I32],
+                );
+            }
+        } else {
+            let f64_val = self.to_f64(fb, &val);
+            let (fmt_name, _) = self.module.add_string_constant("% g");
+            let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
+            fb.call_variadic_with_sig(
+                &IrType::I32,
+                "snprintf",
+                &[buf.clone(), buf_size, fmt_ptr, f64_val],
+                &[IrType::Ptr, IrType::I32, IrType::Ptr],
+            );
+        }
         let len = fb.call(&IrType::I32, "strlen", std::slice::from_ref(&buf));
         let bstr = fb.call(&IrType::Ptr, "pb_bstr_alloc", &[buf.clone(), len]);
         fb.call_void("free", &[buf]);
@@ -21325,9 +21356,10 @@ impl Compiler {
         let buf_size = fb.const_i32(32);
         let buf = fb.call(&IrType::Ptr, "malloc", std::slice::from_ref(&buf_size));
         if val.ty.is_int() {
-            // Integers keep exact formatting: %lld for QUAD, %d otherwise
+            // Integers keep exact formatting: % lld for QUAD, % d otherwise.
+            // The space flag gives PB STR$ semantics (leading blank for >=0).
             if val.ty == IrType::I64 {
-                let (fmt_name, _) = self.module.add_string_constant("%lld");
+                let (fmt_name, _) = self.module.add_string_constant("% lld");
                 let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
                 fb.call_variadic_with_sig(
                     &IrType::I32,
@@ -21336,7 +21368,7 @@ impl Compiler {
                     &[IrType::Ptr, IrType::I32, IrType::Ptr, IrType::I64],
                 );
             } else {
-                let (fmt_name, _) = self.module.add_string_constant("%d");
+                let (fmt_name, _) = self.module.add_string_constant("% d");
                 let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
                 let val_i32 = self.to_i32(fb, val);
                 fb.call_variadic_with_sig(
@@ -21348,7 +21380,7 @@ impl Compiler {
             }
         } else {
             let f64_val = self.to_f64(fb, val);
-            let (fmt_name, _) = self.module.add_string_constant("%g");
+            let (fmt_name, _) = self.module.add_string_constant("% g");
             let fmt_ptr = Val::new(fmt_name, IrType::Ptr);
             fb.call_variadic_with_sig(
                 &IrType::I32,

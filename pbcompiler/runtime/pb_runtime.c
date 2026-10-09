@@ -1673,7 +1673,7 @@ int pb_err_active = 0;   /* 1 while executing the ON ERROR handler (trapping sus
 
 /* ===== ERROR$ � PB error message lookup ===== */
 static const char* pb_error_msgs[] = {
-    [0] = "No error",
+    [0] = "No Error",
     [1] = "Out of memory",
     [2] = "Syntax error",
     [3] = "Return without Gosub",
